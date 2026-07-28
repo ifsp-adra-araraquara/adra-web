@@ -1,0 +1,25 @@
+<p class="page-intro">
+  Bem-vindo(a), {{ auth.currentUser()?.name }} — {{ auth.currentUser()?.role }}
+</p>
+
+<!-- Se o módulo ativo for o Dashboard, exibe o painel correspondente ao cargo -->
+@if (auth.currentModule() === AppModule.DASHBOARD) {
+  @switch (auth.dashType()) {
+    @case (DashboardType.COORDENADOR)      { <app-dash-coord /> }
+    @case (DashboardType.SOCIOPEDAGOGICO)  { <app-dash-socio /> }
+    @case (DashboardType.NEUROLOGIA)       { <app-dash-clinico /> }
+    @case (DashboardType.PSICOPEDAGOGA)    { <app-dash-clinico /> }
+    @case (DashboardType.FINANCEIRO)       { <app-dash-fin /> }
+    @default {
+      <div class="notice notice-lock">
+        <span>Este perfil não possui dashboard.</span>
+      </div>
+    }
+  }
+} @else {
+  <!-- Se clicar em qualquer outro item do menu lateral, exibe a tela do módulo selecionado -->
+  <div class="notice">
+    <span>Exibindo o módulo: <strong>{{ labels[auth.currentModule()!] }}</strong></span>
+    <!-- Aqui futuramente você colocará os componentes de cada tela, ex: <app-assistidos /> -->
+  </div>
+}

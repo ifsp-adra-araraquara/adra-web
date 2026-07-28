@@ -1,0 +1,11 @@
+.main { margin-left: var(--sidebar-w); min-height: 100vh; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 30; height: var(--topbar-h);
+  background: rgba(248,247,244,.86); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--gray-200);
+  display: flex; align-items: center; gap: 14px; padding: 0 26px;
+}
+.topbar h1 { font-size: 17px; font-weight: 600; }
+
+.content { padding: 26px; max-width: 1200px; }

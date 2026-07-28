@@ -1,0 +1,39 @@
+<div class="grid g-stats">
+  <app-stat-card iconClass="ico-green" value="3" label="Chamadas pendentes hoje" trend="de 5 oficinas no turno" trendClass="muted">
+    <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+  </app-stat-card>
+
+  <app-stat-card iconClass="ico-coral" value="7" label="Assistidos com baixa frequência" trend="abaixo de 70%" trendClass="t-down">
+    <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 15-5-5-4 4-3-3"/></svg>
+  </app-stat-card>
+</div>
+
+<div class="card mt">
+  <div class="card-head">
+    <h3>Chamadas pendentes</h3>
+    <span class="sub">turno da tarde · hoje</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Oficina</th><th>Turma</th><th>Horário</th><th>Inscritos</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        @for (c of chamadas; track c.oficina) {
+          <tr>
+            <td class="cell-name">{{ c.oficina }}</td>
+            <td>{{ c.turma }}</td>
+            <td>{{ c.hora }}</td>
+            <td>{{ c.inscritos }}</td>
+            <td>
+              <span class="badge" [class]="c.status === 'Pendente' ? 'b-amber' : 'b-green'">{{ c.status }}</span>
+            </td>
+            <td>
+              <button class="btn btn-sm" [class.btn-ghost]="c.acao === 'Ver'">{{ c.acao }}</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,31 @@
+<div class="grid g-stats">
+  <app-stat-card iconClass="ico-green" value="2" label="Projetos ativos" trend="vigência 2025" trendClass="muted">
+    <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-3H5a2 2 0 0 0-2 3z"/></svg>
+  </app-stat-card>
+
+  <app-stat-card iconClass="ico-blue" value="7" label="Exportações geradas" trend="▲ 2 este mês" trendClass="t-up">
+    <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+  </app-stat-card>
+</div>
+
+<div class="card mt">
+  <div class="card-head"><h3>Exportações recentes</h3></div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Arquivo</th><th>Período</th><th>Projeto</th><th>Formato</th><th>Data</th></tr>
+      </thead>
+      <tbody>
+        @for (e of exportacoes; track e.arquivo) {
+          <tr>
+            <td class="cell-name">{{ e.arquivo }}</td>
+            <td>{{ e.periodo }}</td>
+            <td>{{ e.projeto }}</td>
+            <td><span class="badge plain" [class]="e.formato === 'PDF' ? 'b-red' : 'b-green'">{{ e.formato }}</span></td>
+            <td>{{ e.data }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

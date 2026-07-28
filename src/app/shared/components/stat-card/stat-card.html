@@ -1,0 +1,10 @@
+<div class="stat">
+  <div class="stat-ico" [class]="iconClass()">
+    <ng-content select="[icon]"></ng-content>
+  </div>
+  <div class="stat-val">{{ value() }}</div>
+  <div class="stat-lbl">{{ label() }}</div>
+  @if (trend()) {
+    <div class="stat-trend" [class]="trendClass()">{{ trend() }}</div>
+  }
+</div>

@@ -1,0 +1,112 @@
+<div class="grid g-stats">
+  <app-stat-card iconClass="ico-green" value="84" label="Assistidos ativos" trend="▲ 6 este mês" trendClass="t-up">
+    <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+  </app-stat-card>
+
+  <app-stat-card iconClass="ico-teal" value="12" label="Oficinas ativas" trend="▲ 2 novas" trendClass="t-up">
+    <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+  </app-stat-card>
+
+  <app-stat-card iconClass="ico-blue" value="78%" label="Frequência média" trend="▼ 3% vs. mês ant." trendClass="t-down">
+    <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+  </app-stat-card>
+
+  <app-stat-card iconClass="ico-coral" value="5" label="Ocorrências no mês" trend="▼ 1 vs. mês ant." trendClass="t-down">
+    <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+  </app-stat-card>
+</div>
+
+<div class="row-2 mt">
+  <div class="card">
+    <div class="card-head">
+      <h3>Frequência por oficina</h3>
+      <span class="sub">média de presença · últimos 30 dias</span>
+    </div>
+    <div class="card-pad">
+      <div class="barchart">
+        @for (b of barrasFrequencia; track b.label) {
+          <div class="col">
+            <div class="bar" [style.height.%]="b.valor" [attr.data-v]="b.valor + '%'"></div>
+            <span class="lbl">{{ b.label }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h3>Faixa etária</h3>
+      <span class="sub">assistidos ativos</span>
+    </div>
+    <div class="card-pad">
+      <div class="donut-wrap">
+        <div class="donut">
+          <svg viewBox="0 0 42 42" width="148" height="148">
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--gray-100)" stroke-width="6"/>
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--green-400)" stroke-width="6" stroke-dasharray="38 62" stroke-dashoffset="25" stroke-linecap="round"/>
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--teal-400)" stroke-width="6" stroke-dasharray="31 69" stroke-dashoffset="-13" stroke-linecap="round"/>
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--blue-400)" stroke-width="6" stroke-dasharray="31 69" stroke-dashoffset="-44" stroke-linecap="round"/>
+          </svg>
+          <div class="center"><b>84</b><span>total</span></div>
+        </div>
+        <div class="legend" style="flex-direction:column;margin:0">
+          <div class="item"><span class="dot" style="background:var(--green-400)"></span> 6–9 anos · 32</div>
+          <div class="item"><span class="dot" style="background:var(--teal-400)"></span> 10–13 anos · 26</div>
+          <div class="item"><span class="dot" style="background:var(--blue-400)"></span> 14–17 anos · 26</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row-2 mt">
+  <div class="card">
+    <div class="card-head"><h3>Oficinas por frequência</h3></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Oficina</th><th>Inscritos</th><th>Frequência</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          @for (o of oficinasFrequencia; track o.nome) {
+            <tr>
+              <td class="cell-name">{{ o.nome }}</td>
+              <td>{{ o.inscritos }}</td>
+              <td>
+                <div class="freq" [class]="o.classe">
+                  <div class="track"><div class="fill" [style.width.%]="o.freq"></div></div>
+                  <span class="pct">{{ o.freq }}%</span>
+                </div>
+              </td>
+              <td>
+                <span class="badge" [class]="o.freq < 70 ? 'b-amber' : 'b-green'">
+                  {{ o.freq < 70 ? 'Atenção' : 'Ativa' }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h3>Atividade recente</h3></div>
+    <div class="card-pad">
+      <div class="timeline">
+        @for (a of atividades; track a.texto) {
+          <div class="tl-item">
+            <div class="tl-dot" [class]="a.icone">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+            </div>
+            <div class="tl-body">
+              <div class="t">{{ a.texto }}</div>
+              <div class="when">{{ a.quando }}</div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

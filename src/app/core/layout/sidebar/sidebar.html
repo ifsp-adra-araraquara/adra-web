@@ -1,0 +1,36 @@
+<aside class="sidebar">
+  <div class="sidebar-head">
+    <div class="brand-mark" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2 4 6v6c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V6l-8-4Z"/>
+        <path d="m9 12 2 2 4-4"/>
+      </svg>
+    </div>
+    <div class="sidebar-logo">
+      ADRA
+      <small>Araraquara</small>
+    </div>
+  </div>
+
+ <nav class="nav">
+  <div class="nav-section">Menu</div>
+  @for (item of auth.profileConfig()?.nav; track item) {
+    <button 
+      class="nav-item"
+      (click)="selecionarModulo(item)">
+      {{ labels[item] }}
+    </button>
+  }
+</nav>
+
+  <div class="sidebar-user">
+    <div class="avatar">{{ auth.profileConfig()?.initials }}</div>
+    <div class="who">
+      <b>{{ auth.currentUser()?.name }}</b>
+      <span>{{ auth.currentUser()?.role }}</span>
+    </div>
+    <button class="icon-btn" (click)="auth.logout()" title="Sair">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+    </button>
+  </div>
+</aside>
