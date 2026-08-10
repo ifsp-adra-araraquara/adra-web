@@ -1,9 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
-import { Role } from '../../shared/enum/role.enum';
-import { ROLE_LABELS } from '../../shared/enum/role-labels';
 
 @Component({
   selector: 'app-login',
@@ -13,13 +11,10 @@ import { ROLE_LABELS } from '../../shared/enum/role-labels';
   styleUrl: './login.css'
 })
 export class Login {
-  email = 'coordenador@adra.org.br';
-  senha = 'adra2025';
-  perfilSelecionado: Role = Role.COORD;
-
-  // Alterado de 'roles' para 'perfis' para coincidir com o HTML
-  perfis = Object.values(Role);
-  labels = ROLE_LABELS;
+  email = '';
+  senha = '';
+  carregando = signal(false);
+  erro = signal<string | null>(null);
 
   constructor(
     private authService: AuthService,
@@ -28,9 +23,26 @@ export class Login {
 
   entrar(): void {
     if (!this.email || !this.senha) {
-      return; 
+      this.erro.set('Preencha e-mail e senha.');
+      return;
     }
-    this.authService.login(this.perfilSelecionado);
-    this.router.navigate(['home']);
+
+    this.erro.set(null);
+    this.carregando.set(true);
+
+    this.authService.login(this.email, this.senha).subscribe({
+      next: () => {
+        this.carregando.set(false);
+        this.router.navigate(['home']);
+      },
+      error: (err) => {
+        this.carregando.set(false);
+        this.erro.set(
+          err.status === 401
+            ? 'E-mail ou senha inválidos.'
+            : 'Não foi possível entrar. Tente novamente.'
+        );
+      }
+    });
   }
 }
