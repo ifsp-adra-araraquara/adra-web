@@ -11,6 +11,7 @@ import { DashFin } from './dashboards/dash-fin/dash-fin';
 import { Usuarios } from './usuarios/usuarios';
 import { Acesso } from './acesso/acesso';
 import { Notificacoes } from './notificacoes/notificacoes';
+import { Assistidos } from './assistidos/assistidos';
 
 @Component({
   selector: 'app-home',
@@ -22,7 +23,8 @@ import { Notificacoes } from './notificacoes/notificacoes';
     DashFin,
     Usuarios,
     Acesso,
-    Notificacoes
+    Notificacoes,
+    Assistidos
   ],
   templateUrl: './home.html',
   styleUrl: './home.css'

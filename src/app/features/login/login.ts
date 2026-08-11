@@ -12,7 +12,7 @@ import { AuthService } from '../../core/auth.service';
 })
 export class Login {
   email = '';
-  senha = '';
+  senha = 'MudarNoPrimeiroAcesso@2026';
   carregando = signal(false);
   erro = signal<string | null>(null);
 

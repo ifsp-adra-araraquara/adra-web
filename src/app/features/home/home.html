@@ -15,11 +15,7 @@
       <app-dash-socio />
     }
 
-    @case (DashboardType.NEUROLOGIA) {
-      <app-dash-clinico />
-    }
-
-    @case (DashboardType.PSICOPEDAGOGA) {
+    @case (DashboardType.PROFISSIONAL_SAUDE) {
       <app-dash-clinico />
     }
 
@@ -40,6 +36,10 @@
 
     @case (AppModule.USUARIOS) {
       <app-usuarios />
+    }
+
+    @case (AppModule.ASSISTIDOS) {
+      <app-assistidos />
     }
 
     @case (AppModule.ACESSO) {

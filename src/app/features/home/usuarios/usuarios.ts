@@ -12,15 +12,16 @@ import { environment } from '../../../../environments/environment';
 
 import { Role } from '../../../shared/enum/role.enum';
 
-import { UsuarioRequest } from '../../../shared/models/UsuarioRequest';
-import { UsuarioResponse } from '../../../shared/models/UsuarioResponse';
-import { UsuarioStatusRequest } from '../../../shared/models/UsuarioStatusRequest';
+import { UsuarioRequest } from '../../../shared/models/usuarios/UsuarioRequest';
+import { UsuarioResponse } from '../../../shared/models/usuarios/UsuarioResponse';
+import { UsuarioStatusRequest } from '../../../shared/models/usuarios/UsuarioStatusRequest';
+import { FormsModule } from '@angular/forms';
 
 
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './usuarios.html',
   styleUrl: './usuarios.css'
 })
@@ -401,38 +402,35 @@ export class Usuarios implements OnInit {
    * ============================================================
    */
   getNomePerfil(
-    perfil: Role
-  ): string {
+  perfil: Role
+): string {
 
-    switch (perfil) {
+  switch (perfil) {
 
-      case Role.ADMIN:
-        return 'Administrador';
+    case Role.ADMIN:
+      return 'Administrador';
 
-      case Role.COORD:
-        return 'Coordenador';
+    case Role.COORD:
+      return 'Coordenador';
 
-      case Role.SOCIO:
-        return 'Sociopedagógico';
+    case Role.SOCIO:
+      return 'Sociopedagógico';
 
-      case Role.NEURO:
-        return 'Neurologia';
+    case Role.PROFS:
+      return 'Profissional de Saúde';
 
-      case Role.PSICO:
-        return 'Psicopedagoga';
+    case Role.FINANCEIRO:
+      return 'Financeiro/Adm.';
 
-      case Role.FINANCEIRO:
-        return 'Financeiro/Adm.';
+    case Role.OFICINEIRO:
+      return 'Oficineiro';
 
-      case Role.OFICINEIRO:
-        return 'Oficineiro';
-
-      default:
-        return perfil;
-
-    }
+    default:
+      return perfil;
 
   }
+
+}
 
 
   /*
@@ -440,38 +438,37 @@ export class Usuarios implements OnInit {
    * COR DO BADGE
    * ============================================================
    */
-  getBadgeClass(
-    perfil: Role
-  ): string {
+  
+getBadgeClass(
+  perfil: Role
+): string {
 
-    switch (perfil) {
+  switch (perfil) {
 
-      case Role.ADMIN:
-        return 'b-gray';
+    case Role.ADMIN:
+      return 'b-gray';
 
-      case Role.COORD:
-        return 'b-green';
+    case Role.COORD:
+      return 'b-green';
 
-      case Role.SOCIO:
-      case Role.NEURO:
-        return 'b-teal';
+    case Role.SOCIO:
+      return 'b-teal';
 
-      case Role.PSICO:
-        return 'b-blue';
+    case Role.PROFS:
+      return 'b-blue';
 
-      case Role.FINANCEIRO:
-        return 'b-amber';
+    case Role.FINANCEIRO:
+      return 'b-amber';
 
-      case Role.OFICINEIRO:
-        return 'b-coral';
+    case Role.OFICINEIRO:
+      return 'b-coral';
 
-      default:
-        return 'b-gray';
-
-    }
+    default:
+      return 'b-gray';
 
   }
 
+}
 
   /*
    * ============================================================
