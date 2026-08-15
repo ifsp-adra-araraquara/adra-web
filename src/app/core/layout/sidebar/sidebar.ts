@@ -14,59 +14,34 @@ import { Router } from '@angular/router';
 export class Sidebar {
   auth = inject(AuthService);
   router = inject(Router);
-  AppModule = AppModule;
 
-  labels: Record<AppModule, string> = {
-    [AppModule.DASHBOARD]: 'Dashboard',
-    [AppModule.ASSISTIDOS]: 'Assistidos',
-    [AppModule.OFICINAS]: 'Oficinas',
-    [AppModule.TURMAS]: 'Turmas',
-    [AppModule.CHAMADA]: 'Chamada',
-    [AppModule.DISCIPLINAR]: 'Disciplinar',
-    [AppModule.PRONTUARIOS]: 'Prontuários',
-    [AppModule.USUARIOS]: 'Usuários',
-    [AppModule.ACESSO]: 'Acesso',
-    [AppModule.NOTIFICACOES]: 'Notificações',
-    [AppModule.EXPORTACAO]: 'Exportação',
-    [AppModule.MATERIAIS]: 'Materiais',
-    [AppModule.COMUNICADOS]: 'Comunicados',
+  private secoesPorModulo: Record<string, string> = {
+    DASHBOARD: 'Principal',
+    ASSISTIDOS: 'Gestão',
+    OFICINAS: 'Gestão',
+    TURMAS: 'Gestão',
+    CHAMADA: 'Pedagógico',
+    MATERIAIS: 'Pedagógico',
+    COMUNICADOS: 'Pedagógico',
+    DISCIPLINAR: 'Especializado',
+    PRONTUARIOS: 'Especializado',
+    EXPORTACAO: 'Financeiro',
+    USUARIOS: 'Conta',
+    ACESSO: 'Conta',
+    NOTIFICACOES: 'Conta',
   };
 
-  // Define a qual seção cada módulo pertence
-  private secoesPorModulo: Record<AppModule, string> = {
-    [AppModule.DASHBOARD]: 'Principal',
-
-    [AppModule.ASSISTIDOS]: 'Gestão',
-    [AppModule.OFICINAS]: 'Gestão',
-    [AppModule.TURMAS]: 'Gestão',
-
-    [AppModule.CHAMADA]: 'Pedagógico',
-    [AppModule.MATERIAIS]: 'Pedagógico',
-    [AppModule.COMUNICADOS]: 'Pedagógico',
-
-    [AppModule.DISCIPLINAR]: 'Especializado',
-    [AppModule.PRONTUARIOS]: 'Especializado',
-
-    [AppModule.EXPORTACAO]: 'Financeiro',
-
-    [AppModule.USUARIOS]: 'Conta',
-    [AppModule.ACESSO]: 'Conta',
-    [AppModule.NOTIFICACOES]: 'Conta',
-  };
-
-  // Ordem fixa em que as seções devem aparecer na sidebar
   private ordemSecoes = ['Principal', 'Gestão', 'Especializado', 'Pedagógico', 'Financeiro', 'Conta'];
 
-  // Agrupa dinamicamente os itens permitidos para o perfil logado
   navAgrupado = computed(() => {
-    const itensPermitidos = this.auth.profileConfig()?.nav ?? [];
+    const modulosDoUsuario = this.auth.modulos();
 
-    const grupos: { secao: string; itens: AppModule[] }[] = [];
+    const grupos: { secao: string; itens: { codigo: AppModule; nomeExibicao: string }[] }[] = [];
 
     for (const secao of this.ordemSecoes) {
-      const itensDaSecao = itensPermitidos.filter(
-        (item: AppModule) => this.secoesPorModulo[item] === secao
-      );
+      const itensDaSecao = modulosDoUsuario
+        .filter(m => this.secoesPorModulo[m.codigo] === secao)
+        .map(m => ({ codigo: m.codigo.toLowerCase() as AppModule, nomeExibicao: m.nomeExibicao }));
 
       if (itensDaSecao.length > 0) {
         grupos.push({ secao, itens: itensDaSecao });
@@ -76,15 +51,22 @@ export class Sidebar {
     return grupos;
   });
 
-  selecionarModulo(item: AppModule) {
-    this.auth.setModule(item);
+  iniciais = computed(() => {
+    const nome = this.auth.currentUser()?.name ?? '';
+    return nome
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(p => p[0]?.toUpperCase())
+      .join('');
+  });
+
+  selecionarModulo(codigo: AppModule) {
+    this.auth.setModule(codigo);
   }
 
-
- logout(): void {
-  this.auth.logout(); // Chama o método do serviço
-  this.router.navigate(['/']); // Redireciona para o login
-}
-
-
+  logout(): void {
+    this.auth.logout();
+    this.router.navigate(['/']);
+  }
 }

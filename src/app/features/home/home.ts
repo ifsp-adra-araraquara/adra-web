@@ -34,20 +34,4 @@ export class Home {
 
   AppModule = AppModule;
   DashboardType = DashboardType;
-
-  labels = {
-    [AppModule.DASHBOARD]: 'Dashboard',
-    [AppModule.USUARIOS]: 'Usuários',
-    [AppModule.ACESSO]: 'Acesso',
-    [AppModule.NOTIFICACOES]: 'Notificações',
-    [AppModule.ASSISTIDOS]: 'Assistidos',
-    [AppModule.OFICINAS]: 'Oficinas',
-    [AppModule.TURMAS]: 'Turmas',
-    [AppModule.CHAMADA]: 'Chamada',
-    [AppModule.DISCIPLINAR]: 'Disciplinar',
-    [AppModule.PRONTUARIOS]: 'Prontuários',
-    [AppModule.EXPORTACAO]: 'Exportação',
-    [AppModule.MATERIAIS]: 'Materiais',
-    [AppModule.COMUNICADOS]: 'Comunicados'
-  };
 }

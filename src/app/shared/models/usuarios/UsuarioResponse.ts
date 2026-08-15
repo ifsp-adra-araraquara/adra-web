@@ -1,4 +1,5 @@
 import { Role } from '../../enum/role.enum';
+import { ModuloDTO } from './ModuloDTO';
 
 export interface UsuarioResponse {
   usuarioId: number;
@@ -12,4 +13,5 @@ export interface UsuarioResponse {
   ultimoLogin: string | null;
   criadoEm: string | null;
   atualizadoEm: string | null;
+  modulos: ModuloDTO[];
 }

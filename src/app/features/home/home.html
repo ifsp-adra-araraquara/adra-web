@@ -6,56 +6,24 @@
 @if (auth.currentModule() === AppModule.DASHBOARD) {
 
   @switch (auth.dashType()) {
-
-    @case (DashboardType.COORDENADOR) {
-      <app-dash-coord />
-    }
-
-    @case (DashboardType.SOCIOPEDAGOGICO) {
-      <app-dash-socio />
-    }
-
-    @case (DashboardType.PROFISSIONAL_SAUDE) {
-      <app-dash-clinico />
-    }
-
-    @case (DashboardType.FINANCEIRO) {
-      <app-dash-fin />
-    }
-
+    @case (DashboardType.COORDENADOR) { <app-dash-coord /> }
+    @case (DashboardType.SOCIOPEDAGOGICO) { <app-dash-socio /> }
+    @case (DashboardType.PROFISSIONAL_SAUDE) { <app-dash-clinico /> }
+    @case (DashboardType.FINANCEIRO) { <app-dash-fin /> }
     @default {
-      <div class="notice notice-lock">
-        <span>Este perfil não possui dashboard.</span>
-      </div>
+      <div class="notice notice-lock"><span>Este perfil não possui dashboard.</span></div>
     }
   }
 
 } @else {
 
   @switch (auth.currentModule()) {
-
-    @case (AppModule.USUARIOS) {
-      <app-usuarios />
-    }
-
-    @case (AppModule.ASSISTIDOS) {
-      <app-assistidos />
-    }
-
-    @case (AppModule.ACESSO) {
-      <app-acesso />
-    }
-
-    @case (AppModule.NOTIFICACOES) {
-      <app-notificacoes />
-    }
-
+    @case (AppModule.USUARIOS) { <app-usuarios /> }
+    @case (AppModule.ASSISTIDOS) { <app-assistidos /> }
+    @case (AppModule.ACESSO) { <app-acesso /> }
+    @case (AppModule.NOTIFICACOES) { <app-notificacoes /> }
     @default {
-      <div class="notice">
-        <span>
-          Módulo ainda não implementado.
-        </span>
-      </div>
+      <div class="notice"><span>Módulo ainda não implementado.</span></div>
     }
   }
 
