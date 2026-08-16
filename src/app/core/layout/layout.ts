@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { AuthService } from '../auth.service';
 import { Sidebar } from './sidebar/sidebar';
 
 @Component({
@@ -9,4 +10,6 @@ import { Sidebar } from './sidebar/sidebar';
   templateUrl: './layout.html',
   styleUrl: './layout.css'
 })
-export class Layout {}
+export class Layout {
+  auth = inject(AuthService);
+}
