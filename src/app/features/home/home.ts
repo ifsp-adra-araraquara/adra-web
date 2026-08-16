@@ -7,11 +7,12 @@ import { DashCoord } from './dashboards/dash-coord/dash-coord';
 import { DashSocio } from './dashboards/dash-socio/dash-socio';
 import { DashClinico } from './dashboards/dash-clinico/dash-clinico';
 import { DashFin } from './dashboards/dash-fin/dash-fin';
+import { Usuarios } from '../usuarios/usuarios';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [DashCoord, DashSocio, DashClinico, DashFin],
+  imports: [DashCoord, DashSocio, DashClinico, DashFin, Usuarios],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })
