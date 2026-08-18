@@ -33,24 +33,13 @@
         autocomplete="current-password">
     </div>
 
-    <div class="field">
-      <label for="login-profile-select">Perfil de acesso (simulação)</label>
-      <select class="select" id="login-profile-select" [(ngModel)]="perfilSelecionado">
-        @for (perfil of perfis; track perfil) {
-          <option [value]="perfil">{{ perfil }}</option>
-        }
-      </select>
-    </div>
+    @if (erro()) {
+      <p class="login-erro" role="alert">{{ erro() }}</p>
+    }
 
-    <button class="btn btn-block" (click)="entrar()">Entrar</button>
-
-    <p class="login-note">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/>
-        <path d="M12 16v-4M12 8h.01"/>
-      </svg>
-      <span>Em produção o perfil é detectado automaticamente pelas credenciais (RBAC). A seleção acima existe apenas para demonstração do protótipo.</span>
-    </p>
+    <button class="btn btn-block" (click)="entrar()" [disabled]="carregando()">
+      {{ carregando() ? 'Entrando...' : 'Entrar' }}
+    </button>
     <p class="login-foot">Protótipo acadêmico — IFSP Campus Araraquara</p>
   </div>
 </div>

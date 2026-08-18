@@ -1,9 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
-import { Role } from '../../shared/enum/role.enum';
-import { ROLE_LABELS } from '../../shared/enum/role-labels';
 
 @Component({
   selector: 'app-login',
@@ -13,24 +11,28 @@ import { ROLE_LABELS } from '../../shared/enum/role-labels';
   styleUrl: './login.css'
 })
 export class Login {
-  email = 'coordenador@adra.org.br';
-  senha = 'adra2025';
-  perfilSelecionado: Role = Role.COORD;
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
-  // Alterado de 'roles' para 'perfis' para coincidir com o HTML
-  perfis = Object.values(Role);
-  labels = ROLE_LABELS;
+  email = '';
+  senha = '';
+  erro = signal<string | null>(null);
+  carregando = signal(false);
 
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
-
-  entrar(): void {
+  async entrar(): Promise<void> {
     if (!this.email || !this.senha) {
-      return; 
+      return;
     }
-    this.authService.login(this.perfilSelecionado);
-    this.router.navigate(['home']);
+
+    this.erro.set(null);
+    this.carregando.set(true);
+    try {
+      await this.authService.login(this.email, this.senha);
+      this.router.navigate(['home']);
+    } catch {
+      this.erro.set('Nao foi possivel entrar. Verifique suas credenciais.');
+    } finally {
+      this.carregando.set(false);
+    }
   }
 }

@@ -1,0 +1,59 @@
+<h2 class="usuarios-titulo">Cadastrar usuário</h2>
+
+<form class="usuarios-form" [formGroup]="form" (ngSubmit)="cadastrar()">
+
+  <div class="field">
+    <label for="nome">Nome completo</label>
+    <input class="input" id="nome" type="text" formControlName="nomeCompleto">
+    @if (form.controls.nomeCompleto.touched && form.controls.nomeCompleto.invalid) {
+      <span class="campo-erro">Informe o nome completo.</span>
+    }
+    @if (errosPorCampo()['nomeCompleto']; as erroApi) {
+      <span class="campo-erro">{{ erroApi }}</span>
+    }
+  </div>
+
+  <div class="field">
+    <label for="email">E-mail</label>
+    <input class="input" id="email" type="email" formControlName="email">
+    @if (form.controls.email.touched && form.controls.email.invalid) {
+      <span class="campo-erro">Informe um e-mail válido.</span>
+    }
+    @if (errosPorCampo()['email']; as erroApi) {
+      <span class="campo-erro">{{ erroApi }}</span>
+    }
+  </div>
+
+  <div class="field">
+    <label for="perfil">Perfil de acesso</label>
+    <select class="select" id="perfil" formControlName="nivelPermissao">
+      @for (perfil of perfis; track perfil) {
+        <option [value]="perfil">{{ labels[perfil] }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="field">
+    <label for="cargo">Cargo ou função</label>
+    <input class="input" id="cargo" type="text" formControlName="cargoFuncao">
+  </div>
+
+  <div class="field">
+    <label for="telefone">Telefone</label>
+    <input class="input" id="telefone" type="tel" formControlName="telefone" placeholder="16999998888">
+    @if (form.controls.telefone.touched && form.controls.telefone.invalid) {
+      <span class="campo-erro">DDD + número, 10 ou 11 dígitos.</span>
+    }
+  </div>
+
+  @if (erro()) {
+    <p class="usuarios-erro" role="alert">{{ erro() }}</p>
+  }
+  @if (sucesso()) {
+    <p class="usuarios-sucesso" role="status">{{ sucesso() }}</p>
+  }
+
+  <button class="btn" type="submit" [disabled]="salvando()">
+    {{ salvando() ? 'Cadastrando...' : 'Cadastrar' }}
+  </button>
+</form>
