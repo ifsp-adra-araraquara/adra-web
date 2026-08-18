@@ -12,24 +12,28 @@
     </div>
   </div>
 
- <nav class="nav">
-  <div class="nav-section">Menu</div>
-  @for (item of auth.profileConfig()?.nav; track item) {
-    <button 
-      class="nav-item"
-      (click)="selecionarModulo(item)">
-      {{ labels[item] }}
-    </button>
-  }
-</nav>
+  <nav class="nav">
+    @for (grupo of navAgrupado(); track grupo.secao) {
+      <div class="nav-section">{{ grupo.secao }}</div>
+
+      @for (item of grupo.itens; track item.codigo) {
+        <button
+          class="nav-item"
+          [class.active]="auth.currentModule() === item.codigo"
+          (click)="selecionarModulo(item.codigo)">
+          {{ item.nomeExibicao }}
+        </button>
+      }
+    }
+  </nav>
 
   <div class="sidebar-user">
-    <div class="avatar">{{ auth.profileConfig()?.initials }}</div>
+    <div class="avatar">{{ iniciais() }}</div>
     <div class="who">
       <b>{{ auth.currentUser()?.name }}</b>
       <span>{{ auth.currentUser()?.role }}</span>
     </div>
-    <button class="icon-btn" (click)="auth.logout()" title="Sair">
+    <button class="icon-btn" (click)="logout()" title="Sair">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
     </button>
   </div>

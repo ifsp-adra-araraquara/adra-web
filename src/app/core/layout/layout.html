@@ -3,14 +3,6 @@
 <div class="main">
   <header class="topbar">
     <h1>Sistema de Gestão</h1>
-
-    @if (auth.currentUser(); as usuario) {
-      <div class="topbar-user">
-        <span class="topbar-nome">{{ usuario.name }}</span>
-        <span class="topbar-perfil">{{ usuario.role }}</span>
-        <button class="btn-sair" type="button" (click)="auth.logout()">Sair</button>
-      </div>
-    }
   </header>
 
   <main class="content">
