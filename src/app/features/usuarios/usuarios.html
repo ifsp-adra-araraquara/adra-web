@@ -1,0 +1,14 @@
+<nav class="abas">
+  <button type="button" [class.ativa]="aba() === 'cadastro'" (click)="aba.set('cadastro')">
+    Cadastrar
+  </button>
+  <button type="button" [class.ativa]="aba() === 'senha'" (click)="aba.set('senha')">
+    Definir senha
+  </button>
+</nav>
+
+@if (aba() === 'cadastro') {
+  <app-cadastro-usuario />
+} @else {
+  <app-definir-senha />
+}

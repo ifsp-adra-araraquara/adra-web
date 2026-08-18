@@ -1,0 +1,35 @@
+<h2 class="senha-titulo">Definir senha</h2>
+
+<p class="senha-ajuda">
+  Use enquanto o convite por e-mail não estiver disponível, ou quando alguém perder o acesso.
+</p>
+
+<form class="senha-form" [formGroup]="form" (ngSubmit)="definir()">
+
+  <div class="field">
+    <label for="senha-email">E-mail do usuário</label>
+    <input class="input" id="senha-email" type="email" formControlName="email">
+    @if (form.controls.email.touched && form.controls.email.invalid) {
+      <span class="campo-erro">Informe um e-mail válido.</span>
+    }
+  </div>
+
+  <div class="field">
+    <label for="senha-nova">Nova senha</label>
+    <input class="input" id="senha-nova" type="text" formControlName="novaSenha" autocomplete="off">
+    @if (form.controls.novaSenha.touched && form.controls.novaSenha.invalid) {
+      <span class="campo-erro">Mínimo 8 caracteres, com letra e número.</span>
+    }
+  </div>
+
+  @if (erro()) {
+    <p class="senha-erro" role="alert">{{ erro() }}</p>
+  }
+  @if (sucesso()) {
+    <p class="senha-sucesso" role="status">{{ sucesso() }}</p>
+  }
+
+  <button class="btn" type="submit" [disabled]="salvando()">
+    {{ salvando() ? 'Definindo...' : 'Definir senha' }}
+  </button>
+</form>

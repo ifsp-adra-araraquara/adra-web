@@ -16,6 +16,8 @@
       </div>
     }
   }
+} @else if (auth.currentModule() === AppModule.USUARIOS) {
+  <app-usuarios />
 } @else {
   <!-- Se clicar em qualquer outro item do menu lateral, exibe a tela do módulo selecionado -->
   <div class="notice">

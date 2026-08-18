@@ -1,0 +1,8 @@
+.abas { display: flex; gap: 6px; margin-bottom: 22px; border-bottom: 1px solid var(--gray-200); }
+
+.abas button {
+  background: none; border: none; border-bottom: 2px solid transparent;
+  padding: 8px 14px; font-size: 14px; cursor: pointer; color: var(--gray-400);
+}
+
+.abas button.ativa { color: inherit; font-weight: 600; border-bottom-color: var(--brand, #0f7b5f); }
