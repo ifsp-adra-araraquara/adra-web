@@ -64,13 +64,13 @@ export const routes: Routes = [
       {
         path: 'assistidos', 
         component: Assistidos,
-        data: {  roles: [Role.COORD, Role.SOCIO]  },
+        data: { roles: [Role.COORD, Role.SOCIO] },
         canActivate: [roleGuard]
       },
       {
-        path: 'turmas', 
+        path: 'turmas',
         component: Turmas,
-        data: {  roles: [Role.COORD, Role.SOCIO]  },
+        data: { roles: [Role.COORD, Role.SOCIO] },
         canActivate: [roleGuard]
       },
       {

@@ -150,10 +150,9 @@ export class AuthService {
     );
   }
 
-  private aplicarSessao(resposta: LoginResponse): void {
+    private aplicarSessao(resposta: LoginResponse): void {
     localStorage.setItem(CHAVE_TOKEN, resposta.token);
     localStorage.setItem(USER_KEY, JSON.stringify(resposta.usuario));
-
     this.usuarioLogado.set(resposta.usuario);
 
     const padrao = resposta.usuario.modulos.find(m => m.padrao)?.codigo
