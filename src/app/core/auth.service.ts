@@ -6,9 +6,9 @@ import { switchMap, tap, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AppModule } from '../shared/enum/module.enum';
 import { DashboardType } from '../shared/enum/dashboard-type.enum';
-import { Role } from '../../app/shared/enum/role.enum';
-import { UsuarioResponse } from '../../app/shared/models/usuarios/UsuarioResponse'; // ajuste o caminho real do arquivo
-import { ModuloDTO } from '../../app/shared/models/modulo/ModuloDTO'; // ajuste o caminho real do arquivo
+import { Role } from '../shared/enum/role.enum';
+import { UsuarioResponse } from '../shared/models/usuarios/UsuarioResponse';
+import { ModuloDTO } from '../shared/models/modulo/ModuloDTO';
 import { supabase } from './supabase.client';
 
 export interface LoginResponse {
@@ -28,14 +28,18 @@ export class AuthService {
   currentModule = signal<AppModule | null>(null);
   private usuarioLogado = signal<UsuarioResponse | null>(null);
 
- private dashTypeMap: Record<Role, DashboardType | null> = {
-  [Role.ADMIN]: null,
-  [Role.COORD]: DashboardType.COORDENADOR,
-  [Role.SOCIO]: DashboardType.SOCIOPEDAGOGICO,
-  [Role.PROFS]: DashboardType.PROFISSIONAL_SAUDE,
-  [Role.FINANCEIRO]: DashboardType.FINANCEIRO,
-  [Role.OFICINEIRO]: null,
-};
+  private dashTypeMap: Record<Role, DashboardType | null> = {
+    [Role.ADMIN]: null,
+    [Role.COORD]: DashboardType.COORDENADOR,
+    [Role.SOCIO]: DashboardType.SOCIOPEDAGOGICO,
+    [Role.PROFS]: DashboardType.PROFISSIONAL_SAUDE,
+    [Role.FINANCEIRO]: DashboardType.FINANCEIRO,
+    [Role.OFICINEIRO]: null,
+  };
+
+  // NOVO: substitui o antigo `currentProfile` — deriva do usuário logado
+  // em vez de ser um signal próprio, pra não ter duas fontes de verdade.
+  currentProfile = computed<Role | null>(() => this.usuarioLogado()?.nivelPermissao ?? null);
 
   modulos = computed<ModuloDTO[]>(() => this.usuarioLogado()?.modulos ?? []);
 
@@ -120,6 +124,7 @@ export class AuthService {
     if (padrao) {
       this.currentModule.set(padrao.toLowerCase() as AppModule);
       localStorage.setItem(MODULE_KEY, padrao.toLowerCase());
+      this.router.navigate([padrao.toLowerCase()]);
     }
   }
 
