@@ -28,7 +28,6 @@ export class Login {
     this.carregando.set(true);
     try {
       await this.authService.login(this.email, this.senha);
-      this.router.navigate(['home']);
     } catch {
       this.erro.set('Nao foi possivel entrar. Verifique suas credenciais.');
     } finally {
