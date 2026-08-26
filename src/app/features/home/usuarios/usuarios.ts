@@ -1,9 +1,4 @@
-import {
-  Component,
-  inject,
-  OnInit,
-  signal
-} from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -26,10 +21,9 @@ import { DefinirSenha } from '../../usuarios/senha/definir-senha';
   standalone: true,
   imports: [CommonModule, FormsModule, CadastroUsuario, DefinirSenha],
   templateUrl: './usuarios.html',
-  styleUrl: './usuarios.css'
+  styleUrl: './usuarios.css',
 })
 export class Usuarios implements OnInit {
-
   private http = inject(HttpClient);
 
   Role = Role;
@@ -51,12 +45,15 @@ export class Usuarios implements OnInit {
     nivelPermissao: Role.COORD,
     especialidade: null,
     cargoFuncao: '',
-    telefone: ''
+    telefone: '',
   };
 
   // Modais dos componentes do Pedrão, abertos por cima
   mostrarModalCadastro = signal(false);
   mostrarModalSenha = signal(false);
+  mostrarModalStatus = signal(false);
+  usuarioSelecionadoStatus = signal<UsuarioResponse | null>(null);
+  acaoStatus = signal<'inativar' | 'reativar'>('inativar');
 
   ngOnInit(): void {
     this.carregarUsuarios();
@@ -72,7 +69,7 @@ export class Usuarios implements OnInit {
       error: (erro) => {
         console.error('Erro ao carregar usuários:', erro);
         this.carregando.set(false);
-      }
+      },
     });
   }
 
@@ -105,7 +102,7 @@ export class Usuarios implements OnInit {
       nivelPermissao: usuario.nivelPermissao,
       especialidade: usuario.especialidade,
       cargoFuncao: usuario.cargoFuncao ?? '',
-      telefone: usuario.telefone ?? ''
+      telefone: usuario.telefone ?? '',
     };
 
     this.mostrarModalEdicao.set(true);
@@ -124,26 +121,46 @@ export class Usuarios implements OnInit {
 
     this.salvando.set(true);
 
-    this.http.put<UsuarioResponse>(`${this.apiUrl}/${usuario.usuarioId}`, this.usuarioEdicao).subscribe({
-      next: () => {
-        this.salvando.set(false);
-        this.fecharModalEdicao();
-        this.carregarUsuarios();
-      },
-      error: (erro) => {
-        console.error('Erro ao editar usuário:', erro);
-        this.salvando.set(false);
-      }
-    });
+    this.http
+      .put<UsuarioResponse>(`${this.apiUrl}/${usuario.usuarioId}`, this.usuarioEdicao)
+      .subscribe({
+        next: () => {
+          this.salvando.set(false);
+          this.fecharModalEdicao();
+          this.carregarUsuarios();
+        },
+        error: (erro) => {
+          console.error('Erro ao editar usuário:', erro);
+          this.salvando.set(false);
+        },
+      });
   }
 
   alterarStatus(usuario: UsuarioResponse): void {
-    const request: UsuarioStatusRequest = { ativo: !usuario.ativo };
+    this.usuarioSelecionadoStatus.set(usuario);
+    this.acaoStatus.set(usuario.ativo ? 'inativar' : 'reativar');
+    this.mostrarModalStatus.set(true);
+  }
 
-    this.http.patch<UsuarioResponse>(`${this.apiUrl}/${usuario.usuarioId}/status`, request).subscribe({
-      next: () => this.carregarUsuarios(),
-      error: (erro) => console.error('Erro ao alterar status:', erro)
-    });
+  confirmarAlteracaoStatus(): void {
+    const usuario = this.usuarioSelecionadoStatus();
+    if (usuario) {
+      const novoStatus = this.acaoStatus() === 'reativar';
+      this.executarAlteracaoStatus(usuario, novoStatus);
+    }
+    this.mostrarModalStatus.set(false);
+    this.usuarioSelecionadoStatus.set(null);
+  }
+
+  private executarAlteracaoStatus(usuario: UsuarioResponse, ativo: boolean): void {
+    const request: UsuarioStatusRequest = { ativo };
+
+    this.http
+      .patch<UsuarioResponse>(`${this.apiUrl}/${usuario.usuarioId}/status`, request)
+      .subscribe({
+        next: () => this.carregarUsuarios(),
+        error: (erro) => console.error('Erro ao alterar status:', erro),
+      });
   }
 
   getNomePerfil(perfil: Role): string {
@@ -152,13 +169,20 @@ export class Usuarios implements OnInit {
 
   getBadgeClass(perfil: Role): string {
     switch (perfil) {
-      case Role.ADMIN: return 'b-gray';
-      case Role.COORD: return 'b-green';
-      case Role.SOCIO: return 'b-teal';
-      case Role.PROFS: return 'b-blue';
-      case Role.FINANCEIRO: return 'b-amber';
-      case Role.OFICINEIRO: return 'b-coral';
-      default: return 'b-gray';
+      case Role.ADMIN:
+        return 'b-gray';
+      case Role.COORD:
+        return 'b-green';
+      case Role.SOCIO:
+        return 'b-teal';
+      case Role.PROFS:
+        return 'b-blue';
+      case Role.FINANCEIRO:
+        return 'b-amber';
+      case Role.OFICINEIRO:
+        return 'b-coral';
+      default:
+        return 'b-gray';
     }
   }
 }

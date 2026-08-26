@@ -131,6 +131,7 @@ export class AuthService {
   setModule(module: AppModule): void {
     this.currentModule.set(module);
     localStorage.setItem(MODULE_KEY, module);
+    this.router.navigate([module]);
   }
 
   logout(): void {

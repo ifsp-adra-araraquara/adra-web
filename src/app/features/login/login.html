@@ -1,5 +1,5 @@
 <div class="login-screen">
-  <div class="login-card">
+  <form class="login-card" (ngSubmit)="entrar()">
     <div class="login-brand">
       <div class="brand-mark" aria-hidden="true">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -16,6 +16,7 @@
       <input
         class="input"
         id="login-email"
+        name="email"
         type="email"
         placeholder="coordenador@adra.org.br"
         [(ngModel)]="email"
@@ -27,6 +28,7 @@
       <input
         class="input"
         id="login-pass"
+        name="senha"
         type="password"
         placeholder="••••••••"
         [(ngModel)]="senha"
@@ -37,9 +39,9 @@
       <p class="login-erro" role="alert">{{ erro() }}</p>
     }
 
-    <button class="btn btn-block" (click)="entrar()" [disabled]="carregando()">
+    <button type="submit" class="btn btn-block" [disabled]="carregando()">
       {{ carregando() ? 'Entrando...' : 'Entrar' }}
     </button>
     <p class="login-foot">Protótipo acadêmico — IFSP Campus Araraquara</p>
-  </div>
+  </form>
 </div>

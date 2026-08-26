@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { Login } from './features/login/login';
 import { Home } from './features/home/home';
-import { Usuarios } from './features/usuarios/usuarios';
+import { Usuarios } from './features/home/usuarios/usuarios';
 import { AcessoNegado } from './features/acesso-negado/acesso-negado';
 import { Layout } from './core/layout/layout';
 import { authGuard } from './core/guards/auth.guard';
