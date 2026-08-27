@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Role } from '../shared/enum/role.enum';
-import { Usuario } from './auth.service';
+import { UsuarioResponse } from '../shared/models/usuarios/UsuarioResponse';
 
 export interface NovoUsuario {
   nomeCompleto: string;
@@ -22,8 +22,8 @@ export interface DefinicaoDeSenha {
 export class UsuarioService {
   private http = inject(HttpClient);
 
-  cadastrar(usuario: NovoUsuario): Observable<Usuario> {
-    return this.http.post<Usuario>(`${environment.apiUrl}/api/usuarios`, usuario);
+  cadastrar(usuario: NovoUsuario): Observable<UsuarioResponse> {
+    return this.http.post<UsuarioResponse>(`${environment.apiUrl}/api/usuarios`, usuario);
   }
 
   definirSenha(dados: DefinicaoDeSenha): Observable<void> {

@@ -7,6 +7,36 @@
    Cole este arquivo em: src/styles.css
    ============================================================ */
 
+   @import 'tailwindcss';
+
+@theme {
+  --color-adra-green-50:  #E0F2EC;
+  --color-adra-green-100: #A7DCCC;
+  --color-adra-green-200: #4DB89A;
+  --color-adra-green-400: #007B5F;
+  --color-adra-green-600: #005A45;
+  --color-adra-green-800: #003D2E;
+  --color-adra-green-900: #002A1F;
+
+  --color-adra-gray-50:  #F8F7F4;
+  --color-adra-gray-100: #EFEDE6;
+  --color-adra-gray-200: #D3D1C7;
+  --color-adra-gray-400: #888780;
+  --color-adra-gray-600: #54585A;
+  --color-adra-gray-800: #2C2C2A;
+
+  --color-adra-teal-400:  #1D9E75;
+  --color-adra-blue-400:  #378ADD;
+  --color-adra-amber-400: #BA7517;
+  --color-adra-coral-400: #D85A30;
+  --color-adra-red-400:   #E24B4A;
+
+  --spacing-sidebar: 15rem;   /* 240px */
+  --spacing-topbar: 3.5rem;   /* 56px */
+}
+
+/* resto do reset/tokens que não vira cor pode continuar aqui embaixo, se precisar */
+
 /* ===== RESET ===== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 

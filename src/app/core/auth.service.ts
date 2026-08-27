@@ -2,142 +2,86 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, firstValueFrom, from, throwError } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
+import { switchMap, tap, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { Role } from '../shared/enum/role.enum';
-import { ROLE_LABELS } from '../shared/enum/role-labels';
 import { AppModule } from '../shared/enum/module.enum';
 import { DashboardType } from '../shared/enum/dashboard-type.enum';
+import { Role } from '../shared/enum/role.enum';
+import { UsuarioResponse } from '../shared/models/usuarios/UsuarioResponse';
+import { ModuloDTO } from '../shared/models/modulo/ModuloDTO';
 import { supabase } from './supabase.client';
-
-interface PerfilConfig {
-  nav: AppModule[];
-  defaultPage: string;
-  initials: string;
-  dashType: DashboardType | null;
-}
-
-const PROFILES: Record<Role, PerfilConfig> = {
-
-  [Role.ADMIN]: {
-    nav: [AppModule.USUARIOS, AppModule.ACESSO, AppModule.NOTIFICACOES],
-    defaultPage: AppModule.USUARIOS,
-    initials: 'AD',
-    dashType: null
-  },
-
-  [Role.COORD]: {
-    nav: [
-      AppModule.DASHBOARD, AppModule.ASSISTIDOS, AppModule.OFICINAS,
-      AppModule.TURMAS, AppModule.CHAMADA, AppModule.DISCIPLINAR, AppModule.PRONTUARIOS
-    ],
-    defaultPage: AppModule.DASHBOARD,
-    initials: 'CO',
-    dashType: DashboardType.COORDENADOR
-  },
-
-  [Role.SOCIO]: {
-    nav: [AppModule.DASHBOARD, AppModule.CHAMADA, AppModule.ASSISTIDOS],
-    defaultPage: AppModule.DASHBOARD,
-    initials: 'SP',
-    dashType: DashboardType.SOCIOPEDAGOGICO
-  },
-
-  [Role.NEURO]: {
-    nav: [AppModule.DASHBOARD, AppModule.PRONTUARIOS, AppModule.ASSISTIDOS],
-    defaultPage: AppModule.DASHBOARD,
-    initials: 'NE',
-    dashType: DashboardType.NEUROLOGIA
-  },
-
-  [Role.PSICO]: {
-    nav: [AppModule.DASHBOARD, AppModule.PRONTUARIOS, AppModule.ASSISTIDOS],
-    defaultPage: AppModule.DASHBOARD,
-    initials: 'PP',
-    dashType: DashboardType.PSICOPEDAGOGA
-  },
-
-  [Role.FINANCEIRO]: {
-    nav: [AppModule.DASHBOARD, AppModule.ASSISTIDOS, AppModule.EXPORTACAO],
-    defaultPage: AppModule.DASHBOARD,
-    initials: 'FA',
-    dashType: DashboardType.FINANCEIRO
-  },
-
-  [Role.OFICINEIRO]: {
-    nav: [AppModule.MATERIAIS, AppModule.COMUNICADOS],
-    defaultPage: AppModule.MATERIAIS,
-    initials: 'OF',
-    dashType: DashboardType.OFICINEIRO
-  }
-};
-
-/** Espelha o UsuarioResponseDTO da API. */
-export interface Usuario {
-  usuarioId: number;
-  nomeCompleto: string;
-  email: string;
-  nivelPermissao: Role;
-  cargoFuncao: string | null;
-}
 
 export interface LoginResponse {
   token: string;
-  usuario: Usuario;
+  usuario: UsuarioResponse;
 }
 
-const USERS: Record<Role, { name: string; role: string }> = {
-  [Role.ADMIN]:      { name: 'Carlos Mendes',      role: 'Administrador do sistema' },
-  [Role.COORD]:      { name: 'Juliana Alves',      role: 'Coordenação geral' },
-  [Role.SOCIO]:      { name: 'Marcos Pereira',     role: 'Equipe sociopedagógica' },
-  [Role.NEURO]:      { name: 'Dra. Letícia Prado', role: 'Neurologia' },
-  [Role.PSICO]:      { name: 'Psic. Renata Dias',  role: 'Psicopedagogia' },
-  [Role.FINANCEIRO]: { name: 'Sandra Lopes',       role: 'Financeiro / Administrativo' },
-  [Role.OFICINEIRO]: { name: 'Bruno Carvalho',     role: 'Oficineiro — Música' },
-};
-
 const CHAVE_TOKEN = 'adra.token';
+const USER_KEY = 'usuario_logado';
+const MODULE_KEY = 'modulo_atual';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
 
-  currentProfile = signal<Role | null>(null);
-  usuario = signal<Usuario | null>(null);
-
-  // NOVO: Controla qual módulo/página do menu está selecionado no momento
   currentModule = signal<AppModule | null>(null);
+  private usuarioLogado = signal<UsuarioResponse | null>(null);
 
-  profileConfig = computed(() => {
-    const p = this.currentProfile();
-    return p ? PROFILES[p] : null;
+  private dashTypeMap: Record<Role, DashboardType | null> = {
+    [Role.ADMIN]: null,
+    [Role.COORD]: DashboardType.COORDENADOR,
+    [Role.SOCIO]: DashboardType.SOCIOPEDAGOGICO,
+    [Role.PROFS]: DashboardType.PROFISSIONAL_SAUDE,
+    [Role.FINANCEIRO]: DashboardType.FINANCEIRO,
+    [Role.OFICINEIRO]: null,
+  };
+
+  // NOVO: substitui o antigo `currentProfile` — deriva do usuário logado
+  // em vez de ser um signal próprio, pra não ter duas fontes de verdade.
+  currentProfile = computed<Role | null>(() => this.usuarioLogado()?.nivelPermissao ?? null);
+
+  modulos = computed<ModuloDTO[]>(() => this.usuarioLogado()?.modulos ?? []);
+
+  dashType = computed<DashboardType | null>(() => {
+    const nivel = this.usuarioLogado()?.nivelPermissao;
+    return nivel ? this.dashTypeMap[nivel] ?? null : null;
   });
 
   currentUser = computed(() => {
-    const u = this.usuario();
-    const p = this.currentProfile();
-    if (u) {
-      return { name: u.nomeCompleto, role: u.cargoFuncao ?? ROLE_LABELS[u.nivelPermissao] };
-    }
-    return p ? USERS[p] : null;
+    const u = this.usuarioLogado();
+    return u ? { name: u.nomeCompleto, role: u.cargoFuncao ?? '' } : null;
   });
 
-  dashType = computed(() => this.profileConfig()?.dashType ?? null);
+  get token(): string | null {
+    return localStorage.getItem(CHAVE_TOKEN);
+  }
 
   constructor() {
-    // INITIAL_SESSION restaura a sessao ao recarregr pagina; TOKEN_REFRESHED
-    // acompanha a renovacao do supabase-js, senoa o nosso token expira antes.
+    const storedUser = localStorage.getItem(USER_KEY);
+    if (storedUser) {
+      try {
+        const user: UsuarioResponse = JSON.parse(storedUser);
+        this.usuarioLogado.set(user);
+
+        const storedModule = localStorage.getItem(MODULE_KEY);
+        if (storedModule && this.moduloExisteNaLista(storedModule, user.modulos)) {
+          this.currentModule.set(storedModule as AppModule);
+        } else {
+          const padrao = user.modulos.find(m => m.padrao)?.codigo ?? user.modulos[0]?.codigo ?? null;
+          if (padrao) this.currentModule.set(padrao.toLowerCase() as AppModule);
+        }
+      } catch {
+        localStorage.removeItem(USER_KEY);
+      }
+    }
+
     supabase.auth.onAuthStateChange((evento, sessao) => {
       const deveTrocar = evento === 'INITIAL_SESSION' || evento === 'TOKEN_REFRESHED';
       if (deveTrocar && sessao) {
         this.trocarPorTokenDaAplicacao().subscribe({ error: () => this.logout() });
       }
     });
-  }
-
-  get token(): string | null {
-    return localStorage.getItem(CHAVE_TOKEN);
   }
 
   async login(email: string, senha: string): Promise<void> {
@@ -147,7 +91,6 @@ export class AuthService {
     }
     await firstValueFrom(this.trocarPorTokenDaAplicacao());
   }
-
 
   trocarPorTokenDaAplicacao(): Observable<LoginResponse> {
     return from(supabase.auth.getSession()).pipe(
@@ -160,28 +103,48 @@ export class AuthService {
           headers: { Authorization: `Bearer ${tokenSupabase}` }
         });
       }),
-      tap((resposta) => this.aplicarSessao(resposta))
+      tap((resposta) => this.aplicarSessao(resposta)),
+      catchError((err) => {
+        this.logout();
+        return throwError(() => err);
+      })
     );
   }
 
   private aplicarSessao(resposta: LoginResponse): void {
     localStorage.setItem(CHAVE_TOKEN, resposta.token);
-    this.usuario.set(resposta.usuario);
-    this.currentProfile.set(resposta.usuario.nivelPermissao);
-    this.currentModule.set(PROFILES[resposta.usuario.nivelPermissao].defaultPage as AppModule);
+    localStorage.setItem(USER_KEY, JSON.stringify(resposta.usuario));
+
+    this.usuarioLogado.set(resposta.usuario);
+
+    const padrao = resposta.usuario.modulos.find(m => m.padrao)?.codigo
+      ?? resposta.usuario.modulos[0]?.codigo
+      ?? null;
+
+    if (padrao) {
+      this.currentModule.set(padrao.toLowerCase() as AppModule);
+      localStorage.setItem(MODULE_KEY, padrao.toLowerCase());
+      this.router.navigate([padrao.toLowerCase()]);
+    }
   }
 
-  // NOVO: Método para alterar o módulo ativo ao clicar no menu
   setModule(module: AppModule): void {
     this.currentModule.set(module);
+    localStorage.setItem(MODULE_KEY, module);
+    this.router.navigate([module]);
   }
 
   logout(): void {
     supabase.auth.signOut();
     localStorage.removeItem(CHAVE_TOKEN);
-    this.usuario.set(null);
-    this.currentProfile.set(null);
+    localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(MODULE_KEY);
+    this.usuarioLogado.set(null);
     this.currentModule.set(null);
     this.router.navigate(['login']);
+  }
+
+  private moduloExisteNaLista(codigo: string, modulos: ModuloDTO[]): boolean {
+    return modulos.some(m => m.codigo.toLowerCase() === codigo.toLowerCase());
   }
 }

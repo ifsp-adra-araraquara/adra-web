@@ -1,25 +1,72 @@
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common'; // Adicione se precisar
+import { Component, inject, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { AuthService } from '../../auth.service';
 import { AppModule } from '../../../shared/enum/module.enum';
-import { MODULE_LABELS } from '../../../shared/enum/module-labels';
-import { DashboardType } from '../../../shared/enum/dashboard-type.enum'; // Importe o enum correspondente
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule], // Removemos o RouterLink daqui pois não usaremos rotas para isso
+  imports: [CommonModule],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css'
 })
 export class Sidebar {
   auth = inject(AuthService);
-  AppModule = AppModule;
+  router = inject(Router);
 
-  labels = MODULE_LABELS;
+  private secoesPorModulo: Record<string, string> = {
+    DASHBOARD: 'Principal',
+    ASSISTIDOS: 'Gestão',
+    OFICINAS: 'Gestão',
+    TURMAS: 'Gestão',
+    CHAMADA: 'Pedagógico',
+    MATERIAIS: 'Pedagógico',
+    COMUNICADOS: 'Pedagógico',
+    DISCIPLINAR: 'Especializado',
+    PRONTUARIOS: 'Especializado',
+    EXPORTACAO: 'Financeiro',
+    USUARIOS: 'Conta',
+    ACESSO: 'Conta',
+    NOTIFICACOES: 'Conta',
+  };
 
-  // Método chamado ao clicar em um item do menu
- selecionarModulo(item: AppModule) {
-    this.auth.setModule(item); // <-- Faltava esta linha aqui!
+  private ordemSecoes = ['Principal', 'Gestão', 'Especializado', 'Pedagógico', 'Financeiro', 'Conta'];
+
+  navAgrupado = computed(() => {
+    const modulosDoUsuario = this.auth.modulos();
+
+    const grupos: { secao: string; itens: { codigo: AppModule; nomeExibicao: string }[] }[] = [];
+
+    for (const secao of this.ordemSecoes) {
+      const itensDaSecao = modulosDoUsuario
+        .filter(m => this.secoesPorModulo[m.codigo] === secao)
+        .map(m => ({ codigo: m.codigo.toLowerCase() as AppModule, nomeExibicao: m.nomeExibicao }));
+
+      if (itensDaSecao.length > 0) {
+        grupos.push({ secao, itens: itensDaSecao });
+      }
+    }
+
+    return grupos;
+  });
+
+  iniciais = computed(() => {
+    const nome = this.auth.currentUser()?.name ?? '';
+    return nome
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(p => p[0]?.toUpperCase())
+      .join('');
+  });
+
+  selecionarModulo(codigo: AppModule) {
+    this.auth.setModule(codigo);
+  }
+
+  logout(): void {
+    this.auth.logout();
+    this.router.navigate(['/']);
   }
 }

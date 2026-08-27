@@ -2,8 +2,7 @@ export enum DashboardType {
     ADMINISTRADOR = 'admin',
     COORDENADOR = 'coord',
     SOCIOPEDAGOGICO = 'socio',
-    NEUROLOGIA = 'neuro',
-    PSICOPEDAGOGA = 'psico',
+    PROFISSIONAL_SAUDE = 'profs',
     FINANCEIRO = 'finan',
     OFICINEIRO = 'ofici'
 }
