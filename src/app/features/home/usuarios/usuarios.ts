@@ -1,7 +1,6 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 
-import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 
 import { environment } from '../../../../environments/environment';
@@ -9,6 +8,7 @@ import { environment } from '../../../../environments/environment';
 import { Role } from '../../../shared/enum/role.enum';
 import { ROLE_LABELS } from '../../../shared/enum/role-labels';
 
+import { PaginaResponse } from '../../../shared/models/PaginaResponse';
 import { UsuarioRequest } from '../../../shared/models/usuarios/UsuarioRequest';
 import { UsuarioResponse } from '../../../shared/models/usuarios/UsuarioResponse';
 import { UsuarioStatusRequest } from '../../../shared/models/usuarios/UsuarioStatusRequest';
@@ -18,10 +18,10 @@ import { DefinirSenha } from '../../usuarios/senha/definir-senha';
 
 @Component({
   selector: 'app-usuarios',
-  standalone: true,
-  imports: [CommonModule, FormsModule, CadastroUsuario, DefinirSenha],
+  imports: [FormsModule, CadastroUsuario, DefinirSenha],
   templateUrl: './usuarios.html',
   styleUrl: './usuarios.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Usuarios implements OnInit {
   private http = inject(HttpClient);
@@ -31,9 +31,25 @@ export class Usuarios implements OnInit {
 
   private readonly apiUrl = `${environment.apiUrl}/api/usuarios`;
 
-  usuarios = signal<UsuarioResponse[]>([]);
   carregando = signal(false);
   salvando = signal(false);
+
+  // Paginação
+  pagina = signal(0);
+  readonly tamanho = 20;
+  totalPaginas = signal(0);
+  totalElementos = signal(0);
+  usuarios = signal<UsuarioResponse[]>([]);
+
+  temAnterior = computed(() => this.pagina() > 0);
+  temProxima = computed(() => this.pagina() < this.totalPaginas() - 1);
+
+  // Busca e filtros
+  termoBusca = signal('');
+  filtroPerfil = signal<Role | ''>('');
+  filtroStatus = signal<'ativo' | 'inativo' | ''>('');
+
+  private searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
   // Modal de EDIÇÃO
   mostrarModalEdicao = signal(false);
@@ -61,9 +77,25 @@ export class Usuarios implements OnInit {
 
   carregarUsuarios(): void {
     this.carregando.set(true);
-    this.http.get<UsuarioResponse[]>(this.apiUrl).subscribe({
-      next: (usuarios) => {
-        this.usuarios.set(usuarios);
+
+    let params = new HttpParams()
+      .set('pagina', this.pagina())
+      .set('tamanho', this.tamanho);
+
+    const busca = this.termoBusca().trim();
+    if (busca) params = params.set('busca', busca);
+
+    const perfil = this.filtroPerfil();
+    if (perfil) params = params.set('perfil', perfil);
+
+    const status = this.filtroStatus();
+    if (status) params = params.set('ativo', status === 'ativo');
+
+    this.http.get<PaginaResponse<UsuarioResponse>>(this.apiUrl, { params }).subscribe({
+      next: (resp) => {
+        this.usuarios.set(resp.conteudo);
+        this.totalPaginas.set(resp.totalPaginas);
+        this.totalElementos.set(resp.totalElementos);
         this.carregando.set(false);
       },
       error: (erro) => {
@@ -71,6 +103,34 @@ export class Usuarios implements OnInit {
         this.carregando.set(false);
       },
     });
+  }
+
+  onBuscaChange(valor: string): void {
+    this.termoBusca.set(valor);
+    if (this.searchTimeout) clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+      this.pagina.set(0);
+      this.carregarUsuarios();
+    }, 350);
+  }
+
+  onFiltroChange(): void {
+    this.pagina.set(0);
+    this.carregarUsuarios();
+  }
+
+  paginaAnterior(): void {
+    if (this.temAnterior()) {
+      this.pagina.update((p) => p - 1);
+      this.carregarUsuarios();
+    }
+  }
+
+  proximaPagina(): void {
+    if (this.temProxima()) {
+      this.pagina.update((p) => p + 1);
+      this.carregarUsuarios();
+    }
   }
 
   /* ===== Modal de cadastro (componente do Pedrão) ===== */
