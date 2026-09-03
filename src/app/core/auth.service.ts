@@ -37,8 +37,6 @@ export class AuthService {
     [Role.OFICINEIRO]: null,
   };
 
-  // NOVO: substitui o antigo `currentProfile` — deriva do usuário logado
-  // em vez de ser um signal próprio, pra não ter duas fontes de verdade.
   currentProfile = computed<Role | null>(() => this.usuarioLogado()?.nivelPermissao ?? null);
 
   modulos = computed<ModuloDTO[]>(() => this.usuarioLogado()?.modulos ?? []);
@@ -77,6 +75,9 @@ export class AuthService {
     }
 
     supabase.auth.onAuthStateChange((evento, sessao) => {
+     
+      if (evento === 'PASSWORD_RECOVERY') return;
+
       const deveTrocar = evento === 'INITIAL_SESSION' || evento === 'TOKEN_REFRESHED';
       if (deveTrocar && sessao) {
         this.trocarPorTokenDaAplicacao().subscribe({ error: () => this.logout() });
@@ -90,6 +91,29 @@ export class AuthService {
       throw new Error('E-mail ou senha invalidos.');
     }
     await firstValueFrom(this.trocarPorTokenDaAplicacao());
+  }
+
+  async solicitarRecuperacaoSenha(email: string): Promise<void> {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/redefinir-senha`,
+    });
+    if (error) {
+      throw new Error(
+        'Nao foi possivel enviar o e-mail agora. Peca a um Administrador para redefinir sua senha.'
+      );
+    }
+  }
+
+  /**
+   * Usado tanto na recuperação (US-03) quanto no convite (US-02) — a sessão
+   * temporária de recovery/invite já está ativa nesse ponto.
+   */
+  async redefinirSenha(novaSenha: string): Promise<void> {
+    const { error } = await supabase.auth.updateUser({ password: novaSenha });
+    if (error) {
+      throw new Error('Nao foi possivel redefinir a senha. O link pode ter expirado, solicite um novo.');
+    }
+    await supabase.auth.signOut();
   }
 
   trocarPorTokenDaAplicacao(): Observable<LoginResponse> {

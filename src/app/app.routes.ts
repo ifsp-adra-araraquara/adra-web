@@ -1,5 +1,9 @@
 import { Routes } from '@angular/router';
 import { Login } from './features/login/login';
+import { SolicitarSenha } from './features/login/recuperacao-senha/solicitar/solicitar-senha';
+import { RedefinirSenha } from './features/login/recuperacao-senha/redefinir/redefinir-senha';
+import { DefinirSenhaConvite } from './features/convite/definir-senha-convite';
+import { Convidar } from './features/usuarios/convidar/convidar';
 import { Home } from './features/home/home';
 import { Usuarios } from './features/home/usuarios/usuarios';
 import { AcessoNegado } from './features/acesso-negado/acesso-negado';
@@ -11,6 +15,9 @@ import { Role } from './shared/enum/role.enum';
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: Login },
+  { path: 'esqueci-senha', component: SolicitarSenha },
+  { path: 'redefinir-senha', component: RedefinirSenha },
+  { path: 'convite/:token', component: DefinirSenhaConvite },
   { path: 'acesso-negado', component: AcessoNegado },
 
   {
@@ -28,6 +35,12 @@ export const routes: Routes = [
       {
         path: 'usuarios',
         component: Usuarios,
+        data: { roles: [Role.ADMIN] },
+        canActivate: [roleGuard]
+      },
+      {
+        path: 'usuarios/convidar',
+        component: Convidar,
         data: { roles: [Role.ADMIN] },
         canActivate: [roleGuard]
       }

@@ -22,18 +22,10 @@
 }
 
 @keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-
-  to {
-    opacity: 1;
-    transform: none;
-  }
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
 }
 
-/* ---------- Painel de marca (esquerda) ---------- */
 .brand-panel {
   position: relative;
   overflow: hidden;
@@ -48,7 +40,6 @@
   justify-content: space-between;
 }
 
-/* leve brilho pulsante, custa quase nada em performance */
 .brand-panel-glow {
   position: absolute;
   width: 420px;
@@ -62,20 +53,10 @@
 }
 
 @keyframes pulse {
-
-  0%,
-  100% {
-    opacity: .5;
-    transform: scale(1);
-  }
-
-  50% {
-    opacity: .9;
-    transform: scale(1.08);
-  }
+  0%, 100% { opacity: .5; transform: scale(1); }
+  50% { opacity: .9; transform: scale(1.08); }
 }
 
-/* grid sutil = a pegada "futurista/corporativa" sem pesar */
 .brand-panel-grid {
   position: absolute;
   inset: 0;
@@ -87,32 +68,10 @@
   pointer-events: none;
 }
 
-.brand-panel-content {
-  position: relative;
-  z-index: 1;
-}
-
-.brand-logo {
-  width: 120px;
-  height: auto;
-  margin-bottom: 32px;
-  opacity: .95;
-}
-
-.brand-title {
-  font-size: 24px;
-  font-weight: 600;
-  margin: 0 0 10px;
-  letter-spacing: -.3px;
-  color: #fff;
-}
-
-.brand-tagline {
-  font-size: 14px;
-  color: rgba(255, 255, 255, .7);
-  max-width: 280px;
-  line-height: 1.5;
-}
+.brand-panel-content { position: relative; z-index: 1; }
+.brand-logo { margin-bottom: 32px; opacity: .95; }
+.brand-title { font-size: 24px; font-weight: 600; margin: 0 0 10px; letter-spacing: -.3px; }
+.brand-tagline { font-size: 14px; color: rgba(255, 255, 255, .7); max-width: 280px; line-height: 1.5; }
 
 .brand-panel-footer {
   position: relative;
@@ -134,18 +93,10 @@
 }
 
 @keyframes blink {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: .4;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: .4; }
 }
 
-/* ---------- Formulário (direita) ---------- */
 .login-card {
   background: #fff;
   padding: 48px 44px;
@@ -154,47 +105,13 @@
   justify-content: center;
 }
 
-.login-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 6px;
-}
+.login-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+.login-logo-text { font-size: 24px; color: var(--green-600); letter-spacing: -.5px; }
+.login-sub { color: var(--gray-800); font-size: 17px; font-weight: 600; margin: 22px 0 8px; }
+.login-desc { color: var(--gray-400); font-size: 13.5px; line-height: 1.5; margin: 0 0 22px; }
 
-.brand-mark {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  flex: none;
-  background: var(--green-400);
-  color: #fff;
-  display: grid;
-  place-items: center;
-}
-
-.login-logo-text {
-  font-size: 24px;
-  color: var(--green-600);
-  letter-spacing: -.5px;
-}
-
-.login-sub {
-  color: var(--gray-400);
-  font-size: 13px;
-  margin-bottom: 30px;
-}
-
-.field {
-  margin-bottom: 18px;
-}
-
-.field label {
-  display: block;
-  font-size: 13px;
-  font-weight: 500;
-  margin-bottom: 6px;
-  color: var(--gray-600);
-}
+.field { margin-bottom: 18px; }
+.field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: var(--gray-600); }
 
 .input {
   width: 100%;
@@ -229,26 +146,13 @@
   background: var(--green-400);
   color: #fff;
   transition: background .15s, transform .05s;
+  text-decoration: none;
 }
 
-.btn:hover:not(:disabled) {
-  background: var(--green-600);
-}
-
-.btn:active:not(:disabled) {
-  transform: translateY(1px);
-}
-
-.btn:disabled {
-  opacity: .75;
-  cursor: not-allowed;
-}
-
-.btn-block {
-  width: 100%;
-  padding: 13px;
-  margin-top: 6px;
-}
+.btn:hover:not(:disabled) { background: var(--green-600); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: .75; cursor: not-allowed; }
+.btn-block { width: 100%; padding: 13px; margin-top: 6px; }
 
 .btn-spinner {
   width: 14px;
@@ -259,36 +163,13 @@
   animation: spin .7s linear infinite;
 }
 
-.brand-logo {
-  margin-bottom: 32px;
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
+.login-erro { color: var(--danger, #c0392b); font-size: 13px; margin: 0 0 12px; }
+.login-foot { text-align: center; font-size: 12px; color: var(--gray-400); margin-top: 30px; }
+.login-foot a { color: var(--green-600); text-decoration: none; font-weight: 500; }
 
-.login-erro {
-  color: var(--danger, #c0392b);
-  font-size: 13px;
-  margin: 0 0 12px;
-}
-
-.login-foot {
-  text-align: center;
-  font-size: 12px;
-  color: var(--gray-400);
-  margin-top: 30px;
-}
-
-/* Empilha em telas menores */
 @media (max-width: 720px) {
-  .login-shell {
-    grid-template-columns: 1fr;
-  }
-
-  .brand-panel {
-    display: none;
-  }
+  .login-shell { grid-template-columns: 1fr; }
+  .brand-panel { display: none; }
 }

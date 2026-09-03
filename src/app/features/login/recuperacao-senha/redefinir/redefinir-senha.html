@@ -1,0 +1,65 @@
+<div class="login-screen">
+    <div class="login-shell">
+
+        <aside class="brand-panel" aria-hidden="true">
+            <div class="brand-panel-glow"></div>
+            <div class="brand-panel-grid"></div>
+
+            <div class="brand-panel-content">
+                <app-brand-logo variant="white" [size]="56" class="brand-logo" />
+                <h1 class="brand-title">Nova senha</h1>
+                <p class="brand-tagline">Crie uma senha segura para continuar acessando o sistema · ADRA Araraquara</p>
+            </div>
+
+            <div class="brand-panel-footer">
+                <span class="brand-status-dot"></span>
+                Ambiente seguro · conexão criptografada
+            </div>
+        </aside>
+
+        <form class="login-card" (ngSubmit)="redefinir()">
+            <div class="login-brand">
+                <app-brand-logo variant="green" [size]="32" />
+                <div class="login-logo-text serif">ADRA</div>
+            </div>
+
+            @if (linkValido() === null) {
+            <p class="login-desc">Verificando link...</p>
+            } @else if (linkValido() === false) {
+            <p class="login-sub">Link inválido ou expirado</p>
+            <p class="login-desc">Esse link de redefinição não é mais válido. Solicite um novo.</p>
+            <a routerLink="/esqueci-senha" class="btn btn-block">Solicitar novo link</a>
+            } @else if (concluido()) {
+            <p class="login-sub">Senha redefinida!</p>
+            <p class="login-desc">Redirecionando para o login...</p>
+            } @else {
+            <p class="login-sub">Crie uma nova senha</p>
+            <p class="login-desc">Mínimo de 8 caracteres, com ao menos uma letra e um número.</p>
+
+            <div class="field">
+                <label for="nova-senha">Nova senha</label>
+                <input class="input" id="nova-senha" name="novaSenha" type="password" placeholder="••••••••"
+                    [(ngModel)]="novaSenha" autocomplete="new-password">
+            </div>
+
+            <div class="field">
+                <label for="confirmar-senha">Confirmar nova senha</label>
+                <input class="input" id="confirmar-senha" name="confirmarSenha" type="password" placeholder="••••••••"
+                    [(ngModel)]="confirmarSenha" autocomplete="new-password">
+            </div>
+
+            @if (erro()) {
+            <p class="login-erro" role="alert">{{ erro() }}</p>
+            }
+
+            <button type="submit" class="btn btn-block" [disabled]="carregando()">
+                @if (carregando()) {
+                <span class="btn-spinner" aria-hidden="true"></span>
+                }
+                {{ carregando() ? 'Salvando...' : 'Redefinir senha' }}
+            </button>
+            }
+        </form>
+
+    </div>
+</div>
