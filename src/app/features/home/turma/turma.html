@@ -1,0 +1,306 @@
+<!-- ============================================================
+     PÁGINA: TURMAS
+     ============================================================ -->
+<section class="page" id="page-turmas">
+  <div
+    class="page-header"
+    style="
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 8px;
+    "
+  >
+    <div>
+      <h1 style="margin: 0">Turmas</h1>
+      <p class="page-intro" style="margin: 4px 0 0">
+        Cada turma define turno, faixa etária e capacidade máxima. Turmas inativas são preservadas
+        no histórico e não podem receber novos vínculos.
+      </p>
+    </div>
+
+    <button class="btn btn-sm" style="flex-shrink: 0" (click)="abrirModalNovaTurma()">
+      + Nova turma
+    </button>
+  </div>
+
+  <div class="toolbar" style="justify-content: space-between; flex-wrap: nowrap">
+    <div style="display: flex; gap: 8px; flex: 1; flex-wrap: nowrap; min-width: 0">
+      <input
+        class="input"
+        placeholder="Buscar por nome da turma…"
+        style="flex: 1; min-width: 0"
+        [ngModel]="filtroNome"
+        (ngModelChange)="onFiltroNomeChange($event)"
+      />
+
+      <select
+        class="select"
+        style="flex-shrink: 0; width: auto"
+        [ngModel]="filtroTurno"
+        (ngModelChange)="onFiltroTurnoChange($event)"
+      >
+        <option value="">Todos os turnos</option>
+        @for (turno of turnosDisponiveis; track turno) {
+          <option [value]="turno">{{ turno }}</option>
+        }
+      </select>
+
+      <select
+        class="select"
+        style="flex-shrink: 0; width: auto"
+        [ngModel]="filtroStatus"
+        (ngModelChange)="onFiltroStatusChange($event)"
+      >
+        <option value="ativas">Ativas</option>
+        <option value="inativas">Inativas</option>
+        <option value="todas">Todas</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h3>Turmas cadastradas</h3>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome da turma</th>
+            <th>Turno</th>
+            <th>Faixa etária</th>
+            <th>Capacidade</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @if (carregando()) {
+            <tr>
+              <td colspan="6" class="muted">Carregando…</td>
+            </tr>
+          } @else if (erroListar()) {
+            <tr>
+              <td colspan="6" class="muted">{{ erroListar() }}</td>
+            </tr>
+          } @else if (turmas().length === 0) {
+            <tr>
+              <td colspan="6" class="muted">Nenhuma turma encontrada.</td>
+            </tr>
+          } @else {
+            @for (turma of turmas(); track turma.turmaId) {
+              <tr>
+                <td class="cell-name">{{ turma.nomeTurma }}</td>
+                <td>{{ turma.turno }}</td>
+                <td>{{ turma.faixaEtaria || '—' }}</td>
+                <td>{{ turma.capacidade }}</td>
+                <td>
+                  @if (turma.ativo) {
+                    <span class="badge b-green">Ativa</span>
+                  } @else {
+                    <span class="badge b-gray">Inativa</span>
+                  }
+                </td>
+                <td>
+                  <div class="t-actions">
+                    <!-- Editar -->
+                    <button type="button" title="Editar turma" (click)="abrirModalEditarTurma(turma)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                    </button>
+
+                    <!-- Inativar / Reativar -->
+                    <button
+                      type="button"
+                      [title]="turma.ativo ? 'Inativar turma' : 'Reativar turma'"
+                      (click)="abrirModalStatus(turma)"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v10" />
+                        <path d="M18.4 6.6a9 9 0 1 1-12.8 0" />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     MODAL: NOVA / EDITAR TURMA
+     ============================================================ -->
+@if (mostrarModalForm()) {
+  <div class="modal-overlay" (click)="fecharModalForm()">
+    <div class="modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div class="mh-ico ico-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+          </svg>
+        </div>
+        <h2>{{ turmaEmEdicao() ? 'Editar turma' : 'Nova turma' }}</h2>
+        <button class="modal-close" (click)="fecharModalForm()" aria-label="Fechar">✕</button>
+      </div>
+
+      <div class="modal-body">
+        @if (erroSalvar()) {
+          <div class="notice notice-error">{{ erroSalvar() }}</div>
+        }
+
+        <div class="field">
+          <label>Nome da turma</label>
+          <input
+            class="input"
+            placeholder="Ex.: CJ Grupo A"
+            [ngModel]="formTurma.nomeTurma"
+            (ngModelChange)="atualizarCampoTurma('nomeTurma', $event)"
+          />
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Turno</label>
+            <select
+              class="select"
+              [ngModel]="formTurma.turno"
+              (ngModelChange)="atualizarCampoTurma('turno', $event)"
+            >
+              <option value="">Selecione</option>
+              @for (turno of turnosDisponiveis; track turno) {
+                <option [value]="turno">{{ turno }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Capacidade</label>
+            <input
+              class="input"
+              type="number"
+              min="1"
+              placeholder="Ex.: 24"
+              [ngModel]="formTurma.capacidade"
+              (ngModelChange)="atualizarCampoTurma('capacidade', $event)"
+            />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Faixa etária</label>
+          <input
+            class="input"
+            placeholder="Ex.: 6-9 anos"
+            [ngModel]="formTurma.faixaEtaria"
+            (ngModelChange)="atualizarCampoTurma('faixaEtaria', $event)"
+          />
+        </div>
+
+        <div class="field">
+          <label>Observações</label>
+          <textarea
+            placeholder="Informações relevantes sobre a turma"
+            [ngModel]="formTurma.observacoes"
+            (ngModelChange)="atualizarCampoTurma('observacoes', $event)"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="modal-foot">
+        <button class="btn btn-ghost" (click)="fecharModalForm()">Cancelar</button>
+        <button class="btn" [disabled]="salvando()" (click)="salvarTurma()">
+          {{ salvando() ? 'Salvando...' : 'Salvar turma' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ============================================================
+     MODAL: CONFIRMAR INATIVAÇÃO / REATIVAÇÃO
+     ============================================================ -->
+@if (mostrarModalStatus() && turmaSelecionadaStatus()) {
+  <div class="modal-overlay open" (click)="fecharModalStatus()">
+    <div class="modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div class="mh-ico" [class]="turmaSelecionadaStatus()!.ativo ? 'ico-coral' : 'ico-green'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            @if (turmaSelecionadaStatus()!.ativo) {
+              <path
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            } @else {
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            }
+          </svg>
+        </div>
+        <div style="flex: 1">
+          <h2>{{ turmaSelecionadaStatus()!.ativo ? 'Confirmar Inativação' : 'Confirmar Reativação' }}</h2>
+          <p class="cell-sub">
+            Turma: <strong>{{ turmaSelecionadaStatus()!.nomeTurma }}</strong>
+          </p>
+        </div>
+        <button type="button" class="modal-close" (click)="fecharModalStatus()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        @if (turmaSelecionadaStatus()!.ativo) {
+          <div class="notice notice-amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" /><path d="M12 8v4m0 4h.01" />
+            </svg>
+            <div>
+              <b>Impactos de inativar esta turma:</b>
+              <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px">
+                <li><strong>Sem novos vínculos:</strong> a turma não poderá receber novos assistidos.</li>
+                <li><strong>Histórico preservado:</strong> vínculos já existentes continuam registrados.</li>
+              </ul>
+            </div>
+          </div>
+        } @else {
+          <div class="notice notice-info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" /><path d="M12 8v4m0 4h.01" />
+            </svg>
+            <div>
+              <b>Impactos de reativar esta turma:</b>
+              <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px">
+                <li><strong>Turma volta a ficar disponível</strong> para novos vínculos de assistidos.</li>
+              </ul>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" (click)="fecharModalStatus()">Cancelar</button>
+        @if (turmaSelecionadaStatus()!.ativo) {
+          <button
+            type="button"
+            class="btn btn-danger"
+            [disabled]="alterandoStatus()"
+            (click)="confirmarAlteracaoStatus()"
+          >
+            {{ alterandoStatus() ? 'Inativando...' : 'Inativar turma' }}
+          </button>
+        } @else {
+          <button type="button" class="btn" [disabled]="alterandoStatus()" (click)="confirmarAlteracaoStatus()">
+            {{ alterandoStatus() ? 'Reativando...' : 'Reativar turma' }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}

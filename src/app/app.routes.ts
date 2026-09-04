@@ -11,6 +11,8 @@ import { Layout } from './core/layout/layout';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
 import { Role } from './shared/enum/role.enum';
+import { Assistidos } from './features/home/assistidos/assistidos';
+import { Turmas } from './features/home/turma/turma';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -19,7 +21,6 @@ export const routes: Routes = [
   { path: 'redefinir-senha', component: RedefinirSenha },
   { path: 'convite/:token', component: DefinirSenhaConvite },
   { path: 'acesso-negado', component: AcessoNegado },
-
   {
     path: '',
     component: Layout,
@@ -43,7 +44,20 @@ export const routes: Routes = [
         component: Convidar,
         data: { roles: [Role.ADMIN] },
         canActivate: [roleGuard]
-      }
+      },
+      {
+        path: 'assistidos', 
+        component: Assistidos,
+        data: {  roles: [Role.COORD, Role.SOCIO]  },
+        canActivate: [roleGuard]
+      },
+      {
+        path: 'turmas', 
+        component: Turmas,
+        data: {  roles: [Role.COORD, Role.SOCIO]  },
+        canActivate: [roleGuard]
+      },
+
     ]
   }
 ];
