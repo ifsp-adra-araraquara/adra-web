@@ -273,6 +273,15 @@
             />
           </div>
         </div>
+
+        @if (erroEdicao()) {
+          <div class="notice notice-amber" role="alert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
+            </svg>
+            <div>{{ erroEdicao() }}</div>
+          </div>
+        }
       </div>
 
       <div class="modal-foot">

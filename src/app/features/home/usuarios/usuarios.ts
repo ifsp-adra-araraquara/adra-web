@@ -54,6 +54,7 @@ export class Usuarios implements OnInit {
   // Modal de EDIÇÃO
   mostrarModalEdicao = signal(false);
   usuarioSelecionado = signal<UsuarioResponse | null>(null);
+  erroEdicao = signal<string | null>(null);
 
   usuarioEdicao: UsuarioRequest = {
     nomeCompleto: '',
@@ -165,12 +166,14 @@ export class Usuarios implements OnInit {
       telefone: usuario.telefone ?? '',
     };
 
+    this.erroEdicao.set(null);
     this.mostrarModalEdicao.set(true);
   }
 
   fecharModalEdicao(): void {
     this.mostrarModalEdicao.set(false);
     this.usuarioSelecionado.set(null);
+    this.erroEdicao.set(null);
   }
 
   salvarEdicao(): void {
@@ -179,6 +182,7 @@ export class Usuarios implements OnInit {
     const usuario = this.usuarioSelecionado();
     if (!usuario) return;
 
+    this.erroEdicao.set(null);
     this.salvando.set(true);
 
     this.http
@@ -190,7 +194,7 @@ export class Usuarios implements OnInit {
           this.carregarUsuarios();
         },
         error: (erro) => {
-          console.error('Erro ao editar usuário:', erro);
+          this.erroEdicao.set(erro.error?.mensagem ?? 'Não foi possível salvar as alterações.');
           this.salvando.set(false);
         },
       });
