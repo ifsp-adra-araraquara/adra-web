@@ -199,12 +199,16 @@
 
         <div class="field">
           <label>Faixa etária</label>
-          <input
-            class="input"
-            placeholder="Ex.: 6-9 anos"
+          <select
+            class="select"
             [ngModel]="formTurma.faixaEtaria"
             (ngModelChange)="atualizarCampoTurma('faixaEtaria', $event)"
-          />
+          >
+            <option value="" disabled selected hidden>Selecione</option>
+            <option value="6–9 anos">6–9 anos</option>
+            <option value="10–13 anos">10–13 anos</option>
+            <option value="14–17 anos">14–17 anos</option>
+          </select>
         </div>
 
         <div class="field">
