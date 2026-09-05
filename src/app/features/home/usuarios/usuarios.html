@@ -294,6 +294,32 @@
   </div>
 }
 
+<!-- MODAL: CONFIRMAR TROCA DE PERFIL -->
+@if (mostrarConfirmacaoPerfil()) {
+  <div class="modal-overlay" (click)="mostrarConfirmacaoPerfil.set(false)">
+    <div class="modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <div>
+          <h3>Confirmar troca de perfil</h3>
+          <p>
+            {{ usuarioSelecionado()?.nomeCompleto }} passará de
+            <strong>{{ getNomePerfil(usuarioSelecionado()!.nivelPermissao) }}</strong> para
+            <strong>{{ getNomePerfil(usuarioEdicao.nivelPermissao) }}</strong>.
+            As permissões novas valem a partir do próximo acesso.
+          </p>
+        </div>
+        <button class="modal-close" type="button" (click)="mostrarConfirmacaoPerfil.set(false)">×</button>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" type="button" (click)="mostrarConfirmacaoPerfil.set(false)">Cancelar</button>
+        <button class="btn" type="button" [disabled]="salvando()" (click)="confirmarSalvarEdicao()">
+          {{ salvando() ? 'Salvando...' : 'Confirmar troca' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
 <!-- MODAL: CONFIRMAR ALTERAÇÃO DE STATUS (INATIVAR / REATIVAR) -->
 @if (mostrarModalStatus()) {
   <div class="modal-overlay open" (click)="mostrarModalStatus.set(false)">

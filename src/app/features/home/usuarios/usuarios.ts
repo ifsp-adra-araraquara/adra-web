@@ -56,6 +56,9 @@ export class Usuarios implements OnInit {
   usuarioSelecionado = signal<UsuarioResponse | null>(null);
   erroEdicao = signal<string | null>(null);
 
+  // Confirmação de troca de perfil
+  mostrarConfirmacaoPerfil = signal(false);
+
   usuarioEdicao: UsuarioRequest = {
     nomeCompleto: '',
     email: '',
@@ -176,12 +179,26 @@ export class Usuarios implements OnInit {
     this.erroEdicao.set(null);
   }
 
+  /** Perfil muda o que a pessoa pode acessar: confirma antes de salvar. */
   salvarEdicao(): void {
     if (this.salvando()) return;
 
     const usuario = this.usuarioSelecionado();
     if (!usuario) return;
 
+    if (this.usuarioEdicao.nivelPermissao !== usuario.nivelPermissao) {
+      this.mostrarConfirmacaoPerfil.set(true);
+      return;
+    }
+
+    this.confirmarSalvarEdicao();
+  }
+
+  confirmarSalvarEdicao(): void {
+    const usuario = this.usuarioSelecionado();
+    if (!usuario) return;
+
+    this.mostrarConfirmacaoPerfil.set(false);
     this.erroEdicao.set(null);
     this.salvando.set(true);
 
