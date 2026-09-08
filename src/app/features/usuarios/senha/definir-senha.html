@@ -10,7 +10,7 @@
     <label for="senha-email">E-mail do usuário</label>
     <input class="input" id="senha-email" type="email" formControlName="email">
     @if (form.controls.email.touched && form.controls.email.invalid) {
-      <span class="campo-erro">Informe um e-mail válido.</span>
+    <span class="campo-erro">Informe um e-mail válido.</span>
     }
   </div>
 
@@ -18,15 +18,15 @@
     <label for="senha-nova">Nova senha</label>
     <input class="input" id="senha-nova" type="text" formControlName="novaSenha" autocomplete="off">
     @if (form.controls.novaSenha.touched && form.controls.novaSenha.invalid) {
-      <span class="campo-erro">Mínimo 8 caracteres, com letra e número.</span>
+    <span class="campo-erro">Mínimo 8 caracteres, com letra e número.</span>
     }
   </div>
 
   @if (erro()) {
-    <p class="senha-erro" role="alert">{{ erro() }}</p>
+  <p class="senha-erro" role="alert">{{ erro() }}</p>
   }
   @if (sucesso()) {
-    <p class="senha-sucesso" role="status">{{ sucesso() }}</p>
+  <p class="senha-sucesso" role="status">{{ sucesso() }}</p>
   }
 
   <button class="btn" type="submit" [disabled]="salvando()">

@@ -8,12 +8,4 @@
 }
 .topbar h1 { font-size: 17px; font-weight: 600; }
 
-.topbar-user { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-.topbar-nome { font-size: 14px; font-weight: 600; }
-.topbar-perfil { font-size: 12px; color: var(--gray-400); }
-.btn-sair {
-  background: none; border: 1px solid var(--gray-200); border-radius: 6px;
-  padding: 5px 12px; font-size: 13px; cursor: pointer;
-}
-
 .content { padding: 26px; max-width: 1200px; }

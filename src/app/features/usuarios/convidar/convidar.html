@@ -1,0 +1,79 @@
+<div class="login-screen">
+    <div class="login-shell">
+
+        <aside class="brand-panel" aria-hidden="true">
+            <div class="brand-panel-glow"></div>
+            <div class="brand-panel-grid"></div>
+
+            <div class="brand-panel-content">
+                <app-brand-logo variant="white" [size]="56" class="brand-logo" />
+                <h1 class="brand-title">Convidar usuário</h1>
+                <p class="brand-tagline">Conceda acesso ao Sistema de Gestão · ADRA Araraquara</p>
+            </div>
+
+            <div class="brand-panel-footer">
+                <span class="brand-status-dot"></span>
+                Ambiente seguro · conexão criptografada
+            </div>
+        </aside>
+
+        <form class="login-card" (ngSubmit)="convidar()">
+            <div class="login-brand">
+                <app-brand-logo variant="green" [size]="32" />
+                <div class="login-logo-text serif">ADRA</div>
+            </div>
+
+            @if (!enviado()) {
+            <p class="login-sub">Novo usuário</p>
+            <p class="login-desc">
+                Informe o e-mail institucional e o nível de permissão. A pessoa vai
+                receber um convite por e-mail para criar a própria senha.
+            </p>
+            <div class="field">
+                <label for="conv-nome">Nome completo</label>
+                <input class="input" id="conv-nome" name="nomeCompleto" type="text" placeholder="Nome do novo usuário"
+                    [(ngModel)]="nomeCompleto" autocomplete="off">
+            </div>
+
+            <div class="field">
+                <label for="conv-email">E-mail institucional</label>
+                <input class="input" id="conv-email" name="email" type="email" placeholder="nome@adra.org.br"
+                    [(ngModel)]="email" autocomplete="off">
+            </div>
+
+            <div class="field">
+                <label for="conv-nivel">Nível de permissão</label>
+                <select class="select" id="conv-nivel" name="nivelPermissaoId" [(ngModel)]="nivelPermissaoId">
+                    <option [ngValue]="null" disabled>Selecione...</option>
+                    <option [ngValue]="1">Administrador</option>
+                    <option [ngValue]="2">Coordenador</option>
+                    <option [ngValue]="3">Oficineiro</option>
+                    <option [ngValue]="4">Sociopedagógico</option>
+                    <option [ngValue]="5">Profissional de Saúde</option>
+                    <option [ngValue]="6">Financeiro</option>
+                </select>
+            </div>
+
+            @if (erro()) {
+            <p class="login-erro" role="alert">{{ erro() }}</p>
+            }
+
+            <button type="submit" class="btn btn-block" [disabled]="carregando()">
+                @if (carregando()) {
+                <span class="btn-spinner" aria-hidden="true"></span>
+                }
+                {{ carregando() ? 'Enviando...' : 'Enviar convite' }}
+            </button>
+            } @else {
+            <p class="login-sub">Convite enviado!</p>
+            <p class="login-desc">
+                <strong>{{ email }}</strong> vai receber um e-mail com instruções para
+                criar a senha e acessar o sistema.
+            </p>
+            }
+
+            <p class="login-foot"><a routerLink="/usuarios">Voltar para usuários</a></p>
+        </form>
+
+    </div>
+</div>

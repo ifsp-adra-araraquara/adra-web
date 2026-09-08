@@ -1,0 +1,61 @@
+<div class="login-screen">
+    <div class="login-shell">
+
+        <aside class="brand-panel" aria-hidden="true">
+            <div class="brand-panel-glow"></div>
+            <div class="brand-panel-grid"></div>
+
+            <div class="brand-panel-content">
+                <app-brand-logo variant="white" [size]="56" class="brand-logo" />
+                <h1 class="brand-title">Recuperação de acesso</h1>
+                <p class="brand-tagline">Sem depender do Administrador para redefinir sua senha · ADRA Araraquara</p>
+            </div>
+
+            <div class="brand-panel-footer">
+                <span class="brand-status-dot"></span>
+                Ambiente seguro · conexão criptografada
+            </div>
+        </aside>
+
+        <form class="login-card" (ngSubmit)="solicitar()">
+            <div class="login-brand">
+                <app-brand-logo variant="green" [size]="32" />
+                <div class="login-logo-text serif">ADRA</div>
+            </div>
+
+            @if (!enviado()) {
+            <p class="login-sub">Esqueceu sua senha?</p>
+            <p class="login-desc">
+                Informe seu e-mail institucional. Se ele estiver cadastrado, você vai
+                receber um link para criar uma nova senha.
+            </p>
+
+            <div class="field">
+                <label for="rec-email">E-mail institucional</label>
+                <input class="input" id="rec-email" name="email" type="email" placeholder="coordenador@adra.org.br"
+                    [(ngModel)]="email" autocomplete="username">
+            </div>
+
+            @if (erro()) {
+            <p class="login-erro" role="alert">{{ erro() }}</p>
+            }
+
+            <button type="submit" class="btn btn-block" [disabled]="carregando()">
+                @if (carregando()) {
+                <span class="btn-spinner" aria-hidden="true"></span>
+                }
+                {{ carregando() ? 'Enviando...' : 'Enviar link de recuperação' }}
+            </button>
+            } @else {
+            <p class="login-sub">Verifique seu e-mail</p>
+            <p class="login-desc">
+                Se <strong>{{ email }}</strong> estiver cadastrado, você vai receber
+                um link para redefinir sua senha em instantes. Confira também a caixa de spam.
+            </p>
+            }
+
+            <p class="login-foot"><a routerLink="/login">Voltar ao login</a></p>
+        </form>
+
+    </div>
+</div>
