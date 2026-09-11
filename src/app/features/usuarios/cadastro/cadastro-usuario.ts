@@ -4,12 +4,14 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UsuarioService } from '../../../core/usuario.service';
 import { Role } from '../../../shared/enum/role.enum';
 import { ROLE_LABELS } from '../../../shared/enum/role-labels';
+import { MascaraCpfDirective } from '../../../shared/directives/mascara-cpf.directive';
+import { MascaraTelefoneDirective } from '../../../shared/directives/mascara-telefone.directive';
 
 const PERFIS_DO_MVP = [Role.ADMIN, Role.COORD, Role.SOCIO];
 
 @Component({
   selector: 'app-cadastro-usuario',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, MascaraCpfDirective, MascaraTelefoneDirective],
   templateUrl: './cadastro-usuario.html',
   styleUrl: './cadastro-usuario.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -29,9 +31,10 @@ export class CadastroUsuario {
   form = this.fb.nonNullable.group({
     nomeCompleto: ['', [Validators.required, Validators.maxLength(180)]],
     email: ['', [Validators.required, Validators.email]],
+    cpf: ['', [Validators.required, Validators.pattern(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/)]],
     nivelPermissao: [Role.COORD, Validators.required],
     cargoFuncao: [''],
-    telefone: ['', Validators.pattern(/^$|\d{10,11}/)]
+    telefone: ['', Validators.pattern(/^$|^\(\d{2}\) \d{4,5}-\d{4}$/)]
   });
 
   cadastrar(): void {

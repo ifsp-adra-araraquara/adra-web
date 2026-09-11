@@ -20,6 +20,12 @@ const CHAVE_TOKEN = 'adra.token';
 const USER_KEY = 'usuario_logado';
 const MODULE_KEY = 'modulo_atual';
 
+// Rotas publicas de autenticacao: nao devem reagir a INITIAL_SESSION/TOKEN_REFRESHED
+// restaurando uma sessao antiga (ex: admin testando o link de convite/reset no
+// mesmo navegador). Sem isso, o app "rouba" o usuario de volta pro dashboard
+// antes da pagina de redefinir/convite conseguir renderizar.
+const ROTAS_PUBLICAS_AUTH = ['/login', '/esqueci-senha', '/redefinir-senha', '/convite'];
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
@@ -75,8 +81,17 @@ export class AuthService {
     }
 
     supabase.auth.onAuthStateChange((evento, sessao) => {
-     
+
       if (evento === 'PASSWORD_RECOVERY') return;
+
+      // Nao interfere em paginas publicas de auth (login, esqueci-senha,
+      // redefinir-senha, convite/:token): mesmo que exista uma sessao antiga
+      // restaurada (ex: admin ja logado no mesmo navegador), essas telas
+      // precisam renderizar normalmente sem ser "sequestradas" de volta pro
+      // dashboard.
+      const path = window.location.pathname;
+      const emRotaPublica = ROTAS_PUBLICAS_AUTH.some(rota => path.startsWith(rota));
+      if (emRotaPublica) return;
 
       const deveTrocar = evento === 'INITIAL_SESSION' || evento === 'TOKEN_REFRESHED';
       if (deveTrocar && sessao) {

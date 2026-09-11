@@ -1,0 +1,69 @@
+.senha-forca {
+    margin-top: 8px;
+    animation: fade-in 0.2s ease-out;
+}
+
+.senha-forca-barra {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 6px;
+}
+
+.senha-forca-segmento {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: #e2e8f0;
+    transition: background 0.25s ease, transform 0.2s ease;
+}
+
+.senha-forca-segmento.ativo {
+    transform: scaleY(1.4);
+}
+
+.senha-forca-label {
+    font-size: 12px;
+    font-weight: 600;
+    margin: 0 0 6px;
+    transition: color 0.25s ease;
+}
+
+.senha-forca-criterios {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px 12px;
+}
+
+.senha-forca-criterios li {
+    font-size: 11px;
+    color: #a0aec0;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.senha-forca-criterios li.atendido {
+    color: #38a169;
+}
+
+.senha-forca-icone {
+    font-size: 12px;
+    width: 12px;
+    display: inline-block;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
