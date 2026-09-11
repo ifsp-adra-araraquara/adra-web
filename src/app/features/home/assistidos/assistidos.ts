@@ -1,8 +1,8 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
@@ -10,9 +10,10 @@ import { environment } from '../../../../environments/environment';
 import { StatusGeral } from '../../../shared/enum/StatusGeral';
 
 import { AssistidoRequestDTO } from '../../../shared/models/assistido/AssistidoRequestDTO';
-
 import { AssistidoResponseDTO } from '../../../shared/models/assistido/AssistidoResponseDTO';
 import { AssistidoStatusRequestDTO } from '../../../shared/models/assistido/AssistidoStatusRequestDTO';
+import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO';
+import { PaginaResponse } from '../../../shared/models/PaginaResponse';
 
 import { ResponsavelRequestDTO } from '../../../shared/models/responsavel/ResponsavelRequestDTO';
 import { ResponsavelResponseDTO } from '../../../shared/models/responsavel/ResponsavelResponseDTO';
@@ -48,16 +49,35 @@ export class Assistidos implements OnInit {
 
   private readonly apiAssistidos = `${environment.apiUrl}/api/assistidos`;
   private readonly apiResponsaveis = `${environment.apiUrl}/api/responsaveis`;
+  private readonly apiTurmas = `${environment.apiUrl}/api/turmas`;
 
-  /* Listagem */
+  /* Listagem e Paginação */
   assistidos = signal<AssistidoResponseDTO[]>([]);
   carregando = signal(false);
+  pagina = signal(0);
+  readonly tamanho = 20;
+  totalPaginas = signal(0);
+  totalElementos = signal(0);
+
+  temAnterior = computed(() => this.pagina() > 0);
+  temProxima = computed(() => this.pagina() < this.totalPaginas() - 1);
+
+  /* Busca e Filtros */
+  termoBusca = signal('');
+  filtroTurma = signal<number | ''>('');
+  turmas = signal<TurmaResponseDTO[]>([]);
+  abaAtiva = signal<'todos' | 'ativos' | 'inativos' | 'acomp'>('todos');
+
+  private searchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  temFiltrosAtivos = computed(() => {
+    return !!this.termoBusca().trim() || this.filtroTurma() !== '' || (this.abaAtiva() !== 'todos' && this.abaAtiva() !== 'acomp');
+  });
 
   mostrarModalStatus = signal(false);
   assistidoSelecionadoStatus = signal<AssistidoResponseDTO | null>(null);
   novoStatusDesejado = signal<StatusGeral>(StatusGeral.INATIVO);
 
-  abaAtiva = signal<'todos' | 'ativos' | 'acomp'>('todos');
   abaVerAssistido = signal<'dados' | 'fam' | 'cham' | 'disc' | 'prn'>('dados');
 
   trocarAbaVerAssistido(aba: 'dados' | 'fam' | 'cham' | 'disc' | 'prn') {
@@ -70,27 +90,89 @@ export class Assistidos implements OnInit {
   novoResponsavelVinculado: ResponsavelPendente = this.responsavelVazio();
 
   /* Modal novo assistido */
-
   mostrarModalNovo = signal(false);
   salvando = signal(false);
   erroSalvar = signal<string | null>(null);
-
   novoAssistido: AssistidoRequestDTO = this.assistidoVazio();
-
   assistidoIdCriado = signal<number | null>(null);
 
-  /* Responsáveis já salvos e vinculados (não mais "pendentes" — são reais, já no backend) */
+  /* Modal editar assistido */
+  mostrarModalEditar = signal(false);
+  salvandoEdicao = signal(false);
+  erroSalvarEdicao = signal<string | null>(null);
+  assistidoEmEdicao = signal<AssistidoResponseDTO | null>(null);
+  formEdicaoAssistido: AssistidoRequestDTO = this.assistidoVazio();
+
+  /* Responsáveis já salvos e vinculados */
   responsaveisVinculados = signal<ResponsavelPendente[]>([]);
   salvandoResponsavel = signal(false);
   erroResponsavel = signal<string | null>(null);
 
   /* Sub-fluxo de responsáveis dentro do modal */
-  responsaveisPendentes = signal<ResponsavelPendente[]>([]); // ← precisa vir ANTES
-
-  novoResponsavel: ResponsavelPendente = this.responsavelVazio(); // ← agora funciona
+  responsaveisPendentes = signal<ResponsavelPendente[]>([]);
+  novoResponsavel: ResponsavelPendente = this.responsavelVazio();
 
   ngOnInit(): void {
+    this.carregarTurmas();
     this.carregarAssistidos();
+  }
+
+  carregarTurmas(): void {
+    this.http.get<TurmaResponseDTO[]>(this.apiTurmas).subscribe({
+      next: (lista) => {
+        // Exibir turmas disponíveis para vinculação
+        this.turmas.set(lista);
+      },
+      error: (erro) => console.error('Erro ao carregar turmas:', erro),
+    });
+  }
+
+  onBuscaChange(valor: string): void {
+    this.termoBusca.set(valor);
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    this.searchTimeout = setTimeout(() => {
+      this.pagina.set(0);
+      this.carregarAssistidos();
+    }, 350);
+  }
+
+  onFiltroTurmaChange(valor: any): void {
+    const num = valor === '' || valor === null ? '' : Number(valor);
+    this.filtroTurma.set(num);
+    this.pagina.set(0);
+    this.carregarAssistidos();
+  }
+
+  trocarAbaStatus(aba: 'todos' | 'ativos' | 'inativos' | 'acomp'): void {
+    this.abaAtiva.set(aba);
+    if (aba !== 'acomp') {
+      this.pagina.set(0);
+      this.carregarAssistidos();
+    }
+  }
+
+  limparFiltros(): void {
+    this.termoBusca.set('');
+    this.filtroTurma.set('');
+    this.abaAtiva.set('todos');
+    this.pagina.set(0);
+    this.carregarAssistidos();
+  }
+
+  paginaAnterior(): void {
+    if (this.temAnterior()) {
+      this.pagina.update((p) => p - 1);
+      this.carregarAssistidos();
+    }
+  }
+
+  proximaPagina(): void {
+    if (this.temProxima()) {
+      this.pagina.update((p) => p + 1);
+      this.carregarAssistidos();
+    }
   }
 
   abrirFormNovoResponsavelVinculado(): void {
@@ -112,36 +194,45 @@ export class Assistidos implements OnInit {
 
   /*
    * ============================================================
-   * LISTAR
+   * LISTAR COM FILTROS E PAGINAÇÃO (CA-A03.1 e CA-A03.2)
    * ============================================================
    */
   carregarAssistidos(): void {
     this.carregando.set(true);
 
-    this.http.get<AssistidoResponseDTO[]>(this.apiAssistidos).subscribe({
-      next: (lista) => {
-        this.assistidos.set(lista);
+    let params = new HttpParams()
+      .set('pagina', this.pagina().toString())
+      .set('tamanho', this.tamanho.toString());
+
+    const busca = this.termoBusca().trim();
+    if (busca) {
+      params = params.set('busca', busca);
+    }
+
+    const turmaId = this.filtroTurma();
+    if (turmaId !== '') {
+      params = params.set('turmaId', turmaId.toString());
+    }
+
+    const aba = this.abaAtiva();
+    if (aba === 'ativos') {
+      params = params.set('status', StatusGeral.ATIVO);
+    } else if (aba === 'inativos') {
+      params = params.set('status', StatusGeral.INATIVO);
+    }
+
+    this.http.get<PaginaResponse<AssistidoResponseDTO>>(this.apiAssistidos, { params }).subscribe({
+      next: (resp) => {
+        this.assistidos.set(resp.conteudo);
+        this.totalPaginas.set(resp.totalPaginas);
+        this.totalElementos.set(resp.totalElementos);
         this.carregando.set(false);
       },
-
       error: (erro) => {
         console.error('Erro ao carregar assistidos:', erro);
         this.carregando.set(false);
       },
     });
-  }
-
-  get assistidosFiltrados(): AssistidoResponseDTO[] {
-    const lista = this.assistidos();
-
-    if (this.abaAtiva() === 'ativos') {
-      return lista.filter((a) => a.status === StatusGeral.ATIVO);
-    }
-
-    // 'acomp' (em acompanhamento) depende de dado clínico/sociopedagógico
-    // que ainda não existe no AssistidoResponseDTO — fica igual a 'todos'
-    // até esse endpoint existir.
-    return lista;
   }
 
   calcularIdade(dataNascimento: string): number {
@@ -173,6 +264,7 @@ export class Assistidos implements OnInit {
       dataEntrada: '',
       necessidadesEspecificas: '',
       observacoes: '',
+      turmaId: null,
       confirmarApesarDeDuplicidade: false,
     };
   }
@@ -205,6 +297,77 @@ export class Assistidos implements OnInit {
 
   fecharModalNovoAssistido(): void {
     this.mostrarModalNovo.set(false);
+  }
+
+  /*
+   * ============================================================
+   * MODAL: EDITAR ASSISTIDO (Ação por linha)
+   * ============================================================
+   */
+  abrirModalEditarAssistido(assistido: AssistidoResponseDTO): void {
+    this.assistidoEmEdicao.set(assistido);
+    this.formEdicaoAssistido = {
+      nomeCompleto: assistido.nomeCompleto,
+      dataNascimento: assistido.dataNascimento,
+      cpf: assistido.cpf ?? '',
+      dataEntrada: assistido.dataEntrada ?? '',
+      necessidadesEspecificas: assistido.necessidadesEspecificas ?? '',
+      observacoes: assistido.observacoes ?? '',
+      turmaId: assistido.turmaId ?? null,
+      confirmarApesarDeDuplicidade: false,
+    };
+    this.erroSalvarEdicao.set(null);
+    this.mostrarModalEditar.set(true);
+  }
+
+  fecharModalEditar(): void {
+    this.mostrarModalEditar.set(false);
+    this.assistidoEmEdicao.set(null);
+    this.erroSalvarEdicao.set(null);
+  }
+
+  atualizarCampoEdicaoAssistido(campo: keyof AssistidoRequestDTO, valor: any): void {
+    const processado = campo === 'turmaId' ? (valor === '' || valor === null ? null : Number(valor)) : valor;
+    this.formEdicaoAssistido = { ...this.formEdicaoAssistido, [campo]: processado };
+  }
+
+  async salvarEdicaoAssistido(): Promise<void> {
+    const assistido = this.assistidoEmEdicao();
+    if (!assistido || this.salvandoEdicao()) {
+      return;
+    }
+
+    if (!this.formEdicaoAssistido.nomeCompleto.trim() || !this.formEdicaoAssistido.dataNascimento) {
+      this.erroSalvarEdicao.set('Preencha nome completo e data de nascimento.');
+      return;
+    }
+
+    this.salvandoEdicao.set(true);
+    this.erroSalvarEdicao.set(null);
+
+    try {
+      const payload: AssistidoRequestDTO = {
+        ...this.formEdicaoAssistido,
+        turmaId: this.formEdicaoAssistido.turmaId ? Number(this.formEdicaoAssistido.turmaId) : null,
+      };
+
+      await firstValueFrom(
+        this.http.put<AssistidoResponseDTO>(
+          `${this.apiAssistidos}/${assistido.assistidoId}`,
+          payload,
+        ),
+      );
+
+      this.salvandoEdicao.set(false);
+      this.fecharModalEditar();
+      this.carregarAssistidos();
+    } catch (erro: any) {
+      console.error('Erro ao atualizar assistido:', erro);
+      this.erroSalvarEdicao.set(
+        erro?.error?.message ?? erro?.message ?? 'Não foi possível salvar as alterações.',
+      );
+      this.salvandoEdicao.set(false);
+    }
   }
 
   atualizarCampoResponsavel(campo: keyof ResponsavelPendente, valor: string | boolean): void {

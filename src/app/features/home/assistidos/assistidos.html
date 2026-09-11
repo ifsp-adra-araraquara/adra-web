@@ -26,39 +26,43 @@
   </div>
 
   <div class="tabs">
-    <button class="tab" [class.active]="abaAtiva() === 'todos'" (click)="abaAtiva.set('todos')">
-      Todos <span class="count">{{ assistidos().length }}</span>
+    <button class="tab" [class.active]="abaAtiva() === 'todos'" (click)="trocarAbaStatus('todos')">
+      Todos <span class="count">{{ totalElementos() }}</span>
     </button>
 
-    <button class="tab" [class.active]="abaAtiva() === 'ativos'" (click)="abaAtiva.set('ativos')">
-      Ativos <span class="count">{{ assistidosFiltrados.length }}</span>
+    <button class="tab" [class.active]="abaAtiva() === 'ativos'" (click)="trocarAbaStatus('ativos')">
+      Ativos
     </button>
 
-    <button class="tab" [class.active]="abaAtiva() === 'acomp'" (click)="abaAtiva.set('acomp')">
+    <button class="tab" [class.active]="abaAtiva() === 'inativos'" (click)="trocarAbaStatus('inativos')">
+      Inativos
+    </button>
+
+    <button class="tab" [class.active]="abaAtiva() === 'acomp'" (click)="trocarAbaStatus('acomp')">
       Em acompanhamento
     </button>
   </div>
 
   <div class="toolbar" style="justify-content: space-between; flex-wrap: nowrap">
     <div style="display: flex; gap: 8px; flex: 1; flex-wrap: nowrap; min-width: 0">
-      <input class="input" placeholder="Buscar por nome ou CPF…" style="flex: 1; min-width: 0" />
+      <input
+        class="input"
+        placeholder="Buscar por nome…"
+        style="flex: 1; min-width: 0"
+        [ngModel]="termoBusca()"
+        (ngModelChange)="onBuscaChange($event)"
+      />
 
       <select
         class="select"
-        disabled
         style="flex-shrink: 0; width: auto"
-        title="Ainda não há oficinas cadastradas no sistema"
+        [ngModel]="filtroTurma()"
+        (ngModelChange)="onFiltroTurmaChange($event)"
       >
-        <option>Todas as oficinas</option>
-      </select>
-
-      <select
-        class="select"
-        disabled
-        style="flex-shrink: 0; width: auto"
-        title="Ainda não há turmas cadastradas no sistema"
-      >
-        <option>Todas as turmas</option>
+        <option value="">Todas as turmas</option>
+        @for (turma of turmas(); track turma.turmaId) {
+          <option [value]="turma.turmaId">{{ turma.nomeTurma }}</option>
+        }
       </select>
     </div>
   </div>
@@ -79,6 +83,7 @@
               <th>Nome</th>
               <th>Idade</th>
               <th>CPF</th>
+              <th>Turma</th>
               <th>Status</th>
               <th>Ações</th>
             </tr>
@@ -87,18 +92,28 @@
           <tbody>
             @if (carregando()) {
               <tr>
-                <td colspan="5" class="muted">Carregando…</td>
+                <td colspan="6" class="muted" style="text-align: center; padding: 24px;">Carregando assistidos…</td>
               </tr>
-            } @else if (assistidosFiltrados.length === 0) {
+            } @else if (assistidos().length === 0) {
               <tr>
-                <td colspan="5" class="muted">Nenhum assistido encontrado.</td>
+                <td colspan="6" style="text-align: center; padding: 32px 16px;">
+                  @if (temFiltrosAtivos()) {
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                      <p class="muted" style="margin: 0;">Nenhum assistido encontrado para os filtros aplicados.</p>
+                      <button type="button" class="btn btn-sm btn-ghost" (click)="limparFiltros()">Limpar filtros</button>
+                    </div>
+                  } @else {
+                    <p class="muted" style="margin: 0;">Nenhum assistido cadastrado.</p>
+                  }
+                </td>
               </tr>
             } @else {
-              @for (assistido of assistidosFiltrados; track assistido.assistidoId) {
+              @for (assistido of assistidos(); track assistido.assistidoId) {
                 <tr>
                   <td class="cell-name">{{ assistido.nomeCompleto }}</td>
-                  <td>{{ calcularIdade(assistido.dataNascimento) }}</td>
+                  <td>{{ calcularIdade(assistido.dataNascimento) }} anos</td>
                   <td>{{ assistido.cpf || '—' }}</td>
+                  <td>{{ assistido.nomeTurma || 'Sem turma' }}</td>
 
                   <td>
                     @if (assistido.status === StatusGeral.ATIVO) {
@@ -108,9 +123,20 @@
                     }
                   </td>
 
-                  <td></td>
                   <td>
                     <div class="t-actions">
+                      <!-- Editar (ação de editar por linha) -->
+                      <button
+                        type="button"
+                        title="Editar assistido"
+                        (click)="abrirModalEditarAssistido(assistido)"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                      </button>
+
                       <!-- Visualizar -->
                       <button
                         type="button"
@@ -148,6 +174,31 @@
             }
           </tbody>
         </table>
+
+        @if (totalPaginas() > 1) {
+          <div class="paginacao" role="navigation" aria-label="Paginação" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-top: 1px solid var(--border-color, #e5e7eb);">
+            <button
+              type="button"
+              class="btn btn-sm btn-ghost"
+              [disabled]="!temAnterior()"
+              (click)="paginaAnterior()"
+              aria-label="Página anterior"
+            >&#8592; Anterior</button>
+
+            <span class="pagina-info" style="font-size: 13px; color: var(--muted-color, #6b7280);">
+              Página {{ pagina() + 1 }} de {{ totalPaginas() }}
+              <span class="pagina-total">({{ totalElementos() }} assistidos)</span>
+            </span>
+
+            <button
+              type="button"
+              class="btn btn-sm btn-ghost"
+              [disabled]="!temProxima()"
+              (click)="proximaPagina()"
+              aria-label="Próxima página"
+            >Próxima &#8594;</button>
+          </div>
+        }
       </div>
     </div>
   }
@@ -191,7 +242,7 @@
           />
         </div>
 
-        <div class="form-row">
+        <div class="form-row-3">
           <div class="field">
             <label>Data de nascimento</label>
             <input
@@ -210,6 +261,20 @@
               [ngModel]="novoAssistido.cpf"
               (ngModelChange)="atualizarCampoAssistido('cpf', $event)"
             />
+          </div>
+
+          <div class="field">
+            <label>Turma</label>
+            <select
+              class="select"
+              [ngModel]="novoAssistido.turmaId"
+              (ngModelChange)="atualizarCampoAssistido('turmaId', $event)"
+            >
+              <option [ngValue]="null">Sem turma</option>
+              @for (turma of turmas(); track turma.turmaId) {
+                <option [ngValue]="turma.turmaId">{{ turma.nomeTurma }}</option>
+              }
+            </select>
           </div>
         </div>
 
@@ -856,4 +921,112 @@
     </div>
   </div>
 }
+
+<!-- ============================================================
+     MODAL: EDITAR ASSISTIDO (Ação por linha)
+     ============================================================ -->
+
+@if (mostrarModalEditar()) {
+  <div class="modal-overlay" (click)="fecharModalEditar()">
+    <div class="modal wide" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div class="mh-ico ico-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+            <path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>
+        </div>
+        <div style="flex: 1;">
+          <h2>Editar assistido</h2>
+          <p class="cell-sub" style="margin: 0;">Atualize os dados cadastrais e o vínculo do assistido.</p>
+        </div>
+        <button type="button" class="modal-close" (click)="fecharModalEditar()" aria-label="Fechar">
+          ✕
+        </button>
+      </div>
+
+      <div class="modal-body">
+        @if (erroSalvarEdicao()) {
+          <div class="notice notice-error">{{ erroSalvarEdicao() }}</div>
+        }
+
+        <p class="form-sec-title">Dados pessoais</p>
+
+        <div class="field">
+          <label>Nome completo</label>
+          <input
+            class="input"
+            placeholder="Nome do assistido"
+            [ngModel]="formEdicaoAssistido.nomeCompleto"
+            (ngModelChange)="atualizarCampoEdicaoAssistido('nomeCompleto', $event)"
+          />
+        </div>
+
+        <div class="form-row-3">
+          <div class="field">
+            <label>Data de nascimento</label>
+            <input
+              class="input"
+              type="date"
+              [ngModel]="formEdicaoAssistido.dataNascimento"
+              (ngModelChange)="atualizarCampoEdicaoAssistido('dataNascimento', $event)"
+            />
+          </div>
+
+          <div class="field">
+            <label>CPF</label>
+            <input
+              class="input"
+              placeholder="000.000.000-00"
+              [ngModel]="formEdicaoAssistido.cpf"
+              (ngModelChange)="atualizarCampoEdicaoAssistido('cpf', $event)"
+            />
+          </div>
+
+          <div class="field">
+            <label>Turma</label>
+            <select
+              class="select"
+              [ngModel]="formEdicaoAssistido.turmaId"
+              (ngModelChange)="atualizarCampoEdicaoAssistido('turmaId', $event)"
+            >
+              <option [ngValue]="null">Sem turma</option>
+              @for (turma of turmas(); track turma.turmaId) {
+                <option [ngValue]="turma.turmaId">{{ turma.nomeTurma }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Necessidades específicas</label>
+          <input
+            class="input"
+            placeholder="Ex.: TEA, TDAH, mobilidade reduzida…"
+            [ngModel]="formEdicaoAssistido.necessidadesEspecificas"
+            (ngModelChange)="atualizarCampoEdicaoAssistido('necessidadesEspecificas', $event)"
+          />
+        </div>
+
+        <div class="field">
+          <label>Observações gerais</label>
+          <textarea
+            placeholder="Informações relevantes para o acompanhamento"
+            [ngModel]="formEdicaoAssistido.observacoes"
+            (ngModelChange)="atualizarCampoEdicaoAssistido('observacoes', $event)"
+          >
+          </textarea>
+        </div>
+      </div>
+
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" (click)="fecharModalEditar()">Cancelar</button>
+        <button type="button" class="btn" [disabled]="salvandoEdicao()" (click)="salvarEdicaoAssistido()">
+          {{ salvandoEdicao() ? 'Salvando...' : 'Salvar alterações' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
 

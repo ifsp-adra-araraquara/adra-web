@@ -5,5 +5,6 @@ export interface AssistidoRequestDTO {
   dataEntrada?: string;
   necessidadesEspecificas?: string;
   observacoes?: string;
+  turmaId?: number | null;
   confirmarApesarDeDuplicidade: boolean;
 }
