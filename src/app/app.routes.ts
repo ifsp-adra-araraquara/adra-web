@@ -13,6 +13,7 @@ import { roleGuard } from './core/guards/role.guard';
 import { Role } from './shared/enum/role.enum';
 import { Assistidos } from './features/home/assistidos/assistidos';
 import { Turmas } from './features/home/turma/turma';
+import { Oficinas } from './features/home/oficinas/oficinas';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -55,6 +56,12 @@ export const routes: Routes = [
         path: 'turmas', 
         component: Turmas,
         data: {  roles: [Role.COORD, Role.SOCIO]  },
+        canActivate: [roleGuard]
+      },
+      {
+        path: 'oficinas',
+        component: Oficinas,
+        data: { roles: [Role.COORD, Role.SOCIO] },
         canActivate: [roleGuard]
       },
 
