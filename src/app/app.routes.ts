@@ -12,6 +12,7 @@ import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
 import { Role } from './shared/enum/role.enum';
 import { Assistidos } from './features/home/assistidos/assistidos';
+import { Responsaveis } from './features/home/responsaveis/responsaveis';
 import { Turmas } from './features/home/turma/turma';
 import { Oficinas } from './features/home/oficinas/oficinas';
 
@@ -64,7 +65,12 @@ export const routes: Routes = [
         data: { roles: [Role.COORD, Role.SOCIO] },
         canActivate: [roleGuard]
       },
-
+      {
+        path: 'responsaveis',
+        component: Responsaveis,
+        data: { roles: [Role.COORD, Role.SOCIO] },
+        canActivate: [roleGuard]
+      },
     ]
   }
 ];
