@@ -18,6 +18,7 @@ export class Sidebar {
   private secoesPorModulo: Record<string, string> = {
     DASHBOARD: 'Principal',
     ASSISTIDOS: 'Gestão',
+    RESPONSAVEIS: 'Gestão',
     OFICINAS: 'Gestão',
     TURMAS: 'Gestão',
     CHAMADA: 'Pedagógico',

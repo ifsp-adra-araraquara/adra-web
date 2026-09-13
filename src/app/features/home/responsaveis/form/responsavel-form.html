@@ -1,0 +1,121 @@
+<div>
+  <!-- Etapa 1: busca por CPF -->
+  <div *ngIf="etapa() === 'buscaCpf' && !responsavelEncontrado()">
+    <div class="field">
+      <label for="cpfBusca">CPF do responsável</label>
+      <input
+        id="cpfBusca"
+        class="input"
+        type="text"
+        maxlength="14"
+        placeholder="000.000.000-00"
+        [value]="cpfBusca.value"
+        (input)="onCpfBuscaInput($any($event.target).value)"
+      />
+      <div *ngIf="cpfBusca.touched && cpfBusca.invalid" class="hint" style="color: var(--red-400)">
+        CPF inválido.
+      </div>
+    </div>
+
+    <div class="modal-foot" style="padding: 0; border: none; justify-content: flex-start;">
+      <button type="button" class="btn" (click)="buscarPorCpf()" [disabled]="buscandoCpf()">
+        {{ buscandoCpf() ? 'Buscando...' : 'Buscar' }}
+      </button>
+      <button type="button" class="btn btn-ghost" (click)="cancelar()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Responsável já existe: oferece reaproveitar (CA-A01.2) -->
+  <div *ngIf="responsavelEncontrado() as existente" class="card card-pad">
+    <div class="notice notice-info">
+      <span>Já existe um responsável cadastrado com este CPF.</span>
+    </div>
+
+    <p class="cell-name">{{ existente.nomeCompleto }}</p>
+    <p class="cell-sub mt-s">{{ existente.telefone || 'Sem telefone cadastrado' }}</p>
+
+    <div class="modal-foot" style="padding: 18px 0 0; border: none; justify-content: flex-start;">
+      <button type="button" class="btn" (click)="usarResponsavelEncontrado()">Usar este responsável</button>
+      <button type="button" class="btn btn-ghost" (click)="buscarOutroCpf()">Buscar outro CPF</button>
+    </div>
+  </div>
+
+  <!-- Etapa 2: formulário de cadastro/edição -->
+  <form *ngIf="etapa() === 'formulario'" [formGroup]="form" (ngSubmit)="salvar()">
+    <div *ngIf="erro()" class="notice notice-amber">
+      <span>{{ erro() }}</span>
+    </div>
+
+    <div class="field">
+      <label for="nomeCompleto">Nome completo</label>
+      <input id="nomeCompleto" class="input" type="text" formControlName="nomeCompleto" />
+      <div *ngIf="errosPorCampo()['nomeCompleto']" class="hint" style="color: var(--red-400)">
+        {{ errosPorCampo()['nomeCompleto'] }}
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label for="dataNascimento">Data de nascimento</label>
+        <input
+          id="dataNascimento"
+          class="input"
+          type="date"
+          formControlName="dataNascimento"
+          [max]="dataMaxima"
+        />
+        <div *ngIf="errosPorCampo()['dataNascimento']" class="hint" style="color: var(--red-400)">
+          {{ errosPorCampo()['dataNascimento'] }}
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="cpf">CPF</label>
+        <input
+          id="cpf"
+          class="input"
+          type="text"
+          maxlength="14"
+          [value]="form.controls.cpf.value"
+          (input)="onCpfFormInput($any($event.target).value)"
+          [readonly]="modoEdicao()"
+        />
+        <div *ngIf="form.controls.cpf.touched && form.controls.cpf.invalid" class="hint" style="color: var(--red-400)">
+          CPF inválido.
+        </div>
+        <div *ngIf="errosPorCampo()['cpf']" class="hint" style="color: var(--red-400)">
+          {{ errosPorCampo()['cpf'] }}
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label for="telefone">Telefone</label>
+        <input id="telefone" class="input" type="text" formControlName="telefone" />
+      </div>
+
+      <div class="field">
+        <label for="email">E-mail</label>
+        <input id="email" class="input" type="email" formControlName="email" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="endereco">Endereço</label>
+      <textarea id="endereco" class="input" formControlName="endereco"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="observacoes">Observações</label>
+      <textarea id="observacoes" class="input" formControlName="observacoes"></textarea>
+    </div>
+
+    <div class="modal-foot" style="padding: 18px 0 0; border: none; justify-content: flex-start;">
+      <button type="submit" class="btn" [disabled]="salvando()">
+        {{ salvando() ? 'Salvando...' : (modoEdicao() ? 'Salvar alterações' : 'Cadastrar') }}
+      </button>
+      <button type="button" class="btn btn-ghost" (click)="cancelar()">Cancelar</button>
+    </div>
+  </form>
+</div>

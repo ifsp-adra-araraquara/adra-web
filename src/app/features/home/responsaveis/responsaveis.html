@@ -1,0 +1,54 @@
+<div>
+  <div class="card-head" style="border: none; padding: 0 0 18px;">
+    <h1>Responsáveis</h1>
+    <div class="right">
+      <button type="button" class="btn" (click)="abrirNovo()">Novo responsável</button>
+    </div>
+  </div>
+
+  <div *ngIf="carregando()" class="muted">Carregando...</div>
+
+  <div class="card" *ngIf="!carregando()">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>CPF</th>
+            <th>Telefone</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let responsavel of responsaveis()">
+            <td class="cell-name">{{ responsavel.nomeCompleto }}</td>
+            <td>{{ responsavel.cpf }}</td>
+            <td>{{ responsavel.telefone || '-' }}</td>
+            <td>
+              <div class="t-actions">
+                <button type="button" (click)="abrirEdicao(responsavel)">Editar</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modal-overlay" [class.open]="mostrarModal()">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>{{ responsavelSelecionado() ? 'Editar responsável' : 'Novo responsável' }}</h2>
+        <button type="button" class="modal-close" (click)="aoCancelar()">×</button>
+      </div>
+      <div class="modal-body">
+        <app-responsavel-form
+          *ngIf="mostrarModal()"
+          [responsavelParaEditar]="responsavelSelecionado()"
+          (salvo)="aoSalvar()"
+          (cancelado)="aoCancelar()"
+        ></app-responsavel-form>
+      </div>
+    </div>
+  </div>
+</div>
