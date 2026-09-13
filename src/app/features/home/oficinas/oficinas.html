@@ -1,5 +1,5 @@
 <!-- ============================================================
-     PÁGINA: OFICINAS (US-13)
+     PÁGINA: OFICINAS (US-13 + US-14)
      ============================================================ -->
 <section class="page" id="page-oficinas">
   <div
@@ -59,21 +59,22 @@
             <th>Nome da oficina</th>
             <th>Oficineiro responsável</th>
             <th>Status</th>
+            <th style="width: 120px">Ações</th>
           </tr>
         </thead>
 
         <tbody>
           @if (carregando()) {
             <tr>
-              <td colspan="3" class="muted">Carregando…</td>
+              <td colspan="4" class="muted">Carregando…</td>
             </tr>
           } @else if (erroListar()) {
             <tr>
-              <td colspan="3" class="muted">{{ erroListar() }}</td>
+              <td colspan="4" class="muted">{{ erroListar() }}</td>
             </tr>
           } @else if (oficinas().length === 0) {
             <tr>
-              <td colspan="3" class="muted">Nenhuma oficina encontrada.</td>
+              <td colspan="4" class="muted">Nenhuma oficina encontrada.</td>
             </tr>
           } @else {
             @for (oficina of oficinas(); track oficina.oficinaId) {
@@ -87,6 +88,53 @@
                     <span class="badge b-gray">Inativa</span>
                   }
                 </td>
+                <td>
+                  <div class="actions" style="display: flex; gap: 6px">
+                    <!-- Botão Editar (apenas se ativa) -->
+                    @if (oficina.ativo) {
+                      <button
+                        class="btn-icon"
+                        title="Editar"
+                        (click)="abrirModalEdicao(oficina)"
+                        style="color: #3b82f6"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                      </button>
+
+                      <!-- Botão Inativar (apenas se ativa) -->
+                      <button
+                        class="btn-icon"
+                        title="Inativar"
+                        (click)="abrirConfirmacaoInativacao(oficina)"
+                        style="color: #ef4444"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="8" y1="12" x2="16" y2="12" />
+                        </svg>
+                      </button>
+                    }
+
+                    <!-- Botão Reativar (apenas se inativa) -->
+                    @if (!oficina.ativo) {
+                      <button
+                        class="btn-icon"
+                        title="Reativar"
+                        [disabled]="reativando()"
+                        (click)="abrirConfirmacaoReativacao(oficina)"
+                        style="color: #10b981"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <circle cx="12" cy="12" r="10" />
+                          <polyline points="12 8 12 12 14 14" />
+                        </svg>
+                      </button>
+                    }
+                  </div>
+                </td>
               </tr>
             }
           }
@@ -97,19 +145,26 @@
 </section>
 
 <!-- ============================================================
-     MODAL: NOVA OFICINA
+     MODAL: NOVA OFICINA / EDITAR OFICINA (US-13 + US-14)
      ============================================================ -->
 @if (mostrarModalForm()) {
   <div class="modal-overlay" (click)="fecharModalForm()">
     <div class="modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
       <div class="modal-head">
-        <div class="mh-ico ico-green">
+        <div class="mh-ico" [class.ico-green]="!modoEdicao()" [class.ico-blue]="modoEdicao()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 20h9" />
-            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+            @if (!modoEdicao()) {
+              <!-- Ícone de nova oficina -->
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+            } @else {
+              <!-- Ícone de edição -->
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            }
           </svg>
         </div>
-        <h2>Nova oficina</h2>
+        <h2>{{ modoEdicao() ? 'Editar oficina' : 'Nova oficina' }}</h2>
         <button class="modal-close" (click)="fecharModalForm()" aria-label="Fechar">✕</button>
       </div>
 
@@ -149,7 +204,105 @@
       <div class="modal-foot">
         <button class="btn btn-ghost" (click)="fecharModalForm()">Cancelar</button>
         <button class="btn" [disabled]="salvando()" (click)="salvarOficina()">
-          {{ salvando() ? 'Salvando...' : 'Salvar oficina' }}
+          {{ salvando() ? 'Salvando...' : (modoEdicao() ? 'Atualizar oficina' : 'Salvar oficina') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ============================================================
+     MODAL: CONFIRMAÇÃO DE INATIVAÇÃO (US-14, CA-14.3)
+     ============================================================ -->
+@if (mostrarConfirmacaoInativacao()) {
+  <div class="modal-overlay" (click)="fecharConfirmacaoInativacao()">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div class="mh-ico ico-red">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+        </div>
+        <h2>Inativar oficina</h2>
+        <button class="modal-close" (click)="fecharConfirmacaoInativacao()" aria-label="Fechar">✕</button>
+      </div>
+
+      <div class="modal-body">
+        @if (erroInativar()) {
+          <div class="notice notice-error">{{ erroInativar() }}</div>
+        } @else {
+          <p>
+            Tem certeza que deseja <strong>inativar</strong> a oficina
+            <strong>"{{ oficinaSendoInativada()?.nomeOficina }}"</strong>?
+          </p>
+          <p style="color: #6b7280; font-size: 13px; margin-top: 12px">
+            A oficina será marcada como inativa e não aparecerá em seletores, mas poderá ser reativada a qualquer
+            momento.
+          </p>
+        }
+      </div>
+
+      <div class="modal-foot">
+        <button class="btn btn-ghost" (click)="fecharConfirmacaoInativacao()" [disabled]="inativando()">
+          Cancelar
+        </button>
+        <button
+          class="btn btn-danger"
+          [disabled]="inativando()"
+          (click)="confirmarInativacao()"
+          style="background-color: #ef4444"
+        >
+          {{ inativando() ? 'Inativando...' : 'Inativar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ============================================================
+     MODAL: CONFIRMAÇÃO DE REATIVAÇÃO (US-14)
+     ============================================================ -->
+@if (mostrarConfirmacaoReativacao()) {
+  <div class="modal-overlay" (click)="fecharConfirmacaoReativacao()">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div class="mh-ico ico-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 8 12 12 14 14" />
+          </svg>
+        </div>
+        <h2>Reativar oficina</h2>
+        <button class="modal-close" (click)="fecharConfirmacaoReativacao()" aria-label="Fechar">✕</button>
+      </div>
+
+      <div class="modal-body">
+        @if (erroReativar()) {
+          <div class="notice notice-error">{{ erroReativar() }}</div>
+        } @else {
+          <p>
+            Tem certeza que deseja <strong>reativar</strong> a oficina
+            <strong>"{{ oficinaSendoReativada()?.nomeOficina }}"</strong>?
+          </p>
+          <p style="color: #6b7280; font-size: 13px; margin-top: 12px">
+            A oficina voltará a aparecer em seletores e poderá ser utilizada normalmente.
+          </p>
+        }
+      </div>
+
+      <div class="modal-foot">
+        <button class="btn btn-ghost" (click)="fecharConfirmacaoReativacao()" [disabled]="reativando()">
+          Cancelar
+        </button>
+        <button
+          class="btn"
+          [disabled]="reativando()"
+          (click)="confirmarReativacao()"
+          style="background-color: #10b981"
+        >
+          {{ reativando() ? 'Reativando...' : 'Reativar' }}
         </button>
       </div>
     </div>

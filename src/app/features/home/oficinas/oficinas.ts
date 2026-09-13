@@ -100,11 +100,15 @@ export class Oficinas implements OnInit {
     this.formOficina = this.oficinaVazia();
     this.erroSalvar.set(null);
     this.alertaDuplicidade.set(false);
+    this.modoEdicao.set(false);
+    this.oficinaSendoEditada.set(null);
     this.mostrarModalForm.set(true);
   }
 
   fecharModalForm(): void {
     this.mostrarModalForm.set(false);
+    this.modoEdicao.set(false);
+    this.oficinaSendoEditada.set(null);
   }
 
   atualizarCampoOficina(campo: keyof OficinaRequestDTO, valor: string): void {
@@ -162,7 +166,20 @@ export class Oficinas implements OnInit {
     this.erroSalvar.set(null);
 
     try {
-      await firstValueFrom(this.http.post<OficinaResponseDTO>(this.apiOficinas, this.formOficina));
+      if (this.modoEdicao() && this.oficinaSendoEditada()) {
+        // Modo edição: PUT
+        await firstValueFrom(
+          this.http.put<OficinaResponseDTO>(
+            `${this.apiOficinas}/${this.oficinaSendoEditada()!.oficinaId}`,
+            this.formOficina
+          )
+        );
+      } else {
+        // Modo novo: POST
+        await firstValueFrom(
+          this.http.post<OficinaResponseDTO>(this.apiOficinas, this.formOficina)
+        );
+      }
 
       this.salvando.set(false);
       this.fecharModalForm();
@@ -173,6 +190,118 @@ export class Oficinas implements OnInit {
         erro?.error?.message ?? 'Não foi possível salvar a oficina. Verifique os dados e tente novamente.',
       );
       this.salvando.set(false);
+    }
+  }
+
+  /* ============================================================
+   * MODAL: EDITAR OFICINA (US-14)
+   * ============================================================ */
+  modoEdicao = signal(false);
+  oficinaSendoEditada = signal<OficinaResponseDTO | null>(null);
+
+  abrirModalEdicao(oficina: OficinaResponseDTO): void {
+    this.modoEdicao.set(true);
+    this.oficinaSendoEditada.set(oficina);
+    this.formOficina = {
+      nomeOficina: oficina.nomeOficina,
+      oficineiroResponsavel: oficina.oficineiroResponsavel,
+    };
+    this.erroSalvar.set(null);
+    this.alertaDuplicidade.set(false);
+    this.mostrarModalForm.set(true);
+  }
+
+  /* ============================================================
+   * MODAL: CONFIRMAÇÃO DE INATIVAÇÃO (US-14)
+   * ============================================================ */
+  mostrarConfirmacaoInativacao = signal(false);
+  oficinaSendoInativada = signal<OficinaResponseDTO | null>(null);
+  inativando = signal(false);
+  erroInativar = signal<string | null>(null);
+
+  abrirConfirmacaoInativacao(oficina: OficinaResponseDTO): void {
+    this.oficinaSendoInativada.set(oficina);
+    this.erroInativar.set(null);
+    this.mostrarConfirmacaoInativacao.set(true);
+  }
+
+  fecharConfirmacaoInativacao(): void {
+    this.mostrarConfirmacaoInativacao.set(false);
+    this.oficinaSendoInativada.set(null);
+  }
+
+  async confirmarInativacao(): Promise<void> {
+    if (this.inativando() || !this.oficinaSendoInativada()) {
+      return;
+    }
+
+    this.inativando.set(true);
+    this.erroInativar.set(null);
+
+    try {
+      await firstValueFrom(
+        this.http.patch<OficinaResponseDTO>(
+          `${this.apiOficinas}/${this.oficinaSendoInativada()!.oficinaId}/inativar`,
+          {}
+        )
+      );
+
+      this.inativando.set(false);
+      this.fecharConfirmacaoInativacao();
+      this.carregarOficinas();
+    } catch (erro: any) {
+      console.error('Erro ao inativar oficina:', erro);
+      this.erroInativar.set(
+        erro?.error?.message ?? 'Não foi possível inativar a oficina. Tente novamente.'
+      );
+      this.inativando.set(false);
+    }
+  }
+
+  /* ============================================================
+   * MODAL: CONFIRMAÇÃO DE REATIVAÇÃO (US-14)
+   * ============================================================ */
+  mostrarConfirmacaoReativacao = signal(false);
+  oficinaSendoReativada = signal<OficinaResponseDTO | null>(null);
+  reativando = signal(false);
+  erroReativar = signal<string | null>(null);
+
+  abrirConfirmacaoReativacao(oficina: OficinaResponseDTO): void {
+    this.oficinaSendoReativada.set(oficina);
+    this.erroReativar.set(null);
+    this.mostrarConfirmacaoReativacao.set(true);
+  }
+
+  fecharConfirmacaoReativacao(): void {
+    this.mostrarConfirmacaoReativacao.set(false);
+    this.oficinaSendoReativada.set(null);
+  }
+
+  async confirmarReativacao(): Promise<void> {
+    if (this.reativando() || !this.oficinaSendoReativada()) {
+      return;
+    }
+
+    this.reativando.set(true);
+    this.erroReativar.set(null);
+
+    try {
+      await firstValueFrom(
+        this.http.patch<OficinaResponseDTO>(
+          `${this.apiOficinas}/${this.oficinaSendoReativada()!.oficinaId}/reativar`,
+          {}
+        )
+      );
+
+      this.reativando.set(false);
+      this.fecharConfirmacaoReativacao();
+      this.carregarOficinas();
+    } catch (erro: any) {
+      console.error('Erro ao reativar oficina:', erro);
+      this.erroReativar.set(
+        erro?.error?.message ?? 'Não foi possível reativar a oficina. Tente novamente.'
+      );
+      this.reativando.set(false);
     }
   }
 }
