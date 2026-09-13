@@ -230,6 +230,27 @@
           <div class="notice notice-error">{{ erroSalvar() }}</div>
         }
 
+        @if (alertaDuplicidade()) {
+          <div class="notice notice-warning">
+            Atenção: já existe um assistido com o mesmo nome e data de nascimento. Confirme para continuar.
+          </div>
+
+          @if (duplicadosEncontrados().length > 0) {
+            <div class="mb-s" style="border: 1px solid #f0c36d; background: #fff7e7; border-radius: 10px; padding: 12px;">
+              <p style="margin: 0 0 8px; font-weight: 600; color: #7a4b00;">Possíveis duplicados encontrados</p>
+              <div style="display: grid; gap: 8px;">
+                @for (duplicado of duplicadosEncontrados(); track duplicado.assistidoId) {
+                  <div style="display: grid; gap: 2px; padding: 8px 10px; border-radius: 8px; background: rgba(255,255,255,0.5);">
+                    <strong>{{ duplicado.nomeCompleto }}</strong>
+                    <span>{{ duplicado.dataNascimento | date: 'dd/MM/yyyy' }}</span>
+                    <span>CPF: {{ duplicado.cpf || 'Não informado' }} · Turma: {{ duplicado.nomeTurma || 'Sem turma' }} · Status: {{ duplicado.status }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        }
+
         <p class="form-sec-title">Dados pessoais</p>
 
         <div class="field">
@@ -270,8 +291,8 @@
               [ngModel]="novoAssistido.turmaId"
               (ngModelChange)="atualizarCampoAssistido('turmaId', $event)"
             >
-              <option [ngValue]="null">Sem turma</option>
-              @for (turma of turmas(); track turma.turmaId) {
+              <option [ngValue]="null">Selecione uma turma ativa</option>
+              @for (turma of turmasAtivas(); track turma.turmaId) {
                 <option [ngValue]="turma.turmaId">{{ turma.nomeTurma }}</option>
               }
             </select>
@@ -297,6 +318,17 @@
           >
           </textarea>
         </div>
+
+        @if (alertaDuplicidade()) {
+          <label class="check">
+            <input
+              type="checkbox"
+              [ngModel]="novoAssistido.confirmarApesarDeDuplicidade"
+              (ngModelChange)="atualizarCampoAssistido('confirmarApesarDeDuplicidade', $event)"
+            />
+            Confirmo que este cadastro pode ser um registro duplicado e desejo continuar.
+          </label>
+        }
 
         <!-- ============================================================
      NÚCLEO FAMILIAR
