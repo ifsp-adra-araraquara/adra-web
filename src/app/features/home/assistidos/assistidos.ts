@@ -483,13 +483,55 @@ export class Assistidos implements OnInit {
       return;
     }
 
+    // CA-A04.3: nunca deixa o assistido sem nenhum responsável vinculado.
+    const totalResponsaveis = this.vinculosEmEdicao().length + this.novosResponsaveisEdicao().length;
+    if (totalResponsaveis === 0) {
+      this.erroSalvarEdicao.set('O assistido deve manter pelo menos um responsável vinculado.');
+      return;
+    }
+
+    const totalPrincipais =
+      this.vinculosEmEdicao().filter((v) => v.responsavelPrincipal).length +
+      this.novosResponsaveisEdicao().filter((r) => r.responsavelPrincipal).length;
+    if (totalPrincipais !== 1) {
+      this.erroSalvarEdicao.set('Marque exatamente um responsável como principal.');
+      return;
+    }
+
     this.salvandoEdicao.set(true);
     this.erroSalvarEdicao.set(null);
 
     try {
+      const responsaveisVinculados: VinculoFamiliarRequestDTO[] = this.vinculosEmEdicao().map((v) => ({
+        responsavelId: v.responsavelId,
+        parentesco: v.parentesco || undefined,
+        responsavelPrincipal: v.responsavelPrincipal,
+        contatoEmergencia: v.contatoEmergencia,
+        autorizadoRetirada: v.autorizadoRetirada,
+        observacoes: v.observacoes || undefined,
+      }));
+
+      const responsaveisNovos: VinculoFamiliarComResponsavelRequestDTO[] = this.novosResponsaveisEdicao().map(
+        (r) => ({
+          nomeCompleto: r.nomeCompleto,
+          dataNascimento: r.dataNascimento || undefined,
+          cpf: r.cpf || undefined,
+          telefone: r.telefone || undefined,
+          email: r.email || undefined,
+          endereco: r.endereco || undefined,
+          observacoes: r.observacoes || undefined,
+          parentesco: r.parentesco || undefined,
+          responsavelPrincipal: r.responsavelPrincipal,
+          contatoEmergencia: r.contatoEmergencia,
+          autorizadoRetirada: r.autorizadoRetirada,
+        }),
+      );
+
       const payload: AssistidoRequestDTO = {
         ...this.formEdicaoAssistido,
         turmaId: this.formEdicaoAssistido.turmaId ? Number(this.formEdicaoAssistido.turmaId) : null,
+        responsaveisVinculados,
+        responsaveis: responsaveisNovos,
       };
 
       await firstValueFrom(
@@ -505,7 +547,7 @@ export class Assistidos implements OnInit {
     } catch (erro: any) {
       console.error('Erro ao atualizar assistido:', erro);
       this.erroSalvarEdicao.set(
-        erro?.error?.message ?? erro?.message ?? 'Não foi possível salvar as alterações.',
+        erro?.error?.mensagem ?? erro?.error?.message ?? erro?.message ?? 'Não foi possível salvar as alterações.',
       );
       this.salvandoEdicao.set(false);
     }
