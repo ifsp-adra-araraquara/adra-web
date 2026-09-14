@@ -115,6 +115,14 @@ export class Assistidos implements OnInit {
   assistidoEmEdicao = signal<AssistidoResponseDTO | null>(null);
   formEdicaoAssistido: AssistidoRequestDTO = this.assistidoVazio();
 
+  /* CA-A04: responsáveis vinculados dentro do modal de edição */
+  vinculosEmEdicao = signal<VinculoFamiliarResponseDTO[]>([]);
+  carregandoVinculosEdicao = signal(false);
+  erroVinculosEdicao = signal<string | null>(null);
+  novosResponsaveisEdicao = signal<ResponsavelPendente[]>([]);
+  mostrarFormNovoResponsavelEdicao = signal(false);
+  novoResponsavelEdicao: ResponsavelPendente = this.responsavelVazio();
+
   /* Responsáveis já salvos e vinculados */
   responsaveisVinculados = signal<ResponsavelPendente[]>([]);
   salvandoResponsavel = signal(false);
