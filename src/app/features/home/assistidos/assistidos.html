@@ -1260,11 +1260,16 @@
         }
       </div>
 
-      <div class="modal-foot">
-        <button type="button" class="btn btn-ghost" (click)="fecharModalEditar()">Cancelar</button>
-        <button type="button" class="btn" [disabled]="salvandoEdicao()" (click)="salvarEdicaoAssistido()">
-          {{ salvandoEdicao() ? 'Salvando...' : 'Salvar alterações' }}
-        </button>
+      <div class="modal-foot" style="flex-direction: column; align-items: stretch; gap: 8px">
+        @if (erroSalvarEdicao()) {
+          <div class="notice notice-error">{{ erroSalvarEdicao() }}</div>
+        }
+        <div style="display: flex; justify-content: flex-end; gap: 8px">
+          <button type="button" class="btn btn-ghost" (click)="fecharModalEditar()">Cancelar</button>
+          <button type="button" class="btn" [disabled]="salvandoEdicao()" (click)="salvarEdicaoAssistido()">
+            {{ salvandoEdicao() ? 'Salvando...' : 'Salvar alterações' }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
