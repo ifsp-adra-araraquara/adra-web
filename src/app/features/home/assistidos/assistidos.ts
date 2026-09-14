@@ -20,6 +20,10 @@ import { ResponsavelResponseDTO } from '../../../shared/models/responsavel/Respo
 
 import { VinculoFamiliarRequestDTO } from '../../../shared/models/vinculoFamiliar/VinculoFamiliarRequestDTO';
 import { VinculoFamiliarComResponsavelRequestDTO } from '../../../shared/models/vinculoFamiliar/VinculoFamiliarComResponsavelRequestDTO';
+import { VinculoFamiliarResponseDTO } from '../../../shared/models/vinculoFamiliar/VinculoFamiliarResponseDTO';
+
+import { AuthService } from '../../../core/auth.service';
+import { Role } from '../../../shared/enum/role.enum';
 
 /*
  * Responsável ainda não salvo no backend — vive só no
@@ -44,8 +48,12 @@ interface ResponsavelPendente extends ResponsavelRequestDTO {
 })
 export class Assistidos implements OnInit {
   private http = inject(HttpClient);
+  private auth = inject(AuthService);
 
   StatusGeral = StatusGeral;
+
+  /** CA-A04.3: só administrador pode desvincular um responsável já vinculado. */
+  ehAdministrador = computed(() => this.auth.currentProfile() === Role.ADMIN);
 
   private readonly apiAssistidos = `${environment.apiUrl}/api/assistidos`;
   private readonly apiResponsaveis = `${environment.apiUrl}/api/responsaveis`;
