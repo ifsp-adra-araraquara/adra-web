@@ -430,6 +430,43 @@ export class Assistidos implements OnInit {
     );
   }
 
+  abrirFormNovoResponsavelEdicao(): void {
+    this.novoResponsavelEdicao = this.responsavelVazio();
+    this.erroVinculosEdicao.set(null);
+    this.mostrarFormNovoResponsavelEdicao.set(true);
+  }
+
+  fecharFormNovoResponsavelEdicao(): void {
+    this.mostrarFormNovoResponsavelEdicao.set(false);
+  }
+
+  atualizarCampoNovoResponsavelEdicao(campo: keyof ResponsavelPendente, valor: string | boolean): void {
+    this.novoResponsavelEdicao = { ...this.novoResponsavelEdicao, [campo]: valor };
+  }
+
+  adicionarNovoResponsavelEdicao(): void {
+    if (!this.novoResponsavelEdicao.nomeCompleto.trim()) {
+      this.erroVinculosEdicao.set('Informe o nome do responsável.');
+      return;
+    }
+
+    this.erroVinculosEdicao.set(null);
+
+    // Só um principal no total - se este entrar marcado, desmarca os demais.
+    if (this.novoResponsavelEdicao.responsavelPrincipal) {
+      this.vinculosEmEdicao.update((lista) => lista.map((v) => ({ ...v, responsavelPrincipal: false })));
+      this.novosResponsaveisEdicao.update((lista) => lista.map((r) => ({ ...r, responsavelPrincipal: false })));
+    }
+
+    this.novosResponsaveisEdicao.update((lista) => [...lista, this.novoResponsavelEdicao]);
+    this.novoResponsavelEdicao = this.responsavelVazio();
+    this.mostrarFormNovoResponsavelEdicao.set(false);
+  }
+
+  removerNovoResponsavelEdicao(index: number): void {
+    this.novosResponsaveisEdicao.update((lista) => lista.filter((_, i) => i !== index));
+  }
+
   atualizarCampoEdicaoAssistido(campo: keyof AssistidoRequestDTO, valor: any): void {
     const processado = campo === 'turmaId' ? (valor === '' || valor === null ? null : Number(valor)) : valor;
     this.formEdicaoAssistido = { ...this.formEdicaoAssistido, [campo]: processado };
