@@ -6,6 +6,8 @@ import { DefinirSenhaConvite } from './features/convite/definir-senha-convite';
 import { Convidar } from './features/usuarios/convidar/convidar';
 import { Home } from './features/home/home';
 import { Usuarios } from './features/home/usuarios/usuarios';
+import { Acesso } from './features/home/acesso/acesso';
+import { Notificacoes } from './features/home/notificacoes/notificacoes';
 import { AcessoNegado } from './features/acesso-negado/acesso-negado';
 import { Layout } from './core/layout/layout';
 import { authGuard } from './core/guards/auth.guard';
@@ -44,6 +46,18 @@ export const routes: Routes = [
       {
         path: 'usuarios/convidar',
         component: Convidar,
+        data: { roles: [Role.ADMIN] },
+        canActivate: [roleGuard]
+      },
+      {
+        path: 'acesso',
+        component: Acesso,
+        data: { roles: [Role.ADMIN] },
+        canActivate: [roleGuard]
+      },
+      {
+        path: 'notificacoes',
+        component: Notificacoes,
         data: { roles: [Role.ADMIN] },
         canActivate: [roleGuard]
       },
