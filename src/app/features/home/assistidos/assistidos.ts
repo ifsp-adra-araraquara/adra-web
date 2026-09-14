@@ -661,6 +661,19 @@ export class Assistidos implements OnInit {
       return;
     }
 
+    // Se preencheu o nome do responsável mas esqueceu de clicar em "Salvar
+    // responsável", inclui automaticamente antes de validar - evita o erro
+    // confuso de "informe um responsável" com o campo já preenchido na tela.
+    if (this.novoResponsavel.nomeCompleto.trim()) {
+      const ehPrimeiro = this.responsaveisVinculados().length === 0 && this.responsaveisPendentes().length === 0;
+      const responsavelAuto: ResponsavelPendente = {
+        ...this.novoResponsavel,
+        responsavelPrincipal: this.novoResponsavel.responsavelPrincipal || ehPrimeiro,
+      };
+      this.responsaveisVinculados.update((lista) => [...lista, responsavelAuto]);
+      this.novoResponsavel = this.responsavelVazio();
+    }
+
     const erroValidacao = this.validarAssistidoAntesSalvar();
     if (erroValidacao) {
       this.erroSalvar.set(erroValidacao);
