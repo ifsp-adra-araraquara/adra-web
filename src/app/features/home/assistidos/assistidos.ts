@@ -341,13 +341,93 @@ export class Assistidos implements OnInit {
       confirmarApesarDeDuplicidade: false,
     };
     this.erroSalvarEdicao.set(null);
+
+    this.vinculosEmEdicao.set([]);
+    this.novosResponsaveisEdicao.set([]);
+    this.mostrarFormNovoResponsavelEdicao.set(false);
+    this.novoResponsavelEdicao = this.responsavelVazio();
+    this.erroVinculosEdicao.set(null);
+
     this.mostrarModalEditar.set(true);
+    this.carregarVinculosEdicao(assistido.assistidoId);
   }
 
   fecharModalEditar(): void {
     this.mostrarModalEditar.set(false);
     this.assistidoEmEdicao.set(null);
     this.erroSalvarEdicao.set(null);
+  }
+
+  /*
+   * ============================================================
+   * CA-A04: RESPONSÁVEIS VINCULADOS NO MODAL DE EDIÇÃO
+   * Tudo fica em memória até "Salvar alterações" - só então vai
+   * junto num único PUT (CA-A04.4).
+   * ============================================================
+   */
+  carregarVinculosEdicao(assistidoId: number): void {
+    this.carregandoVinculosEdicao.set(true);
+
+    this.http.get<VinculoFamiliarResponseDTO[]>(`${this.apiAssistidos}/${assistidoId}/responsaveis`).subscribe({
+      next: (vinculos) => {
+        this.vinculosEmEdicao.set(vinculos);
+        this.carregandoVinculosEdicao.set(false);
+      },
+      error: (erro) => {
+        console.error('Erro ao carregar responsáveis do assistido:', erro);
+        this.erroVinculosEdicao.set('Não foi possível carregar os responsáveis vinculados.');
+        this.carregandoVinculosEdicao.set(false);
+      },
+    });
+  }
+
+  /** CA-A04.3: bloqueia no próprio front se a remoção zerar os responsáveis. */
+  removerVinculoEdicao(responsavelId: number): void {
+    if (!this.ehAdministrador()) {
+      return;
+    }
+
+    const totalFinal = this.vinculosEmEdicao().length - 1 + this.novosResponsaveisEdicao().length;
+    if (totalFinal <= 0) {
+      this.erroVinculosEdicao.set('O assistido deve manter pelo menos um responsável vinculado.');
+      return;
+    }
+
+    this.erroVinculosEdicao.set(null);
+    this.vinculosEmEdicao.update((lista) => lista.filter((v) => v.responsavelId !== responsavelId));
+  }
+
+  atualizarCampoVinculoEdicao(
+    responsavelId: number,
+    campo: 'parentesco' | 'contatoEmergencia' | 'autorizadoRetirada' | 'observacoes',
+    valor: string | boolean,
+  ): void {
+    this.vinculosEmEdicao.update((lista) =>
+      lista.map((v) => (v.responsavelId === responsavelId ? { ...v, [campo]: valor } : v)),
+    );
+  }
+
+  /** Só um responsável principal no total (existentes + novos) - espelha a regra do backend. */
+  marcarResponsavelPrincipalEdicao(origem: 'existente' | 'novo', chave: number, valor: boolean): void {
+    if (!valor) {
+      if (origem === 'existente') {
+        this.vinculosEmEdicao.update((lista) =>
+          lista.map((v) => (v.responsavelId === chave ? { ...v, responsavelPrincipal: false } : v)),
+        );
+      } else {
+        this.novosResponsaveisEdicao.update((lista) =>
+          lista.map((r, i) => (i === chave ? { ...r, responsavelPrincipal: false } : r)),
+        );
+      }
+      return;
+    }
+
+    this.vinculosEmEdicao.update((lista) =>
+      lista.map((v) => ({ ...v, responsavelPrincipal: origem === 'existente' && v.responsavelId === chave })),
+    );
+    this.novosResponsaveisEdicao.update((lista) =>
+      lista.map((r, i) => ({ ...r, responsavelPrincipal: origem === 'novo' && i === chave })),
+    );
   }
 
   atualizarCampoEdicaoAssistido(campo: keyof AssistidoRequestDTO, valor: any): void {
