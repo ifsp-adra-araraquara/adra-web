@@ -11,6 +11,8 @@ export interface AssistidoResponseDTO {
   necessidadesEspecificas: string | null;
   observacoes: string | null;
   status: StatusGeral;
+  turmaId?: number | null;
+  nomeTurma?: string | null;
   totalOcorrenciasAtivas: number;
   totalAdvertenciasAtivas: number;
   totalSuspensoes: number;

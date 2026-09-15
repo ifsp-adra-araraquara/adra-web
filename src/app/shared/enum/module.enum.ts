@@ -1,6 +1,7 @@
 export enum AppModule {
   DASHBOARD = 'dashboard',
   ASSISTIDOS = 'assistidos',
+  RESPONSAVEIS = 'responsaveis',
   OFICINAS = 'oficinas',
   TURMAS = 'turmas',
   CHAMADA = 'chamada',

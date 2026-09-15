@@ -6,13 +6,17 @@ import { DefinirSenhaConvite } from './features/convite/definir-senha-convite';
 import { Convidar } from './features/usuarios/convidar/convidar';
 import { Home } from './features/home/home';
 import { Usuarios } from './features/home/usuarios/usuarios';
+import { Acesso } from './features/home/acesso/acesso';
+import { Notificacoes } from './features/home/notificacoes/notificacoes';
 import { AcessoNegado } from './features/acesso-negado/acesso-negado';
 import { Layout } from './core/layout/layout';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
 import { Role } from './shared/enum/role.enum';
 import { Assistidos } from './features/home/assistidos/assistidos';
+import { Responsaveis } from './features/home/responsaveis/responsaveis';
 import { Turmas } from './features/home/turma/turma';
+import { Oficinas } from './features/home/oficinas/oficinas';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -46,6 +50,18 @@ export const routes: Routes = [
         canActivate: [roleGuard]
       },
       {
+        path: 'acesso',
+        component: Acesso,
+        data: { roles: [Role.ADMIN] },
+        canActivate: [roleGuard]
+      },
+      {
+        path: 'notificacoes',
+        component: Notificacoes,
+        data: { roles: [Role.ADMIN] },
+        canActivate: [roleGuard]
+      },
+      {
         path: 'assistidos', 
         component: Assistidos,
         data: {  roles: [Role.COORD, Role.SOCIO]  },
@@ -57,7 +73,18 @@ export const routes: Routes = [
         data: {  roles: [Role.COORD, Role.SOCIO]  },
         canActivate: [roleGuard]
       },
-
+      {
+        path: 'oficinas',
+        component: Oficinas,
+        data: { roles: [Role.COORD, Role.SOCIO] },
+        canActivate: [roleGuard]
+      },
+      {
+        path: 'responsaveis',
+        component: Responsaveis,
+        data: { roles: [Role.COORD, Role.SOCIO] },
+        canActivate: [roleGuard]
+      },
     ]
   }
 ];

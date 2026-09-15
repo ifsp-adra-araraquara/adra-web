@@ -1,0 +1,24 @@
+@if (senha().length > 0) {
+<div class="senha-forca">
+    <div class="senha-forca-barra">
+        @for (seg of segmentos(); track seg) {
+        <span class="senha-forca-segmento" [class.ativo]="seg < resultado().score"
+            [style.background]="seg < resultado().score ? resultado().cor : null">
+        </span>
+        }
+    </div>
+
+    <p class="senha-forca-label" [style.color]="resultado().cor">
+        {{ resultado().label }}
+    </p>
+
+    <ul class="senha-forca-criterios">
+        @for (c of resultado().criterios; track c.chave) {
+        <li [class.atendido]="c.atendido">
+            <span class="senha-forca-icone">{{ c.atendido ? '✓' : '·' }}</span>
+            {{ c.label }}
+        </li>
+        }
+    </ul>
+</div>
+}

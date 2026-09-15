@@ -4,14 +4,16 @@ import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { BrandLogo } from '../../shared/components/brand-logo/brand-logo';
+import { SenhaForca } from '../../shared/components/senha-forca/senha-forca';
 
 @Component({
   selector: 'app-definir-senha-convite',
   standalone: true,
-  imports: [FormsModule, RouterLink, BrandLogo],
+  imports: [FormsModule, RouterLink, BrandLogo, SenhaForca],
   templateUrl: './definir-senha-convite.html',
   styleUrl: './definir-senha-convite.css'
 })
+
 export class DefinirSenhaConvite implements OnInit {
   private http = inject(HttpClient);
   private route = inject(ActivatedRoute);

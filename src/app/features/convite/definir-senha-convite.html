@@ -41,12 +41,16 @@
                 <label for="nova-senha">Senha</label>
                 <input class="input" id="nova-senha" name="novaSenha" type="password" placeholder="••••••••"
                     [(ngModel)]="novaSenha" autocomplete="new-password">
+                <app-senha-forca [senha]="novaSenha" />
             </div>
 
             <div class="field">
                 <label for="confirmar-senha">Confirmar senha</label>
                 <input class="input" id="confirmar-senha" name="confirmarSenha" type="password" placeholder="••••••••"
                     [(ngModel)]="confirmarSenha" autocomplete="new-password">
+                @if (confirmarSenha.length > 0 && confirmarSenha !== novaSenha) {
+                <span class="campo-erro">As senhas não coincidem.</span>
+                }
             </div>
 
             @if (erro()) {
