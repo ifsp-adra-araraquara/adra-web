@@ -6,4 +6,6 @@ export interface TurmaRequestDTO {
   faixaEtaria: string; // ⚠️ pendência do planning: formato ainda em texto livre
   capacidade: number | null;
   observacoes?: string;
+  oficinaId?: number | null;
+  oficineiroResponsavelId?: number | null;
 }

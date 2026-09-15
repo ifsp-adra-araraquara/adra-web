@@ -1,0 +1,5 @@
+export enum StatusPresenca {
+  PRESENTE = 'PRESENTE',
+  FALTA = 'FALTA',
+  FALTA_JUSTIFICADA = 'FALTA_JUSTIFICADA',
+}

@@ -1,0 +1,186 @@
+:host {
+  display: block;
+}
+
+.materiais-page {
+  max-width: 1200px;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--green-400);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h1, h2, p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 8px;
+  font-size: 26px;
+}
+
+h2 {
+  font-size: 16px;
+}
+
+.page-intro {
+  margin-bottom: 0;
+  color: var(--gray-600);
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.tab {
+  padding: 10px 14px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--gray-600);
+  font: inherit;
+  cursor: pointer;
+}
+
+.tab.active {
+  border-bottom-color: var(--green-400);
+  color: var(--green-600);
+  font-weight: 700;
+}
+
+.material-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+.material-card, .table-card {
+  border: 1px solid var(--gray-100);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.material-card {
+  padding: 20px;
+}
+
+.material-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 16px;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--green-50);
+  color: var(--green-600);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.material-card h2 {
+  margin-bottom: 8px;
+}
+
+.material-card p {
+  min-height: 42px;
+  color: var(--gray-600);
+  font-size: 13px;
+}
+
+.material-footer, .table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.material-footer {
+  padding-top: 16px;
+  border-top: 1px solid var(--gray-100);
+}
+
+.status {
+  color: var(--green-600);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status.warning {
+  color: var(--coral-600);
+}
+
+.primary-button, .secondary-button {
+  padding: 8px 12px;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-button {
+  border: 1px solid var(--green-400);
+  background: var(--green-400);
+  color: #fff;
+}
+
+.secondary-button {
+  border: 1px solid var(--gray-200);
+  background: #fff;
+  color: var(--green-600);
+}
+
+.table-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.table-header h2 {
+  margin-bottom: 0;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th, td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--gray-100);
+  text-align: left;
+  white-space: nowrap;
+}
+
+th {
+  color: var(--gray-600);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+@media (max-width: 640px) {
+  .tabs {
+    overflow-x: auto;
+  }
+
+  .tab {
+    white-space: nowrap;
+  }
+}

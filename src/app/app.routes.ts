@@ -15,6 +15,8 @@ import { Assistidos } from './features/home/assistidos/assistidos';
 import { Responsaveis } from './features/home/responsaveis/responsaveis';
 import { Turmas } from './features/home/turma/turma';
 import { Oficinas } from './features/home/oficinas/oficinas';
+import { Materiais } from './features/home/materiais/materiais';
+import { Oficineiro } from './features/home/oficineiro/oficineiro';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -69,6 +71,18 @@ export const routes: Routes = [
         path: 'responsaveis',
         component: Responsaveis,
         data: { roles: [Role.COORD, Role.SOCIO] },
+        canActivate: [roleGuard]
+      },
+      {
+        path: 'materiais',
+        component: Materiais,
+        data: { roles: [Role.ADMIN, Role.COORD, Role.OFICINEIRO] },
+        canActivate: [roleGuard]
+      },
+      {
+        path: 'oficineiro',
+        component: Oficineiro,
+        data: { roles: [Role.OFICINEIRO] },
         canActivate: [roleGuard]
       },
     ]

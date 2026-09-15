@@ -8,4 +8,6 @@ export interface TurmaResponseDTO {
   capacidade: number;
   ativo: boolean;
   observacoes?: string;
+  oficinaId?: number | null;
+  oficineiroResponsavel?: number | null;
 }

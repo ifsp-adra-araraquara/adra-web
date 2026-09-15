@@ -45,6 +45,8 @@ export class AuthService {
 
   currentProfile = computed<Role | null>(() => this.usuarioLogado()?.nivelPermissao ?? null);
 
+  currentUserResponse = computed<UsuarioResponse | null>(() => this.usuarioLogado());
+
   modulos = computed<ModuloDTO[]>(() => this.usuarioLogado()?.modulos ?? []);
 
   dashType = computed<DashboardType | null>(() => {
@@ -163,13 +165,24 @@ export class AuthService {
     if (padrao) {
       this.currentModule.set(padrao.toLowerCase() as AppModule);
       localStorage.setItem(MODULE_KEY, padrao.toLowerCase());
-      this.router.navigate([padrao.toLowerCase()]);
+      const modulo = padrao.toLowerCase() as AppModule;
+      if (resposta.usuario.nivelPermissao === Role.OFICINEIRO) {
+        this.router.navigate(['/oficineiro'], { queryParams: { aba: modulo } });
+      } else {
+        this.router.navigate([modulo]);
+      }
     }
   }
 
   setModule(module: AppModule): void {
     this.currentModule.set(module);
     localStorage.setItem(MODULE_KEY, module);
+    
+    if (this.currentProfile() === Role.OFICINEIRO) {
+      this.router.navigate(['/oficineiro'], { queryParams: { aba: module } });
+      return;
+    }
+    
     this.router.navigate([module]);
   }
 

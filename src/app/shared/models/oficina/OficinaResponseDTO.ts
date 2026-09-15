@@ -3,4 +3,5 @@ export interface OficinaResponseDTO {
   nomeOficina: string;
   oficineiroResponsavel: string;
   ativo: boolean;
+  oficineiroResponsavelId?: number | null;
 }
