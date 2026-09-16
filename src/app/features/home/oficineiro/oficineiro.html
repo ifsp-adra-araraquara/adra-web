@@ -51,7 +51,19 @@
   <section class="panel" aria-labelledby="aulas-titulo">
     <div class="panel-header">
       <div><h2 id="aulas-titulo">Aulas</h2><span class="subtle">Planos de aula das suas turmas</span></div>
-      <div style="display: flex; gap: 8px;">
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <label for="filtro-turma-aulas" class="sr-only">Filtrar por turma</label>
+        <select
+          id="filtro-turma-aulas"
+          class="filtro-turma"
+          [ngModel]="filtroTurmaId()"
+          (ngModelChange)="onFiltroTurmaChange($event)"
+        >
+          <option [ngValue]="null">Todas as turmas</option>
+          @for (turma of turmas(); track turma.turmaId) {
+          <option [ngValue]="turma.turmaId">{{ turma.nomeTurma }}{{ turma.nomeOficina ? ' — ' + turma.nomeOficina : '' }}</option>
+          }
+        </select>
         <button type="button" class="primary-button" (click)="abrirNovaAula()">Nova aula</button>
         <button type="button" class="primary-button" (click)="abrirModalCriarAulas()">Criar várias aulas</button>
       </div>
@@ -74,8 +86,13 @@
         </thead>
         <tbody>
         @for (aula of aulas(); track aula.aulaId) {
-        <tr>
-          <td>{{ aula.dataAula }}</td>
+        <tr
+          [class.linha-hoje]="ehHoje(aula)"
+          [class.linha-bloqueada]="!podeAbrir(aula)"
+          [attr.title]="podeAbrir(aula) ? 'Abrir aula' : 'Só é possível abrir aulas de hoje ou já passadas'"
+          (click)="abrirAula(aula)"
+        >
+          <td>{{ aula.dataAula }} @if (ehHoje(aula)) { <span class="tag-hoje">Hoje</span> }</td>
           <td>{{ aula.horarioInicio && aula.horarioFim ? aula.horarioInicio + ' - ' + aula.horarioFim : '-' }}</td>
           <td>{{ aula.nomeTurma || '-' }}</td>
           <td>{{ aula.nomeOficineiro || '-' }}</td>
@@ -83,10 +100,10 @@
           <td>{{ aula.titulo || '-' }}</td>
           <td>{{ aula.conteudoPrevisto || '-' }}</td>
           <td>{{ aula.conteudoMinistrado || '-' }}</td>
-          <td><span class="status">{{ aula.statusAula }}</span></td>
-          <td><button type="button" class="secondary-button" (click)="editarAula(aula)">Editar</button></td>
+          <td><span class="status" [class]="classeSituacao(aula)">{{ rotuloSituacao(aula) }}</span></td>
+          <td><button type="button" class="secondary-button" (click)="$event.stopPropagation(); editarAula(aula)">Editar</button></td>
         </tr>
-        } @empty { <tr><td colspan="10" class="empty">Nenhuma aula cadastrada para suas turmas.</td></tr> }
+        } @empty { <tr><td colspan="10" class="empty">{{ filtroTurmaId() ? 'Nenhuma aula cadastrada para esta turma.' : 'Nenhuma aula cadastrada para suas turmas.' }}</td></tr> }
         </tbody>
       </table>
     </div>
@@ -123,22 +140,32 @@
 
   @if (mostrarFormularioAula()) {
   <div class="overlay" role="presentation" (click)="fecharFormularioAula()">
-    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="nova-aula-titulo" (click)="$event.stopPropagation()" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+    <section class="dialog dialog-lg" role="dialog" aria-modal="true" aria-labelledby="nova-aula-titulo" (click)="$event.stopPropagation()" style="max-height: 90vh; overflow-y: auto;">
       <div class="panel-header"><h2 id="nova-aula-titulo">Nova aula</h2><button type="button" class="close-button" (click)="fecharFormularioAula()" aria-label="Fechar">X</button></div>
-      <label>Turma<select [(ngModel)]="aulaForm.turmaId"><option [ngValue]="0">Selecione</option>@for (turma of turmas(); track turma.turmaId) { <option [ngValue]="turma.turmaId">{{ turma.nomeTurma }}</option> }</select></label>
-      <label>Data<input type="date" [(ngModel)]="aulaForm.dataAula"></label>
-      <div style="display: flex; gap: 16px;">
-        <label style="flex: 1;">Horário de início<input type="time" [(ngModel)]="aulaForm.horarioInicio"></label>
-        <label style="flex: 1;">Horário de fim<input type="time" [(ngModel)]="aulaForm.horarioFim"></label>
+      <div class="dialog-body">
+        <div class="form-row">
+          <label>Turma<select [(ngModel)]="aulaForm.turmaId"><option [ngValue]="0">Selecione</option>@for (turma of turmas(); track turma.turmaId) { <option [ngValue]="turma.turmaId">{{ turma.nomeTurma }}</option> }</select></label>
+          <label>Data<input type="date" [(ngModel)]="aulaForm.dataAula"></label>
+        </div>
+        <div class="form-row">
+          <label>Horário de início<input type="time" [(ngModel)]="aulaForm.horarioInicio"></label>
+          <label>Horário de fim<input type="time" [(ngModel)]="aulaForm.horarioFim"></label>
+        </div>
+        <div class="form-row">
+          <label>Título (opcional)<input type="text" [(ngModel)]="aulaForm.titulo" placeholder="Ex.: Aula de introdução" maxlength="150"></label>
+          <label>Status<select [(ngModel)]="aulaForm.statusAula"><option [ngValue]="undefined">Planejada</option><option value="REALIZADA">Realizada</option><option value="CANCELADA">Cancelada</option></select></label>
+        </div>
+        <label>Descrição (opcional)<textarea [(ngModel)]="aulaForm.descricao" rows="3"></textarea></label>
+        <div class="form-row">
+          <label>Conteúdo previsto (opcional)<textarea [(ngModel)]="aulaForm.conteudoPrevisto" rows="3"></textarea></label>
+          <label>Conteúdo ministrado (opcional)<textarea [(ngModel)]="aulaForm.conteudoMinistrado" rows="3"></textarea></label>
+        </div>
+        <div class="form-row">
+          <label>Objetivos (opcional)<textarea [(ngModel)]="aulaForm.objetivos" rows="3"></textarea></label>
+          <label>Recursos necessários (opcional)<textarea [(ngModel)]="aulaForm.recursosNecessarios" rows="3"></textarea></label>
+        </div>
+        <label>Observações (opcional)<textarea [(ngModel)]="aulaForm.observacoes" rows="3"></textarea></label>
       </div>
-      <label>Título (opcional)<input type="text" [(ngModel)]="aulaForm.titulo" placeholder="Ex.: Aula de introdução" maxlength="150"></label>
-      <label>Descrição (opcional)<textarea [(ngModel)]="aulaForm.descricao" rows="3"></textarea></label>
-      <label>Conteúdo previsto (opcional)<textarea [(ngModel)]="aulaForm.conteudoPrevisto" rows="3"></textarea></label>
-      <label>Conteúdo ministrado (opcional)<textarea [(ngModel)]="aulaForm.conteudoMinistrado" rows="3"></textarea></label>
-      <label>Objetivos (opcional)<textarea [(ngModel)]="aulaForm.objetivos" rows="3"></textarea></label>
-      <label>Recursos necessários (opcional)<textarea [(ngModel)]="aulaForm.recursosNecessarios" rows="3"></textarea></label>
-      <label>Status<select [(ngModel)]="aulaForm.statusAula"><option [ngValue]="undefined">Planejada</option><option value="REALIZADA">Realizada</option><option value="CANCELADA">Cancelada</option></select></label>
-      <label>Observações (opcional)<textarea [(ngModel)]="aulaForm.observacoes" rows="3"></textarea></label>
       <div class="dialog-actions"><button type="button" class="secondary-button" (click)="fecharFormularioAula()">Cancelar</button><button type="button" class="primary-button" [disabled]="salvandoAula()" (click)="salvarAula()">Salvar aula</button></div>
     </section>
   </div>
@@ -156,35 +183,43 @@
 
   @if (mostrarModalCriarAulas()) {
   <div class="overlay" role="presentation" (click)="fecharModalCriarAulas()">
-    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="criar-varias-aulas-titulo" (click)="$event.stopPropagation()" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+    <section class="dialog dialog-xl" role="dialog" aria-modal="true" aria-labelledby="criar-varias-aulas-titulo" (click)="$event.stopPropagation()" style="max-height: 90vh; overflow-y: auto;">
       <div class="panel-header"><h2 id="criar-varias-aulas-titulo">Criar várias aulas</h2><button type="button" class="close-button" (click)="fecharModalCriarAulas()" aria-label="Fechar">X</button></div>
-      @if (erroCriarAulas()) {
-      <p class="feedback error" role="alert">{{ erroCriarAulas() }}</p>
-      }
-      <label>Turma<select [(ngModel)]="formCriarAulas.turmaId"><option [ngValue]="0">Selecione</option>@for (turma of turmas(); track turma.turmaId) { <option [ngValue]="turma.turmaId">{{ turma.nomeTurma }}</option> }</select></label>
-      <div style="display: flex; gap: 16px;">
-        <label style="flex: 1;">Data de início<input type="date" [(ngModel)]="formCriarAulas.dataInicio"></label>
-        <label style="flex: 1;">Data de fim<input type="date" [(ngModel)]="formCriarAulas.dataFim"></label>
+      <div class="dialog-body">
+        @if (erroCriarAulas()) {
+        <p class="feedback error" role="alert">{{ erroCriarAulas() }}</p>
+        }
+        <div class="form-row">
+          <label>Turma<select [(ngModel)]="formCriarAulas.turmaId"><option [ngValue]="0">Selecione</option>@for (turma of turmas(); track turma.turmaId) { <option [ngValue]="turma.turmaId">{{ turma.nomeTurma }}</option> }</select></label>
+          <label>Título (opcional)<input type="text" [(ngModel)]="formCriarAulas.titulo" placeholder="Ex.: Aula de introdução"></label>
+        </div>
+        <div class="form-row">
+          <label>Data de início<input type="date" [(ngModel)]="formCriarAulas.dataInicio"></label>
+          <label>Data de fim<input type="date" [(ngModel)]="formCriarAulas.dataFim"></label>
+        </div>
+        <div class="form-row">
+          <label>Horário de início<input type="time" [(ngModel)]="formCriarAulas.horarioInicio"></label>
+          <label>Horário de fim<input type="time" [(ngModel)]="formCriarAulas.horarioFim"></label>
+        </div>
+        <label>Dias da semana
+          <div class="dias-semana-grid">
+            <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes('MONDAY')" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('MONDAY')" (click)="toggleDiaSemana('MONDAY')">Segunda</button>
+            <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes('TUESDAY')" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('TUESDAY')" (click)="toggleDiaSemana('TUESDAY')">Terça</button>
+            <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes('WEDNESDAY')" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('WEDNESDAY')" (click)="toggleDiaSemana('WEDNESDAY')">Quarta</button>
+            <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes('THURSDAY')" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('THURSDAY')" (click)="toggleDiaSemana('THURSDAY')">Quinta</button>
+            <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes('FRIDAY')" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('FRIDAY')" (click)="toggleDiaSemana('FRIDAY')">Sexta</button>
+            <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes('SATURDAY')" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('SATURDAY')" (click)="toggleDiaSemana('SATURDAY')">Sábado</button>
+            <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes('SUNDAY')" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('SUNDAY')" (click)="toggleDiaSemana('SUNDAY')">Domingo</button>
+          </div>
+        </label>
+        <label>Descrição (opcional)<textarea [(ngModel)]="formCriarAulas.descricao" placeholder="Descrição das aulas" rows="3"></textarea></label>
+        <div class="form-row">
+          <label>Conteúdo previsto (opcional)<textarea [(ngModel)]="formCriarAulas.conteudoPrevisto" placeholder="Conteúdo que será abordado" rows="3"></textarea></label>
+          <label>Objetivos (opcional)<textarea [(ngModel)]="formCriarAulas.objetivos" placeholder="Objetivos das aulas" rows="3"></textarea></label>
+        </div>
+        <label>Recursos necessários (opcional)<textarea [(ngModel)]="formCriarAulas.recursosNecessarios" placeholder="Materiais e recursos necessários" rows="3"></textarea></label>
+        <label>Observações (opcional)<textarea [(ngModel)]="formCriarAulas.observacoes" placeholder="Observações adicionais" rows="3"></textarea></label>
       </div>
-      <label>Dias da semana<div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
-        <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes(1)" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes(1)" (click)="toggleDiaSemana(1)">Segunda</button>
-        <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes(2)" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes(2)" (click)="toggleDiaSemana(2)">Terça</button>
-        <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes(3)" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes(3)" (click)="toggleDiaSemana(3)">Quarta</button>
-        <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes(4)" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes(4)" (click)="toggleDiaSemana(4)">Quinta</button>
-        <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes(5)" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes(5)" (click)="toggleDiaSemana(5)">Sexta</button>
-        <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes(6)" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes(6)" (click)="toggleDiaSemana(6)">Sábado</button>
-        <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes(7)" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes(7)" (click)="toggleDiaSemana(7)">Domingo</button>
-      </div></label>
-      <div style="display: flex; gap: 16px;">
-        <label style="flex: 1;">Horário de início<input type="time" [(ngModel)]="formCriarAulas.horarioInicio"></label>
-        <label style="flex: 1;">Horário de fim<input type="time" [(ngModel)]="formCriarAulas.horarioFim"></label>
-      </div>
-      <label>Título (opcional)<input type="text" [(ngModel)]="formCriarAulas.titulo" placeholder="Ex.: Aula de introdução"></label>
-      <label>Descrição (opcional)<textarea [(ngModel)]="formCriarAulas.descricao" placeholder="Descrição das aulas" rows="3"></textarea></label>
-      <label>Conteúdo previsto (opcional)<textarea [(ngModel)]="formCriarAulas.conteudoPrevisto" placeholder="Conteúdo que será abordado" rows="3"></textarea></label>
-      <label>Objetivos (opcional)<textarea [(ngModel)]="formCriarAulas.objetivos" placeholder="Objetivos das aulas" rows="3"></textarea></label>
-      <label>Recursos necessários (opcional)<textarea [(ngModel)]="formCriarAulas.recursosNecessarios" placeholder="Materiais e recursos necessários" rows="3"></textarea></label>
-      <label>Observações (opcional)<textarea [(ngModel)]="formCriarAulas.observacoes" placeholder="Observações adicionais" rows="3"></textarea></label>
       <div class="dialog-actions"><button type="button" class="secondary-button" (click)="fecharModalCriarAulas()">Cancelar</button><button type="button" class="primary-button" [disabled]="salvandoCriarAulas()" (click)="salvarCriarAulas()">{{ salvandoCriarAulas() ? 'Criando aulas...' : 'Criar aulas' }}</button></div>
     </section>
   </div>
@@ -196,4 +231,10 @@
     [aberto]="turmaAulasSelecionada() !== null"
     (fechar)="fecharAulasDaTurma()">
   </app-aulas-turma-modal>
+
+  <app-aula-modal
+    [aula]="aulaAberta()"
+    (fechar)="fecharAulaModal()"
+    (chamadaSalva)="aoSalvarChamada()">
+  </app-aula-modal>
 </section>

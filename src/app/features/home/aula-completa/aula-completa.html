@@ -1,0 +1,97 @@
+<section class="aula-completa-page">
+  @if (carregando()) {
+  <p class="feedback" role="status">Carregando...</p>
+  } @else if (erro() && !aula()) {
+  <p class="feedback error" role="alert">{{ erro() }}</p>
+  } @else if (aula(); as aulaAtual) {
+  <header class="page-header">
+    <p class="eyebrow">Aula completa</p>
+    <h1>{{ aulaAtual.nomeTurma || 'Aula' }}{{ aulaAtual.titulo ? ' — ' + aulaAtual.titulo : '' }}</h1>
+    <p class="page-intro">
+      {{ aulaAtual.dataAula }}{{ aulaAtual.horarioInicio && aulaAtual.horarioFim ? ' · ' + aulaAtual.horarioInicio + ' - ' + aulaAtual.horarioFim : '' }}{{ aulaAtual.nomeOficineiro ? ' · ' + aulaAtual.nomeOficineiro : '' }}
+    </p>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Seções da aula">
+    <button type="button" class="tab" [class.active]="aba() === 'alunos'" role="tab" [attr.aria-selected]="aba() === 'alunos'" (click)="selecionarAba('alunos')">Alunos</button>
+    <button type="button" class="tab" [class.active]="aba() === 'materiais'" role="tab" [attr.aria-selected]="aba() === 'materiais'" (click)="selecionarAba('materiais')">Materiais</button>
+  </nav>
+
+  @if (erro()) {
+  <p class="feedback error" role="alert">{{ erro() }}</p>
+  }
+  @if (salvo()) {
+  <p class="feedback success" role="status">Chamada salva com sucesso.</p>
+  }
+
+  @switch (aba()) {
+  @case ('alunos') {
+  <section class="panel-alunos">
+    @if (ehSociopedagogico()) {
+    <div class="toolbar">
+      <div class="pres-counts">
+        <div class="pc pc-p"><b>{{ totalPresentes() }}</b><span>Presentes</span></div>
+        <div class="pc pc-f"><b>{{ totalFaltas() }}</b><span>Faltas</span></div>
+        <div class="pc pc-fj"><b>{{ totalFaltasJustificadas() }}</b><span>Faltas justificadas</span></div>
+      </div>
+      <button type="button" class="secondary-button" (click)="marcarTodosPresentes()">Marcar todos presentes</button>
+    </div>
+    }
+
+    <div class="alunos-grid">
+      @for (aluno of alunos(); track aluno.assistidoId) {
+      <article class="aluno-card">
+        <div class="aluno-info">
+          <span class="aluno-nome">{{ aluno.nomeCompleto }}</span>
+          <span class="aluno-sub">{{ aulaAtual.nomeTurma || '-' }}</span>
+        </div>
+        <div class="presenca-botoes">
+          <button
+            type="button"
+            class="presenca-btn presente"
+            [class.ativo]="aluno.statusPresenca === StatusPresenca.PRESENTE"
+            [disabled]="!ehSociopedagogico()"
+            (click)="marcarPresenca(aluno, StatusPresenca.PRESENTE)"
+            title="Presente"
+          >P</button>
+          <button
+            type="button"
+            class="presenca-btn falta"
+            [class.ativo]="aluno.statusPresenca === StatusPresenca.FALTA"
+            [disabled]="!ehSociopedagogico()"
+            (click)="marcarPresenca(aluno, StatusPresenca.FALTA)"
+            title="Falta"
+          >F</button>
+          <button
+            type="button"
+            class="presenca-btn justificada"
+            [class.ativo]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+            [disabled]="!ehSociopedagogico()"
+            (click)="marcarPresenca(aluno, StatusPresenca.FALTA_JUSTIFICADA)"
+            title="Falta justificada"
+          >FJ</button>
+        </div>
+      </article>
+      } @empty {
+      <p class="empty">Nenhum aluno ativo nesta turma.</p>
+      }
+    </div>
+
+    @if (ehSociopedagogico()) {
+    <div class="acoes-finais">
+      <button type="button" class="primary-button" [disabled]="salvando()" (click)="salvarChamada()">
+        {{ salvando() ? 'Salvando...' : 'Salvar chamada' }}
+      </button>
+    </div>
+    }
+  </section>
+  }
+  @case ('materiais') {
+  <section class="panel-materiais">
+    <p class="empty">Nenhum material vinculado a esta aula ainda.</p>
+    <button type="button" class="secondary-button" disabled title="Em breve">Adicionar material</button>
+  </section>
+  }
+  }
+  }
+</section>

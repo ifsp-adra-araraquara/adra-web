@@ -8,4 +8,4 @@
 }
 .topbar h1 { font-size: 17px; font-weight: 600; }
 
-.content { padding: 26px; max-width: 1200px; }
+.content { padding: 26px; max-width: 100%; }

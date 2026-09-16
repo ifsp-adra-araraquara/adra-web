@@ -1,0 +1,145 @@
+:host { display: contents; }
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 42, 31, .45);
+}
+
+.dialog {
+  width: min(680px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: var(--shadow-lg);
+}
+
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.panel-header h2 { font-size: 17px; margin-bottom: 2px; }
+.subtle { font-size: 12px; color: var(--gray-600); }
+
+.panel-header-acoes { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+.close-button {
+  flex-shrink: 0;
+  border: 1px solid var(--gray-200);
+  background: #fff;
+  color: var(--green-600);
+  border-radius: 7px;
+  padding: 6px 10px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.badge-situacao {
+  display: inline-block;
+  margin: 16px 20px 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.situacao-pendente { background: var(--gray-100); color: var(--gray-600); }
+.situacao-disponivel { background: var(--amber-50); color: var(--amber-600); }
+.situacao-finalizada { background: var(--green-50); color: var(--green-600); }
+.situacao-cancelada { background: var(--coral-50); color: var(--coral-600); }
+
+.feedback { margin: 16px 20px 0; color: var(--gray-600); font-size: 13px; }
+.feedback.error { color: var(--coral-600); }
+
+.pres-counts { display: flex; gap: 12px; padding: 16px 20px 0; }
+.pc { flex: 1; padding: 10px 12px; border: 1px solid var(--gray-100); border-radius: 8px; text-align: center; }
+.pc b { display: block; font-size: 20px; line-height: 1.2; }
+.pc span { font-size: 11px; color: var(--gray-600); text-transform: uppercase; letter-spacing: .03em; }
+.pc-p b { color: var(--green-600); }
+.pc-f b { color: var(--coral-600); }
+.pc-fj b { color: var(--amber-600); }
+
+.chamada-toolbar { display: flex; justify-content: flex-end; padding: 12px 20px 0; }
+
+.lista-alunos { list-style: none; margin: 0; padding: 8px 20px 20px; display: flex; flex-direction: column; gap: 6px; }
+.linha-aluno {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-100);
+  border-radius: 8px;
+}
+.nome-aluno { font-size: 13.5px; font-weight: 600; color: var(--gray-800); }
+
+.linha-aluno-acoes { display: flex; align-items: center; gap: 10px; }
+
+.presenca-botoes { display: flex; gap: 6px; }
+.presenca-btn {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--gray-200);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--gray-400);
+  cursor: pointer;
+  transition: .14s;
+}
+.presenca-btn svg { width: 16px; height: 16px; }
+.presenca-btn.presente.ativo { background: var(--green-400); border-color: var(--green-400); color: #fff; }
+.presenca-btn.falta.ativo { background: var(--coral-400); border-color: var(--coral-400); color: #fff; }
+.presenca-btn.justificada.ativo { background: var(--amber-400); border-color: var(--amber-400); color: #fff; }
+
+.mini-badge {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.mini-badge.presente { background: var(--green-50); color: var(--green-600); }
+.mini-badge.falta { background: var(--coral-50); color: var(--coral-600); }
+.mini-badge.justificada { background: var(--amber-50); color: var(--amber-600); }
+
+.icon-button {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--gray-200);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--amber-600);
+  cursor: pointer;
+  transition: .14s;
+}
+.icon-button svg { width: 16px; height: 16px; }
+.icon-button:hover { background: var(--amber-50); border-color: var(--amber-400); }
+
+.empty { padding: 20px; text-align: center; color: var(--gray-600); font-size: 13px; }
+
+.primary-button, .secondary-button {
+  padding: 8px 14px;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.primary-button { border: 1px solid var(--green-400); background: var(--green-400); color: #fff; }
+.primary-button:disabled { opacity: .6; cursor: not-allowed; }
+.secondary-button { border: 1px solid var(--gray-200); background: #fff; color: var(--green-600); }
+
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 16px 20px 20px; }

@@ -348,7 +348,7 @@
      ============================================================ -->
 @if (mostrarModalCriarAulas()) {
   <div class="modal-overlay" (click)="fecharModalCriarAulas()">
-    <div class="modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+    <div class="modal modal-lg" role="dialog" aria-modal="true" (click)="$event.stopPropagation()" style="max-height: 90vh; overflow-y: auto;">
       <div class="modal-head">
         <div class="mh-ico ico-blue">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -400,67 +400,67 @@
 
         <div class="field">
           <label>Dias da semana</label>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px;">
             <button
               type="button"
               class="btn btn-sm"
-              [class.btn-primary]="formCriarAulas.diasDaSemana.includes(1)"
-              [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes(1)"
-              (click)="toggleDiaSemana(1)"
+              [class.btn-primary]="formCriarAulas.diasDaSemana.includes('MONDAY')"
+              [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('MONDAY')"
+              (click)="toggleDiaSemana('MONDAY')"
             >
               Segunda
             </button>
             <button
               type="button"
               class="btn btn-sm"
-              [class.btn-primary]="formCriarAulas.diasDaSemana.includes(2)"
-              [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes(2)"
-              (click)="toggleDiaSemana(2)"
+              [class.btn-primary]="formCriarAulas.diasDaSemana.includes('TUESDAY')"
+              [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('TUESDAY')"
+              (click)="toggleDiaSemana('TUESDAY')"
             >
               Terça
             </button>
             <button
               type="button"
               class="btn btn-sm"
-              [class.btn-primary]="formCriarAulas.diasDaSemana.includes(3)"
-              [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes(3)"
-              (click)="toggleDiaSemana(3)"
+              [class.btn-primary]="formCriarAulas.diasDaSemana.includes('WEDNESDAY')"
+              [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('WEDNESDAY')"
+              (click)="toggleDiaSemana('WEDNESDAY')"
             >
               Quarta
             </button>
             <button
               type="button"
               class="btn btn-sm"
-              [class.btn-primary]="formCriarAulas.diasDaSemana.includes(4)"
-              [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes(4)"
-              (click)="toggleDiaSemana(4)"
+              [class.btn-primary]="formCriarAulas.diasDaSemana.includes('THURSDAY')"
+              [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('THURSDAY')"
+              (click)="toggleDiaSemana('THURSDAY')"
             >
               Quinta
             </button>
             <button
               type="button"
               class="btn btn-sm"
-              [class.btn-primary]="formCriarAulas.diasDaSemana.includes(5)"
-              [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes(5)"
-              (click)="toggleDiaSemana(5)"
+              [class.btn-primary]="formCriarAulas.diasDaSemana.includes('FRIDAY')"
+              [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('FRIDAY')"
+              (click)="toggleDiaSemana('FRIDAY')"
             >
               Sexta
             </button>
             <button
               type="button"
               class="btn btn-sm"
-              [class.btn-primary]="formCriarAulas.diasDaSemana.includes(6)"
-              [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes(6)"
-              (click)="toggleDiaSemana(6)"
+              [class.btn-primary]="formCriarAulas.diasDaSemana.includes('SATURDAY')"
+              [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('SATURDAY')"
+              (click)="toggleDiaSemana('SATURDAY')"
             >
               Sábado
             </button>
             <button
               type="button"
               class="btn btn-sm"
-              [class.btn-primary]="formCriarAulas.diasDaSemana.includes(7)"
-              [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes(7)"
-              (click)="toggleDiaSemana(7)"
+              [class.btn-primary]="formCriarAulas.diasDaSemana.includes('SUNDAY')"
+              [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('SUNDAY')"
+              (click)="toggleDiaSemana('SUNDAY')"
             >
               Domingo
             </button>

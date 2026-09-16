@@ -54,9 +54,51 @@
   top: 0;
 }
 
+.aulas-table tbody tr {
+  cursor: pointer;
+}
+
 .aulas-table tbody tr:hover {
   background: #fafafa;
 }
+
+.aulas-table tbody tr.linha-hoje {
+  background: #e0f2ec;
+}
+
+.aulas-table tbody tr.linha-hoje:hover {
+  background: #e0f2ec;
+}
+
+.aulas-table tbody tr.linha-bloqueada {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+.tag-hoje {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #007b5f;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+
+.status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.situacao-pendente { background: #efede6; color: #54585a; }
+.situacao-disponivel { background: #faeeda; color: #854f0b; }
+.situacao-finalizada { background: #e0f2ec; color: #005a45; }
+.situacao-cancelada { background: #faece7; color: #993c1d; }
 
 .empty {
   text-align: center;

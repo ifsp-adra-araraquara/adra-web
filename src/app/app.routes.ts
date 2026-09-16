@@ -17,6 +17,8 @@ import { Turmas } from './features/home/turma/turma';
 import { Oficinas } from './features/home/oficinas/oficinas';
 import { Materiais } from './features/home/materiais/materiais';
 import { Oficineiro } from './features/home/oficineiro/oficineiro';
+import { Aulas } from './features/home/aulas/aulas';
+import { AulaCompleta } from './features/home/aula-completa/aula-completa';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -71,6 +73,18 @@ export const routes: Routes = [
         path: 'responsaveis',
         component: Responsaveis,
         data: { roles: [Role.COORD, Role.SOCIO] },
+        canActivate: [roleGuard]
+      },
+      {
+        path: 'aulas',
+        component: Aulas,
+        data: { roles: [Role.COORD, Role.SOCIO] },
+        canActivate: [roleGuard]
+      },
+      {
+        path: 'aulas/:aulaId/completa',
+        component: AulaCompleta,
+        data: { roles: [Role.COORD, Role.SOCIO, Role.OFICINEIRO] },
         canActivate: [roleGuard]
       },
       {

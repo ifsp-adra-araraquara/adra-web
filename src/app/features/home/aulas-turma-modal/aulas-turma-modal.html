@@ -23,11 +23,16 @@
         </thead>
         <tbody>
         @for (aula of aulas(); track aula.aulaId) {
-        <tr>
-          <td>{{ aula.dataAula }}</td>
+        <tr
+          [class.linha-hoje]="ehHoje(aula)"
+          [class.linha-bloqueada]="!podeAbrir(aula)"
+          [attr.title]="podeAbrir(aula) ? 'Abrir aula' : 'Só é possível abrir aulas de hoje ou já passadas'"
+          (click)="abrirAula(aula)"
+        >
+          <td>{{ aula.dataAula }} @if (ehHoje(aula)) { <span class="tag-hoje">Hoje</span> }</td>
           <td>{{ aula.horarioInicio && aula.horarioFim ? aula.horarioInicio + ' - ' + aula.horarioFim : '-' }}</td>
           <td>{{ aula.titulo || '-' }}</td>
-          <td><span class="status">{{ aula.statusAula }}</span></td>
+          <td><span class="status" [class]="classeSituacao(aula)">{{ rotuloSituacao(aula) }}</span></td>
         </tr>
         } @empty {
         <tr><td colspan="4" class="empty">Nenhuma aula cadastrada para esta turma.</td></tr>
@@ -36,6 +41,12 @@
       </table>
     </div>
     }
+
+    <app-aula-modal
+      [aula]="aulaAberta()"
+      (fechar)="fecharAulaModal()"
+      (chamadaSalva)="aoSalvarChamada()">
+    </app-aula-modal>
   </section>
 </div>
 }

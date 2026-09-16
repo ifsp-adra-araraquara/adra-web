@@ -30,6 +30,10 @@
   flex-direction: column;
 }
 
+.modal-lg {
+  max-width: 940px;
+}
+
 .modal-head {
   display: flex;
   justify-content: space-between;
@@ -59,7 +63,7 @@
 }
 
 .modal-body {
-  padding: 24px;
+  padding: 28px;
   overflow-y: auto;
 }
 
@@ -68,18 +72,18 @@
 
   grid-template-columns: 1fr 1fr;
 
-  gap: 16px;
+  gap: 22px;
 
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
 
-  gap: 6px;
+  gap: 8px;
 
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .field label {
@@ -97,13 +101,13 @@ textarea {
 
   box-sizing: border-box;
 
-  min-height: 42px;
+  min-height: 46px;
 
-  padding: 9px 12px;
+  padding: 12px 14px;
 
   border: 1px solid #d1d5db;
 
-  border-radius: 7px;
+  border-radius: 8px;
 
   background: #fff;
 
@@ -123,7 +127,7 @@ textarea:focus {
 textarea {
   resize: vertical;
 
-  min-height: 80px;
+  min-height: 96px;
 
   font-family: inherit;
 }

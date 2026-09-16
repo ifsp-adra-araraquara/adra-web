@@ -12,7 +12,7 @@ import { Turno, TURNOS_DISPONIVEIS } from '../../../shared/enum/Turno';
 import { TurmaRequestDTO } from '../../../shared/models/turma/TurmaRequestDTO';
 import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO';
 import { TurmaStatusRequestDTO } from '../../../shared/models/turma/TurmaStatusRequestDTO';
-import { CriacaoAulasRequestDTO } from '../../../shared/models/aula/CriacaoAulasRequestDTO';
+import { CriacaoAulasRequestDTO, DiaDaSemana } from '../../../shared/models/aula/CriacaoAulasRequestDTO';
 
 
 @Component({
@@ -246,7 +246,7 @@ export class Turmas implements OnInit {
     this.formCriarAulas = { ...this.formCriarAulas, [campo]: valor };
   }
 
-  toggleDiaSemana(dia: number): void {
+  toggleDiaSemana(dia: DiaDaSemana): void {
     const dias = this.formCriarAulas.diasDaSemana;
     const index = dias.indexOf(dia);
     if (index > -1) {
@@ -295,10 +295,19 @@ export class Turmas implements OnInit {
     this.erroSalvarAulas.set(null);
 
     try {
-      await firstValueFrom(
+      const criouAlgumaAula = await firstValueFrom(
         this.http.post<boolean>(`${this.apiAulas}/varias-aulas`, this.formCriarAulas),
       );
       this.salvandoAulas.set(false);
+
+      if (!criouAlgumaAula) {
+        this.erroSalvarAulas.set(
+          'Nenhuma aula foi criada: nenhuma data no período informado cai nos dias da semana ' +
+            'escolhidos (ou as aulas dessas datas já existiam para esta turma).',
+        );
+        return;
+      }
+
       this.fecharModalCriarAulas();
     } catch (erro: any) {
       console.error('Erro ao criar aulas:', erro);
