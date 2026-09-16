@@ -7,109 +7,193 @@
 
   <nav class="tabs" role="tablist" aria-label="Módulos do oficineiro">
     @for (item of [
-      { id: 'turmas', label: 'Turmas' },
-      { id: 'aulas', label: 'Aulas' },
-      { id: 'materiais', label: 'Materiais' },
-      { id: 'comunicados', label: 'Comunicados' }
+    { id: 'turmas', label: 'Turmas' },
+    { id: 'aulas', label: 'Aulas' },
+    { id: 'materiais', label: 'Materiais' },
+    { id: 'comunicados', label: 'Comunicados' }
     ]; track item.id) {
-      <button type="button" class="tab" [class.active]="aba() === item.id" role="tab" [attr.aria-selected]="aba() === item.id" (click)="selecionarAba($any(item.id))">
-        {{ item.label }}
-      </button>
+    <button type="button" class="tab" [class.active]="aba() === item.id" role="tab" [attr.aria-selected]="aba() === item.id" (click)="selecionarAba($any(item.id))">
+      {{ item.label }}
+    </button>
     }
   </nav>
 
   @if (carregando()) {
-    <p class="feedback" role="status">Carregando...</p>
+  <p class="feedback" role="status">Carregando...</p>
   } @else if (erro()) {
-    <p class="feedback error" role="alert">{{ erro() }}</p>
+  <p class="feedback error" role="alert">{{ erro() }}</p>
   }
 
   @switch (aba()) {
-    @case ('turmas') {
-      <section class="panel" aria-labelledby="turmas-titulo">
-        <div class="panel-header"><h2 id="turmas-titulo">Minhas turmas</h2><span class="subtle">Somente leitura</span></div>
-        <div class="table-wrapper">
-          <table>
-            <thead><tr><th>Turma</th><th>Oficina</th><th>Turno</th><th>Alunos</th><th>Capacidade</th><th></th></tr></thead>
-            <tbody>
-              @for (turma of turmas(); track turma.turmaId) {
-                <tr>
-                  <td class="strong">{{ turma.nomeTurma }}</td><td>{{ turma.nomeOficina || '-' }}</td><td>{{ turma.turno }}</td>
-                  <td>{{ turma.quantidadeAlunos }}</td><td>{{ turma.capacidade }}</td>
-                  <td><button type="button" class="secondary-button" (click)="abrirTurma(turma)">Ver alunos</button></td>
-                </tr>
-              } @empty { <tr><td colspan="6" class="empty">Nenhuma turma vinculada ao seu usuário.</td></tr> }
-            </tbody>
-          </table>
-        </div>
-      </section>
-    }
-    @case ('aulas') {
-      <section class="panel" aria-labelledby="aulas-titulo">
-        <div class="panel-header"><div><h2 id="aulas-titulo">Aulas</h2><span class="subtle">Planos de aula das suas turmas</span></div><button type="button" class="primary-button" (click)="abrirNovaAula()">Nova aula</button></div>
-        <div class="table-wrapper">
-          <table>
-            <thead><tr><th>Data</th><th>Turma</th><th>Conteúdo previsto</th><th>Conteúdo ministrado</th><th>Status</th><th></th></tr></thead>
-            <tbody>
-              @for (aula of aulas(); track aula.aulaId) {
-                <tr><td>{{ aula.dataAula }}</td><td>{{ aula.turmaId }}</td><td>{{ aula.conteudoPrevisto || '-' }}</td><td>{{ aula.conteudoMinistrado || '-' }}</td><td><span class="status">{{ aula.statusAula }}</span></td><td><button type="button" class="secondary-button" (click)="editarAula(aula)">Editar</button></td></tr>
-              } @empty { <tr><td colspan="6" class="empty">Nenhuma aula cadastrada para suas turmas.</td></tr> }
-            </tbody>
-          </table>
-        </div>
-      </section>
-    }
-    @case ('materiais') {
-      <section class="panel" aria-labelledby="materiais-titulo">
-        <div class="panel-header"><div><h2 id="materiais-titulo">Materiais didáticos</h2><span class="subtle">Filtrados pelas suas turmas</span></div><button type="button" class="primary-button" (click)="mostrarUploadMaterial.set(true)">Novo material</button></div>
-        <div class="material-grid">
-          @for (material of materiais(); track material.materialId) {
-            <article class="material-card"><div class="material-icon">{{ material.tipo }}</div><h3>{{ material.titulo }}</h3><p>{{ material.nomeTurma || material.nomeOficina || 'Sem vínculo informado' }}</p><a class="secondary-button" [href]="material.url" target="_blank" rel="noopener">Abrir</a></article>
-          } @empty { <p class="empty">Nenhum material disponível para suas turmas.</p> }
-        </div>
-      </section>
-    }
-    @case ('comunicados') {
-      <section class="panel" aria-labelledby="comunicados-titulo">
-        <div class="panel-header"><div><h2 id="comunicados-titulo">Comunicados</h2><span class="subtle">Mensagens da coordenação</span></div></div>
-        @for (comunicado of comunicados(); track comunicado.comunicadoId) {
-          <article class="announcement"><h3>{{ comunicado.titulo }}</h3><p>{{ comunicado.mensagem }}</p><time>{{ comunicado.criadoEm }}</time></article>
-        } @empty { <p class="empty">Nenhum comunicado para suas turmas.</p> }
-      </section>
-    }
+  @case ('turmas') {
+  <section class="panel" aria-labelledby="turmas-titulo">
+    <div class="panel-header"><h2 id="turmas-titulo">Minhas turmas</h2><span class="subtle">Somente leitura</span></div>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Turma</th><th>Oficina</th><th>Turno</th><th>Alunos</th><th>Capacidade</th><th></th></tr></thead>
+        <tbody>
+        @for (turma of turmas(); track turma.turmaId) {
+        <tr>
+          <td class="strong">{{ turma.nomeTurma }}</td><td>{{ turma.nomeOficina || '-' }}</td><td>{{ turma.turno }}</td>
+          <td>{{ turma.quantidadeAlunos }}</td><td>{{ turma.capacidade }}</td>
+          <td class="acoes-cell">
+            <button type="button" class="secondary-button" (click)="abrirTurma(turma)">Ver alunos</button>
+            <button type="button" class="secondary-button" (click)="abrirAulasDaTurma(turma)">Ver aulas</button>
+          </td>
+        </tr>
+        } @empty { <tr><td colspan="6" class="empty">Nenhuma turma vinculada ao seu usuário.</td></tr> }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  }
+  @case ('aulas') {
+  <section class="panel" aria-labelledby="aulas-titulo">
+    <div class="panel-header">
+      <div><h2 id="aulas-titulo">Aulas</h2><span class="subtle">Planos de aula das suas turmas</span></div>
+      <div style="display: flex; gap: 8px;">
+        <button type="button" class="primary-button" (click)="abrirNovaAula()">Nova aula</button>
+        <button type="button" class="primary-button" (click)="abrirModalCriarAulas()">Criar várias aulas</button>
+      </div>
+    </div>
+    <div class="table-wrapper table-wrapper-aulas">
+      <table class="aulas-table-principal">
+        <thead>
+        <tr>
+          <th>Data</th>
+          <th>Horário</th>
+          <th>Turma</th>
+          <th>Oficineiro</th>
+          <th>Alunos</th>
+          <th>Título</th>
+          <th>Conteúdo previsto</th>
+          <th>Conteúdo ministrado</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        @for (aula of aulas(); track aula.aulaId) {
+        <tr>
+          <td>{{ aula.dataAula }}</td>
+          <td>{{ aula.horarioInicio && aula.horarioFim ? aula.horarioInicio + ' - ' + aula.horarioFim : '-' }}</td>
+          <td>{{ aula.nomeTurma || '-' }}</td>
+          <td>{{ aula.nomeOficineiro || '-' }}</td>
+          <td>{{ aula.quantidadeAlunos ?? '-' }}</td>
+          <td>{{ aula.titulo || '-' }}</td>
+          <td>{{ aula.conteudoPrevisto || '-' }}</td>
+          <td>{{ aula.conteudoMinistrado || '-' }}</td>
+          <td><span class="status">{{ aula.statusAula }}</span></td>
+          <td><button type="button" class="secondary-button" (click)="editarAula(aula)">Editar</button></td>
+        </tr>
+        } @empty { <tr><td colspan="10" class="empty">Nenhuma aula cadastrada para suas turmas.</td></tr> }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  }
+  @case ('materiais') {
+  <section class="panel" aria-labelledby="materiais-titulo">
+    <div class="panel-header"><div><h2 id="materiais-titulo">Materiais didáticos</h2><span class="subtle">Filtrados pelas suas turmas</span></div><button type="button" class="primary-button" (click)="mostrarUploadMaterial.set(true)">Novo material</button></div>
+    <div class="material-grid">
+      @for (material of materiais(); track material.materialId) {
+      <article class="material-card"><div class="material-icon">{{ material.tipo }}</div><h3>{{ material.titulo }}</h3><p>{{ material.nomeTurma || material.nomeOficina || 'Sem vínculo informado' }}</p><a class="secondary-button" [href]="material.url" target="_blank" rel="noopener">Abrir</a></article>
+      } @empty { <p class="empty">Nenhum material disponível para suas turmas.</p> }
+    </div>
+  </section>
+  }
+  @case ('comunicados') {
+  <section class="panel" aria-labelledby="comunicados-titulo">
+    <div class="panel-header"><div><h2 id="comunicados-titulo">Comunicados</h2><span class="subtle">Mensagens da coordenação</span></div></div>
+    @for (comunicado of comunicados(); track comunicado.comunicadoId) {
+    <article class="announcement"><h3>{{ comunicado.titulo }}</h3><p>{{ comunicado.mensagem }}</p><time>{{ comunicado.criadoEm }}</time></article>
+    } @empty { <p class="empty">Nenhum comunicado para suas turmas.</p> }
+  </section>
+  }
   }
 
   @if (turmaSelecionada(); as turma) {
-    <div class="overlay" role="presentation" (click)="fecharTurma()">
-      <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="alunos-titulo" (click)="$event.stopPropagation()">
-        <div class="panel-header"><h2 id="alunos-titulo">Alunos de {{ turma.nomeTurma }}</h2><button type="button" class="close-button" (click)="fecharTurma()" aria-label="Fechar">X</button></div>
-        @for (aluno of alunos(); track aluno.assistidoId) { <p class="student">{{ aluno.nomeCompleto }}</p> } @empty { <p class="empty">Nenhum aluno ativo encontrado.</p> }
-      </section>
-    </div>
+  <div class="overlay" role="presentation" (click)="fecharTurma()">
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="alunos-titulo" (click)="$event.stopPropagation()">
+      <div class="panel-header"><h2 id="alunos-titulo">Alunos de {{ turma.nomeTurma }}</h2><button type="button" class="close-button" (click)="fecharTurma()" aria-label="Fechar">X</button></div>
+      @for (aluno of alunos(); track aluno.assistidoId) { <p class="student">{{ aluno.nomeCompleto }}</p> } @empty { <p class="empty">Nenhum aluno ativo encontrado.</p> }
+    </section>
+  </div>
   }
 
   @if (mostrarFormularioAula()) {
-    <div class="overlay" role="presentation" (click)="fecharFormularioAula()">
-      <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="nova-aula-titulo" (click)="$event.stopPropagation()">
-        <div class="panel-header"><h2 id="nova-aula-titulo">Nova aula</h2><button type="button" class="close-button" (click)="fecharFormularioAula()" aria-label="Fechar">X</button></div>
-        <label>Turma<select [(ngModel)]="aulaForm.turmaId"><option [ngValue]="0">Selecione</option>@for (turma of turmas(); track turma.turmaId) { <option [ngValue]="turma.turmaId">{{ turma.nomeTurma }}</option> }</select></label>
-        <label>Data<input type="date" [(ngModel)]="aulaForm.dataAula"></label>
-        <label>Conteúdo previsto<textarea [(ngModel)]="aulaForm.conteudoPrevisto"></textarea></label>
-        <label>Conteúdo ministrado<textarea [(ngModel)]="aulaForm.conteudoMinistrado"></textarea></label>
-        <label>Status<select [(ngModel)]="aulaForm.statusAula"><option [ngValue]="undefined">Planejada</option><option value="REALIZADA">Realizada</option><option value="CANCELADA">Cancelada</option></select></label>
-        <label>Observações<textarea [(ngModel)]="aulaForm.observacoes"></textarea></label>
-        <div class="dialog-actions"><button type="button" class="secondary-button" (click)="fecharFormularioAula()">Cancelar</button><button type="button" class="primary-button" [disabled]="salvandoAula()" (click)="salvarAula()">Salvar aula</button></div>
-      </section>
-    </div>
+  <div class="overlay" role="presentation" (click)="fecharFormularioAula()">
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="nova-aula-titulo" (click)="$event.stopPropagation()" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+      <div class="panel-header"><h2 id="nova-aula-titulo">Nova aula</h2><button type="button" class="close-button" (click)="fecharFormularioAula()" aria-label="Fechar">X</button></div>
+      <label>Turma<select [(ngModel)]="aulaForm.turmaId"><option [ngValue]="0">Selecione</option>@for (turma of turmas(); track turma.turmaId) { <option [ngValue]="turma.turmaId">{{ turma.nomeTurma }}</option> }</select></label>
+      <label>Data<input type="date" [(ngModel)]="aulaForm.dataAula"></label>
+      <div style="display: flex; gap: 16px;">
+        <label style="flex: 1;">Horário de início<input type="time" [(ngModel)]="aulaForm.horarioInicio"></label>
+        <label style="flex: 1;">Horário de fim<input type="time" [(ngModel)]="aulaForm.horarioFim"></label>
+      </div>
+      <label>Título (opcional)<input type="text" [(ngModel)]="aulaForm.titulo" placeholder="Ex.: Aula de introdução" maxlength="150"></label>
+      <label>Descrição (opcional)<textarea [(ngModel)]="aulaForm.descricao" rows="3"></textarea></label>
+      <label>Conteúdo previsto (opcional)<textarea [(ngModel)]="aulaForm.conteudoPrevisto" rows="3"></textarea></label>
+      <label>Conteúdo ministrado (opcional)<textarea [(ngModel)]="aulaForm.conteudoMinistrado" rows="3"></textarea></label>
+      <label>Objetivos (opcional)<textarea [(ngModel)]="aulaForm.objetivos" rows="3"></textarea></label>
+      <label>Recursos necessários (opcional)<textarea [(ngModel)]="aulaForm.recursosNecessarios" rows="3"></textarea></label>
+      <label>Status<select [(ngModel)]="aulaForm.statusAula"><option [ngValue]="undefined">Planejada</option><option value="REALIZADA">Realizada</option><option value="CANCELADA">Cancelada</option></select></label>
+      <label>Observações (opcional)<textarea [(ngModel)]="aulaForm.observacoes" rows="3"></textarea></label>
+      <div class="dialog-actions"><button type="button" class="secondary-button" (click)="fecharFormularioAula()">Cancelar</button><button type="button" class="primary-button" [disabled]="salvandoAula()" (click)="salvarAula()">Salvar aula</button></div>
+    </section>
+  </div>
   }
 
   @if (mostrarUploadMaterial()) {
-    <div class="overlay" role="presentation" (click)="mostrarUploadMaterial.set(false)">
-      <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="novo-material-titulo" (click)="$event.stopPropagation()">
-        <div class="panel-header"><h2 id="novo-material-titulo">Novo material</h2><button type="button" class="close-button" (click)="mostrarUploadMaterial.set(false)" aria-label="Fechar">X</button></div>
-        <label>Arquivo<input type="file" (change)="selecionarArquivo($event)" accept=".pdf,.mp4,.doc,.docx,.ppt,.pptx"></label>
-        <div class="dialog-actions"><button type="button" class="secondary-button" (click)="mostrarUploadMaterial.set(false)">Cancelar</button><button type="button" class="primary-button" [disabled]="enviandoMaterial()" (click)="enviarMaterial()">Enviar</button></div>
-      </section>
-    </div>
+  <div class="overlay" role="presentation" (click)="mostrarUploadMaterial.set(false)">
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="novo-material-titulo" (click)="$event.stopPropagation()">
+      <div class="panel-header"><h2 id="novo-material-titulo">Novo material</h2><button type="button" class="close-button" (click)="mostrarUploadMaterial.set(false)" aria-label="Fechar">X</button></div>
+      <label>Arquivo<input type="file" (change)="selecionarArquivo($event)" accept=".pdf,.mp4,.doc,.docx,.ppt,.pptx"></label>
+      <div class="dialog-actions"><button type="button" class="secondary-button" (click)="mostrarUploadMaterial.set(false)">Cancelar</button><button type="button" class="primary-button" [disabled]="enviandoMaterial()" (click)="enviarMaterial()">Enviar</button></div>
+    </section>
+  </div>
   }
+
+  @if (mostrarModalCriarAulas()) {
+  <div class="overlay" role="presentation" (click)="fecharModalCriarAulas()">
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="criar-varias-aulas-titulo" (click)="$event.stopPropagation()" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+      <div class="panel-header"><h2 id="criar-varias-aulas-titulo">Criar várias aulas</h2><button type="button" class="close-button" (click)="fecharModalCriarAulas()" aria-label="Fechar">X</button></div>
+      @if (erroCriarAulas()) {
+      <p class="feedback error" role="alert">{{ erroCriarAulas() }}</p>
+      }
+      <label>Turma<select [(ngModel)]="formCriarAulas.turmaId"><option [ngValue]="0">Selecione</option>@for (turma of turmas(); track turma.turmaId) { <option [ngValue]="turma.turmaId">{{ turma.nomeTurma }}</option> }</select></label>
+      <div style="display: flex; gap: 16px;">
+        <label style="flex: 1;">Data de início<input type="date" [(ngModel)]="formCriarAulas.dataInicio"></label>
+        <label style="flex: 1;">Data de fim<input type="date" [(ngModel)]="formCriarAulas.dataFim"></label>
+      </div>
+      <label>Dias da semana<div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+        <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes(1)" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes(1)" (click)="toggleDiaSemana(1)">Segunda</button>
+        <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes(2)" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes(2)" (click)="toggleDiaSemana(2)">Terça</button>
+        <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes(3)" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes(3)" (click)="toggleDiaSemana(3)">Quarta</button>
+        <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes(4)" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes(4)" (click)="toggleDiaSemana(4)">Quinta</button>
+        <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes(5)" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes(5)" (click)="toggleDiaSemana(5)">Sexta</button>
+        <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes(6)" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes(6)" (click)="toggleDiaSemana(6)">Sábado</button>
+        <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes(7)" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes(7)" (click)="toggleDiaSemana(7)">Domingo</button>
+      </div></label>
+      <div style="display: flex; gap: 16px;">
+        <label style="flex: 1;">Horário de início<input type="time" [(ngModel)]="formCriarAulas.horarioInicio"></label>
+        <label style="flex: 1;">Horário de fim<input type="time" [(ngModel)]="formCriarAulas.horarioFim"></label>
+      </div>
+      <label>Título (opcional)<input type="text" [(ngModel)]="formCriarAulas.titulo" placeholder="Ex.: Aula de introdução"></label>
+      <label>Descrição (opcional)<textarea [(ngModel)]="formCriarAulas.descricao" placeholder="Descrição das aulas" rows="3"></textarea></label>
+      <label>Conteúdo previsto (opcional)<textarea [(ngModel)]="formCriarAulas.conteudoPrevisto" placeholder="Conteúdo que será abordado" rows="3"></textarea></label>
+      <label>Objetivos (opcional)<textarea [(ngModel)]="formCriarAulas.objetivos" placeholder="Objetivos das aulas" rows="3"></textarea></label>
+      <label>Recursos necessários (opcional)<textarea [(ngModel)]="formCriarAulas.recursosNecessarios" placeholder="Materiais e recursos necessários" rows="3"></textarea></label>
+      <label>Observações (opcional)<textarea [(ngModel)]="formCriarAulas.observacoes" placeholder="Observações adicionais" rows="3"></textarea></label>
+      <div class="dialog-actions"><button type="button" class="secondary-button" (click)="fecharModalCriarAulas()">Cancelar</button><button type="button" class="primary-button" [disabled]="salvandoCriarAulas()" (click)="salvarCriarAulas()">{{ salvandoCriarAulas() ? 'Criando aulas...' : 'Criar aulas' }}</button></div>
+    </section>
+  </div>
+  }
+
+  <app-aulas-turma-modal
+    [turmaId]="turmaAulasSelecionada()?.turmaId ?? 0"
+    [nomeTurma]="turmaAulasSelecionada()?.nomeTurma ?? ''"
+    [aberto]="turmaAulasSelecionada() !== null"
+    (fechar)="fecharAulasDaTurma()">
+  </app-aulas-turma-modal>
 </section>

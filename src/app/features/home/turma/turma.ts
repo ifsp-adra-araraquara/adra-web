@@ -12,6 +12,7 @@ import { Turno, TURNOS_DISPONIVEIS } from '../../../shared/enum/Turno';
 import { TurmaRequestDTO } from '../../../shared/models/turma/TurmaRequestDTO';
 import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO';
 import { TurmaStatusRequestDTO } from '../../../shared/models/turma/TurmaStatusRequestDTO';
+import { CriacaoAulasRequestDTO } from '../../../shared/models/aula/CriacaoAulasRequestDTO';
 
 
 @Component({
@@ -25,6 +26,7 @@ export class Turmas implements OnInit {
   private http = inject(HttpClient);
 
   private readonly apiTurmas = `${environment.apiUrl}/api/turmas`;
+  private readonly apiAulas = `${environment.apiUrl}/api/aulas`;
 
   Turno = Turno;
   turnosDisponiveis = TURNOS_DISPONIVEIS;
@@ -59,7 +61,7 @@ export class Turmas implements OnInit {
     this.carregarTurmas();
   }
 
-  
+
 
 
   carregarTurmas(): void {
@@ -202,6 +204,111 @@ export class Turmas implements OnInit {
   turmaSelecionadaStatus = signal<TurmaResponseDTO | null>(null);
   alterandoStatus = signal(false);
 
+  /* ============================================================
+   * CRIAR VÁRIAS AULAS
+   * ============================================================ */
+  mostrarModalCriarAulas = signal(false);
+  salvandoAulas = signal(false);
+  erroSalvarAulas = signal<string | null>(null);
+  formCriarAulas: CriacaoAulasRequestDTO = this.criacaoAulasVazia();
+
+  private criacaoAulasVazia(): CriacaoAulasRequestDTO {
+    return {
+      turmaId: 0,
+      dataInicio: '',
+      dataFim: '',
+      diasDaSemana: [],
+      horarioInicio: '',
+      horarioFim: '',
+      titulo: '',
+      descricao: '',
+      conteudoPrevisto: '',
+      objetivos: '',
+      recursosNecessarios: '',
+      observacoes: '',
+    };
+  }
+
+  abrirModalCriarAulas(turma: TurmaResponseDTO): void {
+    this.formCriarAulas = {
+      ...this.criacaoAulasVazia(),
+      turmaId: turma.turmaId,
+    };
+    this.erroSalvarAulas.set(null);
+    this.mostrarModalCriarAulas.set(true);
+  }
+
+  fecharModalCriarAulas(): void {
+    this.mostrarModalCriarAulas.set(false);
+  }
+
+  atualizarCampoCriarAulas(campo: keyof CriacaoAulasRequestDTO, valor: any): void {
+    this.formCriarAulas = { ...this.formCriarAulas, [campo]: valor };
+  }
+
+  toggleDiaSemana(dia: number): void {
+    const dias = this.formCriarAulas.diasDaSemana;
+    const index = dias.indexOf(dia);
+    if (index > -1) {
+      this.formCriarAulas.diasDaSemana = dias.filter((d) => d !== dia);
+    } else {
+      this.formCriarAulas.diasDaSemana = [...dias, dia];
+    }
+  }
+
+  async salvarCriarAulas(): Promise<void> {
+    if (this.salvandoAulas()) {
+      return;
+    }
+
+    if (!this.formCriarAulas.turmaId) {
+      this.erroSalvarAulas.set('Selecione uma turma.');
+      return;
+    }
+
+    if (!this.formCriarAulas.dataInicio) {
+      this.erroSalvarAulas.set('Informe a data de início.');
+      return;
+    }
+
+    if (!this.formCriarAulas.dataFim) {
+      this.erroSalvarAulas.set('Informe a data de fim.');
+      return;
+    }
+
+    if (!this.formCriarAulas.diasDaSemana || this.formCriarAulas.diasDaSemana.length === 0) {
+      this.erroSalvarAulas.set('Selecione pelo menos um dia da semana.');
+      return;
+    }
+
+    if (!this.formCriarAulas.horarioInicio) {
+      this.erroSalvarAulas.set('Informe o horário de início.');
+      return;
+    }
+
+    if (!this.formCriarAulas.horarioFim) {
+      this.erroSalvarAulas.set('Informe o horário de fim.');
+      return;
+    }
+
+    this.salvandoAulas.set(true);
+    this.erroSalvarAulas.set(null);
+
+    try {
+      await firstValueFrom(
+        this.http.post<boolean>(`${this.apiAulas}/varias-aulas`, this.formCriarAulas),
+      );
+      this.salvandoAulas.set(false);
+      this.fecharModalCriarAulas();
+    } catch (erro: any) {
+      console.error('Erro ao criar aulas:', erro);
+      this.erroSalvarAulas.set(
+        erro?.error?.message ?? 'Não foi possível criar as aulas. Verifique os dados e tente novamente.',
+      );
+      this.salvandoAulas.set(false);
+    }
+  }
+
   abrirModalStatus(turma: TurmaResponseDTO): void {
     this.turmaSelecionadaStatus.set(turma);
     this.mostrarModalStatus.set(true);
@@ -235,6 +342,6 @@ export class Turmas implements OnInit {
       // mantém o modal aberto pra o usuário poder tentar de novo
     }
   }
-  
+
 }
 

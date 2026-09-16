@@ -6,21 +6,33 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { AulaRequestDTO } from '../../../shared/models/aula/AulaRequestDTO';
 import { AulaResponseDTO } from '../../../shared/models/aula/AulaResponseDTO';
+import { AulaComDetalhesResponseDTO } from '../../../shared/models/aula/AulaComDetalhesResponseDTO';
+import { CriacaoAulasRequestDTO } from '../../../shared/models/aula/CriacaoAulasRequestDTO';
 import { OficineiroComunicadoDTO } from '../../../shared/models/oficineiro/OficineiroComunicadoDTO';
 import { OficineiroMaterialDTO } from '../../../shared/models/oficineiro/OficineiroMaterialDTO';
 import { OficineiroTurmaDTO } from '../../../shared/models/oficineiro/OficineiroTurmaDTO';
 import { AuthService } from '../../../core/auth.service';
+import { AulasTurmaModal } from '../aulas-turma-modal/aulas-turma-modal';
 
 type AbaOficineiro = 'turmas' | 'aulas' | 'materiais' | 'comunicados';
 
 @Component({
   selector: 'app-oficineiro',
-  imports: [FormsModule],
+  imports: [FormsModule, AulasTurmaModal],
   templateUrl: './oficineiro.html',
   styleUrl: './oficineiro.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Oficineiro implements OnInit {
+  readonly turmaAulasSelecionada = signal<OficineiroTurmaDTO | null>(null);
+
+  abrirAulasDaTurma(turma: OficineiroTurmaDTO): void {
+    this.turmaAulasSelecionada.set(turma);
+  }
+
+  fecharAulasDaTurma(): void {
+    this.turmaAulasSelecionada.set(null);
+  }
   private readonly http = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -31,7 +43,7 @@ export class Oficineiro implements OnInit {
   readonly carregando = signal(false);
   readonly erro = signal<string | null>(null);
   readonly turmas = signal<OficineiroTurmaDTO[]>([]);
-  readonly aulas = signal<AulaResponseDTO[]>([]);
+  readonly aulas = signal<AulaComDetalhesResponseDTO[]>([]);
   readonly materiais = signal<OficineiroMaterialDTO[]>([]);
   readonly comunicados = signal<OficineiroComunicadoDTO[]>([]);
   readonly turmaSelecionada = signal<OficineiroTurmaDTO | null>(null);
@@ -42,13 +54,35 @@ export class Oficineiro implements OnInit {
   readonly mostrarUploadMaterial = signal(false);
   readonly enviandoMaterial = signal(false);
   readonly arquivoMaterial = signal<File | null>(null);
+  readonly mostrarModalCriarAulas = signal(false);
+  readonly salvandoCriarAulas = signal(false);
+  readonly erroCriarAulas = signal<string | null>(null);
+  formCriarAulas: CriacaoAulasRequestDTO = {
+    turmaId: 0,
+    dataInicio: '',
+    dataFim: '',
+    diasDaSemana: [],
+    horarioInicio: '',
+    horarioFim: '',
+    titulo: '',
+    descricao: '',
+    conteudoPrevisto: '',
+    objetivos: '',
+    recursosNecessarios: '',
+    observacoes: '',
+  };
   readonly aulaForm: AulaRequestDTO = {
     turmaId: 0,
     dataAula: '',
     titulo: '',
     descricao: '',
+    horarioInicio: '',
+    horarioFim: '',
     conteudoPrevisto: '',
     conteudoMinistrado: '',
+    objetivos: '',
+    recursosNecessarios: '',
+    statusAula: undefined,
     observacoes: '',
   };
 
@@ -64,15 +98,24 @@ export class Oficineiro implements OnInit {
 
   selecionarAba(aba: AbaOficineiro): void {
     this.aba.set(aba);
-    this.router.navigate([], { relativeTo: this.route, queryParams: { aba }, queryParamsHandling: 'merge' });
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { aba },
+      queryParamsHandling: 'merge',
+    });
     this.carregarAba(aba);
   }
 
   abrirTurma(turma: OficineiroTurmaDTO): void {
     this.turmaSelecionada.set(turma);
-    this.http.get<{ assistidoId: number; nomeCompleto: string }[]>(`${this.api}/api/assistidos`, {
-      params: { turmaId: turma.turmaId.toString(), ativo: 'true' },
-    }).subscribe({ next: (alunos) => this.alunos.set(alunos), error: () => this.erro.set('Não foi possível carregar os alunos da turma.') });
+    this.http
+      .get<{ assistidoId: number; nomeCompleto: string }[]>(`${this.api}/api/assistidos`, {
+        params: { turmaId: turma.turmaId.toString(), ativo: 'true' },
+      })
+      .subscribe({
+        next: (alunos) => this.alunos.set(alunos),
+        error: () => this.erro.set('Não foi possível carregar os alunos da turma.'),
+      });
   }
 
   fecharTurma(): void {
@@ -84,20 +127,31 @@ export class Oficineiro implements OnInit {
     this.aulaEmEdicao.set(null);
     this.aulaForm.turmaId = this.turmas()[0]?.turmaId ?? 0;
     this.aulaForm.dataAula = new Date().toISOString().slice(0, 10);
+    this.aulaForm.titulo = '';
+    this.aulaForm.descricao = '';
+    this.aulaForm.horarioInicio = '';
+    this.aulaForm.horarioFim = '';
     this.aulaForm.conteudoPrevisto = '';
     this.aulaForm.conteudoMinistrado = '';
+    this.aulaForm.objetivos = '';
+    this.aulaForm.recursosNecessarios = '';
     this.aulaForm.statusAula = undefined;
+    this.aulaForm.observacoes = '';
     this.mostrarFormularioAula.set(true);
   }
 
-  editarAula(aula: AulaResponseDTO): void {
+  editarAula(aula: AulaComDetalhesResponseDTO): void {
     this.aulaEmEdicao.set(aula.aulaId);
-    this.aulaForm.turmaId = aula.turmaId;
+    this.aulaForm.turmaId = aula.turmaId ?? 0;
     this.aulaForm.dataAula = aula.dataAula;
-    this.aulaForm.titulo = aula.titulo;
+    this.aulaForm.titulo = aula.titulo ?? '';
     this.aulaForm.descricao = aula.descricao ?? '';
+    this.aulaForm.horarioInicio = aula.horarioInicio ?? '';
+    this.aulaForm.horarioFim = aula.horarioFim ?? '';
     this.aulaForm.conteudoPrevisto = aula.conteudoPrevisto ?? '';
     this.aulaForm.conteudoMinistrado = aula.conteudoMinistrado ?? '';
+    this.aulaForm.objetivos = aula.objetivos ?? '';
+    this.aulaForm.recursosNecessarios = aula.recursosNecessarios ?? '';
     this.aulaForm.statusAula = aula.statusAula;
     this.aulaForm.observacoes = aula.observacoes ?? '';
     this.mostrarFormularioAula.set(true);
@@ -115,9 +169,13 @@ export class Oficineiro implements OnInit {
     try {
       const aulaId = this.aulaEmEdicao();
       if (aulaId) {
-        await firstValueFrom(this.http.put<AulaResponseDTO>(`${this.api}/api/aulas/${aulaId}`, this.aulaForm));
+        await firstValueFrom(
+          this.http.put<AulaResponseDTO>(`${this.api}/api/aulas/${aulaId}`, this.aulaForm),
+        );
       } else {
-        await firstValueFrom(this.http.post<AulaResponseDTO>(`${this.api}/api/aulas`, this.aulaForm));
+        await firstValueFrom(
+          this.http.post<AulaResponseDTO>(`${this.api}/api/aulas`, this.aulaForm),
+        );
       }
       this.fecharFormularioAula();
       await this.carregarAulas();
@@ -169,23 +227,39 @@ export class Oficineiro implements OnInit {
   private async carregarTurmas(): Promise<void> {
     const usuario = this.usuarioLogado();
     if (!usuario) return;
-    const turmas = await firstValueFrom(this.http.get<OficineiroTurmaDTO[]>(`${this.api}/api/turmas/minhas-turmas/${usuario.usuarioId}`));
+    const turmas = await firstValueFrom(
+      this.http.get<OficineiroTurmaDTO[]>(
+        `${this.api}/api/turmas/minhas-turmas/${usuario.usuarioId}`,
+      ),
+    );
     this.turmas.set(turmas);
   }
 
   private async carregarAulas(): Promise<void> {
     await this.carregarTurmas();
-    const aulas = await Promise.all(this.turmas().map((turma) => firstValueFrom(this.http.get<AulaResponseDTO[]>(`${this.api}/api/aulas/turma/${turma.turmaId}`))));
+    const aulas = await Promise.all(
+      this.turmas().map((turma) =>
+        firstValueFrom(
+          this.http.get<AulaComDetalhesResponseDTO[]>(
+            `${this.api}/api/aulas/turma/${turma.turmaId}/detalhes`,
+          ),
+        ),
+      ),
+    );
     this.aulas.set(aulas.flat().sort((a, b) => b.dataAula.localeCompare(a.dataAula)));
   }
 
   private async carregarMateriais(): Promise<void> {
-    const materiais = await firstValueFrom(this.http.get<OficineiroMaterialDTO[]>(`${this.api}/api/materiais/minhas-turmas`));
+    const materiais = await firstValueFrom(
+      this.http.get<OficineiroMaterialDTO[]>(`${this.api}/api/materiais/minhas-turmas`),
+    );
     this.materiais.set(materiais);
   }
 
   private async carregarComunicados(): Promise<void> {
-    const comunicados = await firstValueFrom(this.http.get<OficineiroComunicadoDTO[]>(`${this.api}/api/comunicados/minhas-turmas`));
+    const comunicados = await firstValueFrom(
+      this.http.get<OficineiroComunicadoDTO[]>(`${this.api}/api/comunicados/minhas-turmas`),
+    );
     this.comunicados.set(comunicados);
   }
 
@@ -194,6 +268,103 @@ export class Oficineiro implements OnInit {
   }
 
   private ehAba(valor: string | null): valor is AbaOficineiro {
-    return valor === 'turmas' || valor === 'aulas' || valor === 'materiais' || valor === 'comunicados';
+    return (
+      valor === 'turmas' || valor === 'aulas' || valor === 'materiais' || valor === 'comunicados'
+    );
+  }
+
+  /* ============================================================
+   * CRIAR VÁRIAS AULAS
+   * ============================================================ */
+  abrirModalCriarAulas(): void {
+    this.formCriarAulas = {
+      turmaId: this.turmas()[0]?.turmaId ?? 0,
+      dataInicio: '',
+      dataFim: '',
+      diasDaSemana: [],
+      horarioInicio: '',
+      horarioFim: '',
+      titulo: '',
+      descricao: '',
+      conteudoPrevisto: '',
+      objetivos: '',
+      recursosNecessarios: '',
+      observacoes: '',
+    };
+    this.erroCriarAulas.set(null);
+    this.mostrarModalCriarAulas.set(true);
+  }
+
+  fecharModalCriarAulas(): void {
+    this.mostrarModalCriarAulas.set(false);
+  }
+
+  atualizarCampoCriarAulas(campo: keyof CriacaoAulasRequestDTO, valor: any): void {
+    this.formCriarAulas = { ...this.formCriarAulas, [campo]: valor };
+  }
+
+  toggleDiaSemana(dia: number): void {
+    const dias = this.formCriarAulas.diasDaSemana;
+    const index = dias.indexOf(dia);
+    if (index > -1) {
+      this.formCriarAulas.diasDaSemana = dias.filter((d) => d !== dia);
+    } else {
+      this.formCriarAulas.diasDaSemana = [...dias, dia];
+    }
+  }
+
+  async salvarCriarAulas(): Promise<void> {
+    if (this.salvandoCriarAulas()) {
+      return;
+    }
+
+    if (!this.formCriarAulas.turmaId) {
+      this.erroCriarAulas.set('Selecione uma turma.');
+      return;
+    }
+
+    if (!this.formCriarAulas.dataInicio) {
+      this.erroCriarAulas.set('Informe a data de início.');
+      return;
+    }
+
+    if (!this.formCriarAulas.dataFim) {
+      this.erroCriarAulas.set('Informe a data de fim.');
+      return;
+    }
+
+    if (!this.formCriarAulas.diasDaSemana || this.formCriarAulas.diasDaSemana.length === 0) {
+      this.erroCriarAulas.set('Selecione pelo menos um dia da semana.');
+      return;
+    }
+
+    if (!this.formCriarAulas.horarioInicio) {
+      this.erroCriarAulas.set('Informe o horário de início.');
+      return;
+    }
+
+    if (!this.formCriarAulas.horarioFim) {
+      this.erroCriarAulas.set('Informe o horário de fim.');
+      return;
+    }
+
+    this.salvandoCriarAulas.set(true);
+    this.erroCriarAulas.set(null);
+
+    try {
+      await firstValueFrom(
+        this.http.post<boolean>(`${this.api}/api/aulas/varias-aulas`, this.formCriarAulas),
+      );
+      this.salvandoCriarAulas.set(false);
+      this.fecharModalCriarAulas();
+      await this.carregarAulas();
+    } catch (erro: any) {
+      console.error('Erro ao criar aulas:', erro);
+      this.erroCriarAulas.set(
+        erro?.error?.message ??
+          'Não foi possível criar as aulas. Verifique os dados e tente novamente.',
+      );
+      this.salvandoCriarAulas.set(false);
+    }
   }
 }
