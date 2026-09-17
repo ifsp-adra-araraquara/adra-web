@@ -15,6 +15,7 @@ import { UsuarioStatusRequest } from '../../../shared/models/usuarios/UsuarioSta
 
 import { CadastroUsuario } from '../../usuarios/cadastro/cadastro-usuario';
 import { DefinirSenha } from '../../usuarios/senha/definir-senha';
+import { AuthService } from '../../../core/auth.service';
 
 @Component({
   selector: 'app-usuarios',
@@ -25,6 +26,10 @@ import { DefinirSenha } from '../../usuarios/senha/definir-senha';
 })
 export class Usuarios implements OnInit {
   private http = inject(HttpClient);
+  private authService = inject(AuthService);
+
+  usuarioLogadoId = computed(() => this.authService.currentUserResponse()?.usuarioId ?? null);
+  erroGeral = signal<string | null>(null);
 
   Role = Role;
   labels = ROLE_LABELS;
@@ -217,7 +222,14 @@ export class Usuarios implements OnInit {
       });
   }
 
+  isProprioUsuario(usuario: UsuarioResponse): boolean {
+    return this.usuarioLogadoId() === usuario.usuarioId;
+  }
+
   alterarStatus(usuario: UsuarioResponse): void {
+    if (this.isProprioUsuario(usuario) && usuario.ativo) {
+      return;
+    }
     this.usuarioSelecionadoStatus.set(usuario);
     this.acaoStatus.set(usuario.ativo ? 'inativar' : 'reativar');
     this.mostrarModalStatus.set(true);
@@ -226,6 +238,11 @@ export class Usuarios implements OnInit {
   confirmarAlteracaoStatus(): void {
     const usuario = this.usuarioSelecionadoStatus();
     if (usuario) {
+      if (this.isProprioUsuario(usuario) && this.acaoStatus() === 'inativar') {
+        this.mostrarModalStatus.set(false);
+        this.usuarioSelecionadoStatus.set(null);
+        return;
+      }
       const novoStatus = this.acaoStatus() === 'reativar';
       this.executarAlteracaoStatus(usuario, novoStatus);
     }
@@ -235,12 +252,16 @@ export class Usuarios implements OnInit {
 
   private executarAlteracaoStatus(usuario: UsuarioResponse, ativo: boolean): void {
     const request: UsuarioStatusRequest = { ativo };
+    this.erroGeral.set(null);
 
     this.http
       .patch<UsuarioResponse>(`${this.apiUrl}/${usuario.usuarioId}/status`, request)
       .subscribe({
         next: () => this.carregarUsuarios(),
-        error: (erro) => console.error('Erro ao alterar status:', erro),
+        error: (erro) => {
+          console.error('Erro ao alterar status:', erro);
+          this.erroGeral.set(erro.error?.mensagem ?? 'Não foi possível alterar o status do usuário.');
+        },
       });
   }
 

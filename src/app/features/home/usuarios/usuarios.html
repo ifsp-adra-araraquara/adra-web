@@ -58,6 +58,13 @@
       </div>
     </div>
 
+    @if (erroGeral()) {
+      <div class="notice notice-amber" style="margin: 0 24px 16px 24px; display: flex; justify-content: space-between; align-items: center;" role="alert">
+        <span>{{ erroGeral() }}</span>
+        <button type="button" (click)="erroGeral.set(null)" style="background: none; border: none; cursor: pointer; font-size: 16px; line-height: 1;">✕</button>
+      </div>
+    }
+
     <div class="table-wrap">
       @if (carregando()) {
         <p class="loading" role="status">Carregando usuários…</p>
@@ -103,7 +110,10 @@
                       </svg>
                     </button>
 
-                    <button title="Alterar status" (click)="alterarStatus(usuario)">
+                    <button
+                      [title]="isProprioUsuario(usuario) && usuario.ativo ? 'Não é permitido inativar seu próprio usuário' : 'Alterar status'"
+                      [disabled]="isProprioUsuario(usuario) && usuario.ativo"
+                      (click)="alterarStatus(usuario)">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 2v10" />
                         <path d="M18.4 6.6a9 9 0 1 1-12.8 0" />
