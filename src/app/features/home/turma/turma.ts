@@ -13,12 +13,12 @@ import { TurmaRequestDTO } from '../../../shared/models/turma/TurmaRequestDTO';
 import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO';
 import { TurmaStatusRequestDTO } from '../../../shared/models/turma/TurmaStatusRequestDTO';
 import { CriacaoAulasRequestDTO, DiaDaSemana } from '../../../shared/models/aula/CriacaoAulasRequestDTO';
-
+import { Select, SelectOption } from '../../../shared/components/select/select';
 
 @Component({
   selector: 'app-turmas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, Select],
   templateUrl: './turma.html',
   styleUrl: './turma.css',
 })
@@ -30,6 +30,28 @@ export class Turmas implements OnInit {
 
   Turno = Turno;
   turnosDisponiveis = TURNOS_DISPONIVEIS;
+
+  turnoOptions: SelectOption<string>[] = this.turnosDisponiveis.map(t => ({
+    value: t,
+    label: t
+  }));
+
+  filtroTurnoOptions: SelectOption<string>[] = [
+    { value: '', label: 'Todos os turnos' },
+    ...this.turnosDisponiveis.map(t => ({ value: t, label: t }))
+  ];
+
+  filtroStatusOptions: SelectOption<'todas' | 'ativas' | 'inativas'>[] = [
+    { value: 'ativas', label: 'Ativas' },
+    { value: 'inativas', label: 'Inativas' },
+    { value: 'todas', label: 'Todas' }
+  ];
+
+  faixaEtariaOptions: SelectOption<string>[] = [
+    { value: '6–9 anos', label: '6–9 anos' },
+    { value: '10–13 anos', label: '10–13 anos' },
+    { value: '14–17 anos', label: '14–17 anos' }
+  ];
 
   turmas = signal<TurmaResponseDTO[]>([]);
   carregando = signal(false);
@@ -61,43 +83,38 @@ export class Turmas implements OnInit {
     this.carregarTurmas();
   }
 
-
-
-
   carregarTurmas(): void {
-  this.carregando.set(true);
-  this.erroListar.set(null);
+    this.carregando.set(true);
+    this.erroListar.set(null);
 
-  let params = new HttpParams();
+    let params = new HttpParams();
 
-  if (this.filtroNome.trim()) {
-    params = params.set('nome', this.filtroNome.trim());
+    if (this.filtroNome.trim()) {
+      params = params.set('nome', this.filtroNome.trim());
+    }
+
+    if (this.filtroTurno) {
+      params = params.set('turno', this.filtroTurno); // Envia "MANHA" ou "Manhã"
+    }
+
+    if (this.filtroStatus === 'ativas') {
+      params = params.set('ativo', 'true');
+    } else if (this.filtroStatus === 'inativas') {
+      params = params.set('ativo', 'false');
+    }
+
+    this.http.get<TurmaResponseDTO[]>(this.apiTurmas, { params }).subscribe({
+      next: (lista) => {
+        this.turmas.set(lista);
+        this.carregando.set(false);
+      },
+      error: (erro) => {
+        console.error('Erro ao carregar turmas:', erro);
+        this.erroListar.set('Não foi possível carregar as turmas.');
+        this.carregando.set(false);
+      },
+    });
   }
-
-  if (this.filtroTurno) {
-    params = params.set('turno', this.filtroTurno); // Envia "MANHA" ou "Manhã"
-  }
-
-  if (this.filtroStatus === 'ativas') {
-    params = params.set('ativo', 'true');
-  } else if (this.filtroStatus === 'inativas') {
-    params = params.set('ativo', 'false');
-  }
-
-  this.http.get<TurmaResponseDTO[]>(this.apiTurmas, { params }).subscribe({
-    next: (lista) => {
-      this.turmas.set(lista);
-      this.carregando.set(false);
-    },
-    error: (erro) => {
-      console.error('Erro ao carregar turmas:', erro);
-      this.erroListar.set('Não foi possível carregar as turmas.');
-      this.carregando.set(false);
-    },
-  });
-}
-
-
 
   /* ============================================================
    * MODAL: NOVA / EDITAR TURMA (US-09 e US-11)
@@ -353,4 +370,3 @@ export class Turmas implements OnInit {
   }
 
 }
-

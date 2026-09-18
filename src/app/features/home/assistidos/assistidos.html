@@ -1,6 +1,3 @@
-<!-- ============================================================
-     PÁGINA: ASSISTIDOS
-     ============================================================ -->
 <section class="page" id="page-assistidos">
   <div
     class="page-header"
@@ -53,17 +50,12 @@
         (ngModelChange)="onBuscaChange($event)"
       />
 
-      <select
-        class="select"
+      <app-select
         style="flex-shrink: 0; width: auto"
         [ngModel]="filtroTurma()"
         (ngModelChange)="onFiltroTurmaChange($event)"
-      >
-        <option value="">Todas as turmas</option>
-        @for (turma of turmas(); track turma.turmaId) {
-          <option [value]="turma.turmaId">{{ turma.nomeTurma }}</option>
-        }
-      </select>
+        [options]="filtroTurmaOptions()"
+      />
     </div>
   </div>
 
@@ -286,16 +278,11 @@
 
           <div class="field">
             <label>Turma</label>
-            <select
-              class="select"
+            <app-select
               [ngModel]="novoAssistido.turmaId"
               (ngModelChange)="atualizarCampoAssistido('turmaId', $event)"
-            >
-              <option [ngValue]="null">Selecione uma turma ativa</option>
-              @for (turma of turmasAtivas(); track turma.turmaId) {
-                <option [ngValue]="turma.turmaId">{{ turma.nomeTurma }}</option>
-              }
-            </select>
+              [options]="turmaNovoAssistidoOptions()"
+            />
           </div>
         </div>
 
@@ -390,18 +377,11 @@
 
           <div class="field">
             <label>Parentesco</label>
-            <select
-              class="select"
+            <app-select
               [ngModel]="novoResponsavel.parentesco"
               (ngModelChange)="atualizarCampoResponsavel('parentesco', $event)"
-            >
-              <option value="">Selecione</option>
-              <option value="Mãe">Mãe</option>
-              <option value="Pai">Pai</option>
-              <option value="Avó/Avô">Avó/Avô</option>
-              <option value="Tio/Tia">Tio/Tia</option>
-              <option value="Responsável legal">Responsável legal</option>
-            </select>
+              [options]="parentescoOptions"
+            />
           </div>
         </div>
 
@@ -660,18 +640,11 @@
 
                   <div class="field">
                     <label>Parentesco</label>
-                    <select
-                      class="select"
+                    <app-select
                       [ngModel]="novoResponsavelVinculado.parentesco"
                       (ngModelChange)="atualizarCampoResponsavelVinculado('parentesco', $event)"
-                    >
-                      <option value="">Selecione</option>
-                      <option value="Mãe">Mãe</option>
-                      <option value="Pai">Pai</option>
-                      <option value="Avó/Avô">Avó/Avô</option>
-                      <option value="Tio/Tia">Tio/Tia</option>
-                      <option value="Responsável legal">Responsável legal</option>
-                    </select>
+                      [options]="parentescoOptions"
+                    />
                   </div>
                 </div>
 
@@ -1017,16 +990,11 @@
 
           <div class="field">
             <label>Turma</label>
-            <select
-              class="select"
+            <app-select
               [ngModel]="formEdicaoAssistido.turmaId"
               (ngModelChange)="atualizarCampoEdicaoAssistido('turmaId', $event)"
-            >
-              <option [ngValue]="null">Sem turma</option>
-              @for (turma of turmas(); track turma.turmaId) {
-                <option [ngValue]="turma.turmaId">{{ turma.nomeTurma }}</option>
-              }
-            </select>
+              [options]="turmaEdicaoOptions()"
+            />
           </div>
         </div>
 

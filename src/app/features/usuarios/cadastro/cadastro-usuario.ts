@@ -6,12 +6,13 @@ import { Role } from '../../../shared/enum/role.enum';
 import { ROLE_LABELS } from '../../../shared/enum/role-labels';
 import { MascaraCpfDirective } from '../../../shared/directives/mascara-cpf.directive';
 import { MascaraTelefoneDirective } from '../../../shared/directives/mascara-telefone.directive';
+import { Select, SelectOption } from '../../../shared/components/select/select';
 
 const PERFIS_DO_MVP = [Role.ADMIN, Role.COORD, Role.SOCIO];
 
 @Component({
   selector: 'app-cadastro-usuario',
-  imports: [ReactiveFormsModule, MascaraCpfDirective, MascaraTelefoneDirective],
+  imports: [ReactiveFormsModule, MascaraCpfDirective, MascaraTelefoneDirective, Select],
   templateUrl: './cadastro-usuario.html',
   styleUrl: './cadastro-usuario.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -22,6 +23,11 @@ export class CadastroUsuario {
 
   perfis = PERFIS_DO_MVP;
   labels = ROLE_LABELS;
+
+  perfilOptions: SelectOption<Role>[] = PERFIS_DO_MVP.map(p => ({
+    value: p,
+    label: ROLE_LABELS[p]
+  }));
 
   salvando = signal(false);
   sucesso = signal<string | null>(null);

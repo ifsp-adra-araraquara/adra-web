@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -23,12 +23,13 @@ import {
   ehAulaDeHoje,
   podeAbrirAula,
 } from '../../../shared/utils/aula.util';
+import { Select, SelectOption } from '../../../shared/components/select/select';
 
 type AbaOficineiro = 'turmas' | 'aulas' | 'materiais' | 'comunicados';
 
 @Component({
   selector: 'app-oficineiro',
-  imports: [FormsModule, AulasTurmaModal, AulaModal],
+  imports: [FormsModule, AulasTurmaModal, AulaModal, Select],
   templateUrl: './oficineiro.html',
   styleUrl: './oficineiro.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -73,6 +74,26 @@ export class Oficineiro implements OnInit {
   fecharAulasDaTurma(): void {
     this.turmaAulasSelecionada.set(null);
   }
+
+  readonly turmasFiltroOptions = computed<SelectOption<number | null>[]>(() => [
+    { value: null, label: 'Todas as turmas' },
+    ...this.turmas().map((turma) => ({
+      value: turma.turmaId,
+      label: turma.nomeOficina ? `${turma.nomeTurma} — ${turma.nomeOficina}` : turma.nomeTurma,
+    })),
+  ]);
+
+  readonly turmasFormOptions = computed<SelectOption<number>[]>(() => [
+    { value: 0, label: 'Selecione' },
+    ...this.turmas().map((turma) => ({ value: turma.turmaId, label: turma.nomeTurma })),
+  ]);
+
+  statusAulaOptions: SelectOption<string | undefined>[] = [
+    { value: undefined, label: 'Planejada' },
+    { value: 'REALIZADA', label: 'Realizada' },
+    { value: 'CANCELADA', label: 'Cancelada' },
+  ];
+  
   private readonly http = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -127,6 +148,7 @@ export class Oficineiro implements OnInit {
     observacoes: '',
   };
 
+  
   ngOnInit(): void {
     this.route.queryParamMap.subscribe((params) => {
       const aba = params.get('aba');

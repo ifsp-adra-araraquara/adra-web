@@ -53,17 +53,13 @@
       <div><h2 id="aulas-titulo">Aulas</h2><span class="subtle">Planos de aula das suas turmas</span></div>
       <div style="display: flex; gap: 8px; align-items: center;">
         <label for="filtro-turma-aulas" class="sr-only">Filtrar por turma</label>
-        <select
+        <app-select
           id="filtro-turma-aulas"
           class="filtro-turma"
           [ngModel]="filtroTurmaId()"
           (ngModelChange)="onFiltroTurmaChange($event)"
-        >
-          <option [ngValue]="null">Todas as turmas</option>
-          @for (turma of turmas(); track turma.turmaId) {
-          <option [ngValue]="turma.turmaId">{{ turma.nomeTurma }}{{ turma.nomeOficina ? ' — ' + turma.nomeOficina : '' }}</option>
-          }
-        </select>
+          [options]="turmasFiltroOptions()"
+        />
         <button type="button" class="primary-button" (click)="abrirNovaAula()">Nova aula</button>
         <button type="button" class="primary-button" (click)="abrirModalCriarAulas()">Criar várias aulas</button>
       </div>
@@ -144,8 +140,8 @@
       <div class="panel-header"><h2 id="nova-aula-titulo">Nova aula</h2><button type="button" class="close-button" (click)="fecharFormularioAula()" aria-label="Fechar">X</button></div>
       <div class="dialog-body">
         <div class="form-row">
-          <label>Turma<select [(ngModel)]="aulaForm.turmaId"><option [ngValue]="0">Selecione</option>@for (turma of turmas(); track turma.turmaId) { <option [ngValue]="turma.turmaId">{{ turma.nomeTurma }}</option> }</select></label>
-          <label>Data<input type="date" [(ngModel)]="aulaForm.dataAula"></label>
+        <label>Turma<app-select [(ngModel)]="aulaForm.turmaId" [options]="turmasFormOptions()" /></label>
+        <label>Data<input type="date" [(ngModel)]="aulaForm.dataAula"></label>
         </div>
         <div class="form-row">
           <label>Horário de início<input type="time" [(ngModel)]="aulaForm.horarioInicio"></label>
@@ -153,7 +149,7 @@
         </div>
         <div class="form-row">
           <label>Título (opcional)<input type="text" [(ngModel)]="aulaForm.titulo" placeholder="Ex.: Aula de introdução" maxlength="150"></label>
-          <label>Status<select [(ngModel)]="aulaForm.statusAula"><option [ngValue]="undefined">Planejada</option><option value="REALIZADA">Realizada</option><option value="CANCELADA">Cancelada</option></select></label>
+          <label>Status<app-select [(ngModel)]="aulaForm.statusAula" [options]="statusAulaOptions" /></label>
         </div>
         <label>Descrição (opcional)<textarea [(ngModel)]="aulaForm.descricao" rows="3"></textarea></label>
         <div class="form-row">
@@ -190,7 +186,7 @@
         <p class="feedback error" role="alert">{{ erroCriarAulas() }}</p>
         }
         <div class="form-row">
-          <label>Turma<select [(ngModel)]="formCriarAulas.turmaId"><option [ngValue]="0">Selecione</option>@for (turma of turmas(); track turma.turmaId) { <option [ngValue]="turma.turmaId">{{ turma.nomeTurma }}</option> }</select></label>
+          <label>Turma<app-select [(ngModel)]="formCriarAulas.turmaId" [options]="turmasFormOptions()" /></label>
           <label>Título (opcional)<input type="text" [(ngModel)]="formCriarAulas.titulo" placeholder="Ex.: Aula de introdução"></label>
         </div>
         <div class="form-row">

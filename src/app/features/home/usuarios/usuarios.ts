@@ -16,10 +16,11 @@ import { UsuarioStatusRequest } from '../../../shared/models/usuarios/UsuarioSta
 import { CadastroUsuario } from '../../usuarios/cadastro/cadastro-usuario';
 import { DefinirSenha } from '../../usuarios/senha/definir-senha';
 import { AuthService } from '../../../core/auth.service';
+import { Select, SelectOption } from '../../../shared/components/select/select';
 
 @Component({
   selector: 'app-usuarios',
-  imports: [FormsModule, CadastroUsuario, DefinirSenha],
+  imports: [FormsModule, CadastroUsuario, DefinirSenha, Select],
   templateUrl: './usuarios.html',
   styleUrl: './usuarios.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,6 +37,34 @@ export class Usuarios implements OnInit {
 
   private readonly apiUrl = `${environment.apiUrl}/api/usuarios`;
 
+  perfilFiltroOptions: SelectOption<Role | ''>[] = [
+    { value: '', label: 'Todos os perfis' },
+    { value: Role.ADMIN, label: 'Administrador' },
+    { value: Role.COORD, label: 'Coordenador' },
+    { value: Role.SOCIO, label: 'Sociopedagógico' }
+  ];
+
+  statusFiltroOptions: SelectOption<'ativo' | 'inativo' | ''>[] = [
+    { value: '', label: 'Todos os status' },
+    { value: 'ativo', label: 'Ativo' },
+    { value: 'inativo', label: 'Inativo' }
+  ];
+
+  perfilEdicaoOptions: SelectOption<Role>[] = [
+    { value: Role.ADMIN, label: 'Administrador' },
+    { value: Role.COORD, label: 'Coordenador' },
+    { value: Role.SOCIO, label: 'Sociopedagógico' },
+    { value: Role.PROFS, label: 'Profissional de Saúde' },
+    { value: Role.FINANCEIRO, label: 'Financeiro/Administrativo' },
+    { value: Role.OFICINEIRO, label: 'Oficineiro' }
+  ];
+
+  especialidadeOptions: SelectOption<string>[] = [
+    { value: 'NEUROLOGIA', label: 'Neurologia' },
+    { value: 'PSICOPEDAGOGIA', label: 'Psicopedagogia' },
+    { value: 'PSICOLOGIA', label: 'Psicologia' }
+  ];
+  
   carregando = signal(false);
   salvando = signal(false);
 

@@ -9,11 +9,12 @@ import { environment } from '../../../../environments/environment';
 
 import { OficinaRequestDTO } from '../../../shared/models/oficina/OficinaRequestDTO';
 import { OficinaResponseDTO } from '../../../shared/models/oficina/OficinaResponseDTO';
+import { Select, SelectOption } from '../../../shared/components/select/select';
 
 @Component({
   selector: 'app-oficinas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, Select],
   templateUrl: './oficinas.html',
   styleUrl: './oficinas.css',
 })
@@ -29,6 +30,12 @@ export class Oficinas implements OnInit {
   filtroNome = '';
   filtroStatus: 'todas' | 'ativas' | 'inativas' = 'ativas';
 
+  filtroStatusOptions: SelectOption<'todas' | 'ativas' | 'inativas'>[] = [
+    { value: 'ativas', label: 'Ativas' },
+    { value: 'inativas', label: 'Inativas' },
+    { value: 'todas', label: 'Todas' }
+  ];
+  
   private debounceTimerListagem?: ReturnType<typeof setTimeout>;
 
   ngOnInit(): void {

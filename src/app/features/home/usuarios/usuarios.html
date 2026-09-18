@@ -32,29 +32,21 @@
 
       <div class="toolbar-filters">
         <label for="filtro-perfil" class="sr-only">Filtrar por perfil</label>
-        <select
+        <label for="filtro-perfil" class="sr-only">Filtrar por perfil</label>
+        <app-select
           id="filtro-perfil"
-          class="select select-sm"
           [ngModel]="filtroPerfil()"
           (ngModelChange)="filtroPerfil.set($event); onFiltroChange()"
-        >
-          <option value="">Todos os perfis</option>
-          <option [value]="Role.ADMIN">Administrador</option>
-          <option [value]="Role.COORD">Coordenador</option>
-          <option [value]="Role.SOCIO">Sociopedagógico</option>
-        </select>
+          [options]="perfilFiltroOptions"
+        />
 
         <label for="filtro-status" class="sr-only">Filtrar por status</label>
-        <select
+        <app-select
           id="filtro-status"
-          class="select select-sm"
           [ngModel]="filtroStatus()"
           (ngModelChange)="filtroStatus.set($event); onFiltroChange()"
-        >
-          <option value="">Todos os status</option>
-          <option value="ativo">Ativo</option>
-          <option value="inativo">Inativo</option>
-        </select>
+          [options]="statusFiltroOptions"
+        />
       </div>
     </div>
 
@@ -247,14 +239,10 @@
 
           <div class="field">
             <label>Perfil de acesso</label>
-            <select class="select" [(ngModel)]="usuarioEdicao.nivelPermissao">
-              <option [value]="Role.ADMIN">Administrador</option>
-              <option [value]="Role.COORD">Coordenador</option>
-              <option [value]="Role.SOCIO">Sociopedagógico</option>
-              <option [value]="Role.PROFS">Profissional de Saúde</option>
-              <option [value]="Role.FINANCEIRO">Financeiro/Administrativo</option>
-              <option [value]="Role.OFICINEIRO">Oficineiro</option>
-            </select>
+            <app-select
+              [(ngModel)]="usuarioEdicao.nivelPermissao"
+              [options]="perfilEdicaoOptions"
+            />
           </div>
         </div>
 
@@ -262,12 +250,11 @@
           <div class="form-row">
             <div class="field">
               <label>Especialidade</label>
-              <select class="select" [(ngModel)]="usuarioEdicao.especialidade">
-                <option [value]="null" disabled>Selecione a especialidade</option>
-                <option value="NEUROLOGIA">Neurologia</option>
-                <option value="PSICOPEDAGOGIA">Psicopedagogia</option>
-                <option value="PSICOLOGIA">Psicologia</option>
-              </select>
+              <app-select
+                [(ngModel)]="usuarioEdicao.especialidade"
+                [placeholder]="'Selecione a especialidade'"
+                [options]="especialidadeOptions"
+              />
             </div>
           </div>
         }

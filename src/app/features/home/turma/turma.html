@@ -1,6 +1,3 @@
-<!-- ============================================================
-     PÁGINA: TURMAS
-     ============================================================ -->
 <section class="page" id="page-turmas">
   <div
     class="page-header"
@@ -35,28 +32,19 @@
         (ngModelChange)="onFiltroNomeChange($event)"
       />
 
-      <select
-        class="select"
+      <app-select
         style="flex-shrink: 0; width: auto"
         [ngModel]="filtroTurno"
         (ngModelChange)="onFiltroTurnoChange($event)"
-      >
-        <option value="">Todos os turnos</option>
-        @for (turno of turnosDisponiveis; track turno) {
-          <option [value]="turno">{{ turno }}</option>
-        }
-      </select>
+        [options]="filtroTurnoOptions"
+      />
 
-      <select
-        class="select"
+      <app-select
         style="flex-shrink: 0; width: auto"
         [ngModel]="filtroStatus"
         (ngModelChange)="onFiltroStatusChange($event)"
-      >
-        <option value="ativas">Ativas</option>
-        <option value="inativas">Inativas</option>
-        <option value="todas">Todas</option>
-      </select>
+        [options]="filtroStatusOptions"
+      />
     </div>
   </div>
 
@@ -190,16 +178,12 @@
         <div class="form-row">
           <div class="field">
             <label>Turno</label>
-            <select
-              class="select"
+            <app-select
               [ngModel]="formTurma.turno"
               (ngModelChange)="atualizarCampoTurma('turno', $event)"
-            >
-              <option value="">Selecione</option>
-              @for (turno of turnosDisponiveis; track turno) {
-                <option [value]="turno">{{ turno }}</option>
-              }
-            </select>
+              [placeholder]="'Selecione'"
+              [options]="turnoOptions"
+            />
           </div>
 
           <div class="field">
@@ -217,16 +201,12 @@
 
         <div class="field">
           <label>Faixa etária</label>
-          <select
-            class="select"
+          <app-select
             [ngModel]="formTurma.faixaEtaria"
             (ngModelChange)="atualizarCampoTurma('faixaEtaria', $event)"
-          >
-            <option value="" disabled selected hidden>Selecione</option>
-            <option value="6–9 anos">6–9 anos</option>
-            <option value="10–13 anos">10–13 anos</option>
-            <option value="14–17 anos">14–17 anos</option>
-          </select>
+            [placeholder]="'Selecione'"
+            [options]="faixaEtariaOptions"
+          />
         </div>
 
         <div class="field">
