@@ -10,11 +10,13 @@ import { environment } from '../../../../environments/environment';
 import { OficinaRequestDTO } from '../../../shared/models/oficina/OficinaRequestDTO';
 import { OficinaResponseDTO } from '../../../shared/models/oficina/OficinaResponseDTO';
 import { Select, SelectOption } from '../../../shared/components/select/select';
+import { Modal } from '../../../shared/components/modal/modal';
+import { Table, TableColumn } from '../../../shared/components/table/table';
 
 @Component({
   selector: 'app-oficinas',
   standalone: true,
-  imports: [CommonModule, FormsModule, Select],
+  imports: [CommonModule, FormsModule, Select, Modal, Table],
   templateUrl: './oficinas.html',
   styleUrl: './oficinas.css',
 })
@@ -26,6 +28,14 @@ export class Oficinas implements OnInit {
   oficinas = signal<OficinaResponseDTO[]>([]);
   carregando = signal(false);
   erroListar = signal<string | null>(null);
+
+  readonly colunasOficinas: TableColumn<OficinaResponseDTO>[] = [
+    { key: 'nomeOficina', header: 'Nome da oficina', sortable: true },
+    { key: 'oficineiroResponsavel', header: 'Oficineiro responsável', sortable: true },
+    { key: 'ativo', header: 'Status', type: 'badge', width: '140px' },
+  ];
+
+  protected readonly trackByOficinaId = (oficina: OficinaResponseDTO) => oficina.oficinaId;
 
   filtroNome = '';
   filtroStatus: 'todas' | 'ativas' | 'inativas' = 'ativas';

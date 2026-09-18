@@ -12,6 +12,10 @@ export interface SelectOption<T = any> {
   standalone: true,
   templateUrl: './select.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Custom elements are `display: inline` por padrão — sem isso, `width`/`flex-*`
+  // aplicados no <app-select> pelo pai são ignorados e o select "encolhe" pro
+  // tamanho do texto da opção selecionada (o efeito de "chip" torto na toolbar).
+  host: { style: 'display: block;' },
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

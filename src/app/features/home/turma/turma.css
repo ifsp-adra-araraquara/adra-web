@@ -1,71 +1,10 @@
 /* =========================
-   MODAL TURMAS
+   TURMAS
+
+   Modal, tabela e badge de status agora vêm dos componentes
+   compartilhados (app-modal / app-table / app-badge — US-61); os
+   estilos aqui são só o conteúdo projetado nos modais (formulários).
    ========================= */
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  z-index: 99999 !important;
-  padding: 20px;
-}
-
-.modal {
-  width: 100%;
-  max-width: 760px;
-  max-height: 90vh;
-
-  background: #fff;
-
-  border-radius: 12px;
-
-  overflow: hidden;
-
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-lg {
-  max-width: 940px;
-}
-
-.modal-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-
-  padding: 22px 24px;
-
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.modal-head h2 {
-  margin: 0;
-  font-size: 19px;
-}
-
-.modal-close {
-  border: 0;
-  background: transparent;
-
-  font-size: 25px;
-
-  cursor: pointer;
-
-  color: #6b7280;
-
-  line-height: 1;
-}
-
-.modal-body {
-  padding: 28px;
-  overflow-y: auto;
-}
 
 .form-row {
   display: grid;
@@ -132,23 +71,6 @@ textarea {
   font-family: inherit;
 }
 
-.modal-foot {
-  display: flex;
-
-  justify-content: flex-end;
-
-  gap: 10px;
-
-  padding: 16px 24px;
-
-  border-top: 1px solid #e5e7eb;
-}
-
-.modal-foot .btn {
-  min-width: 110px;
-}
-
-
 /* =========================
    ERRO
    ========================= */
@@ -169,30 +91,12 @@ textarea {
   font-size: 13px;
 }
 
-
 /* =========================
    RESPONSIVO
    ========================= */
 
 @media (max-width: 650px) {
-
   .form-row {
     grid-template-columns: 1fr;
-  }
-
-  .modal {
-    max-height: 95vh;
-  }
-
-  .modal-body {
-    padding: 18px;
-  }
-
-  .modal-head {
-    padding: 18px;
-  }
-
-  .modal-foot {
-    padding: 14px 18px;
   }
 }

@@ -1,25 +1,16 @@
-<div class="relative">
-  <select
-    [id]="id() || null"
-    [attr.name]="name() || null"
-    [disabled]="effectiveDisabled()"
-    [value]="selectedIndex()"
-    (change)="handleChange($event)"
-    (blur)="handleBlur()"
-    class="w-full appearance-none cursor-pointer px-3 py-2.5 pr-9 text-sm text-adra-gray-800 bg-adra-gray-50 border-[1.5px] border-adra-gray-200 rounded-lg transition-colors duration-150 focus:outline-none focus:border-adra-green-400 focus:bg-white focus:ring-2 focus:ring-adra-green-50 disabled:opacity-60 disabled:cursor-not-allowed"
-  >
-    @if (placeholder()) {
-      <option value="-1" disabled>{{ placeholder() }}</option>
-    }
-    @for (opt of options(); track $index) {
-      <option [value]="$index" [disabled]="opt.disabled ?? false">{{ opt.label }}</option>
-    }
-  </select>
-
-  <svg
-    class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-adra-gray-600"
-    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-  >
-    <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
-  </svg>
-</div>
+<select
+  [id]="id() || null"
+  [attr.name]="name() || null"
+  [disabled]="effectiveDisabled()"
+  [value]="selectedIndex()"
+  (change)="handleChange($event)"
+  (blur)="handleBlur()"
+  class="select"
+>
+  @if (placeholder()) {
+    <option value="-1" disabled>{{ placeholder() }}</option>
+  }
+  @for (opt of options(); track $index) {
+    <option [value]="$index" [disabled]="opt.disabled ?? false">{{ opt.label }}</option>
+  }
+</select>

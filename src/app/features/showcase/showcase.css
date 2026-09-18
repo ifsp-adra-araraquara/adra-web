@@ -1,0 +1,48 @@
+:host { display: block; }
+
+.page { max-width: 1200px; }
+
+.page-header { margin-bottom: 8px; }
+.page-header h1 { margin: 0; font-size: 26px; }
+.page-intro { margin: 4px 0 0; color: var(--gray-600); }
+
+.card-head .sub { font-size: 12.5px; color: var(--gray-400); }
+
+.showcase-subtitle {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--gray-600);
+  margin-bottom: 10px;
+}
+
+.showcase-badge-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.showcase-badge-list li { display: flex; align-items: center; gap: 12px; }
+.showcase-badge-desc { font-size: 13px; color: var(--gray-600); }
+
+.t-actions-btn {
+  border: 1px solid var(--gray-200);
+  background: #fff;
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gray-600);
+  transition: .14s;
+}
+.t-actions-btn:hover { border-color: var(--green-400); color: var(--green-400); background: var(--green-50); }
+
+code {
+  background: var(--gray-100);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 12.5px;
+}

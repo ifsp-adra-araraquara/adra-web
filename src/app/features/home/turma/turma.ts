@@ -14,11 +14,13 @@ import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO'
 import { TurmaStatusRequestDTO } from '../../../shared/models/turma/TurmaStatusRequestDTO';
 import { CriacaoAulasRequestDTO, DiaDaSemana } from '../../../shared/models/aula/CriacaoAulasRequestDTO';
 import { Select, SelectOption } from '../../../shared/components/select/select';
+import { Modal } from '../../../shared/components/modal/modal';
+import { Table, TableColumn } from '../../../shared/components/table/table';
 
 @Component({
   selector: 'app-turmas',
   standalone: true,
-  imports: [CommonModule, FormsModule, Select],
+  imports: [CommonModule, FormsModule, Select, Modal, Table],
   templateUrl: './turma.html',
   styleUrl: './turma.css',
 })
@@ -56,6 +58,16 @@ export class Turmas implements OnInit {
   turmas = signal<TurmaResponseDTO[]>([]);
   carregando = signal(false);
   erroListar = signal<string | null>(null);
+
+  readonly colunasTurmas: TableColumn<TurmaResponseDTO>[] = [
+    { key: 'nomeTurma', header: 'Nome da turma', sortable: true },
+    { key: 'turno', header: 'Turno', sortable: true },
+    { key: 'faixaEtaria', header: 'Faixa etária', value: (t) => t.faixaEtaria || '—' },
+    { key: 'capacidade', header: 'Capacidade', align: 'center' },
+    { key: 'ativo', header: 'Status', type: 'badge', width: '140px' },
+  ];
+
+  protected readonly trackByTurmaId = (turma: TurmaResponseDTO) => turma.turmaId;
 
   filtroNome = '';
   filtroTurno: Turno | '' = '';

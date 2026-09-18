@@ -19,6 +19,7 @@ import { Materiais } from './features/home/materiais/materiais';
 import { Oficineiro } from './features/home/oficineiro/oficineiro';
 import { Aulas } from './features/home/aulas/aulas';
 import { AulaCompleta } from './features/home/aula-completa/aula-completa';
+import { Showcase } from './features/showcase/showcase';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -97,6 +98,12 @@ export const routes: Routes = [
         path: 'oficineiro',
         component: Oficineiro,
         data: { roles: [Role.OFICINEIRO] },
+        canActivate: [roleGuard]
+      },
+      {
+        path: 'showcase',
+        component: Showcase,
+        data: { roles: [Role.ADMIN, Role.COORD, Role.SOCIO, Role.PROFS, Role.FINANCEIRO, Role.OFICINEIRO] },
         canActivate: [roleGuard]
       },
     ]

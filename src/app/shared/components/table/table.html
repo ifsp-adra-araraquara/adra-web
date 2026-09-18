@@ -1,0 +1,80 @@
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        @for (column of columns(); track column.key) {
+          <th
+            [style.width]="column.width"
+            [style.text-align]="column.align ?? 'left'"
+            [class.sortable]="column.sortable"
+            (click)="onHeaderClick(column)"
+          >
+            {{ column.header }}
+            @if (column.sortable) {
+              <span
+                class="sort-icon"
+                [class.asc]="sortIndicator(column) === 'asc'"
+                [class.desc]="sortIndicator(column) === 'desc'"
+                aria-hidden="true"
+              >▲</span>
+            }
+          </th>
+        }
+        @if (rowActionsTemplate()) {
+          <th class="col-actions">Ações</th>
+        }
+      </tr>
+    </thead>
+
+    <tbody>
+      @for (row of pagedData(); track trackRow($index, row)) {
+        <tr>
+          @for (column of columns(); track column.key) {
+            <td [style.text-align]="column.align ?? 'left'">
+              @if (column.type === 'badge') {
+                <app-badge [status]="cellStatus(row, column)" />
+              } @else {
+                {{ cellValue(row, column) }}
+              }
+            </td>
+          }
+          @if (rowActionsTemplate(); as actions) {
+            <td class="col-actions">
+              <div class="t-actions">
+                <ng-container [ngTemplateOutlet]="actions" [ngTemplateOutletContext]="{ $implicit: row }" />
+              </div>
+            </td>
+          }
+        </tr>
+      } @empty {
+        <tr>
+          <td [attr.colspan]="columns().length + (rowActionsTemplate() ? 1 : 0)" class="muted">
+            Nenhum registro encontrado.
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (totalPages() > 1) {
+  <div class="table-pagination">
+    <button
+      type="button"
+      class="page-btn"
+      [disabled]="currentPage() === 1"
+      (click)="goToPage(currentPage() - 1)"
+      aria-label="Página anterior"
+    >‹</button>
+
+    <span class="page-info">Página {{ currentPage() }} de {{ totalPages() }}</span>
+
+    <button
+      type="button"
+      class="page-btn"
+      [disabled]="currentPage() === totalPages()"
+      (click)="goToPage(currentPage() + 1)"
+      aria-label="Próxima página"
+    >›</button>
+  </div>
+}

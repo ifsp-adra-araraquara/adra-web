@@ -1,0 +1,118 @@
+<section class="page" id="page-showcase">
+  <div class="page-header">
+    <div>
+      <h1>Showcase de componentes</h1>
+      <p class="page-intro">
+        Página de referência para os componentes reutilizáveis de modal, tabela e badge de status
+        (US-61). Não faz chamadas à API — os dados abaixo são exemplos estáticos.
+      </p>
+    </div>
+  </div>
+
+  <!-- ================= BADGES ================= -->
+  <div class="card mt">
+    <div class="card-head">
+      <h3>app-badge</h3>
+      <span class="sub">Status de aula (agendada/realizada/cancelada/remarcada) e demais status do sistema</span>
+    </div>
+    <div class="card-pad">
+      <h4 class="showcase-subtitle">Status de aula</h4>
+      <ul class="showcase-badge-list">
+        @for (item of amostraStatusAula; track item.valor) {
+          <li>
+            <app-badge [status]="item.valor" />
+            <span class="showcase-badge-desc">{{ item.descricao }}</span>
+          </li>
+        }
+      </ul>
+
+      <h4 class="showcase-subtitle mt-s">Outros status conhecidos</h4>
+      <ul class="showcase-badge-list">
+        @for (item of amostraOutrosStatus; track item.descricao) {
+          <li>
+            <app-badge [status]="item.valor" />
+            <span class="showcase-badge-desc">{{ item.descricao }}</span>
+          </li>
+        }
+      </ul>
+
+      <h4 class="showcase-subtitle mt-s">Customizado (variante e rótulo manuais)</h4>
+      <ul class="showcase-badge-list">
+        <li>
+          <app-badge variant="blue" label="Em análise" />
+          <span class="showcase-badge-desc">variant="blue" + label customizado</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ================= TABELA ================= -->
+  <div class="card mt">
+    <div class="card-head">
+      <h3>app-table</h3>
+      <span class="sub">Colunas configuráveis, coluna de status via app-badge, ações por linha e paginação</span>
+    </div>
+    <div class="card-pad">
+      <app-table
+        [columns]="colunasOficinas"
+        [data]="oficinas()"
+        [pageSize]="5"
+      >
+        <ng-template #rowActions let-oficina>
+          <button
+            type="button"
+            class="t-actions-btn"
+            [title]="oficina.ativo ? 'Inativar' : 'Reativar'"
+            (click)="abrirConfirmacaoInativacao(oficina)"
+          >
+            {{ oficina.ativo ? 'Inativar' : 'Reativar' }}
+          </button>
+        </ng-template>
+      </app-table>
+    </div>
+  </div>
+
+  <!-- ================= MODAL ================= -->
+  <div class="card mt">
+    <div class="card-head">
+      <h3>app-modal</h3>
+      <span class="sub">Abre/fecha via signal, corpo e ações por projeção, fecha ao clicar fora ou ESC</span>
+    </div>
+    <div class="card-pad" style="display: flex; gap: 10px; flex-wrap: wrap">
+      <button type="button" class="btn btn-sm" (click)="modalSimplesAberto.set(true)">
+        Abrir modal simples
+      </button>
+      <button type="button" class="btn btn-sm btn-ghost" (click)="abrirConfirmacaoInativacao(oficinas()[0])">
+        Abrir modal de confirmação
+      </button>
+    </div>
+  </div>
+</section>
+
+<app-modal [(open)]="modalSimplesAberto" title="Modal de exemplo" size="md">
+  <p>Este é o conteúdo do corpo do modal, projetado normalmente via <code>&lt;ng-content&gt;</code>.</p>
+  <p class="mt-s">Feche clicando fora, apertando ESC ou no botão abaixo.</p>
+
+  <ng-template #footer>
+    <button type="button" class="btn btn-ghost" (click)="modalSimplesAberto.set(false)">Fechar</button>
+  </ng-template>
+</app-modal>
+
+<app-modal
+  [(open)]="modalConfirmacaoAberto"
+  [title]="oficinaSelecionada()?.ativo ? 'Inativar oficina' : 'Reativar oficina'"
+  size="sm"
+>
+  @if (oficinaSelecionada(); as oficina) {
+    <p>
+      Tem certeza que deseja
+      <strong>{{ oficina.ativo ? 'inativar' : 'reativar' }}</strong>
+      a oficina <strong>"{{ oficina.nomeOficina }}"</strong>?
+    </p>
+  }
+
+  <ng-template #footer>
+    <button type="button" class="btn btn-ghost" (click)="modalConfirmacaoAberto.set(false)">Cancelar</button>
+    <button type="button" class="btn" (click)="confirmarAlteracaoStatus()">Confirmar</button>
+  </ng-template>
+</app-modal>
