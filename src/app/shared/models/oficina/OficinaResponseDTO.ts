@@ -1,7 +1,6 @@
 export interface OficinaResponseDTO {
   oficinaId: number;
   nomeOficina: string;
-  oficineiroResponsavel: string;
   ativo: boolean;
-  oficineiroResponsavelId?: number | null;
+  oficineiroResponsavelId: number | null;
 }

@@ -11,6 +11,7 @@ import {
   signal,
 } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/auth.service';
@@ -37,6 +38,15 @@ interface LinhaChamada {
   statusPresenca: StatusPresenca | null;
 }
 
+interface FormDefinirCampos {
+  titulo: string;
+  descricao: string;
+  conteudoPrevisto: string;
+  objetivos: string;
+  recursosNecessarios: string;
+  observacoes: string;
+}
+
 /**
  * Modal reutilizável de "abrir aula" — usado tanto na aba Aulas da área do
  * oficineiro quanto no modal de aulas por turma.
@@ -50,11 +60,16 @@ interface LinhaChamada {
  * nem canceladas) — quem decide isso é `podeAbrirAula()`, em
  * `shared/utils/aula.util.ts`; o componente pai é responsável por só
  * atribuir `aula` quando a abertura for permitida.
+ *
+ * Se a aula ainda não tem título (fluxo de "criar turma sem título e
+ * descrição" — o coordenador optou por deixar o oficineiro decidir), a
+ * primeira coisa que aparece ao abrir é um formulário pedindo pra definir
+ * pelo menos o título antes de continuar pro resto da modal.
  */
 @Component({
   selector: 'app-aula-modal',
   standalone: true,
-  imports: [],
+  imports: [FormsModule],
   templateUrl: './aula-modal.html',
   styleUrl: './aula-modal.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -66,7 +81,7 @@ export class AulaModal implements OnChanges {
 
   @Input() aula: AulaComDetalhesResponseDTO | null = null;
   @Output() fechar = new EventEmitter<void>();
-  /** Emitido depois que a chamada é salva com sucesso, pro pai recarregar a lista de aulas. */
+  /** Emitido depois que a chamada é salva ou os campos da aula são definidos, pro pai recarregar a lista de aulas. */
   @Output() chamadaSalva = new EventEmitter<void>();
 
   readonly StatusPresenca = StatusPresenca;
@@ -112,6 +127,19 @@ export class AulaModal implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['aula'] && this.aula) {
+      const semTitulo = !this.aula.titulo || !this.aula.titulo.trim();
+      this.mostrarDefinirCampos.set(semTitulo);
+      this.erroDefinirCampos.set(null);
+
+      this.formDefinirCampos = {
+        titulo: this.aula.titulo ?? '',
+        descricao: this.aula.descricao ?? '',
+        conteudoPrevisto: this.aula.conteudoPrevisto ?? '',
+        objetivos: this.aula.objetivos ?? '',
+        recursosNecessarios: this.aula.recursosNecessarios ?? '',
+        observacoes: this.aula.observacoes ?? '',
+      };
+
       this.carregarDados();
     }
   }
@@ -245,5 +273,77 @@ export class AulaModal implements OnChanges {
     if (!this.aula) return;
     const url = `${window.location.origin}/aulas/${this.aula.aulaId}/completa`;
     window.open(url, '_blank', 'noopener');
+  }
+
+  /* ============================================================
+   * DEFINIR TÍTULO/DESCRIÇÃO NA PRIMEIRA ABERTURA
+   * Aparece quando a aula foi criada sem título (fluxo "sem título e
+   * descrição" do modal de nova turma) - só o título é obrigatório aqui,
+   * o resto continua opcional.
+   * ============================================================ */
+  mostrarDefinirCampos = signal(false);
+  salvandoDefinirCampos = signal(false);
+  erroDefinirCampos = signal<string | null>(null);
+
+  formDefinirCampos: FormDefinirCampos = {
+    titulo: '',
+    descricao: '',
+    conteudoPrevisto: '',
+    objetivos: '',
+    recursosNecessarios: '',
+    observacoes: '',
+  };
+
+  async salvarDefinirCampos(): Promise<void> {
+    const aula = this.aula;
+    if (!aula || !aula.turmaId || this.salvandoDefinirCampos()) return;
+
+    if (!this.formDefinirCampos.titulo.trim()) {
+      this.erroDefinirCampos.set('Informe o título da aula.');
+      return;
+    }
+
+    this.salvandoDefinirCampos.set(true);
+    this.erroDefinirCampos.set(null);
+
+    const form = this.formDefinirCampos;
+    const dto: AulaRequestDTO = {
+      turmaId: aula.turmaId,
+      titulo: form.titulo.trim(),
+      descricao: form.descricao.trim() || undefined,
+      dataAula: aula.dataAula,
+      horarioInicio: aula.horarioInicio ?? undefined,
+      horarioFim: aula.horarioFim ?? undefined,
+      conteudoPrevisto: form.conteudoPrevisto.trim() || undefined,
+      conteudoMinistrado: aula.conteudoMinistrado ?? undefined,
+      objetivos: form.objetivos.trim() || undefined,
+      recursosNecessarios: form.recursosNecessarios.trim() || undefined,
+      statusAula: aula.statusAula,
+      observacoes: form.observacoes.trim() || undefined,
+    };
+
+    try {
+      const atualizada = await firstValueFrom(
+        this.http.put<AulaResponseDTO>(`${this.api}/api/aulas/${aula.aulaId}`, dto),
+      );
+
+      this.aula = {
+        ...aula,
+        titulo: atualizada.titulo,
+        descricao: atualizada.descricao,
+        conteudoPrevisto: atualizada.conteudoPrevisto,
+        objetivos: atualizada.objetivos,
+        recursosNecessarios: atualizada.recursosNecessarios,
+        observacoes: atualizada.observacoes,
+      };
+
+      this.mostrarDefinirCampos.set(false);
+      this.salvandoDefinirCampos.set(false);
+      this.chamadaSalva.emit();
+    } catch (erroSalvar) {
+      console.error('Erro ao salvar os dados da aula:', erroSalvar);
+      this.erroDefinirCampos.set('Não foi possível salvar. Tente novamente.');
+      this.salvandoDefinirCampos.set(false);
+    }
   }
 }

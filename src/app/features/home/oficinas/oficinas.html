@@ -133,13 +133,12 @@
 
   <div class="field">
     <label>Oficineiro responsável</label>
-    <input
-      class="input"
-      placeholder="Nome do oficineiro"
-      [ngModel]="formOficina.oficineiroResponsavel"
-      (ngModelChange)="atualizarCampoOficina('oficineiroResponsavel', $event)"
+    <app-select
+      [ngModel]="formOficina.oficineiroResponsavelId"
+      (ngModelChange)="atualizarCampoOficina('oficineiroResponsavelId', $event)"
+      [placeholder]="'Selecione'"
+      [options]="oficineiroOptions()"
     />
-    <p class="hint">Campo apenas descritivo — o oficineiro não é um usuário do sistema.</p>
   </div>
 
   <ng-template #footer>

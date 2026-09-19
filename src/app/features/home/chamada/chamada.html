@@ -1,0 +1,80 @@
+<section class="chamada-page" aria-labelledby="chamada-titulo">
+  <header class="page-header">
+    <p class="eyebrow">Pedagógico</p>
+    <h1 id="chamada-titulo">Chamada</h1>
+    <p class="page-intro">Aulas do dia selecionado, de todas as turmas. Clique em uma aula de hoje ou já passada para abrir a chamada.</p>
+  </header>
+
+  <section class="panel">
+    <div class="panel-header">
+      <div>
+        <h2>Aulas do dia</h2>
+        <span class="subtle">{{ dataSelecionada() === hojeISO() ? 'Hoje' : dataSelecionada() }}</span>
+      </div>
+      <div class="filtros">
+        <label for="filtro-data-chamada" class="sr-only">Filtrar por data</label>
+        <input
+          id="filtro-data-chamada"
+          type="date"
+          class="filtro-data"
+          [ngModel]="dataSelecionada()"
+          (ngModelChange)="onDataChange($event)"
+        />
+        <button
+          type="button"
+          class="secondary-button"
+          [disabled]="dataSelecionada() === hojeISO()"
+          (click)="irParaHoje()"
+        >
+          Hoje
+        </button>
+      </div>
+    </div>
+
+    @if (carregando()) {
+    <p class="feedback" role="status">Carregando...</p>
+    } @else if (erro()) {
+    <p class="feedback error" role="alert">{{ erro() }}</p>
+    }
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Horário</th>
+            <th>Turma</th>
+            <th>Oficineiro</th>
+            <th>Alunos</th>
+            <th>Título</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (aula of aulas(); track aula.aulaId) {
+          <tr
+            [class.linha-hoje]="ehHoje(aula)"
+            [class.linha-bloqueada]="!podeAbrir(aula)"
+            [attr.title]="podeAbrir(aula) ? 'Abrir aula' : 'Só é possível abrir aulas de hoje ou já passadas'"
+            (click)="abrirAula(aula)"
+          >
+            <td>{{ aula.horarioInicio && aula.horarioFim ? aula.horarioInicio + ' - ' + aula.horarioFim : '-' }} @if (ehHoje(aula)) { <span class="tag-hoje">Hoje</span> }</td>
+            <td class="strong">{{ aula.nomeTurma || '-' }}</td>
+            <td>{{ aula.nomeOficineiro || '-' }}</td>
+            <td>{{ aula.quantidadeAlunos ?? '-' }}</td>
+            <td>{{ aula.titulo || '-' }}</td>
+            <td><span class="status" [class]="classeSituacao(aula)">{{ rotuloSituacao(aula) }}</span></td>
+          </tr>
+          } @empty {
+          <tr><td colspan="6" class="empty">Nenhuma aula cadastrada para esta data.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <app-aula-modal
+    [aula]="aulaAberta()"
+    (fechar)="fecharAulaModal()"
+    (chamadaSalva)="aoSalvarChamada()">
+  </app-aula-modal>
+</section>

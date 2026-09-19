@@ -1,104 +1,106 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { AulaComDetalhesResponseDTO } from '../../../shared/models/aula/AulaComDetalhesResponseDTO';
-import { AulaModal } from '../../../shared/components/aula-modal/aula-modal';
-import {
-  ROTULO_SITUACAO_AULA,
-  CLASSE_SITUACAO_AULA,
-  calcularSituacaoAula,
-  ehAulaDeHoje,
-  hojeISO,
-  podeAbrirAula,
-} from '../../../shared/utils/aula.util';
+import { AuthService } from '../../../core/auth.service';
+import { Role } from '../../../shared/enum/role.enum';
+import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO';
+import { OficinaResponseDTO } from '../../../shared/models/oficina/OficinaResponseDTO';
+import { AssistidoResponseDTO } from '../../../shared/models/assistido/AssistidoResponseDTO';
+import { PaginaResponse } from '../../../shared/models/PaginaResponse';
+import { AulasTurmaModal } from '../aulas-turma-modal/aulas-turma-modal';
 
 /**
- * Tela "Aulas" do sociopedagogico/coordenador: mostra, por padrao, as aulas
- * de hoje (de todas as turmas), com um filtro de data em cima pra trocar o
- * dia. Reaproveita o mesmo <app-aula-modal> das outras telas de aula — pro
- * sociopedagogico, clicar numa aula abre a chamada.
+ * Tela "Aulas"/"Chamada" do sociopedagógico e do coordenador: lista TODAS
+ * as turmas (não só as de hoje, não só as "minhas") e, por turma, dá pra
+ * ver os alunos e ver as aulas - passadas e futuras, de qualquer data.
+ *
+ * Reaproveita o mesmo padrão da aba "Turmas" do oficineiro
+ * (`AulasTurmaModal` + `app-aula-modal`), só que sem a restrição de
+ * "minhas turmas": aqui é sempre a lista completa de turmas.
+ *
+ * - Sociopedagógico consegue abrir as aulas pra fazer a chamada (é
+ *   literalmente o motivo dessa tela pra esse perfil).
+ * - Coordenador só acompanha: vê as turmas, os alunos e a lista de aulas de
+ *   cada turma (todo o histórico, não só hoje), mas não abre aula nenhuma.
  */
 @Component({
   selector: 'app-aulas',
   standalone: true,
-  imports: [FormsModule, AulaModal],
+  imports: [AulasTurmaModal],
   templateUrl: './aulas.html',
   styleUrl: './aulas.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Aulas implements OnInit {
   private readonly http = inject(HttpClient);
+  private readonly auth = inject(AuthService);
   private readonly api = environment.apiUrl;
+
+  private readonly ehSociopedagogico = computed(() => this.auth.currentProfile() === Role.SOCIO);
+  /** Só sociopedagógico pode abrir uma aula pra fazer a chamada; coordenador só acompanha. */
+  readonly podeAbrirAula = computed(() => this.ehSociopedagogico());
 
   readonly carregando = signal(false);
   readonly erro = signal<string | null>(null);
-  readonly aulas = signal<AulaComDetalhesResponseDTO[]>([]);
-  readonly dataSelecionada = signal<string>(hojeISO());
-  readonly aulaAberta = signal<AulaComDetalhesResponseDTO | null>(null);
+  readonly turmas = signal<TurmaResponseDTO[]>([]);
+  private readonly nomesOficinas = signal<Map<number, string>>(new Map());
 
-  readonly hojeISO = hojeISO;
+  readonly turmaAulasSelecionada = signal<TurmaResponseDTO | null>(null);
+  readonly turmaSelecionada = signal<TurmaResponseDTO | null>(null);
+  readonly alunos = signal<{ assistidoId: number; nomeCompleto: string }[]>([]);
 
   ngOnInit(): void {
-    this.carregarAulas();
+    this.carregarTurmas();
   }
 
-  onDataChange(valor: string): void {
-    if (!valor) return;
-    this.dataSelecionada.set(valor);
-    this.carregarAulas();
+  nomeOficina(turma: TurmaResponseDTO): string {
+    if (!turma.oficinaId) return '-';
+    return this.nomesOficinas().get(turma.oficinaId) ?? '-';
   }
 
-  irParaHoje(): void {
-    this.onDataChange(hojeISO());
-  }
-
-  abrirAula(aula: AulaComDetalhesResponseDTO): void {
-    if (!this.podeAbrir(aula)) return;
-    this.aulaAberta.set(aula);
-  }
-
-  fecharAulaModal(): void {
-    this.aulaAberta.set(null);
-  }
-
-  aoSalvarChamada(): void {
-    this.carregarAulas();
-  }
-
-  podeAbrir(aula: AulaComDetalhesResponseDTO): boolean {
-    return podeAbrirAula(aula.dataAula, aula.statusAula);
-  }
-
-  ehHoje(aula: AulaComDetalhesResponseDTO): boolean {
-    return ehAulaDeHoje(aula.dataAula);
-  }
-
-  rotuloSituacao(aula: AulaComDetalhesResponseDTO): string {
-    return ROTULO_SITUACAO_AULA[calcularSituacaoAula(aula.dataAula, aula.statusAula)];
-  }
-
-  classeSituacao(aula: AulaComDetalhesResponseDTO): string {
-    return CLASSE_SITUACAO_AULA[calcularSituacaoAula(aula.dataAula, aula.statusAula)];
-  }
-
-  private async carregarAulas(): Promise<void> {
+  private async carregarTurmas(): Promise<void> {
     this.carregando.set(true);
     this.erro.set(null);
     try {
-      const aulas = await firstValueFrom(
-        this.http.get<AulaComDetalhesResponseDTO[]>(`${this.api}/api/aulas/com-detalhes`, {
-          params: { dataAula: this.dataSelecionada() },
-        }),
-      );
-      this.aulas.set(
-        [...aulas].sort((a, b) => (a.horarioInicio ?? '').localeCompare(b.horarioInicio ?? '')),
-      );
+      const [turmas, oficinas] = await Promise.all([
+        firstValueFrom(this.http.get<TurmaResponseDTO[]>(`${this.api}/api/turmas`)),
+        firstValueFrom(this.http.get<OficinaResponseDTO[]>(`${this.api}/api/oficinas`)),
+      ]);
+      this.nomesOficinas.set(new Map(oficinas.map((o) => [o.oficinaId, o.nomeOficina])));
+      this.turmas.set([...turmas].sort((a, b) => a.nomeTurma.localeCompare(b.nomeTurma)));
     } catch {
-      this.erro.set('Não foi possível carregar as aulas desta data.');
+      this.erro.set('Não foi possível carregar as turmas.');
     } finally {
       this.carregando.set(false);
     }
+  }
+
+  abrirAulasDaTurma(turma: TurmaResponseDTO): void {
+    this.turmaAulasSelecionada.set(turma);
+  }
+
+  fecharAulasDaTurma(): void {
+    this.turmaAulasSelecionada.set(null);
+  }
+
+  abrirTurma(turma: TurmaResponseDTO): void {
+    this.turmaSelecionada.set(turma);
+    this.http
+      .get<PaginaResponse<AssistidoResponseDTO>>(`${this.api}/api/assistidos`, {
+        params: { turmaId: turma.turmaId.toString(), status: 'ATIVO', tamanho: '200' },
+      })
+      .subscribe({
+        next: (pagina) =>
+          this.alunos.set(
+            pagina.conteudo.map((a) => ({ assistidoId: a.assistidoId, nomeCompleto: a.nomeCompleto })),
+          ),
+        error: () => this.erro.set('Não foi possível carregar os alunos da turma.'),
+      });
+  }
+
+  fecharTurma(): void {
+    this.turmaSelecionada.set(null);
+    this.alunos.set([]);
   }
 }

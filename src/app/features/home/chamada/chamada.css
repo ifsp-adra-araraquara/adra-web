@@ -1,5 +1,5 @@
 :host { display: block; width: 100%; }
-.aulas-page { width: 100%; max-width: 100%; }
+.chamada-page { width: 100%; max-width: 100%; }
 .page-header { margin-bottom: 24px; }
 .eyebrow { margin: 0 0 6px; color: var(--green-400); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 h1, h2, p { margin-top: 0; }
@@ -28,19 +28,18 @@ h2 { margin-bottom: 0; font-size: 17px; }
   box-shadow: 0 0 0 3px var(--green-50);
 }
 
-.primary-button, .secondary-button, .close-button {
+.secondary-button {
   padding: 8px 12px;
   border-radius: 7px;
+  border: 1px solid var(--gray-200);
+  background: #fff;
+  color: var(--green-600);
   font: inherit;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
 }
-.primary-button { border: 1px solid var(--green-400); background: var(--green-400); color: #fff; }
-.secondary-button, .close-button { border: 1px solid var(--gray-200); background: #fff; color: var(--green-600); text-decoration: none; }
 .secondary-button:disabled { opacity: .5; cursor: default; }
-
-.acoes-cell { display: flex; gap: 8px; white-space: nowrap; }
 
 .table-wrapper { width: 100%; overflow-x: auto; border-radius: 0 0 10px 10px; box-sizing: border-box; }
 
@@ -50,6 +49,7 @@ th, td { padding: 12px 14px; border-bottom: 1px solid var(--gray-100); text-alig
 
 th { background: #f7f7f9; color: var(--gray-600); font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; }
 
+tbody tr { cursor: pointer; }
 tbody tr:hover { background: #fafbfc; }
 tbody tr.linha-hoje { background: var(--green-50); }
 tbody tr.linha-hoje:hover { background: var(--green-50); }
@@ -98,13 +98,6 @@ tbody tr.linha-bloqueada { cursor: not-allowed; opacity: .55; }
   white-space: nowrap;
   border: 0;
 }
-
-/* =========================
-   OVERLAY: "Ver alunos" (roster somente leitura)
-   ========================= */
-.overlay { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: rgba(0, 42, 31, .45); }
-.dialog { width: min(560px, 100%); max-height: 90vh; overflow: auto; padding-bottom: 20px; border-radius: 12px; background: #fff; box-shadow: var(--shadow-lg); }
-.student { margin: 0; padding: 12px 20px; border-bottom: 1px solid var(--gray-100); }
 
 @media (max-width: 640px) {
   h1 { font-size: 22px; }

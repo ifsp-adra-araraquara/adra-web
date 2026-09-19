@@ -9,126 +9,220 @@
         </span>
       </div>
       <div class="panel-header-acoes">
-        <button type="button" class="secondary-button" (click)="abrirAulaCompleta()">Ver aula completa</button>
+        @if (!mostrarDefinirCampos()) {
+          <button type="button" class="secondary-button" (click)="abrirAulaCompleta()">Ver aula completa</button>
+        }
         <button type="button" class="close-button" (click)="fecharModal()" aria-label="Fechar">X</button>
       </div>
     </div>
 
     <span class="badge-situacao" [class]="classeSituacao()">{{ rotuloSituacao() }}</span>
 
-    @if (carregando()) {
-    <p class="feedback" role="status">Carregando alunos...</p>
-    } @else {
+    @if (mostrarDefinirCampos()) {
+    <!-- ================= AULA SEM TÍTULO: precisa ser definido antes de continuar ================= -->
+    <div class="definir-campos">
+      <p class="feedback" role="status">
+        Essa aula ainda não tem título definido. Preencha pelo menos o título abaixo pra continuar
+        (os demais campos são opcionais e podem ser completados depois).
+      </p>
 
-      @if (erro()) {
-      <p class="feedback error" role="alert">{{ erro() }}</p>
+      @if (erroDefinirCampos()) {
+      <p class="feedback error" role="alert">{{ erroDefinirCampos() }}</p>
       }
 
-      @if (mostrarFormularioChamada()) {
-      <!-- ================= SOCIOPEDAGÓGICO: chamada ================= -->
-      <div class="pres-counts">
-        <div class="pc pc-p"><b>{{ totalPresentes() }}</b><span>Presentes</span></div>
-        <div class="pc pc-f"><b>{{ totalFaltas() }}</b><span>Faltas</span></div>
-        <div class="pc pc-fj"><b>{{ totalFaltasJustificadas() }}</b><span>Faltas justificadas</span></div>
+      <div class="campo">
+        <label>Título</label>
+        <input
+          class="campo-input"
+          placeholder="Ex.: Aula de introdução"
+          name="tituloDefinirCampos"
+          [(ngModel)]="formDefinirCampos.titulo"
+        />
       </div>
 
-      <div class="chamada-toolbar">
-        <button type="button" class="secondary-button" (click)="marcarTodosPresentes()">Marcar todos presentes</button>
+      <div class="campo">
+        <label>Descrição (opcional)</label>
+        <textarea
+          class="campo-input"
+          rows="3"
+          placeholder="Descrição da aula"
+          name="descricaoDefinirCampos"
+          [(ngModel)]="formDefinirCampos.descricao"
+        ></textarea>
       </div>
 
-      <ul class="lista-alunos">
-        @for (aluno of alunos(); track aluno.assistidoId) {
-        <li class="linha-aluno">
-          <span class="nome-aluno">{{ aluno.nomeCompleto }}</span>
-          <div class="presenca-botoes">
-            <button
-              type="button"
-              class="presenca-btn presente"
-              [class.ativo]="aluno.statusPresenca === StatusPresenca.PRESENTE"
-              (click)="marcarPresenca(aluno, StatusPresenca.PRESENTE)"
-              title="Presente"
-              aria-label="Marcar presente"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-            </button>
-            <button
-              type="button"
-              class="presenca-btn falta"
-              [class.ativo]="aluno.statusPresenca === StatusPresenca.FALTA"
-              (click)="marcarPresenca(aluno, StatusPresenca.FALTA)"
-              title="Falta"
-              aria-label="Marcar falta"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-            <button
-              type="button"
-              class="presenca-btn justificada"
-              [class.ativo]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
-              (click)="marcarPresenca(aluno, StatusPresenca.FALTA_JUSTIFICADA)"
-              title="Falta justificada"
-              aria-label="Marcar falta justificada"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
-            </button>
-          </div>
-        </li>
-        } @empty {
-        <li class="empty">Nenhum aluno ativo nesta turma.</li>
-        }
-      </ul>
+      <div class="campo">
+        <label>Conteúdo previsto (opcional)</label>
+        <textarea
+          class="campo-input"
+          rows="3"
+          placeholder="Conteúdo que será abordado"
+          name="conteudoPrevistoDefinirCampos"
+          [(ngModel)]="formDefinirCampos.conteudoPrevisto"
+        ></textarea>
+      </div>
+
+      <div class="campo">
+        <label>Objetivos (opcional)</label>
+        <textarea
+          class="campo-input"
+          rows="3"
+          placeholder="Objetivos da aula"
+          name="objetivosDefinirCampos"
+          [(ngModel)]="formDefinirCampos.objetivos"
+        ></textarea>
+      </div>
+
+      <div class="campo">
+        <label>Recursos necessários (opcional)</label>
+        <textarea
+          class="campo-input"
+          rows="3"
+          placeholder="Materiais e recursos necessários"
+          name="recursosDefinirCampos"
+          [(ngModel)]="formDefinirCampos.recursosNecessarios"
+        ></textarea>
+      </div>
+
+      <div class="campo">
+        <label>Observações (opcional)</label>
+        <textarea
+          class="campo-input"
+          rows="3"
+          placeholder="Observações adicionais"
+          name="observacoesDefinirCampos"
+          [(ngModel)]="formDefinirCampos.observacoes"
+        ></textarea>
+      </div>
 
       <div class="dialog-actions">
         <button type="button" class="secondary-button" (click)="fecharModal()">Cancelar</button>
-        <button type="button" class="primary-button" [disabled]="salvando()" (click)="salvarChamada()">
-          {{ salvando() ? 'Salvando...' : 'Salvar chamada' }}
+        <button
+          type="button"
+          class="primary-button"
+          [disabled]="salvandoDefinirCampos()"
+          (click)="salvarDefinirCampos()"
+        >
+          {{ salvandoDefinirCampos() ? 'Salvando...' : 'Salvar e continuar' }}
         </button>
       </div>
+    </div>
+    } @else {
 
+      @if (carregando()) {
+      <p class="feedback" role="status">Carregando alunos...</p>
       } @else {
-      <!-- ================= OFICINEIRO / COORDENADOR, ou aula já finalizada: somente leitura ================= -->
-      <ul class="lista-alunos">
-        @for (aluno of alunos(); track aluno.assistidoId) {
-        <li class="linha-aluno">
-          <span class="nome-aluno">{{ aluno.nomeCompleto }}</span>
 
-          <div class="linha-aluno-acoes">
-            @if (aluno.statusPresenca) {
-            <span
-              class="mini-badge"
-              [class.presente]="aluno.statusPresenca === StatusPresenca.PRESENTE"
-              [class.falta]="aluno.statusPresenca === StatusPresenca.FALTA"
-              [class.justificada]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
-            >
-              @switch (aluno.statusPresenca) {
-                @case (StatusPresenca.PRESENTE) { Presente }
-                @case (StatusPresenca.FALTA) { Falta }
-                @case (StatusPresenca.FALTA_JUSTIFICADA) { Falta justificada }
-              }
-            </span>
-            }
-
-            @if (ehOficineiroOuCoordenador()) {
-            <button
-              type="button"
-              class="icon-button"
-              title="Registrar ocorrência"
-              aria-label="Registrar ocorrência"
-              (click)="registrarOcorrencia(aluno)"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
-                <line x1="12" y1="9" x2="12" y2="13"/>
-                <line x1="12" y1="17" x2="12.01" y2="17"/>
-              </svg>
-            </button>
-            }
-          </div>
-        </li>
-        } @empty {
-        <li class="empty">Nenhum aluno ativo nesta turma.</li>
+        @if (erro()) {
+        <p class="feedback error" role="alert">{{ erro() }}</p>
         }
-      </ul>
+
+        @if (mostrarFormularioChamada()) {
+        <!-- ================= SOCIOPEDAGÓGICO: chamada ================= -->
+        <div class="pres-counts">
+          <div class="pc pc-p"><b>{{ totalPresentes() }}</b><span>Presentes</span></div>
+          <div class="pc pc-f"><b>{{ totalFaltas() }}</b><span>Faltas</span></div>
+          <div class="pc pc-fj"><b>{{ totalFaltasJustificadas() }}</b><span>Faltas justificadas</span></div>
+        </div>
+
+        <div class="chamada-toolbar">
+          <button type="button" class="secondary-button" (click)="marcarTodosPresentes()">Marcar todos presentes</button>
+        </div>
+
+        <ul class="lista-alunos">
+          @for (aluno of alunos(); track aluno.assistidoId) {
+          <li class="linha-aluno">
+            <span class="nome-aluno">{{ aluno.nomeCompleto }}</span>
+            <div class="presenca-botoes">
+              <button
+                type="button"
+                class="presenca-btn presente"
+                [class.ativo]="aluno.statusPresenca === StatusPresenca.PRESENTE"
+                (click)="marcarPresenca(aluno, StatusPresenca.PRESENTE)"
+                title="Presente"
+                aria-label="Marcar presente"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+              <button
+                type="button"
+                class="presenca-btn falta"
+                [class.ativo]="aluno.statusPresenca === StatusPresenca.FALTA"
+                (click)="marcarPresenca(aluno, StatusPresenca.FALTA)"
+                title="Falta"
+                aria-label="Marcar falta"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+              <button
+                type="button"
+                class="presenca-btn justificada"
+                [class.ativo]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+                (click)="marcarPresenca(aluno, StatusPresenca.FALTA_JUSTIFICADA)"
+                title="Falta justificada"
+                aria-label="Marcar falta justificada"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+              </button>
+            </div>
+          </li>
+          } @empty {
+          <li class="empty">Nenhum aluno ativo nesta turma.</li>
+          }
+        </ul>
+
+        <div class="dialog-actions">
+          <button type="button" class="secondary-button" (click)="fecharModal()">Cancelar</button>
+          <button type="button" class="primary-button" [disabled]="salvando()" (click)="salvarChamada()">
+            {{ salvando() ? 'Salvando...' : 'Salvar chamada' }}
+          </button>
+        </div>
+
+        } @else {
+        <!-- ================= OFICINEIRO / COORDENADOR, ou aula já finalizada: somente leitura ================= -->
+        <ul class="lista-alunos">
+          @for (aluno of alunos(); track aluno.assistidoId) {
+          <li class="linha-aluno">
+            <span class="nome-aluno">{{ aluno.nomeCompleto }}</span>
+
+            <div class="linha-aluno-acoes">
+              @if (aluno.statusPresenca) {
+              <span
+                class="mini-badge"
+                [class.presente]="aluno.statusPresenca === StatusPresenca.PRESENTE"
+                [class.falta]="aluno.statusPresenca === StatusPresenca.FALTA"
+                [class.justificada]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+              >
+                @switch (aluno.statusPresenca) {
+                  @case (StatusPresenca.PRESENTE) { Presente }
+                  @case (StatusPresenca.FALTA) { Falta }
+                  @case (StatusPresenca.FALTA_JUSTIFICADA) { Falta justificada }
+                }
+              </span>
+              }
+
+              @if (ehOficineiroOuCoordenador()) {
+              <button
+                type="button"
+                class="icon-button"
+                title="Registrar ocorrência"
+                aria-label="Registrar ocorrência"
+                (click)="registrarOcorrencia(aluno)"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </button>
+              }
+            </div>
+          </li>
+          } @empty {
+          <li class="empty">Nenhum aluno ativo nesta turma.</li>
+          }
+        </ul>
+        }
       }
     }
   </section>

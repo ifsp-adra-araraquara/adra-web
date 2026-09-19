@@ -1,80 +1,83 @@
 <section class="aulas-page" aria-labelledby="aulas-titulo">
   <header class="page-header">
     <p class="eyebrow">Pedagógico</p>
-    <h1 id="aulas-titulo">Aulas</h1>
-    <p class="page-intro">Aulas do dia selecionado, de todas as turmas. Clique em uma aula de hoje ou já passada para abrir a chamada.</p>
+    <h1 id="aulas-titulo">{{ podeAbrirAula() ? 'Chamada' : 'Aulas' }}</h1>
+    <p class="page-intro">
+      @if (podeAbrirAula()) {
+        Turmas cadastradas. Veja os alunos de cada turma ou abra suas aulas — passadas ou de hoje — para fazer a chamada.
+      } @else {
+        Turmas cadastradas. Veja os alunos e o histórico completo de aulas de cada turma (passadas e futuras, de todas as datas).
+      }
+    </p>
   </header>
 
-  <section class="panel">
+  @if (carregando()) {
+  <p class="feedback" role="status">Carregando...</p>
+  } @else if (erro()) {
+  <p class="feedback error" role="alert">{{ erro() }}</p>
+  }
+
+  <section class="panel" aria-labelledby="turmas-titulo">
     <div class="panel-header">
-      <div>
-        <h2>Aulas do dia</h2>
-        <span class="subtle">{{ dataSelecionada() === hojeISO() ? 'Hoje' : dataSelecionada() }}</span>
-      </div>
-      <div class="filtros">
-        <label for="filtro-data-aulas" class="sr-only">Filtrar por data</label>
-        <input
-          id="filtro-data-aulas"
-          type="date"
-          class="filtro-data"
-          [ngModel]="dataSelecionada()"
-          (ngModelChange)="onDataChange($event)"
-        />
-        <button
-          type="button"
-          class="secondary-button"
-          [disabled]="dataSelecionada() === hojeISO()"
-          (click)="irParaHoje()"
-        >
-          Hoje
-        </button>
-      </div>
+      <h2 id="turmas-titulo">Turmas</h2>
+      <span class="subtle">{{ turmas().length }} turma(s)</span>
     </div>
-
-    @if (carregando()) {
-    <p class="feedback" role="status">Carregando...</p>
-    } @else if (erro()) {
-    <p class="feedback error" role="alert">{{ erro() }}</p>
-    }
-
     <div class="table-wrapper">
       <table>
         <thead>
           <tr>
-            <th>Horário</th>
             <th>Turma</th>
-            <th>Oficineiro</th>
-            <th>Alunos</th>
-            <th>Título</th>
+            <th>Oficina</th>
+            <th>Turno</th>
+            <th>Faixa etária</th>
+            <th>Capacidade</th>
             <th>Status</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
-          @for (aula of aulas(); track aula.aulaId) {
-          <tr
-            [class.linha-hoje]="ehHoje(aula)"
-            [class.linha-bloqueada]="!podeAbrir(aula)"
-            [attr.title]="podeAbrir(aula) ? 'Abrir aula' : 'Só é possível abrir aulas de hoje ou já passadas'"
-            (click)="abrirAula(aula)"
-          >
-            <td>{{ aula.horarioInicio && aula.horarioFim ? aula.horarioInicio + ' - ' + aula.horarioFim : '-' }} @if (ehHoje(aula)) { <span class="tag-hoje">Hoje</span> }</td>
-            <td class="strong">{{ aula.nomeTurma || '-' }}</td>
-            <td>{{ aula.nomeOficineiro || '-' }}</td>
-            <td>{{ aula.quantidadeAlunos ?? '-' }}</td>
-            <td>{{ aula.titulo || '-' }}</td>
-            <td><span class="status" [class]="classeSituacao(aula)">{{ rotuloSituacao(aula) }}</span></td>
+          @for (turma of turmas(); track turma.turmaId) {
+          <tr>
+            <td class="strong">{{ turma.nomeTurma }}</td>
+            <td>{{ nomeOficina(turma) }}</td>
+            <td>{{ turma.turno }}</td>
+            <td>{{ turma.faixaEtaria || '-' }}</td>
+            <td>{{ turma.capacidade }}</td>
+            <td><span class="status" [class.situacao-cancelada]="!turma.ativo">{{ turma.ativo ? 'Ativa' : 'Inativa' }}</span></td>
+            <td class="acoes-cell">
+              <button type="button" class="secondary-button" (click)="abrirTurma(turma)">Ver alunos</button>
+              <button type="button" class="secondary-button" (click)="abrirAulasDaTurma(turma)">Ver aulas</button>
+            </td>
           </tr>
           } @empty {
-          <tr><td colspan="6" class="empty">Nenhuma aula cadastrada para esta data.</td></tr>
+          <tr><td colspan="7" class="empty">Nenhuma turma cadastrada.</td></tr>
           }
         </tbody>
       </table>
     </div>
   </section>
 
-  <app-aula-modal
-    [aula]="aulaAberta()"
-    (fechar)="fecharAulaModal()"
-    (chamadaSalva)="aoSalvarChamada()">
-  </app-aula-modal>
+  @if (turmaSelecionada(); as turma) {
+  <div class="overlay" role="presentation" (click)="fecharTurma()">
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="alunos-titulo" (click)="$event.stopPropagation()">
+      <div class="panel-header">
+        <h2 id="alunos-titulo">Alunos de {{ turma.nomeTurma }}</h2>
+        <button type="button" class="close-button" (click)="fecharTurma()" aria-label="Fechar">X</button>
+      </div>
+      @for (aluno of alunos(); track aluno.assistidoId) {
+      <p class="student">{{ aluno.nomeCompleto }}</p>
+      } @empty {
+      <p class="empty">Nenhum aluno ativo encontrado.</p>
+      }
+    </section>
+  </div>
+  }
+
+  <app-aulas-turma-modal
+    [turmaId]="turmaAulasSelecionada()?.turmaId ?? 0"
+    [nomeTurma]="turmaAulasSelecionada()?.nomeTurma ?? ''"
+    [aberto]="turmaAulasSelecionada() !== null"
+    [permiteAbrirAula]="podeAbrirAula()"
+    (fechar)="fecharAulasDaTurma()">
+  </app-aulas-turma-modal>
 </section>

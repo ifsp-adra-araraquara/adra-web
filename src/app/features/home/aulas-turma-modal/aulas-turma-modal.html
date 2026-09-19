@@ -26,7 +26,7 @@
         <tr
           [class.linha-hoje]="ehHoje(aula)"
           [class.linha-bloqueada]="!podeAbrir(aula)"
-          [attr.title]="podeAbrir(aula) ? 'Abrir aula' : 'Só é possível abrir aulas de hoje ou já passadas'"
+          [attr.title]="tituloLinha(aula)"
           (click)="abrirAula(aula)"
         >
           <td>{{ aula.dataAula }} @if (ehHoje(aula)) { <span class="tag-hoje">Hoje</span> }</td>

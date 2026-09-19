@@ -37,6 +37,8 @@ export class AulasTurmaModal implements OnChanges {
   @Input({ required: true }) turmaId!: number;
   @Input() nomeTurma = '';
   @Input() aberto = false;
+  /** Quando false, a lista de aulas fica só pra consulta - clicar numa linha não abre a aula (ex.: coordenador). */
+  @Input() permiteAbrirAula = true;
 
   @Output() fechar = new EventEmitter<void>();
 
@@ -69,7 +71,7 @@ export class AulasTurmaModal implements OnChanges {
   }
 
   abrirAula(aula: AulaComDetalhesResponseDTO): void {
-    if (!this.podeAbrir(aula)) return;
+    if (!this.permiteAbrirAula || !this.podeAbrir(aula)) return;
     this.aulaAberta.set(aula);
   }
 
@@ -82,7 +84,12 @@ export class AulasTurmaModal implements OnChanges {
   }
 
   podeAbrir(aula: AulaComDetalhesResponseDTO): boolean {
-    return podeAbrirAula(aula.dataAula, aula.statusAula);
+    return this.permiteAbrirAula && podeAbrirAula(aula.dataAula, aula.statusAula);
+  }
+
+  tituloLinha(aula: AulaComDetalhesResponseDTO): string {
+    if (!this.permiteAbrirAula) return 'Somente consulta';
+    return this.podeAbrir(aula) ? 'Abrir aula' : 'Só é possível abrir aulas de hoje ou já passadas';
   }
 
   ehHoje(aula: AulaComDetalhesResponseDTO): boolean {

@@ -9,5 +9,5 @@ export interface TurmaResponseDTO {
   ativo: boolean;
   observacoes?: string;
   oficinaId?: number | null;
-  oficineiroResponsavel?: number | null;
+  oficineiroResponsavelId?: number | null;
 }

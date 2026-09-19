@@ -143,3 +143,31 @@
 .secondary-button { border: 1px solid var(--gray-200); background: #fff; color: var(--green-600); }
 
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 16px 20px 20px; }
+
+/* =========================
+   DEFINIR TÍTULO/DESCRIÇÃO (aula criada sem título)
+   ========================= */
+
+.definir-campos { padding: 16px 20px 20px; display: flex; flex-direction: column; }
+
+.campo { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
+
+.campo label { font-size: 13px; font-weight: 600; color: var(--gray-800); }
+
+.campo-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+  resize: vertical;
+}
+
+.campo-input:focus {
+  border-color: var(--green-400);
+  box-shadow: 0 0 0 2px rgba(52, 168, 108, 0.15);
+}

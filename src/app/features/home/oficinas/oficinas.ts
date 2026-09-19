@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -9,6 +9,7 @@ import { environment } from '../../../../environments/environment';
 
 import { OficinaRequestDTO } from '../../../shared/models/oficina/OficinaRequestDTO';
 import { OficinaResponseDTO } from '../../../shared/models/oficina/OficinaResponseDTO';
+import { UsuarioResponse } from '../../../shared/models/usuarios/UsuarioResponse';
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Modal } from '../../../shared/components/modal/modal';
 import { Table, TableColumn } from '../../../shared/components/table/table';
@@ -24,14 +25,25 @@ export class Oficinas implements OnInit {
   private http = inject(HttpClient);
 
   private readonly apiOficinas = `${environment.apiUrl}/api/oficinas`;
+  private readonly apiUsuarios = `${environment.apiUrl}/api/usuarios`;
 
   oficinas = signal<OficinaResponseDTO[]>([]);
   carregando = signal(false);
   erroListar = signal<string | null>(null);
 
+  /** Opções do select de oficineiro responsável, usado tanto no cadastro quanto na edição. */
+  oficineiroOptions = signal<SelectOption<number>[]>([]);
+
+  /** id -> nome, pra exibir o nome do oficineiro responsável na tabela (o back só manda o id). */
+  nomesOficineiros = computed(() => new Map(this.oficineiroOptions().map((o) => [o.value, o.label])));
+
   readonly colunasOficinas: TableColumn<OficinaResponseDTO>[] = [
     { key: 'nomeOficina', header: 'Nome da oficina', sortable: true },
-    { key: 'oficineiroResponsavel', header: 'Oficineiro responsável', sortable: true },
+    {
+      key: 'oficineiroResponsavelId',
+      header: 'Oficineiro responsável',
+      value: (o) => this.nomesOficineiros().get(o.oficineiroResponsavelId ?? -1) ?? '—',
+    },
     { key: 'ativo', header: 'Status', type: 'badge', width: '140px' },
   ];
 
@@ -50,6 +62,16 @@ export class Oficinas implements OnInit {
 
   ngOnInit(): void {
     this.carregarOficinas();
+    this.carregarOficineirosParaSelect();
+  }
+
+  private carregarOficineirosParaSelect(): void {
+    this.http.get<UsuarioResponse[]>(`${this.apiUsuarios}/oficineiros`).subscribe({
+      next: (lista) => {
+        this.oficineiroOptions.set(lista.map((u) => ({ value: u.usuarioId, label: u.nomeCompleto })));
+      },
+      error: (erro) => console.error('Erro ao carregar oficineiros para seleção:', erro),
+    });
   }
 
   onFiltroNomeChange(valor: string): void {
@@ -109,7 +131,7 @@ export class Oficinas implements OnInit {
   private oficinaVazia(): OficinaRequestDTO {
     return {
       nomeOficina: '',
-      oficineiroResponsavel: '',
+      oficineiroResponsavelId: null,
     };
   }
 
@@ -128,11 +150,18 @@ export class Oficinas implements OnInit {
     this.oficinaSendoEditada.set(null);
   }
 
-  atualizarCampoOficina(campo: keyof OficinaRequestDTO, valor: string): void {
+  atualizarCampoOficina(campo: keyof OficinaRequestDTO, valor: string | number | null): void {
     this.formOficina = { ...this.formOficina, [campo]: valor };
 
     if (campo === 'nomeOficina') {
-      this.dispararChecagemDuplicidade(valor);
+      this.dispararChecagemDuplicidade(valor as string);
+    }
+
+    // Mesmo ajuste feito em Turmas: limpa o erro assim que o usuário mexe
+    // em algum campo, pra não ficar uma mensagem de validação "presa" na
+    // tela depois que ele já corrigiu o que faltava.
+    if (this.erroSalvar()) {
+      this.erroSalvar.set(null);
     }
   }
 
@@ -174,8 +203,8 @@ export class Oficinas implements OnInit {
       return;
     }
 
-    if (!this.formOficina.oficineiroResponsavel.trim()) {
-      this.erroSalvar.set('Informe o oficineiro responsável.');
+    if (this.formOficina.oficineiroResponsavelId == null) {
+      this.erroSalvar.set('Selecione o oficineiro responsável.');
       return;
     }
 
@@ -221,7 +250,7 @@ export class Oficinas implements OnInit {
     this.oficinaSendoEditada.set(oficina);
     this.formOficina = {
       nomeOficina: oficina.nomeOficina,
-      oficineiroResponsavel: oficina.oficineiroResponsavel,
+      oficineiroResponsavelId: oficina.oficineiroResponsavelId ?? null,
     };
     this.erroSalvar.set(null);
     this.alertaDuplicidade.set(false);
