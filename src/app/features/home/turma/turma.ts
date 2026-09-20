@@ -14,6 +14,10 @@ import { TurmaRequestDTO } from '../../../shared/models/turma/TurmaRequestDTO';
 import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO';
 import { TurmaStatusRequestDTO } from '../../../shared/models/turma/TurmaStatusRequestDTO';
 import { CriacaoAulasRequestDTO, DiaDaSemana } from '../../../shared/models/aula/CriacaoAulasRequestDTO';
+import { GerarAulasResponseDTO } from '../../../shared/models/aula/GerarAulasResponseDTO';
+import { AulaRequestDTO } from '../../../shared/models/aula/AulaRequestDTO';
+import { AulaResponseDTO } from '../../../shared/models/aula/AulaResponseDTO';
+import { StatusAula } from '../../../shared/enum/StatusAula';
 import { OficinaResponseDTO } from '../../../shared/models/oficina/OficinaResponseDTO';
 import { UsuarioResponse } from '../../../shared/models/usuarios/UsuarioResponse';
 import { Select, SelectOption } from '../../../shared/components/select/select';
@@ -410,23 +414,21 @@ export class Turmas implements OnInit {
         }
 
         try {
-          const criouAlgumaAula = await firstValueFrom(
-            this.http.post<boolean>(`${this.apiAulas}/varias-aulas`, payloadAulas),
+          const resultadoAulas = await firstValueFrom(
+            this.http.post<GerarAulasResponseDTO>(`${this.apiAulas}/gerar`, payloadAulas),
           );
 
-          if (!criouAlgumaAula) {
-            // O back respondeu 200 normalmente, mas não criou nenhuma aula
-            // (ex.: nenhuma data do período cai nos dias da semana
-            // escolhidos). Sem esse aviso o usuário via a turma sendo
-            // criada e achava que as aulas também tinham sido, quando na
-            // verdade nenhuma foi.
+          if (resultadoAulas.aulasCriadas === 0) {
+            let motivo = 'nenhuma data do período informado cai nos dias da semana escolhidos';
+            if (resultadoAulas.aulasExcecaoPuladas > 0) {
+              motivo = `${resultadoAulas.aulasExcecaoPuladas} data(s) caíram em feriados ou recessos cadastrados`;
+            }
             this.salvando.set(false);
             this.fecharModalForm();
             this.carregarTurmas();
             this.avisoPosCriacao.set(
-              `A turma "${this.formTurma.nomeTurma}" foi criada, mas nenhuma aula foi criada: nenhuma data do ` +
-                'período informado cai nos dias da semana escolhidos. Use a ação "Criar várias aulas" na lista ' +
-                'para tentar novamente com outro período ou dias.',
+              `A turma "${this.formTurma.nomeTurma}" foi criada, mas nenhuma aula foi gerada (${motivo}). ` +
+                'Use a ação "Criar várias aulas" na lista para tentar novamente com outro período ou dias.',
             );
             return;
           }
@@ -556,16 +558,23 @@ export class Turmas implements OnInit {
     this.erroSalvarAulas.set(null);
 
     try {
-      const criouAlgumaAula = await firstValueFrom(
-        this.http.post<boolean>(`${this.apiAulas}/varias-aulas`, this.formCriarAulas),
+      const resultadoAulas = await firstValueFrom(
+        this.http.post<GerarAulasResponseDTO>(`${this.apiAulas}/gerar`, this.formCriarAulas),
       );
       this.salvandoAulas.set(false);
 
-      if (!criouAlgumaAula) {
-        this.erroSalvarAulas.set(
-          'Nenhuma aula foi criada: nenhuma data no período informado cai nos dias da semana ' +
-            'escolhidos (ou as aulas dessas datas já existiam para esta turma).',
-        );
+      if (resultadoAulas.aulasCriadas === 0) {
+        let msg = 'Nenhuma aula foi criada.';
+        if (resultadoAulas.aulasExcecaoPuladas > 0 && resultadoAulas.aulasDuplicadasPuladas > 0) {
+          msg += ` As datas calculadas caíram em feriados/recessos (${resultadoAulas.aulasExcecaoPuladas}) ou já existiam (${resultadoAulas.aulasDuplicadasPuladas}).`;
+        } else if (resultadoAulas.aulasExcecaoPuladas > 0) {
+          msg += ` Todas as datas calculadas caíram em feriados ou recessos cadastrados (${resultadoAulas.aulasExcecaoPuladas}).`;
+        } else if (resultadoAulas.aulasDuplicadasPuladas > 0) {
+          msg += ` As aulas para todas as datas já haviam sido criadas anteriormente (${resultadoAulas.aulasDuplicadasPuladas}).`;
+        } else {
+          msg += ' Nenhuma data no período informado cai nos dias da semana escolhidos.';
+        }
+        this.erroSalvarAulas.set(msg);
         return;
       }
 
@@ -613,4 +622,85 @@ export class Turmas implements OnInit {
     }
   }
 
+  /* ============================================================
+   * NOVA AULA (AVULSA) — Coordenador cadastra aula individual
+   * ============================================================ */
+  mostrarModalNovaAula = signal(false);
+  salvandoNovaAula = signal(false);
+  erroSalvarNovaAula = signal<string | null>(null);
+  turmaNovaAula = signal<TurmaResponseDTO | null>(null);
+  formNovaAula: AulaRequestDTO = this.novaAulaVazia();
+
+  readonly statusAulaOptions: SelectOption[] = [
+    { value: StatusAula.PLANEJADA, label: 'Agendada' },
+    { value: StatusAula.REALIZADA, label: 'Realizada' },
+    { value: StatusAula.REMARCADA, label: 'Remarcada' },
+    { value: StatusAula.CANCELADA, label: 'Cancelada' },
+  ];
+
+  private novaAulaVazia(): AulaRequestDTO {
+    return {
+      turmaId: 0,
+      dataAula: '',
+      horarioInicio: '',
+      horarioFim: '',
+      titulo: '',
+      descricao: '',
+      conteudoPrevisto: '',
+      conteudoMinistrado: '',
+      objetivos: '',
+      recursosNecessarios: '',
+      statusAula: StatusAula.PLANEJADA,
+      observacoes: '',
+    };
+  }
+
+  abrirModalNovaAula(turma: TurmaResponseDTO): void {
+    this.turmaNovaAula.set(turma);
+    this.formNovaAula = {
+      ...this.novaAulaVazia(),
+      turmaId: turma.turmaId,
+      horarioInicio: '',
+      horarioFim: '',
+    };
+    this.erroSalvarNovaAula.set(null);
+    this.mostrarModalNovaAula.set(true);
+  }
+
+  fecharModalNovaAula(): void {
+    this.mostrarModalNovaAula.set(false);
+    this.turmaNovaAula.set(null);
+  }
+
+  async salvarNovaAula(): Promise<void> {
+    if (this.salvandoNovaAula()) return;
+
+    if (!this.formNovaAula.turmaId) {
+      this.erroSalvarNovaAula.set('Informe a turma.');
+      return;
+    }
+    if (!this.formNovaAula.dataAula) {
+      this.erroSalvarNovaAula.set('Informe a data da aula.');
+      return;
+    }
+
+    this.salvandoNovaAula.set(true);
+    this.erroSalvarNovaAula.set(null);
+
+    try {
+      await firstValueFrom(
+        this.http.post<AulaResponseDTO>(this.apiAulas, this.formNovaAula),
+      );
+      this.salvandoNovaAula.set(false);
+      this.fecharModalNovaAula();
+    } catch (erro: any) {
+      console.error('Erro ao cadastrar aula avulsa:', erro);
+      this.erroSalvarNovaAula.set(
+        erro?.error?.message ?? 'Não foi possível cadastrar a aula. Verifique os dados e tente novamente.',
+      );
+      this.salvandoNovaAula.set(false);
+    }
+  }
+
 }
+

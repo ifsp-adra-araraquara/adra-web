@@ -27,6 +27,7 @@ const BADGE_STATUS_MAP: Record<string, BadgeStatusInfo> = {
   [StatusAula.REALIZADA]: { label: 'Realizada', variant: 'green' },
   [StatusAula.CANCELADA]: { label: 'Cancelada', variant: 'coral' },
   [StatusAula.ADIADA]: { label: 'Remarcada', variant: 'amber' },
+  [StatusAula.REMARCADA]: { label: 'Remarcada', variant: 'amber' },
 
   [StatusPresenca.PRESENTE]: { label: 'Presente', variant: 'green' },
   [StatusPresenca.FALTA]: { label: 'Falta', variant: 'coral' },

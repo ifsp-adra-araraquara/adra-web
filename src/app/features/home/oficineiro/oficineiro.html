@@ -60,8 +60,6 @@
           (ngModelChange)="onFiltroTurmaChange($event)"
           [options]="turmasFiltroOptions()"
         />
-        <button type="button" class="primary-button" (click)="abrirNovaAula()">Nova aula</button>
-        <button type="button" class="primary-button" (click)="abrirModalCriarAulas()">Criar várias aulas</button>
       </div>
     </div>
     <div class="table-wrapper table-wrapper-aulas">
@@ -77,7 +75,6 @@
           <th>Conteúdo previsto</th>
           <th>Conteúdo ministrado</th>
           <th>Status</th>
-          <th></th>
         </tr>
         </thead>
         <tbody>
@@ -97,9 +94,8 @@
           <td>{{ aula.conteudoPrevisto || '-' }}</td>
           <td>{{ aula.conteudoMinistrado || '-' }}</td>
           <td><span class="status" [class]="classeSituacao(aula)">{{ rotuloSituacao(aula) }}</span></td>
-          <td><button type="button" class="secondary-button" (click)="$event.stopPropagation(); editarAula(aula)">Editar</button></td>
         </tr>
-        } @empty { <tr><td colspan="10" class="empty">{{ filtroTurmaId() ? 'Nenhuma aula cadastrada para esta turma.' : 'Nenhuma aula cadastrada para suas turmas.' }}</td></tr> }
+        } @empty { <tr><td colspan="9" class="empty">{{ filtroTurmaId() ? 'Nenhuma aula cadastrada para esta turma.' : 'Nenhuma aula cadastrada para suas turmas.' }}</td></tr> }
         </tbody>
       </table>
     </div>
