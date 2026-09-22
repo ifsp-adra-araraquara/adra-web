@@ -6,6 +6,8 @@ import { CriacaoAulasRequestDTO, DiaDaSemana } from '../../../shared/models/aula
 import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO';
 import { Modal } from '../../../shared/components/modal/modal';
 import { Select, SelectOption } from '../../../shared/components/select/select';
+import { Input } from '../../../shared/components/input/input';
+import { Button } from '../../../shared/components/button/button';
 
 const OPCOES_DIA_SEMANA: { value: DiaDaSemana; label: string }[] = [
   { value: 'MONDAY', label: 'Segunda' },
@@ -20,7 +22,7 @@ const OPCOES_DIA_SEMANA: { value: DiaDaSemana; label: string }[] = [
 @Component({
   selector: 'app-recorrencia-aulas-modal',
   standalone: true,
-  imports: [FormsModule, Modal, Select],
+  imports: [FormsModule, Modal, Select, Input, Button],
   templateUrl: './recorrencia-aulas-modal.html',
 })
 export class RecorrenciaAulasModal {

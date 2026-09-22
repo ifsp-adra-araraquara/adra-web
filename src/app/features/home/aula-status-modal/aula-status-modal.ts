@@ -8,6 +8,7 @@ import { resolveBadgeStatus } from '../../../shared/utils/badge-status.util';
 import { Modal } from '../../../shared/components/modal/modal';
 import { Badge } from '../../../shared/components/badge/badge';
 import { Select, SelectOption } from '../../../shared/components/select/select';
+import { Button } from '../../../shared/components/button/button';
 
 const OPCOES_STATUS_AULA: SelectOption<StatusAula>[] = Object.values(StatusAula).map((status) => ({
   value: status,
@@ -17,7 +18,7 @@ const OPCOES_STATUS_AULA: SelectOption<StatusAula>[] = Object.values(StatusAula)
 @Component({
   selector: 'app-aula-status-modal',
   standalone: true,
-  imports: [FormsModule, Modal, Badge, Select],
+  imports: [FormsModule, Modal, Badge, Select, Button],
   templateUrl: './aula-status-modal.html',
 })
 export class AulaStatusModal {

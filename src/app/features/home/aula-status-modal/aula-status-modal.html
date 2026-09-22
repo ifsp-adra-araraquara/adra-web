@@ -19,9 +19,7 @@
   }
 
   <ng-template #footer>
-    <button type="button" class="btn btn-ghost" (click)="fechar.emit()">Cancelar</button>
-    <button type="button" class="btn" [disabled]="!podeSalvar()" (click)="salvarStatus()">
-      {{ salvando() ? 'Salvando...' : 'Salvar' }}
-    </button>
+    <app-button variant="secondary" (click)="fechar.emit()">Cancelar</app-button>
+    <app-button [loading]="salvando()" [disabled]="!podeSalvar()" (click)="salvarStatus()">Salvar</app-button>
   </ng-template>
 </app-modal>

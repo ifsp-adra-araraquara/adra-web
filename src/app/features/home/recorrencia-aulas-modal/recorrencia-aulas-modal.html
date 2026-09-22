@@ -21,14 +21,10 @@
   </fieldset>
 
   <div class="form-row">
-    <div class="field">
-      <label>Data início</label>
-      <input class="input" type="date" [(ngModel)]="dataInicio" name="dataInicio" />
-    </div>
-    <div class="field">
-      <label>Data fim</label>
-      <input class="input" type="date" [(ngModel)]="dataFim" name="dataFim" />
-    </div>
+    <app-input label="Data início" type="date" name="dataInicio" [(ngModel)]="dataInicio" />
+    <app-input label="Data fim" type="date" name="dataFim" [(ngModel)]="dataFim" />
+
+    <!-- app-input não tem type="time" ainda — mantido nativo -->
     <div class="field">
       <label>Horário início</label>
       <input class="input" type="time" [(ngModel)]="horarioInicio" name="horarioInicio" />
@@ -39,10 +35,9 @@
     </div>
   </div>
 
-  <div class="field">
-    <label>Título (opcional)</label>
-    <input class="input" type="text" [(ngModel)]="titulo" name="titulo" />
-  </div>
+  <app-input label="Título (opcional)" name="titulo" [(ngModel)]="titulo" />
+
+  <!-- app-input não tem variante textarea ainda — mantido nativo -->
   <div class="field">
     <label>Descrição (opcional)</label>
     <textarea class="input" [(ngModel)]="descricao" name="descricao"></textarea>
@@ -56,9 +51,7 @@
   }
 
   <ng-template #footer>
-    <button type="button" class="btn btn-ghost" (click)="fecharModal()">Fechar</button>
-    <button type="button" class="btn" [disabled]="!formularioValido() || gerando()" (click)="gerar()">
-      {{ gerando() ? 'Gerando...' : 'Gerar aulas' }}
-    </button>
+    <app-button variant="secondary" (click)="fecharModal()">Fechar</app-button>
+    <app-button [loading]="gerando()" [disabled]="!formularioValido()" (click)="gerar()">Gerar aulas</app-button>
   </ng-template>
 </app-modal>
