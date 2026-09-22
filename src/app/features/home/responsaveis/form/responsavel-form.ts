@@ -1,17 +1,18 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input as InputDecorator, OnChanges, Output, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ResponsavelService } from '../../../../core/responsavel.service';
 import { AlertaCpfDuplicadoDTO } from '../../../../shared/models/responsavel/AlertaCpfDuplicadoDTO';
 import { ResponsavelResponseDTO } from '../../../../shared/models/responsavel/ResponsavelResponseDTO';
-import { cpfValidator, formatarCpf, somenteDigitos } from '../../../../shared/validators/cpf.validator';
+import { cpfValidator } from '../../../../shared/validators/cpf.validator';
+import { Input } from '../../../../shared/components/input/input';
+import { Button } from '../../../../shared/components/button/button';
 
 type EtapaForm = 'buscaCpf' | 'formulario';
 
 @Component({
   selector: 'app-responsavel-form',
-  imports: [ReactiveFormsModule, CommonModule],
+  imports: [ReactiveFormsModule, Input, Button],
   templateUrl: './responsavel-form.html',
   styleUrl: './responsavel-form.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -21,7 +22,7 @@ export class ResponsavelForm implements OnChanges {
   private fb = inject(FormBuilder);
 
   /** Se vier preenchido, o form abre direto em modo edicao (pula a busca por CPF). */
-  @Input() responsavelParaEditar: ResponsavelResponseDTO | null = null;
+  @InputDecorator() responsavelParaEditar: ResponsavelResponseDTO | null = null;
 
   @Output() salvo = new EventEmitter<ResponsavelResponseDTO>();
   @Output() cancelado = new EventEmitter<void>();
@@ -44,10 +45,36 @@ export class ResponsavelForm implements OnChanges {
     nomeCompleto: ['', [Validators.required, Validators.maxLength(180)]],
     dataNascimento: [''],
     cpf: ['', [Validators.required, cpfValidator()]],
-    telefone: ['', Validators.pattern(/^$|\d{10,11}/)],
+    telefone: ['', Validators.pattern(/^$|^\d{10,11}$/)],
     email: ['', Validators.email],
     endereco: [''],
     observacoes: [''],
+  });
+
+  protected erroCpfBusca = computed(() =>
+    this.cpfBusca.touched && this.cpfBusca.invalid ? 'CPF inválido.' : null,
+  );
+
+  protected erroNome = computed(() => this.errosPorCampo()['nomeCompleto'] ?? null);
+  protected erroDataNascimento = computed(() => this.errosPorCampo()['dataNascimento'] ?? null);
+
+  protected erroCpfForm = computed(() => {
+    if (this.form.controls.cpf.touched && this.form.controls.cpf.invalid) return 'CPF inválido.';
+    return this.errosPorCampo()['cpf'] ?? null;
+  });
+
+  protected erroTelefone = computed(() => {
+    if (this.form.controls.telefone.touched && this.form.controls.telefone.invalid) {
+      return 'Telefone deve ter DDD + número (10 ou 11 dígitos).';
+    }
+    return this.errosPorCampo()['telefone'] ?? null;
+  });
+
+  protected erroEmail = computed(() => {
+    if (this.form.controls.email.touched && this.form.controls.email.invalid) {
+      return 'Informe um e-mail válido.';
+    }
+    return this.errosPorCampo()['email'] ?? null;
   });
 
   /** Usado no [max] do input de data, para impedir escolher data futura no seletor do navegador. */
@@ -65,19 +92,13 @@ export class ResponsavelForm implements OnChanges {
 
   /* ===== Etapa 1: busca por CPF (CA-A01.2) ===== */
 
-  onCpfBuscaInput(valor: string): void {
-    this.cpfBusca.setValue(formatarCpf(valor), { emitEvent: false });
-    this.cpfNaoEncontrado.set(false);
-    this.responsavelEncontrado.set(null);
-  }
-
   buscarPorCpf(): void {
     if (this.cpfBusca.invalid) {
       this.cpfBusca.markAsTouched();
       return;
     }
 
-    const cpf = somenteDigitos(this.cpfBusca.value);
+    const cpf = this.cpfBusca.value;
     this.buscandoCpf.set(true);
     this.cpfNaoEncontrado.set(false);
     this.responsavelEncontrado.set(null);
@@ -138,10 +159,6 @@ export class ResponsavelForm implements OnChanges {
     this.etapa.set('formulario');
   }
 
-  onCpfFormInput(valor: string): void {
-    this.form.patchValue({ cpf: formatarCpf(valor) }, { emitEvent: false });
-  }
-
   salvar(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -151,7 +168,7 @@ export class ResponsavelForm implements OnChanges {
     this.salvando.set(true);
     this.limparMensagens();
 
-    const dto = { ...this.form.getRawValue(), cpf: somenteDigitos(this.form.getRawValue().cpf) };
+    const dto = this.form.getRawValue();
     const id = this.responsavelIdEmEdicao();
 
     const operacao = this.modoEdicao() && id

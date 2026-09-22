@@ -88,18 +88,6 @@
   letter-spacing: .03em;
 }
 
-.status {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-}
-.situacao-pendente { background: #efede6; color: #54585a; }
-.situacao-disponivel { background: #faeeda; color: #854f0b; }
-.situacao-finalizada { background: #e0f2ec; color: #005a45; }
-.situacao-cancelada { background: #faece7; color: #993c1d; }
-
 .empty {
   text-align: center;
   color: #888;

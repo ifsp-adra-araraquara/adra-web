@@ -26,28 +26,31 @@
       </div>
       <p class="login-sub">Acesso institucional</p>
 
-      <div class="field">
-        <label for="login-email">E-mail institucional</label>
-        <input class="input" id="login-email" name="email" type="email" placeholder="coordenador@adra.org.br"
-          [(ngModel)]="email" autocomplete="username">
-      </div>
+      <app-input
+        label="E-mail institucional"
+        type="email"
+        name="email"
+        placeholder="coordenador@adra.org.br"
+        autocomplete="username"
+        [(ngModel)]="email"
+      />
 
-      <div class="field">
-        <label for="login-pass">Senha</label>
-        <input class="input" id="login-pass" name="senha" type="password" placeholder="••••••••" [(ngModel)]="senha"
-          autocomplete="current-password">
-      </div>
+      <app-input
+        label="Senha"
+        type="password"
+        name="senha"
+        placeholder="••••••••"
+        autocomplete="current-password"
+        [(ngModel)]="senha"
+      />
 
       @if (erro()) {
       <p class="login-erro" role="alert">{{ erro() }}</p>
       }
 
-      <button type="submit" class="btn btn-block" [disabled]="carregando()">
-        @if (carregando()) {
-        <span class="btn-spinner" aria-hidden="true"></span>
-        }
+      <app-button type="submit" size="lg" [block]="true" [loading]="carregando()">
         {{ carregando() ? 'Entrando...' : 'Entrar' }}
-      </button>
+      </app-button>
 
       <p class="login-foot" style="margin-top: 14px;">
         <a routerLink="/esqueci-senha">Esqueceu sua senha?</a>

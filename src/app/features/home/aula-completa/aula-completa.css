@@ -63,19 +63,6 @@ h1 { margin: 0 0 6px; font-size: 24px; }
 
 .acoes-finais { display: flex; justify-content: flex-end; }
 
-.primary-button, .secondary-button {
-  padding: 11px 18px;
-  border-radius: 8px;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.primary-button { border: 1px solid var(--green-400); background: var(--green-400); color: #fff; }
-.primary-button:disabled { opacity: .6; cursor: default; }
-.secondary-button { border: 1px solid var(--gray-200); background: #fff; color: var(--green-600); }
-.secondary-button:disabled { opacity: .5; cursor: not-allowed; }
-
 .panel-materiais { padding: 48px 0; text-align: center; }
 .panel-materiais .empty { margin-bottom: 16px; }
 

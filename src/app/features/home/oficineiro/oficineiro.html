@@ -37,8 +37,8 @@
           <td class="strong">{{ turma.nomeTurma }}</td><td>{{ turma.nomeOficina || '-' }}</td><td>{{ turma.turno }}</td>
           <td>{{ turma.quantidadeAlunos }}</td><td>{{ turma.capacidade }}</td>
           <td class="acoes-cell">
-            <button type="button" class="secondary-button" (click)="abrirTurma(turma)">Ver alunos</button>
-            <button type="button" class="secondary-button" (click)="abrirAulasDaTurma(turma)">Ver aulas</button>
+            <app-button variant="secondary" size="sm" (click)="abrirTurma(turma)">Ver alunos</app-button>
+            <app-button variant="secondary" size="sm" (click)="abrirAulasDaTurma(turma)">Ver aulas</app-button>
           </td>
         </tr>
         } @empty { <tr><td colspan="6" class="empty">Nenhuma turma vinculada ao seu usuário.</td></tr> }
@@ -93,7 +93,7 @@
           <td>{{ aula.titulo || '-' }}</td>
           <td>{{ aula.conteudoPrevisto || '-' }}</td>
           <td>{{ aula.conteudoMinistrado || '-' }}</td>
-          <td><span class="status" [class]="classeSituacao(aula)">{{ rotuloSituacao(aula) }}</span></td>
+          <td><app-badge [status]="situacaoAula(aula)" /></td>
         </tr>
         } @empty { <tr><td colspan="9" class="empty">{{ filtroTurmaId() ? 'Nenhuma aula cadastrada para esta turma.' : 'Nenhuma aula cadastrada para suas turmas.' }}</td></tr> }
         </tbody>
@@ -103,7 +103,7 @@
   }
   @case ('materiais') {
   <section class="panel" aria-labelledby="materiais-titulo">
-    <div class="panel-header"><div><h2 id="materiais-titulo">Materiais didáticos</h2><span class="subtle">Filtrados pelas suas turmas</span></div><button type="button" class="primary-button" (click)="mostrarUploadMaterial.set(true)">Novo material</button></div>
+    <div class="panel-header"><div><h2 id="materiais-titulo">Materiais didáticos</h2><span class="subtle">Filtrados pelas suas turmas</span></div><app-button size="sm" (click)="mostrarUploadMaterial.set(true)">Novo material</app-button></div>
     <div class="material-grid">
       @for (material of materiais(); track material.materialId) {
       <article class="material-card"><div class="material-icon">{{ material.tipo }}</div><h3>{{ material.titulo }}</h3><p>{{ material.nomeTurma || material.nomeOficina || 'Sem vínculo informado' }}</p><a class="secondary-button" [href]="material.url" target="_blank" rel="noopener">Abrir</a></article>
@@ -121,14 +121,17 @@
   }
   }
 
-  @if (turmaSelecionada(); as turma) {
-  <div class="overlay" role="presentation" (click)="fecharTurma()">
-    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="alunos-titulo" (click)="$event.stopPropagation()">
-      <div class="panel-header"><h2 id="alunos-titulo">Alunos de {{ turma.nomeTurma }}</h2><button type="button" class="close-button" (click)="fecharTurma()" aria-label="Fechar">X</button></div>
-      @for (aluno of alunos(); track aluno.assistidoId) { <p class="student">{{ aluno.nomeCompleto }}</p> } @empty { <p class="empty">Nenhum aluno ativo encontrado.</p> }
-    </section>
-  </div>
-  }
+  <app-modal
+    [(open)]="mostrarAlunos"
+    [title]="'Alunos de ' + (turmaSelecionada()?.nomeTurma ?? '')"
+    (closed)="fecharTurma()"
+  >
+    @for (aluno of alunos(); track aluno.assistidoId) {
+    <p class="student">{{ aluno.nomeCompleto }}</p>
+    } @empty {
+    <p class="empty">Nenhum aluno ativo encontrado.</p>
+    }
+  </app-modal>
 
   @if (mostrarFormularioAula()) {
   <div class="overlay" role="presentation" (click)="fecharFormularioAula()">
@@ -137,14 +140,14 @@
       <div class="dialog-body">
         <div class="form-row">
         <label>Turma<app-select [(ngModel)]="aulaForm.turmaId" [options]="turmasFormOptions()" /></label>
-        <label>Data<input type="date" [(ngModel)]="aulaForm.dataAula"></label>
+        <app-input label="Data" type="date" [(ngModel)]="aulaForm.dataAula" />
         </div>
         <div class="form-row">
           <label>Horário de início<input type="time" [(ngModel)]="aulaForm.horarioInicio"></label>
           <label>Horário de fim<input type="time" [(ngModel)]="aulaForm.horarioFim"></label>
         </div>
         <div class="form-row">
-          <label>Título (opcional)<input type="text" [(ngModel)]="aulaForm.titulo" placeholder="Ex.: Aula de introdução" maxlength="150"></label>
+          <app-input label="Título (opcional)" [(ngModel)]="aulaForm.titulo" placeholder="Ex.: Aula de introdução" />
           <label>Status<app-select [(ngModel)]="aulaForm.statusAula" [options]="statusAulaOptions" /></label>
         </div>
         <label>Descrição (opcional)<textarea [(ngModel)]="aulaForm.descricao" rows="3"></textarea></label>
@@ -158,7 +161,7 @@
         </div>
         <label>Observações (opcional)<textarea [(ngModel)]="aulaForm.observacoes" rows="3"></textarea></label>
       </div>
-      <div class="dialog-actions"><button type="button" class="secondary-button" (click)="fecharFormularioAula()">Cancelar</button><button type="button" class="primary-button" [disabled]="salvandoAula()" (click)="salvarAula()">Salvar aula</button></div>
+      <div class="dialog-actions"><app-button variant="secondary" (click)="fecharFormularioAula()">Cancelar</app-button><app-button [loading]="salvandoAula()" (click)="salvarAula()">Salvar aula</app-button></div>
     </section>
   </div>
   }
@@ -168,7 +171,7 @@
     <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="novo-material-titulo" (click)="$event.stopPropagation()">
       <div class="panel-header"><h2 id="novo-material-titulo">Novo material</h2><button type="button" class="close-button" (click)="mostrarUploadMaterial.set(false)" aria-label="Fechar">X</button></div>
       <label>Arquivo<input type="file" (change)="selecionarArquivo($event)" accept=".pdf,.mp4,.doc,.docx,.ppt,.pptx"></label>
-      <div class="dialog-actions"><button type="button" class="secondary-button" (click)="mostrarUploadMaterial.set(false)">Cancelar</button><button type="button" class="primary-button" [disabled]="enviandoMaterial()" (click)="enviarMaterial()">Enviar</button></div>
+      <div class="dialog-actions"><app-button variant="secondary" (click)="mostrarUploadMaterial.set(false)">Cancelar</app-button><app-button [loading]="enviandoMaterial()" (click)="enviarMaterial()">Enviar</app-button></div>
     </section>
   </div>
   }
@@ -183,11 +186,11 @@
         }
         <div class="form-row">
           <label>Turma<app-select [(ngModel)]="formCriarAulas.turmaId" [options]="turmasFormOptions()" /></label>
-          <label>Título (opcional)<input type="text" [(ngModel)]="formCriarAulas.titulo" placeholder="Ex.: Aula de introdução"></label>
+          <app-input label="Título (opcional)" [(ngModel)]="formCriarAulas.titulo" placeholder="Ex.: Aula de introdução" />
         </div>
         <div class="form-row">
-          <label>Data de início<input type="date" [(ngModel)]="formCriarAulas.dataInicio"></label>
-          <label>Data de fim<input type="date" [(ngModel)]="formCriarAulas.dataFim"></label>
+          <app-input label="Data de início" type="date" [(ngModel)]="formCriarAulas.dataInicio" />
+          <app-input label="Data de fim" type="date" [(ngModel)]="formCriarAulas.dataFim" />
         </div>
         <div class="form-row">
           <label>Horário de início<input type="time" [(ngModel)]="formCriarAulas.horarioInicio"></label>
@@ -212,7 +215,7 @@
         <label>Recursos necessários (opcional)<textarea [(ngModel)]="formCriarAulas.recursosNecessarios" placeholder="Materiais e recursos necessários" rows="3"></textarea></label>
         <label>Observações (opcional)<textarea [(ngModel)]="formCriarAulas.observacoes" placeholder="Observações adicionais" rows="3"></textarea></label>
       </div>
-      <div class="dialog-actions"><button type="button" class="secondary-button" (click)="fecharModalCriarAulas()">Cancelar</button><button type="button" class="primary-button" [disabled]="salvandoCriarAulas()" (click)="salvarCriarAulas()">{{ salvandoCriarAulas() ? 'Criando aulas...' : 'Criar aulas' }}</button></div>
+      <div class="dialog-actions"><app-button variant="secondary" (click)="fecharModalCriarAulas()">Cancelar</app-button><app-button [loading]="salvandoCriarAulas()" (click)="salvarCriarAulas()">Criar aulas</app-button></div>
     </section>
   </div>
   }

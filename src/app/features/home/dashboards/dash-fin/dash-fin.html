@@ -21,7 +21,7 @@
             <td class="cell-name">{{ e.arquivo }}</td>
             <td>{{ e.periodo }}</td>
             <td>{{ e.projeto }}</td>
-            <td><span class="badge plain" [class]="e.formato === 'PDF' ? 'b-red' : 'b-green'">{{ e.formato }}</span></td>
+            <td><app-badge [plain]="true" [variant]="e.formato === 'PDF' ? 'red' : 'green'" [label]="e.formato" /></td>
             <td>{{ e.data }}</td>
           </tr>
         }

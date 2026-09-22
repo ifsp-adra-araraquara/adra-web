@@ -18,25 +18,26 @@
     </div>
 
     @if (isCoordenador()) {
-      <button class="btn btn-sm" style="flex-shrink: 0" (click)="abrirModalNovaTurma()">
+      <app-button size="sm" style="flex-shrink: 0" (click)="abrirModalNovaTurma()">
         + Nova turma
-      </button>
+      </app-button>
     }
   </div>
 
   @if (avisoPosCriacao()) {
     <div class="notice notice-amber" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px">
       <span>{{ avisoPosCriacao() }}</span>
-      <button type="button" class="btn btn-ghost btn-sm" style="flex-shrink: 0" (click)="avisoPosCriacao.set(null)">
+      <app-button variant="secondary" size="sm" style="flex-shrink: 0" (click)="avisoPosCriacao.set(null)">
         Entendi
-      </button>
+      </app-button>
     </div>
   }
 
   <div class="toolbar" style="justify-content: space-between; flex-wrap: nowrap">
     <div style="display: flex; gap: 8px; flex: 1; flex-wrap: nowrap; min-width: 0">
-      <input
-        class="input"
+      <app-input
+        label="Buscar por nome da turma"
+        [hideLabel]="true"
         placeholder="Buscar por nome da turma…"
         style="flex: 1; min-width: 0"
         [ngModel]="filtroNome"
@@ -168,15 +169,12 @@
       <div class="notice-error">{{ erroSalvar() }}</div>
     }
 
-    <div class="field">
-      <label>Nome da turma</label>
-      <input
-        class="input"
-        placeholder="Ex.: CJ Grupo A"
-        [ngModel]="formTurma.nomeTurma"
-        (ngModelChange)="atualizarCampoTurma('nomeTurma', $event)"
-      />
-    </div>
+    <app-input
+      label="Nome da turma"
+      placeholder="Ex.: CJ Grupo A"
+      [ngModel]="formTurma.nomeTurma"
+      (ngModelChange)="atualizarCampoTurma('nomeTurma', $event)"
+    />
 
     <div class="form-row">
       <div class="field">
@@ -211,17 +209,14 @@
         />
       </div>
 
-      <div class="field">
-        <label>Capacidade</label>
-        <input
-          class="input"
-          type="number"
-          min="1"
-          placeholder="Ex.: 24"
-          [ngModel]="formTurma.capacidade"
-          (ngModelChange)="atualizarCampoTurma('capacidade', $event)"
-        />
-      </div>
+      <app-input
+        label="Capacidade"
+        type="number"
+        min="1"
+        placeholder="Ex.: 24"
+        [ngModel]="formTurma.capacidade"
+        (ngModelChange)="atualizarCampoTurma('capacidade', $event)"
+      />
     </div>
 
     <div class="field">
@@ -256,25 +251,19 @@
     }
 
     <div class="form-row">
-      <div class="field">
-        <label>Data de início</label>
-        <input
-          class="input"
-          type="date"
-          [ngModel]="formAulasTurma.dataInicio"
-          (ngModelChange)="atualizarCampoAulasTurma('dataInicio', $event)"
-        />
-      </div>
+      <app-input
+        label="Data de início"
+        type="date"
+        [ngModel]="formAulasTurma.dataInicio"
+        (ngModelChange)="atualizarCampoAulasTurma('dataInicio', $event)"
+      />
 
-      <div class="field">
-        <label>Data de fim</label>
-        <input
-          class="input"
-          type="date"
-          [ngModel]="formAulasTurma.dataFim"
-          (ngModelChange)="atualizarCampoAulasTurma('dataFim', $event)"
-        />
-      </div>
+      <app-input
+        label="Data de fim"
+        type="date"
+        [ngModel]="formAulasTurma.dataFim"
+        (ngModelChange)="atualizarCampoAulasTurma('dataFim', $event)"
+      />
     </div>
 
     <div class="field">
@@ -398,16 +387,13 @@
       }
     </div>
 
-    <div class="field">
-      <label>Título {{ comTituloDescricao() ? '(opcional)' : '' }}</label>
-      <input
-        class="input"
-        placeholder="Ex.: Aula de introdução"
-        [disabled]="!comTituloDescricao()"
-        [ngModel]="formAulasTurma.titulo"
-        (ngModelChange)="atualizarCampoAulasTurma('titulo', $event)"
-      />
-    </div>
+    <app-input
+      [label]="'Título' + (comTituloDescricao() ? ' (opcional)' : '')"
+      placeholder="Ex.: Aula de introdução"
+      [disabled]="!comTituloDescricao()"
+      [ngModel]="formAulasTurma.titulo"
+      (ngModelChange)="atualizarCampoAulasTurma('titulo', $event)"
+    />
 
     <div class="field">
       <label>Descrição {{ comTituloDescricao() ? '(opcional)' : '' }}</label>
@@ -462,10 +448,8 @@
   }
 
   <ng-template #footer>
-    <button class="btn btn-ghost" (click)="fecharModalForm()">Cancelar</button>
-    <button class="btn" [disabled]="salvando()" (click)="salvarTurma()">
-      {{ salvando() ? 'Salvando...' : 'Salvar turma' }}
-    </button>
+    <app-button variant="secondary" (click)="fecharModalForm()">Cancelar</app-button>
+    <app-button [loading]="salvando()" (click)="salvarTurma()">Salvar turma</app-button>
   </ng-template>
 </app-modal>
 
@@ -497,12 +481,12 @@
   </p>
 
   <ng-template #footer>
-    <button type="button" class="btn btn-ghost" (click)="cancelarCriarSemAulas()">
+    <app-button variant="secondary" (click)="cancelarCriarSemAulas()">
       Cancelar, voltar pra aba Aulas
-    </button>
-    <button type="button" class="btn" (click)="confirmarCriarSemAulas()">
+    </app-button>
+    <app-button (click)="confirmarCriarSemAulas()">
       Criar sem aulas
-    </button>
+    </app-button>
   </ng-template>
 </app-modal>
 
@@ -563,25 +547,15 @@
   }
 
   <ng-template #footer>
-    <button type="button" class="btn btn-ghost" (click)="fecharModalStatus()">Cancelar</button>
+    <app-button variant="secondary" (click)="fecharModalStatus()">Cancelar</app-button>
     @if (turmaSelecionadaStatus()?.ativo) {
-      <button
-        type="button"
-        class="btn btn-danger"
-        [disabled]="alterandoStatus()"
-        (click)="confirmarAlteracaoStatus()"
-      >
-        {{ alterandoStatus() ? 'Inativando...' : 'Inativar turma' }}
-      </button>
+      <app-button variant="danger" [loading]="alterandoStatus()" (click)="confirmarAlteracaoStatus()">
+        Inativar turma
+      </app-button>
     } @else {
-      <button
-        type="button"
-        class="btn"
-        [disabled]="alterandoStatus()"
-        (click)="confirmarAlteracaoStatus()"
-      >
-        {{ alterandoStatus() ? 'Reativando...' : 'Reativar turma' }}
-      </button>
+      <app-button [loading]="alterandoStatus()" (click)="confirmarAlteracaoStatus()">
+        Reativar turma
+      </app-button>
     }
   </ng-template>
 </app-modal>
@@ -608,31 +582,22 @@
     <div class="notice-error">{{ erroSalvarAulas() }}</div>
   }
 
-  <div class="field">
-    <label>Turma ID</label>
-    <input class="input" [ngModel]="formCriarAulas.turmaId" disabled />
-  </div>
+  <app-input label="Turma ID" [ngModel]="formCriarAulas.turmaId" [disabled]="true" />
 
   <div class="form-row">
-    <div class="field">
-      <label>Data de início</label>
-      <input
-        class="input"
-        type="date"
-        [ngModel]="formCriarAulas.dataInicio"
-        (ngModelChange)="atualizarCampoCriarAulas('dataInicio', $event)"
-      />
-    </div>
+    <app-input
+      label="Data de início"
+      type="date"
+      [ngModel]="formCriarAulas.dataInicio"
+      (ngModelChange)="atualizarCampoCriarAulas('dataInicio', $event)"
+    />
 
-    <div class="field">
-      <label>Data de fim</label>
-      <input
-        class="input"
-        type="date"
-        [ngModel]="formCriarAulas.dataFim"
-        (ngModelChange)="atualizarCampoCriarAulas('dataFim', $event)"
-      />
-    </div>
+    <app-input
+      label="Data de fim"
+      type="date"
+      [ngModel]="formCriarAulas.dataFim"
+      (ngModelChange)="atualizarCampoCriarAulas('dataFim', $event)"
+    />
   </div>
 
   <div class="field">
@@ -726,15 +691,13 @@
     </div>
   </div>
 
-  <div class="field">
-    <label>Título (opcional)</label>
-    <input
-      class="input"
-      placeholder="Ex.: Aula de introdução"
-      [ngModel]="formCriarAulas.titulo"
-      (ngModelChange)="atualizarCampoCriarAulas('titulo', $event)"
-    />
-  </div>
+  <app-input
+    label="Título (opcional)"
+    placeholder="Ex.: Aula de introdução"
+    [maxLength]="150"
+    [ngModel]="formCriarAulas.titulo"
+    (ngModelChange)="atualizarCampoCriarAulas('titulo', $event)"
+  />
 
   <div class="field">
     <label>Descrição (opcional)</label>
@@ -787,10 +750,8 @@
   </div>
 
   <ng-template #footer>
-    <button class="btn btn-ghost" (click)="fecharModalCriarAulas()">Cancelar</button>
-    <button class="btn" [disabled]="salvandoAulas()" (click)="salvarCriarAulas()">
-      {{ salvandoAulas() ? 'Criando aulas...' : 'Criar aulas' }}
-    </button>
+    <app-button variant="secondary" (click)="fecharModalCriarAulas()">Cancelar</app-button>
+    <app-button [loading]="salvandoAulas()" (click)="salvarCriarAulas()">Criar aulas</app-button>
   </ng-template>
 </app-modal>
 
@@ -819,15 +780,12 @@
   }
 
   <div class="form-row">
-    <div class="field">
-      <label>Data da aula *</label>
-      <input
-        class="input"
-        type="date"
-        [(ngModel)]="formNovaAula.dataAula"
-        required
-      />
-    </div>
+    <app-input
+      label="Data da aula"
+      type="date"
+      [required]="true"
+      [(ngModel)]="formNovaAula.dataAula"
+    />
 
     <div class="field">
       <label>Status</label>
@@ -858,16 +816,11 @@
     </div>
   </div>
 
-  <div class="field">
-    <label>Título (opcional)</label>
-    <input
-      class="input"
-      type="text"
-      [(ngModel)]="formNovaAula.titulo"
-      placeholder="Ex.: Aula Inaugural ou Reposição"
-      maxlength="150"
-    />
-  </div>
+  <app-input
+    label="Título (opcional)"
+    [(ngModel)]="formNovaAula.titulo"
+    placeholder="Ex.: Aula Inaugural ou Reposição"
+  />
 
   <div class="field">
     <label>Descrição (opcional)</label>
@@ -928,9 +881,15 @@
   </div>
 
   <ng-template #footer>
-    <button class="btn btn-ghost" [disabled]="salvandoNovaAula()" (click)="fecharModalNovaAula()">Cancelar</button>
-    <button class="btn" [disabled]="salvandoNovaAula() || !formNovaAula.dataAula" (click)="salvarNovaAula()">
-      {{ salvandoNovaAula() ? 'Salvando...' : 'Salvar aula' }}
-    </button>
+    <app-button variant="secondary" [disabled]="salvandoNovaAula()" (click)="fecharModalNovaAula()">
+      Cancelar
+    </app-button>
+    <app-button
+      [loading]="salvandoNovaAula()"
+      [disabled]="!formNovaAula.dataAula"
+      (click)="salvarNovaAula()"
+    >
+      Salvar aula
+    </app-button>
   </ng-template>
 </app-modal>

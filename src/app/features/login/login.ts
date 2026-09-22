@@ -3,11 +3,13 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { BrandLogo } from '../../shared/components/brand-logo/brand-logo';
+import { Input } from '../../shared/components/input/input';
+import { Button } from '../../shared/components/button/button';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, RouterLink, BrandLogo],
+  imports: [FormsModule, RouterLink, BrandLogo, Input, Button],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })

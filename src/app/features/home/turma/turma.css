@@ -34,7 +34,6 @@
 }
 
 .input,
-.select,
 textarea {
   width: 100%;
 
@@ -56,7 +55,6 @@ textarea {
 }
 
 .input:focus,
-.select:focus,
 textarea:focus {
   border-color: #64748b;
 
@@ -64,7 +62,6 @@ textarea:focus {
 }
 
 .input:disabled,
-.select:disabled,
 textarea:disabled {
   background: #f3f4f6;
 

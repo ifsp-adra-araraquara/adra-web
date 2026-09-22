@@ -19,11 +19,7 @@ import { Role } from '../../enum/role.enum';
 import { StatusAula } from '../../enum/StatusAula';
 import { StatusPresenca } from '../../enum/StatusPresenca';
 import { SituacaoAula } from '../../enum/SituacaoAula';
-import {
-  CLASSE_SITUACAO_AULA,
-  ROTULO_SITUACAO_AULA,
-  calcularSituacaoAula,
-} from '../../utils/aula.util';
+import { calcularSituacaoAula } from '../../utils/aula.util';
 import { AulaComDetalhesResponseDTO } from '../../models/aula/AulaComDetalhesResponseDTO';
 import { AulaRequestDTO } from '../../models/aula/AulaRequestDTO';
 import { AulaResponseDTO } from '../../models/aula/AulaResponseDTO';
@@ -31,6 +27,9 @@ import { AssistidoResponseDTO } from '../../models/assistido/AssistidoResponseDT
 import { PaginaResponse } from '../../models/PaginaResponse';
 import { PresencaRequestDTO } from '../../models/presenca/PresencaRequestDTO';
 import { PresencaResponseDTO } from '../../models/presenca/PresencaResponseDTO';
+import { Badge } from '../badge/badge';
+import { Input as AppInput } from '../input/input';
+import { Button as AppButton } from '../button/button';
 
 interface LinhaChamada {
   assistidoId: number;
@@ -69,7 +68,7 @@ interface FormDefinirCampos {
 @Component({
   selector: 'app-aula-modal',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, Badge, AppInput, AppButton],
   templateUrl: './aula-modal.html',
   styleUrl: './aula-modal.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -101,14 +100,6 @@ export class AulaModal implements OnChanges {
     this.aula ? calcularSituacaoAula(this.aula.dataAula, this.aula.statusAula) : null,
   );
   readonly situacaoFinalizada = computed(() => this.situacao() === SituacaoAula.FINALIZADA);
-  readonly rotuloSituacao = computed(() => {
-    const s = this.situacao();
-    return s ? ROTULO_SITUACAO_AULA[s] : '';
-  });
-  readonly classeSituacao = computed(() => {
-    const s = this.situacao();
-    return s ? CLASSE_SITUACAO_AULA[s] : '';
-  });
 
   /** Mostra o formulário de chamada só pro sociopedagógico, e só quando a aula ainda não foi finalizada. */
   readonly mostrarFormularioChamada = computed(

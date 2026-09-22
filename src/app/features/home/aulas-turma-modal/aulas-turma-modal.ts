@@ -14,18 +14,13 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { AulaComDetalhesResponseDTO } from '../../../shared/models/aula/AulaComDetalhesResponseDTO';
 import { AulaModal } from '../../../shared/components/aula-modal/aula-modal';
-import {
-  ROTULO_SITUACAO_AULA,
-  CLASSE_SITUACAO_AULA,
-  calcularSituacaoAula,
-  ehAulaDeHoje,
-  podeAbrirAula,
-} from '../../../shared/utils/aula.util';
+import { calcularSituacaoAula, ehAulaDeHoje, podeAbrirAula } from '../../../shared/utils/aula.util';
+import { Badge } from '../../../shared/components/badge/badge';
 
 @Component({
   selector: 'app-aulas-turma-modal',
   standalone: true,
-  imports: [AulaModal],
+  imports: [AulaModal, Badge],
   templateUrl: './aulas-turma-modal.html',
   styleUrl: './aulas-turma-modal.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -96,12 +91,8 @@ export class AulasTurmaModal implements OnChanges {
     return ehAulaDeHoje(aula.dataAula);
   }
 
-  rotuloSituacao(aula: AulaComDetalhesResponseDTO): string {
-    return ROTULO_SITUACAO_AULA[calcularSituacaoAula(aula.dataAula, aula.statusAula)];
-  }
-
-  classeSituacao(aula: AulaComDetalhesResponseDTO): string {
-    return CLASSE_SITUACAO_AULA[calcularSituacaoAula(aula.dataAula, aula.statusAula)];
+  situacaoAula(aula: AulaComDetalhesResponseDTO) {
+    return calcularSituacaoAula(aula.dataAula, aula.statusAula);
   }
 
   fecharModal(): void {

@@ -12,22 +12,21 @@
         <span class="subtle">{{ dataSelecionada() === hojeISO() ? 'Hoje' : dataSelecionada() }}</span>
       </div>
       <div class="filtros">
-        <label for="filtro-data-chamada" class="sr-only">Filtrar por data</label>
-        <input
-          id="filtro-data-chamada"
+        <app-input
           type="date"
-          class="filtro-data"
+          label="Filtrar por data"
+          [hideLabel]="true"
           [ngModel]="dataSelecionada()"
           (ngModelChange)="onDataChange($event)"
         />
-        <button
-          type="button"
-          class="secondary-button"
+        <app-button
+          variant="secondary"
+          size="sm"
           [disabled]="dataSelecionada() === hojeISO()"
           (click)="irParaHoje()"
         >
           Hoje
-        </button>
+        </app-button>
       </div>
     </div>
 
@@ -62,7 +61,7 @@
             <td>{{ aula.nomeOficineiro || '-' }}</td>
             <td>{{ aula.quantidadeAlunos ?? '-' }}</td>
             <td>{{ aula.titulo || '-' }}</td>
-            <td><span class="status" [class]="classeSituacao(aula)">{{ rotuloSituacao(aula) }}</span></td>
+            <td><app-badge [status]="situacaoAula(aula)" /></td>
           </tr>
           } @empty {
           <tr><td colspan="6" class="empty">Nenhuma aula cadastrada para esta data.</td></tr>

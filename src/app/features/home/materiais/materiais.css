@@ -122,27 +122,6 @@ h2 {
   color: var(--coral-600);
 }
 
-.primary-button, .secondary-button {
-  padding: 8px 12px;
-  border-radius: 7px;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.primary-button {
-  border: 1px solid var(--green-400);
-  background: var(--green-400);
-  color: #fff;
-}
-
-.secondary-button {
-  border: 1px solid var(--gray-200);
-  background: #fff;
-  color: var(--green-600);
-}
-
 .table-header {
   padding: 16px 20px;
   border-bottom: 1px solid var(--gray-100);

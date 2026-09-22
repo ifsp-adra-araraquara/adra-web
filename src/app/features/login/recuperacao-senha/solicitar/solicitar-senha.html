@@ -30,22 +30,22 @@
                 receber um link para criar uma nova senha.
             </p>
 
-            <div class="field">
-                <label for="rec-email">E-mail institucional</label>
-                <input class="input" id="rec-email" name="email" type="email" placeholder="coordenador@adra.org.br"
-                    [(ngModel)]="email" autocomplete="username">
-            </div>
+            <app-input
+                label="E-mail institucional"
+                type="email"
+                name="email"
+                placeholder="coordenador@adra.org.br"
+                autocomplete="username"
+                [(ngModel)]="email"
+            />
 
             @if (erro()) {
             <p class="login-erro" role="alert">{{ erro() }}</p>
             }
 
-            <button type="submit" class="btn btn-block" [disabled]="carregando()">
-                @if (carregando()) {
-                <span class="btn-spinner" aria-hidden="true"></span>
-                }
+            <app-button type="submit" size="lg" [block]="true" [loading]="carregando()">
                 {{ carregando() ? 'Enviando...' : 'Enviar link de recuperação' }}
-            </button>
+            </app-button>
             } @else {
             <p class="login-sub">Verifique seu e-mail</p>
             <p class="login-desc">

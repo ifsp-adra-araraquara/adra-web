@@ -24,6 +24,8 @@ export class Badge {
   variant = input<BadgeVariant | null>(null);
   /** Força um rótulo específico, ignorando o resolvido a partir de `status`. */
   label = input('');
+  /** Remove o indicador (•) antes do texto. */
+  plain = input(false);
 
   private readonly resolved = computed(() => resolveBadgeStatus(this.status()));
 

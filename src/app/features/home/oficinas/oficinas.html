@@ -16,15 +16,16 @@
       </p>
     </div>
 
-    <button class="btn btn-sm" style="flex-shrink: 0" (click)="abrirModalNovaOficina()">
+    <app-button size="sm" style="flex-shrink: 0" (click)="abrirModalNovaOficina()">
       + Nova oficina
-    </button>
+    </app-button>
   </div>
 
   <div class="toolbar" style="justify-content: space-between; flex-wrap: nowrap">
     <div style="display: flex; gap: 8px; flex: 1; flex-wrap: nowrap; min-width: 0">
-      <input
-        class="input"
+      <app-input
+        label="Buscar por nome da oficina"
+        [hideLabel]="true"
         placeholder="Buscar por nome da oficina…"
         style="flex: 1; min-width: 0"
         [ngModel]="filtroNome"
@@ -115,21 +116,19 @@
     <div class="notice notice-error">{{ erroSalvar() }}</div>
   }
 
-  <div class="field">
-    <label>Nome da oficina</label>
-    <input
-      class="input"
-      placeholder="Ex.: Oficina de Violão"
-      [ngModel]="formOficina.nomeOficina"
-      (ngModelChange)="atualizarCampoOficina('nomeOficina', $event)"
-    />
+  <app-input
+    label="Nome da oficina"
+    placeholder="Ex.: Oficina de Violão"
+    [required]="true"
+    [ngModel]="formOficina.nomeOficina"
+    (ngModelChange)="atualizarCampoOficina('nomeOficina', $event)"
+  />
 
-    @if (alertaDuplicidade()) {
-      <p class="hint" style="color: var(--amber-600)">
-        Já existe uma oficina cadastrada com um nome parecido. Você ainda pode salvar assim mesmo.
-      </p>
-    }
-  </div>
+  @if (alertaDuplicidade()) {
+    <p class="hint" style="color: var(--amber-600); margin-top: -12px">
+      Já existe uma oficina cadastrada com um nome parecido. Você ainda pode salvar assim mesmo.
+    </p>
+  }
 
   <div class="field">
     <label>Oficineiro responsável</label>
@@ -142,10 +141,10 @@
   </div>
 
   <ng-template #footer>
-    <button class="btn btn-ghost" (click)="fecharModalForm()">Cancelar</button>
-    <button class="btn" [disabled]="salvando()" (click)="salvarOficina()">
-      {{ salvando() ? 'Salvando...' : (modoEdicao() ? 'Atualizar oficina' : 'Salvar oficina') }}
-    </button>
+    <app-button variant="secondary" (click)="fecharModalForm()">Cancelar</app-button>
+    <app-button [loading]="salvando()" (click)="salvarOficina()">
+      {{ modoEdicao() ? 'Atualizar oficina' : 'Salvar oficina' }}
+    </app-button>
   </ng-template>
 </app-modal>
 
@@ -180,12 +179,10 @@
   }
 
   <ng-template #footer>
-    <button type="button" class="btn btn-ghost" (click)="fecharConfirmacaoInativacao()" [disabled]="inativando()">
+    <app-button variant="secondary" [disabled]="inativando()" (click)="fecharConfirmacaoInativacao()">
       Cancelar
-    </button>
-    <button type="button" class="btn btn-danger" [disabled]="inativando()" (click)="confirmarInativacao()">
-      {{ inativando() ? 'Inativando...' : 'Inativar' }}
-    </button>
+    </app-button>
+    <app-button variant="danger" [loading]="inativando()" (click)="confirmarInativacao()">Inativar</app-button>
   </ng-template>
 </app-modal>
 
@@ -218,11 +215,9 @@
   }
 
   <ng-template #footer>
-    <button type="button" class="btn btn-ghost" (click)="fecharConfirmacaoReativacao()" [disabled]="reativando()">
+    <app-button variant="secondary" [disabled]="reativando()" (click)="fecharConfirmacaoReativacao()">
       Cancelar
-    </button>
-    <button type="button" class="btn" [disabled]="reativando()" (click)="confirmarReativacao()">
-      {{ reativando() ? 'Reativando...' : 'Reativar' }}
-    </button>
+    </app-button>
+    <app-button [loading]="reativando()" (click)="confirmarReativacao()">Reativar</app-button>
   </ng-template>
 </app-modal>

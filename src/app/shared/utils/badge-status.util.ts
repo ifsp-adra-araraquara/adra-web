@@ -36,6 +36,8 @@ const BADGE_STATUS_MAP: Record<string, BadgeStatusInfo> = {
   [SituacaoAula.PENDENTE]: { label: 'Pendente', variant: 'gray' },
   [SituacaoAula.DISPONIVEL]: { label: 'Disponível', variant: 'amber' },
   [SituacaoAula.FINALIZADA]: { label: 'Finalizada', variant: 'green' },
+  // SituacaoAula.CANCELADA e StatusAula.CANCELADA são o mesmo literal 'CANCELADA' —
+  // já coberto pela entrada de StatusAula.CANCELADA acima.
 };
 
 /**

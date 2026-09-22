@@ -10,13 +10,15 @@
       </div>
       <div class="panel-header-acoes">
         @if (!mostrarDefinirCampos()) {
-          <button type="button" class="secondary-button" (click)="abrirAulaCompleta()">Ver aula completa</button>
+          <app-button variant="secondary" size="sm" (click)="abrirAulaCompleta()">Ver aula completa</app-button>
         }
         <button type="button" class="close-button" (click)="fecharModal()" aria-label="Fechar">X</button>
       </div>
     </div>
 
-    <span class="badge-situacao" [class]="classeSituacao()">{{ rotuloSituacao() }}</span>
+    @if (situacao(); as s) {
+      <div class="badge-situacao-wrap"><app-badge [status]="s" /></div>
+    }
 
     @if (mostrarDefinirCampos()) {
     <!-- ================= AULA SEM TÍTULO: precisa ser definido antes de continuar ================= -->
@@ -30,15 +32,13 @@
       <p class="feedback error" role="alert">{{ erroDefinirCampos() }}</p>
       }
 
-      <div class="campo">
-        <label>Título</label>
-        <input
-          class="campo-input"
-          placeholder="Ex.: Aula de introdução"
-          name="tituloDefinirCampos"
-          [(ngModel)]="formDefinirCampos.titulo"
-        />
-      </div>
+      <app-input
+        label="Título"
+        placeholder="Ex.: Aula de introdução"
+        name="tituloDefinirCampos"
+        [required]="true"
+        [(ngModel)]="formDefinirCampos.titulo"
+      />
 
       <div class="campo">
         <label>Descrição (opcional)</label>
@@ -96,15 +96,10 @@
       </div>
 
       <div class="dialog-actions">
-        <button type="button" class="secondary-button" (click)="fecharModal()">Cancelar</button>
-        <button
-          type="button"
-          class="primary-button"
-          [disabled]="salvandoDefinirCampos()"
-          (click)="salvarDefinirCampos()"
-        >
-          {{ salvandoDefinirCampos() ? 'Salvando...' : 'Salvar e continuar' }}
-        </button>
+        <app-button variant="secondary" (click)="fecharModal()">Cancelar</app-button>
+        <app-button [loading]="salvandoDefinirCampos()" (click)="salvarDefinirCampos()">
+          Salvar e continuar
+        </app-button>
       </div>
     </div>
     } @else {
@@ -126,7 +121,7 @@
         </div>
 
         <div class="chamada-toolbar">
-          <button type="button" class="secondary-button" (click)="marcarTodosPresentes()">Marcar todos presentes</button>
+          <app-button variant="secondary" size="sm" (click)="marcarTodosPresentes()">Marcar todos presentes</app-button>
         </div>
 
         <ul class="lista-alunos">
@@ -172,10 +167,8 @@
         </ul>
 
         <div class="dialog-actions">
-          <button type="button" class="secondary-button" (click)="fecharModal()">Cancelar</button>
-          <button type="button" class="primary-button" [disabled]="salvando()" (click)="salvarChamada()">
-            {{ salvando() ? 'Salvando...' : 'Salvar chamada' }}
-          </button>
+          <app-button variant="secondary" (click)="fecharModal()">Cancelar</app-button>
+          <app-button [loading]="salvando()" (click)="salvarChamada()">Salvar chamada</app-button>
         </div>
 
         } @else {

@@ -17,10 +17,15 @@ import { CadastroUsuario } from '../../usuarios/cadastro/cadastro-usuario';
 import { DefinirSenha } from '../../usuarios/senha/definir-senha';
 import { AuthService } from '../../../core/auth.service';
 import { Select, SelectOption } from '../../../shared/components/select/select';
+import { Input } from '../../../shared/components/input/input';
+import { Button } from '../../../shared/components/button/button';
+import { Modal } from '../../../shared/components/modal/modal';
+import { Badge } from '../../../shared/components/badge/badge';
+import { BadgeVariant } from '../../../shared/utils/badge-status.util';
 
 @Component({
   selector: 'app-usuarios',
-  imports: [FormsModule, CadastroUsuario, DefinirSenha, Select],
+  imports: [FormsModule, CadastroUsuario, DefinirSenha, Select, Input, Button, Modal, Badge],
   templateUrl: './usuarios.html',
   styleUrl: './usuarios.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -298,22 +303,22 @@ export class Usuarios implements OnInit {
     return this.labels[perfil] ?? perfil;
   }
 
-  getBadgeClass(perfil: Role): string {
+  getBadgeVariant(perfil: Role): BadgeVariant {
     switch (perfil) {
       case Role.ADMIN:
-        return 'b-gray';
+        return 'gray';
       case Role.COORD:
-        return 'b-green';
+        return 'green';
       case Role.SOCIO:
-        return 'b-teal';
+        return 'teal';
       case Role.PROFS:
-        return 'b-blue';
+        return 'blue';
       case Role.FINANCEIRO:
-        return 'b-amber';
+        return 'amber';
       case Role.OFICINEIRO:
-        return 'b-coral';
+        return 'coral';
       default:
-        return 'b-gray';
+        return 'gray';
     }
   }
 }

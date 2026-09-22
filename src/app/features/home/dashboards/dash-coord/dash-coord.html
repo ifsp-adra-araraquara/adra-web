@@ -80,9 +80,7 @@
                 </div>
               </td>
               <td>
-                <span class="badge" [class]="o.freq < 70 ? 'b-amber' : 'b-green'">
-                  {{ o.freq < 70 ? 'Atenção' : 'Ativa' }}
-                </span>
+                <app-badge [variant]="o.freq < 70 ? 'amber' : 'green'" [label]="o.freq < 70 ? 'Atenção' : 'Ativa'" />
               </td>
             </tr>
           }

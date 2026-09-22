@@ -26,10 +26,10 @@
             <td>{{ c.hora }}</td>
             <td>{{ c.inscritos }}</td>
             <td>
-              <span class="badge" [class]="c.status === 'Pendente' ? 'b-amber' : 'b-green'">{{ c.status }}</span>
+              <app-badge [variant]="c.status === 'Pendente' ? 'amber' : 'green'" [label]="c.status" />
             </td>
             <td>
-              <button class="btn btn-sm" [class.btn-ghost]="c.acao === 'Ver'">{{ c.acao }}</button>
+              <app-button size="sm" [variant]="c.acao === 'Ver' ? 'secondary' : 'primary'">{{ c.acao }}</app-button>
             </td>
           </tr>
         }

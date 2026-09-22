@@ -1,0 +1,108 @@
+:host {
+  display: inline-block;
+}
+
+.app-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  min-height: 44px;
+  padding: 11px 18px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-sm, 8px);
+  background: var(--green-400, #007b5f);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.05s, opacity 0.15s;
+}
+
+.app-button:hover:not(:disabled) {
+  background: var(--green-600, #005a45);
+}
+
+.app-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.app-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.app-button--secondary {
+  background: #fff;
+  color: var(--gray-600, #54585a);
+  border-color: var(--gray-200, #d3d1c7);
+}
+
+.app-button--secondary:hover:not(:disabled) {
+  background: var(--gray-50, #f8f7f4);
+  border-color: var(--green-200, #4db89a);
+}
+
+.app-button--danger {
+  background: var(--red-400, #e24b4a);
+}
+
+.app-button--danger:hover:not(:disabled) {
+  background: var(--red-600, #a32d2d);
+}
+
+.app-button--sm {
+  min-height: 36px;
+  padding: 7px 12px;
+  font-size: 13px;
+}
+
+.app-button--lg {
+  min-height: 50px;
+  padding: 14px 22px;
+  font-size: 15px;
+}
+
+.app-button--block {
+  width: 100%;
+}
+
+.app-button-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-button-label--hidden {
+  visibility: hidden;
+}
+
+.app-button-spinner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: app-button-spin 0.6s linear infinite;
+}
+
+.app-button--secondary .app-button-spinner {
+  border-color: rgba(84, 88, 90, 0.3);
+  border-top-color: var(--gray-600, #54585a);
+}
+
+@keyframes app-button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-button-spinner {
+    animation-duration: 1.2s;
+  }
+}

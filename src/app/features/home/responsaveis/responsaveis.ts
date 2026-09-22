@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { ResponsavelService } from '../../../core/responsavel.service';
 import { ResponsavelResponseDTO } from '../../../shared/models/responsavel/ResponsavelResponseDTO';
 import { ResponsavelForm } from './form/responsavel-form';
+import { Modal } from '../../../shared/components/modal/modal';
+import { Button } from '../../../shared/components/button/button';
 
 @Component({
   selector: 'app-responsaveis',
-  imports: [CommonModule, ResponsavelForm],
+  imports: [ResponsavelForm, Modal, Button],
   templateUrl: './responsaveis.html',
   styleUrl: './responsaveis.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

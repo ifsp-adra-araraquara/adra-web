@@ -13,11 +13,13 @@ import { UsuarioResponse } from '../../../shared/models/usuarios/UsuarioResponse
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Modal } from '../../../shared/components/modal/modal';
 import { Table, TableColumn } from '../../../shared/components/table/table';
+import { Input } from '../../../shared/components/input/input';
+import { Button } from '../../../shared/components/button/button';
 
 @Component({
   selector: 'app-oficinas',
   standalone: true,
-  imports: [CommonModule, FormsModule, Select, Modal, Table],
+  imports: [CommonModule, FormsModule, Select, Modal, Table, Input, Button],
   templateUrl: './oficinas.html',
   styleUrl: './oficinas.css',
 })

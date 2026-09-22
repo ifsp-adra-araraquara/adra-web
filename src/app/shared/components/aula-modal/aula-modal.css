@@ -43,18 +43,9 @@
   cursor: pointer;
 }
 
-.badge-situacao {
-  display: inline-block;
+.badge-situacao-wrap {
   margin: 16px 20px 0;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
 }
-.situacao-pendente { background: var(--gray-100); color: var(--gray-600); }
-.situacao-disponivel { background: var(--amber-50); color: var(--amber-600); }
-.situacao-finalizada { background: var(--green-50); color: var(--green-600); }
-.situacao-cancelada { background: var(--coral-50); color: var(--coral-600); }
 
 .feedback { margin: 16px 20px 0; color: var(--gray-600); font-size: 13px; }
 .feedback.error { color: var(--coral-600); }
@@ -129,18 +120,6 @@
 .icon-button:hover { background: var(--amber-50); border-color: var(--amber-400); }
 
 .empty { padding: 20px; text-align: center; color: var(--gray-600); font-size: 13px; }
-
-.primary-button, .secondary-button {
-  padding: 8px 14px;
-  border-radius: 7px;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.primary-button { border: 1px solid var(--green-400); background: var(--green-400); color: #fff; }
-.primary-button:disabled { opacity: .6; cursor: not-allowed; }
-.secondary-button { border: 1px solid var(--gray-200); background: #fff; color: var(--green-600); }
 
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 16px 20px 20px; }
 

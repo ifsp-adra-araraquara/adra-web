@@ -43,10 +43,10 @@
             <td>{{ turma.turno }}</td>
             <td>{{ turma.faixaEtaria || '-' }}</td>
             <td>{{ turma.capacidade }}</td>
-            <td><span class="status" [class.situacao-cancelada]="!turma.ativo">{{ turma.ativo ? 'Ativa' : 'Inativa' }}</span></td>
+            <td><app-badge [status]="turma.ativo" /></td>
             <td class="acoes-cell">
-              <button type="button" class="secondary-button" (click)="abrirTurma(turma)">Ver alunos</button>
-              <button type="button" class="secondary-button" (click)="abrirAulasDaTurma(turma)">Ver aulas</button>
+              <app-button variant="secondary" size="sm" (click)="abrirTurma(turma)">Ver alunos</app-button>
+              <app-button variant="secondary" size="sm" (click)="abrirAulasDaTurma(turma)">Ver aulas</app-button>
             </td>
           </tr>
           } @empty {
@@ -57,21 +57,17 @@
     </div>
   </section>
 
-  @if (turmaSelecionada(); as turma) {
-  <div class="overlay" role="presentation" (click)="fecharTurma()">
-    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="alunos-titulo" (click)="$event.stopPropagation()">
-      <div class="panel-header">
-        <h2 id="alunos-titulo">Alunos de {{ turma.nomeTurma }}</h2>
-        <button type="button" class="close-button" (click)="fecharTurma()" aria-label="Fechar">X</button>
-      </div>
-      @for (aluno of alunos(); track aluno.assistidoId) {
-      <p class="student">{{ aluno.nomeCompleto }}</p>
-      } @empty {
-      <p class="empty">Nenhum aluno ativo encontrado.</p>
-      }
-    </section>
-  </div>
-  }
+  <app-modal
+    [(open)]="mostrarAlunos"
+    [title]="'Alunos de ' + (turmaSelecionada()?.nomeTurma ?? '')"
+    (closed)="fecharTurma()"
+  >
+    @for (aluno of alunos(); track aluno.assistidoId) {
+    <p class="student">{{ aluno.nomeCompleto }}</p>
+    } @empty {
+    <p class="empty">Nenhum aluno ativo encontrado.</p>
+    }
+  </app-modal>
 
   <app-aulas-turma-modal
     [turmaId]="turmaAulasSelecionada()?.turmaId ?? 0"

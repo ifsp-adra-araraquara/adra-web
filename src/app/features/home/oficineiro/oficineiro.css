@@ -48,19 +48,8 @@ tbody tr:hover { background: #fafbfc; }
 
 .strong { font-weight: 700; }
 .empty { padding: 24px; color: var(--gray-600); text-align: center; }
-.primary-button, .secondary-button, .close-button { padding: 8px 12px; border-radius: 7px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
-.primary-button { border: 1px solid var(--green-400); background: var(--green-400); color: #fff; }
+.secondary-button, .close-button { padding: 8px 12px; border-radius: 7px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .secondary-button, .close-button { border: 1px solid var(--gray-200); background: #fff; color: var(--green-600); text-decoration: none; }
-
-.status {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--green-50, #eef2ff);
-  color: var(--green-600);
-  font-size: 12px;
-  font-weight: 700;
-}
 
 /* Tabela de aulas: mais colunas, então precisa de largura mínima
    maior para não ficar espremida — mas o WRAPPER (não a página)
@@ -93,11 +82,6 @@ tbody tr:hover { background: #fafbfc; }
   text-transform: uppercase;
   letter-spacing: .03em;
 }
-
-.situacao-pendente { background: var(--gray-100); color: var(--gray-600); }
-.situacao-disponivel { background: var(--amber-50); color: var(--amber-600); }
-.situacao-finalizada { background: var(--green-50); color: var(--green-600); }
-.situacao-cancelada { background: var(--coral-50); color: var(--coral-600); }
 
 .material-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; padding: 20px; }
 .material-card { padding: 18px; border: 1px solid var(--gray-100); border-radius: 8px; }

@@ -34,7 +34,7 @@
         <div class="pc pc-f"><b>{{ totalFaltas() }}</b><span>Faltas</span></div>
         <div class="pc pc-fj"><b>{{ totalFaltasJustificadas() }}</b><span>Faltas justificadas</span></div>
       </div>
-      <button type="button" class="secondary-button" (click)="marcarTodosPresentes()">Marcar todos presentes</button>
+      <app-button variant="secondary" size="sm" (click)="marcarTodosPresentes()">Marcar todos presentes</app-button>
     </div>
     }
 
@@ -79,9 +79,7 @@
 
     @if (ehSociopedagogico()) {
     <div class="acoes-finais">
-      <button type="button" class="primary-button" [disabled]="salvando()" (click)="salvarChamada()">
-        {{ salvando() ? 'Salvando...' : 'Salvar chamada' }}
-      </button>
+      <app-button [loading]="salvando()" (click)="salvarChamada()">Salvar chamada</app-button>
     </div>
     }
   </section>
@@ -89,7 +87,7 @@
   @case ('materiais') {
   <section class="panel-materiais">
     <p class="empty">Nenhum material vinculado a esta aula ainda.</p>
-    <button type="button" class="secondary-button" disabled title="Em breve">Adicionar material</button>
+    <app-button variant="secondary" size="sm" [disabled]="true" title="Em breve">Adicionar material</app-button>
   </section>
   }
   }

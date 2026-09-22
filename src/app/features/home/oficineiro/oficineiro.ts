@@ -16,20 +16,18 @@ import { AulasTurmaModal } from '../aulas-turma-modal/aulas-turma-modal';
 import { AulaModal } from '../../../shared/components/aula-modal/aula-modal';
 import { PaginaResponse } from '../../../shared/models/PaginaResponse';
 import { AssistidoResponseDTO } from '../../../shared/models/assistido/AssistidoResponseDTO';
-import {
-  ROTULO_SITUACAO_AULA,
-  CLASSE_SITUACAO_AULA,
-  calcularSituacaoAula,
-  ehAulaDeHoje,
-  podeAbrirAula,
-} from '../../../shared/utils/aula.util';
+import { calcularSituacaoAula, ehAulaDeHoje, podeAbrirAula } from '../../../shared/utils/aula.util';
 import { Select, SelectOption } from '../../../shared/components/select/select';
+import { Badge } from '../../../shared/components/badge/badge';
+import { Input } from '../../../shared/components/input/input';
+import { Button } from '../../../shared/components/button/button';
+import { Modal } from '../../../shared/components/modal/modal';
 
 type AbaOficineiro = 'turmas' | 'aulas' | 'materiais' | 'comunicados';
 
 @Component({
   selector: 'app-oficineiro',
-  imports: [FormsModule, AulasTurmaModal, AulaModal, Select],
+  imports: [FormsModule, AulasTurmaModal, AulaModal, Select, Badge, Input, Button, Modal],
   templateUrl: './oficineiro.html',
   styleUrl: './oficineiro.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -59,12 +57,8 @@ export class Oficineiro implements OnInit {
     return ehAulaDeHoje(aula.dataAula);
   }
 
-  rotuloSituacao(aula: AulaComDetalhesResponseDTO): string {
-    return ROTULO_SITUACAO_AULA[calcularSituacaoAula(aula.dataAula, aula.statusAula)];
-  }
-
-  classeSituacao(aula: AulaComDetalhesResponseDTO): string {
-    return CLASSE_SITUACAO_AULA[calcularSituacaoAula(aula.dataAula, aula.statusAula)];
+  situacaoAula(aula: AulaComDetalhesResponseDTO) {
+    return calcularSituacaoAula(aula.dataAula, aula.statusAula);
   }
 
   abrirAulasDaTurma(turma: OficineiroTurmaDTO): void {
@@ -109,6 +103,7 @@ export class Oficineiro implements OnInit {
   readonly materiais = signal<OficineiroMaterialDTO[]>([]);
   readonly comunicados = signal<OficineiroComunicadoDTO[]>([]);
   readonly turmaSelecionada = signal<OficineiroTurmaDTO | null>(null);
+  readonly mostrarAlunos = signal(false);
   readonly alunos = signal<{ assistidoId: number; nomeCompleto: string }[]>([]);
   readonly mostrarFormularioAula = signal(false);
   readonly salvandoAula = signal(false);
@@ -171,6 +166,7 @@ export class Oficineiro implements OnInit {
 
   abrirTurma(turma: OficineiroTurmaDTO): void {
     this.turmaSelecionada.set(turma);
+    this.mostrarAlunos.set(true);
     this.http
       .get<PaginaResponse<AssistidoResponseDTO>>(`${this.api}/api/assistidos`, {
         params: { turmaId: turma.turmaId.toString(), status: 'ATIVO', tamanho: '200' },
@@ -188,6 +184,7 @@ export class Oficineiro implements OnInit {
   }
 
   fecharTurma(): void {
+    this.mostrarAlunos.set(false);
     this.turmaSelecionada.set(null);
     this.alunos.set([]);
   }

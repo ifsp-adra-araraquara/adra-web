@@ -5,11 +5,14 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { BrandLogo } from '../../shared/components/brand-logo/brand-logo';
 import { SenhaForca } from '../../shared/components/senha-forca/senha-forca';
+import { Input } from '../../shared/components/input/input';
+import { Button } from '../../shared/components/button/button';
+import { validarPoliticaSenha } from '../../shared/utils/senha-forca';
 
 @Component({
   selector: 'app-definir-senha-convite',
   standalone: true,
-  imports: [FormsModule, RouterLink, BrandLogo, SenhaForca],
+  imports: [FormsModule, RouterLink, BrandLogo, SenhaForca, Input, Button],
   templateUrl: './definir-senha-convite.html',
   styleUrl: './definir-senha-convite.css'
 })
@@ -43,17 +46,10 @@ export class DefinirSenhaConvite implements OnInit {
     }
   }
 
-  private validarPolitica(senha: string): string | null {
-    if (senha.length < 8) return 'A senha precisa ter no minimo 8 caracteres.';
-    if (!/[A-Za-z]/.test(senha)) return 'A senha precisa ter ao menos uma letra.';
-    if (!/[0-9]/.test(senha)) return 'A senha precisa ter ao menos um numero.';
-    return null;
-  }
-
   async definir(): Promise<void> {
     this.erro.set(null);
 
-    const erroPolitica = this.validarPolitica(this.novaSenha);
+    const erroPolitica = validarPoliticaSenha(this.novaSenha);
     if (erroPolitica) {
       this.erro.set(erroPolitica);
       return;

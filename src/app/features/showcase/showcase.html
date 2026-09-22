@@ -46,6 +46,66 @@
     </div>
   </div>
 
+  <!-- ================= APP-INPUT ================= -->
+  <div class="card mt">
+    <div class="card-head">
+      <h3>app-input</h3>
+      <span class="sub">Estados (default/foco/erro/disabled), tipos (texto/número/senha/e-mail) e máscaras (CPF/telefone)</span>
+    </div>
+    <div class="card-pad">
+      <h4 class="showcase-subtitle">Estados isolados</h4>
+      <div class="form-row-3">
+        <app-input label="Default" placeholder="Digite algo..." />
+        <app-input label="Com erro" placeholder="Digite algo..." errorMessage="Este campo é obrigatório." [required]="true" />
+        <app-input label="Desabilitado" placeholder="Não editável" [disabled]="true" />
+      </div>
+
+      <h4 class="showcase-subtitle mt-s">Tipos e máscaras</h4>
+      <div class="form-row-3">
+        <app-input label="Senha" type="password" placeholder="••••••••" />
+        <app-input label="CPF" mask="cpf" placeholder="000.000.000-00" />
+        <app-input label="Telefone" mask="telefone" placeholder="(00) 00000-0000" />
+      </div>
+
+      <h4 class="showcase-subtitle mt-s">Formulário reativo completo (formControlName)</h4>
+      <form [formGroup]="formExemplo" (ngSubmit)="enviarFormExemplo()" class="showcase-form">
+        <div class="form-row">
+          <app-input label="Nome completo" formControlName="nome" [required]="true" [errorMessage]="erroNome()" />
+          <app-input label="E-mail" type="email" formControlName="email" [required]="true" [errorMessage]="erroEmail()" />
+        </div>
+        <div class="form-row">
+          <app-input label="CPF" mask="cpf" formControlName="cpf" [required]="true" [errorMessage]="erroCpf()" />
+          <app-input label="Telefone" mask="telefone" formControlName="telefone" [errorMessage]="erroTelefone()" />
+        </div>
+        <app-input label="Senha" type="password" formControlName="senha" [required]="true" [errorMessage]="erroSenha()" />
+
+        <div style="display: flex; align-items: center; gap: 12px; margin-top: 6px">
+          <app-button type="submit" [loading]="enviando()">Enviar</app-button>
+          @if (enviado()) {
+            <span class="muted">Formulário válido — valor do CPF (só dígitos): {{ formExemplo.controls.cpf.value }}</span>
+          }
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= APP-BUTTON ================= -->
+  <div class="card mt">
+    <div class="card-head">
+      <h3>app-button</h3>
+      <span class="sub">Variantes (primária/secundária/perigo), tamanhos (sm/md/lg) e estado loading</span>
+    </div>
+    <div class="card-pad" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center">
+      <app-button variant="primary">Primária</app-button>
+      <app-button variant="secondary">Secundária</app-button>
+      <app-button variant="danger">Perigo</app-button>
+      <app-button variant="primary" size="sm">Pequeno</app-button>
+      <app-button variant="primary" size="lg">Grande</app-button>
+      <app-button variant="primary" [loading]="true">Carregando</app-button>
+      <app-button variant="primary" [disabled]="true">Desabilitado</app-button>
+    </div>
+  </div>
+
   <!-- ================= TABELA ================= -->
   <div class="card mt">
     <div class="card-head">

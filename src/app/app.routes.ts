@@ -20,6 +20,7 @@ import { Oficineiro } from './features/home/oficineiro/oficineiro';
 import { Aulas } from './features/home/aulas/aulas';
 import { Chamada } from './features/home/chamada/chamada';
 import { AulaCompleta } from './features/home/aula-completa/aula-completa';
+import { Showcase } from './features/showcase/showcase';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -105,6 +106,10 @@ export const routes: Routes = [
         component: Oficineiro,
         data: { roles: [Role.OFICINEIRO] },
         canActivate: [roleGuard]
+      },
+      {
+        path: 'showcase',
+        component: Showcase
       },
     ]
   }

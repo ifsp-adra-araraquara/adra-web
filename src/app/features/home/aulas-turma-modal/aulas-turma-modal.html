@@ -32,7 +32,7 @@
           <td>{{ aula.dataAula }} @if (ehHoje(aula)) { <span class="tag-hoje">Hoje</span> }</td>
           <td>{{ aula.horarioInicio && aula.horarioFim ? aula.horarioInicio + ' - ' + aula.horarioFim : '-' }}</td>
           <td>{{ aula.titulo || '-' }}</td>
-          <td><span class="status" [class]="classeSituacao(aula)">{{ rotuloSituacao(aula) }}</span></td>
+          <td><app-badge [status]="situacaoAula(aula)" /></td>
         </tr>
         } @empty {
         <tr><td colspan="4" class="empty">Nenhuma aula cadastrada para esta turma.</td></tr>

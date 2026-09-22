@@ -14,6 +14,7 @@ import { AssistidoResponseDTO } from '../../../shared/models/assistido/Assistido
 import { PaginaResponse } from '../../../shared/models/PaginaResponse';
 import { PresencaRequestDTO } from '../../../shared/models/presenca/PresencaRequestDTO';
 import { PresencaResponseDTO } from '../../../shared/models/presenca/PresencaResponseDTO';
+import { Button } from '../../../shared/components/button/button';
 
 interface LinhaAluno {
   assistidoId: number;
@@ -32,7 +33,7 @@ type AbaAulaCompleta = 'alunos' | 'materiais';
 @Component({
   selector: 'app-aula-completa',
   standalone: true,
-  imports: [],
+  imports: [Button],
   templateUrl: './aula-completa.html',
   styleUrl: './aula-completa.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

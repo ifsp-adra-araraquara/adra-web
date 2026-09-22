@@ -5,14 +5,10 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { AulaComDetalhesResponseDTO } from '../../../shared/models/aula/AulaComDetalhesResponseDTO';
 import { AulaModal } from '../../../shared/components/aula-modal/aula-modal';
-import {
-  ROTULO_SITUACAO_AULA,
-  CLASSE_SITUACAO_AULA,
-  calcularSituacaoAula,
-  ehAulaDeHoje,
-  hojeISO,
-  podeAbrirAula,
-} from '../../../shared/utils/aula.util';
+import { calcularSituacaoAula, ehAulaDeHoje, hojeISO, podeAbrirAula } from '../../../shared/utils/aula.util';
+import { Badge } from '../../../shared/components/badge/badge';
+import { Input } from '../../../shared/components/input/input';
+import { Button } from '../../../shared/components/button/button';
 
 /**
  * Tela "Chamada" do sociopedagogico (também acessível ao coordenador):
@@ -29,7 +25,7 @@ import {
 @Component({
   selector: 'app-chamada',
   standalone: true,
-  imports: [FormsModule, AulaModal],
+  imports: [FormsModule, AulaModal, Badge, Input, Button],
   templateUrl: './chamada.html',
   styleUrl: './chamada.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -81,12 +77,8 @@ export class Chamada implements OnInit {
     return ehAulaDeHoje(aula.dataAula);
   }
 
-  rotuloSituacao(aula: AulaComDetalhesResponseDTO): string {
-    return ROTULO_SITUACAO_AULA[calcularSituacaoAula(aula.dataAula, aula.statusAula)];
-  }
-
-  classeSituacao(aula: AulaComDetalhesResponseDTO): string {
-    return CLASSE_SITUACAO_AULA[calcularSituacaoAula(aula.dataAula, aula.statusAula)];
+  situacaoAula(aula: AulaComDetalhesResponseDTO) {
+    return calcularSituacaoAula(aula.dataAula, aula.statusAula);
   }
 
   private async carregarAulas(): Promise<void> {

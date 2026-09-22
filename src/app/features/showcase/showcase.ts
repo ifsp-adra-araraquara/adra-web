@@ -1,8 +1,12 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { Badge } from '../../shared/components/badge/badge';
 import { Modal } from '../../shared/components/modal/modal';
 import { Table, TableColumn } from '../../shared/components/table/table';
+import { Input } from '../../shared/components/input/input';
+import { Button } from '../../shared/components/button/button';
+import { cpfValidator } from '../../shared/validators/cpf.validator';
 import { StatusAula } from '../../shared/enum/StatusAula';
 import { SituacaoAula } from '../../shared/enum/SituacaoAula';
 import { StatusPresenca } from '../../shared/enum/StatusPresenca';
@@ -68,12 +72,53 @@ function gerarOficinasExemplo(): OficinaExemplo[] {
 @Component({
   selector: 'app-showcase',
   standalone: true,
-  imports: [Badge, Modal, Table],
+  imports: [Badge, Modal, Table, Input, Button, ReactiveFormsModule],
   templateUrl: './showcase.html',
   styleUrl: './showcase.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Showcase {
+  private fb = new FormBuilder();
+
+  protected readonly formExemplo = this.fb.nonNullable.group({
+    nome: ['', [Validators.required]],
+    cpf: ['', [Validators.required, cpfValidator()]],
+    telefone: ['', [Validators.pattern(/^$|^\d{10,11}$/)]],
+    email: ['', [Validators.required, Validators.email]],
+    senha: ['', [Validators.required, Validators.minLength(8)]],
+  });
+
+  protected erroNome = computed(() => this.erroDoCampo('nome', 'Nome é obrigatório.'));
+  protected erroCpf = computed(() => {
+    const c = this.formExemplo.controls.cpf;
+    if (!c.touched || c.valid) return null;
+    return c.hasError('required') ? 'CPF é obrigatório.' : 'CPF inválido.';
+  });
+  protected erroTelefone = computed(() => this.erroDoCampo('telefone', 'Telefone inválido.'));
+  protected erroEmail = computed(() => this.erroDoCampo('email', 'Informe um e-mail válido.'));
+  protected erroSenha = computed(() => this.erroDoCampo('senha', 'Mínimo de 8 caracteres.'));
+
+  protected readonly enviando = signal(false);
+  protected readonly enviado = signal(false);
+
+  protected enviarFormExemplo(): void {
+    if (this.formExemplo.invalid) {
+      this.formExemplo.markAllAsTouched();
+      return;
+    }
+    this.enviando.set(true);
+    this.enviado.set(false);
+    setTimeout(() => {
+      this.enviando.set(false);
+      this.enviado.set(true);
+    }, 1200);
+  }
+
+  private erroDoCampo(nome: 'nome' | 'telefone' | 'email' | 'senha', mensagem: string): string | null {
+    const c = this.formExemplo.controls[nome];
+    return c.touched && c.invalid ? mensagem : null;
+  }
+
   protected readonly amostraStatusAula = AMOSTRA_STATUS_AULA;
   protected readonly amostraOutrosStatus = AMOSTRA_OUTROS_STATUS;
 

@@ -19,6 +19,10 @@ import { ResponsavelRequestDTO } from '../../../shared/models/responsavel/Respon
 import { VinculoFamiliarComResponsavelRequestDTO } from '../../../shared/models/vinculoFamiliar/VinculoFamiliarComResponsavelRequestDTO';
 
 import { Select, SelectOption } from '../../../shared/components/select/select';
+import { Input } from '../../../shared/components/input/input';
+import { Button } from '../../../shared/components/button/button';
+import { Modal } from '../../../shared/components/modal/modal';
+import { Badge } from '../../../shared/components/badge/badge';
 
 interface ResponsavelPendente extends ResponsavelRequestDTO {
   parentesco: string;
@@ -30,7 +34,7 @@ interface ResponsavelPendente extends ResponsavelRequestDTO {
 @Component({
   selector: 'app-assistidos',
   standalone: true,
-  imports: [CommonModule, FormsModule, Select],
+  imports: [CommonModule, FormsModule, Select, Input, Button, Modal, Badge],
   templateUrl: './assistidos.html',
   styleUrl: './assistidos.css',
 })

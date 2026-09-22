@@ -9,6 +9,9 @@ import { OficinaResponseDTO } from '../../../shared/models/oficina/OficinaRespon
 import { AssistidoResponseDTO } from '../../../shared/models/assistido/AssistidoResponseDTO';
 import { PaginaResponse } from '../../../shared/models/PaginaResponse';
 import { AulasTurmaModal } from '../aulas-turma-modal/aulas-turma-modal';
+import { Modal } from '../../../shared/components/modal/modal';
+import { Badge } from '../../../shared/components/badge/badge';
+import { Button } from '../../../shared/components/button/button';
 
 /**
  * Tela "Aulas"/"Chamada" do sociopedagógico e do coordenador: lista TODAS
@@ -27,7 +30,7 @@ import { AulasTurmaModal } from '../aulas-turma-modal/aulas-turma-modal';
 @Component({
   selector: 'app-aulas',
   standalone: true,
-  imports: [AulasTurmaModal],
+  imports: [AulasTurmaModal, Modal, Badge, Button],
   templateUrl: './aulas.html',
   styleUrl: './aulas.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -48,6 +51,7 @@ export class Aulas implements OnInit {
 
   readonly turmaAulasSelecionada = signal<TurmaResponseDTO | null>(null);
   readonly turmaSelecionada = signal<TurmaResponseDTO | null>(null);
+  readonly mostrarAlunos = signal(false);
   readonly alunos = signal<{ assistidoId: number; nomeCompleto: string }[]>([]);
 
   ngOnInit(): void {
@@ -86,6 +90,7 @@ export class Aulas implements OnInit {
 
   abrirTurma(turma: TurmaResponseDTO): void {
     this.turmaSelecionada.set(turma);
+    this.mostrarAlunos.set(true);
     this.http
       .get<PaginaResponse<AssistidoResponseDTO>>(`${this.api}/api/assistidos`, {
         params: { turmaId: turma.turmaId.toString(), status: 'ATIVO', tamanho: '200' },
@@ -100,6 +105,7 @@ export class Aulas implements OnInit {
   }
 
   fecharTurma(): void {
+    this.mostrarAlunos.set(false);
     this.turmaSelecionada.set(null);
     this.alunos.set([]);
   }

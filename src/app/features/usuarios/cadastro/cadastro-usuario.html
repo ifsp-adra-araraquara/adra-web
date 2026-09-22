@@ -2,39 +2,18 @@
 
 <form class="usuarios-form" [formGroup]="form" (ngSubmit)="cadastrar()">
 
-  <div class="field">
-    <label for="nome">Nome completo</label>
-    <input class="input" id="nome" type="text" formControlName="nomeCompleto">
-    @if (form.controls.nomeCompleto.touched && form.controls.nomeCompleto.invalid) {
-    <span class="campo-erro">Informe o nome completo.</span>
-    }
-    @if (errosPorCampo()['nomeCompleto']; as erroApi) {
-    <span class="campo-erro">{{ erroApi }}</span>
-    }
-  </div>
+  <app-input label="Nome completo" formControlName="nomeCompleto" [required]="true" [errorMessage]="erroNome()" />
 
-  <div class="field">
-    <label for="email">E-mail</label>
-    <input class="input" id="email" type="email" formControlName="email">
-    @if (form.controls.email.touched && form.controls.email.invalid) {
-    <span class="campo-erro">Informe um e-mail válido.</span>
-    }
-    @if (errosPorCampo()['email']; as erroApi) {
-    <span class="campo-erro">{{ erroApi }}</span>
-    }
-  </div>
+  <app-input label="E-mail" type="email" formControlName="email" [required]="true" [errorMessage]="erroEmail()" />
 
-  <div class="field">
-    <label for="cpf">CPF</label>
-    <input class="input" id="cpf" type="text" formControlName="cpf" appMascaraCpf placeholder="000.000.000-00"
-      inputmode="numeric" maxlength="14">
-    @if (form.controls.cpf.touched && form.controls.cpf.invalid) {
-    <span class="campo-erro">Informe um CPF válido (000.000.000-00).</span>
-    }
-    @if (errosPorCampo()['cpf']; as erroApi) {
-    <span class="campo-erro">{{ erroApi }}</span>
-    }
-  </div>
+  <app-input
+    label="CPF"
+    mask="cpf"
+    formControlName="cpf"
+    placeholder="000.000.000-00"
+    [required]="true"
+    [errorMessage]="erroCpf()"
+  />
 
   <div class="field">
     <label for="perfil">Perfil de acesso</label>
@@ -45,19 +24,15 @@
     />
   </div>
 
-  <div class="field">
-    <label for="cargo">Cargo ou função</label>
-    <input class="input" id="cargo" type="text" formControlName="cargoFuncao">
-  </div>
+  <app-input label="Cargo ou função" formControlName="cargoFuncao" />
 
-  <div class="field">
-    <label for="telefone">Telefone</label>
-    <input class="input" id="telefone" type="tel" formControlName="telefone" appMascaraTelefone
-      placeholder="(16) 99999-8888" inputmode="numeric" maxlength="15">
-    @if (form.controls.telefone.touched && form.controls.telefone.invalid) {
-    <span class="campo-erro">DDD + número, 10 ou 11 dígitos.</span>
-    }
-  </div>
+  <app-input
+    label="Telefone"
+    mask="telefone"
+    formControlName="telefone"
+    placeholder="(16) 99999-8888"
+    [errorMessage]="erroTelefone()"
+  />
 
   @if (erro()) {
   <p class="usuarios-erro" role="alert">{{ erro() }}</p>
@@ -66,7 +41,5 @@
   <p class="usuarios-sucesso" role="status">{{ sucesso() }}</p>
   }
 
-  <button class="btn" type="submit" [disabled]="salvando()">
-    {{ salvando() ? 'Cadastrando...' : 'Cadastrar' }}
-  </button>
+  <app-button type="submit" [loading]="salvando()">Cadastrar</app-button>
 </form>
