@@ -11,51 +11,63 @@
     </p>
   </header>
 
+  <nav class="tabs" role="tablist" aria-label="Seções de Aulas">
+    <button type="button" class="tab" [class.active]="abaAtiva() === 'turmas'" role="tab" [attr.aria-selected]="abaAtiva() === 'turmas'" (click)="selecionarAba('turmas')">Turmas</button>
+    <button type="button" class="tab" [class.active]="abaAtiva() === 'calendario'" role="tab" [attr.aria-selected]="abaAtiva() === 'calendario'" (click)="selecionarAba('calendario')">Calendário</button>
+  </nav>
+
   @if (carregando()) {
   <p class="feedback" role="status">Carregando...</p>
   } @else if (erro()) {
   <p class="feedback error" role="alert">{{ erro() }}</p>
   }
 
-  <section class="panel" aria-labelledby="turmas-titulo">
-    <div class="panel-header">
-      <h2 id="turmas-titulo">Turmas</h2>
-      <span class="subtle">{{ turmas().length }} turma(s)</span>
-    </div>
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Turma</th>
-            <th>Oficina</th>
-            <th>Turno</th>
-            <th>Faixa etária</th>
-            <th>Capacidade</th>
-            <th>Status</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (turma of turmas(); track turma.turmaId) {
-          <tr>
-            <td class="strong">{{ turma.nomeTurma }}</td>
-            <td>{{ nomeOficina(turma) }}</td>
-            <td>{{ turma.turno }}</td>
-            <td>{{ turma.faixaEtaria || '-' }}</td>
-            <td>{{ turma.capacidade }}</td>
-            <td><app-badge [status]="turma.ativo" /></td>
-            <td class="acoes-cell">
-              <app-button variant="secondary" size="sm" (click)="abrirTurma(turma)">Ver alunos</app-button>
-              <app-button variant="secondary" size="sm" (click)="abrirAulasDaTurma(turma)">Ver aulas</app-button>
-            </td>
-          </tr>
-          } @empty {
-          <tr><td colspan="7" class="empty">Nenhuma turma cadastrada.</td></tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </section>
+  @switch (abaAtiva()) {
+    @case ('turmas') {
+      <section class="panel" aria-labelledby="turmas-titulo">
+        <div class="panel-header">
+          <h2 id="turmas-titulo">Turmas</h2>
+          <span class="subtle">{{ turmas().length }} turma(s)</span>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Turma</th>
+                <th>Oficina</th>
+                <th>Turno</th>
+                <th>Faixa etária</th>
+                <th>Capacidade</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (turma of turmas(); track turma.turmaId) {
+              <tr>
+                <td class="strong">{{ turma.nomeTurma }}</td>
+                <td>{{ nomeOficina(turma) }}</td>
+                <td>{{ turma.turno }}</td>
+                <td>{{ turma.faixaEtaria || '-' }}</td>
+                <td>{{ turma.capacidade }}</td>
+                <td><app-badge [status]="turma.ativo" /></td>
+                <td class="acoes-cell">
+                  <app-button variant="secondary" size="sm" (click)="abrirTurma(turma)">Ver alunos</app-button>
+                  <app-button variant="secondary" size="sm" (click)="abrirAulasDaTurma(turma)">Ver aulas</app-button>
+                </td>
+              </tr>
+              } @empty {
+              <tr><td colspan="7" class="empty">Nenhuma turma cadastrada.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+    @case ('calendario') {
+      <app-calendario-aulas [turmas]="turmas()" [oficinas]="oficinas()" [podeGerenciar]="ehCoordenador()" />
+    }
+  }
 
   <app-modal
     [(open)]="mostrarAlunos"

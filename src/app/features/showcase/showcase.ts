@@ -23,7 +23,6 @@ const AMOSTRA_STATUS_AULA = [
   { valor: StatusAula.PLANEJADA, descricao: 'Agendada' },
   { valor: StatusAula.REALIZADA, descricao: 'Realizada' },
   { valor: StatusAula.CANCELADA, descricao: 'Cancelada' },
-  { valor: StatusAula.ADIADA, descricao: 'Remarcada' },
 ];
 
 const AMOSTRA_OUTROS_STATUS = [

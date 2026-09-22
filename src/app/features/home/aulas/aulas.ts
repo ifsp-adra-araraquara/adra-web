@@ -12,25 +12,14 @@ import { AulasTurmaModal } from '../aulas-turma-modal/aulas-turma-modal';
 import { Modal } from '../../../shared/components/modal/modal';
 import { Badge } from '../../../shared/components/badge/badge';
 import { Button } from '../../../shared/components/button/button';
+import { CalendarioAulas } from '../../home/calendario-aulas/calendario-aulas';
 
-/**
- * Tela "Aulas"/"Chamada" do sociopedagógico e do coordenador: lista TODAS
- * as turmas (não só as de hoje, não só as "minhas") e, por turma, dá pra
- * ver os alunos e ver as aulas - passadas e futuras, de qualquer data.
- *
- * Reaproveita o mesmo padrão da aba "Turmas" do oficineiro
- * (`AulasTurmaModal` + `app-aula-modal`), só que sem a restrição de
- * "minhas turmas": aqui é sempre a lista completa de turmas.
- *
- * - Sociopedagógico consegue abrir as aulas pra fazer a chamada (é
- *   literalmente o motivo dessa tela pra esse perfil).
- * - Coordenador só acompanha: vê as turmas, os alunos e a lista de aulas de
- *   cada turma (todo o histórico, não só hoje), mas não abre aula nenhuma.
- */
+type AbaAulas = 'turmas' | 'calendario';
+
 @Component({
   selector: 'app-aulas',
   standalone: true,
-  imports: [AulasTurmaModal, Modal, Badge, Button],
+  imports: [AulasTurmaModal, Modal, Badge, Button, CalendarioAulas],
   templateUrl: './aulas.html',
   styleUrl: './aulas.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,12 +30,16 @@ export class Aulas implements OnInit {
   private readonly api = environment.apiUrl;
 
   private readonly ehSociopedagogico = computed(() => this.auth.currentProfile() === Role.SOCIO);
-  /** Só sociopedagógico pode abrir uma aula pra fazer a chamada; coordenador só acompanha. */
   readonly podeAbrirAula = computed(() => this.ehSociopedagogico());
+  // CA-64 (recorrência + editar status): só Coordenador, decisão confirmada.
+  readonly ehCoordenador = computed(() => this.auth.currentProfile() === Role.COORD);
+
+  readonly abaAtiva = signal<AbaAulas>('turmas');
 
   readonly carregando = signal(false);
   readonly erro = signal<string | null>(null);
   readonly turmas = signal<TurmaResponseDTO[]>([]);
+  readonly oficinas = signal<OficinaResponseDTO[]>([]);
   private readonly nomesOficinas = signal<Map<number, string>>(new Map());
 
   readonly turmaAulasSelecionada = signal<TurmaResponseDTO | null>(null);
@@ -56,6 +49,10 @@ export class Aulas implements OnInit {
 
   ngOnInit(): void {
     this.carregarTurmas();
+  }
+
+  selecionarAba(aba: AbaAulas): void {
+    this.abaAtiva.set(aba);
   }
 
   nomeOficina(turma: TurmaResponseDTO): string {
@@ -71,6 +68,7 @@ export class Aulas implements OnInit {
         firstValueFrom(this.http.get<TurmaResponseDTO[]>(`${this.api}/api/turmas`)),
         firstValueFrom(this.http.get<OficinaResponseDTO[]>(`${this.api}/api/oficinas`)),
       ]);
+      this.oficinas.set(oficinas);
       this.nomesOficinas.set(new Map(oficinas.map((o) => [o.oficinaId, o.nomeOficina])));
       this.turmas.set([...turmas].sort((a, b) => a.nomeTurma.localeCompare(b.nomeTurma)));
     } catch {
