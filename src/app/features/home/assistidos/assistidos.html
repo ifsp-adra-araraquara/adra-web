@@ -422,10 +422,17 @@
         </app-button>
 
   <ng-template #footer>
-    <app-button variant="secondary" (click)="fecharModalNovoAssistido()">Cancelar</app-button>
-    <app-button [loading]="salvando()" (click)="salvarAssistido()">
-      {{ salvando() ? 'Salvando...' : 'Salvar assistido' }}
-    </app-button>
+    <div style="display: flex; flex-direction: column; align-items: stretch; gap: 8px; width: 100%">
+      @if (erroSalvar()) {
+        <div class="notice notice-error">{{ erroSalvar() }}</div>
+      }
+      <div style="display: flex; justify-content: flex-end; gap: 8px">
+        <app-button variant="secondary" (click)="fecharModalNovoAssistido()">Cancelar</app-button>
+        <app-button [loading]="salvando()" (click)="salvarAssistido()">
+          {{ salvando() ? 'Salvando...' : 'Salvar assistido' }}
+        </app-button>
+      </div>
+    </div>
   </ng-template>
 </app-modal>
 
@@ -951,13 +958,222 @@
           >
           </textarea>
         </div>
+
+        <!-- ==================== CA-A04: RESPONSÁVEIS VINCULADOS ==================== -->
+        <p class="form-sec-title" style="margin-top: 20px">Responsáveis vinculados</p>
+
+        @if (erroVinculosEdicao()) {
+          <div class="notice notice-error mb-s">{{ erroVinculosEdicao() }}</div>
+        }
+
+        @if (carregandoVinculosEdicao()) {
+          <div class="card card-pad"><p class="muted">Carregando responsáveis...</p></div>
+        } @else {
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px">
+            @for (vinculo of vinculosEmEdicao(); track vinculo.responsavelId) {
+              <div class="card card-pad">
+                <div
+                  style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px"
+                >
+                  <div class="cell-name">{{ vinculo.nomeResponsavel }}</div>
+                  @if (ehAdministrador()) {
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-sm"
+                      title="Remover vínculo"
+                      (click)="removerVinculoEdicao(vinculo.responsavelId)"
+                    >
+                      Remover
+                    </button>
+                  }
+                </div>
+
+                <div class="form-row-3">
+                  <div class="field">
+                    <label>Parentesco</label>
+                    <select
+                      class="select"
+                      [ngModel]="vinculo.parentesco"
+                      (ngModelChange)="atualizarCampoVinculoEdicao(vinculo.responsavelId, 'parentesco', $event)"
+                    >
+                      <option value="">Selecione</option>
+                      <option value="Mãe">Mãe</option>
+                      <option value="Pai">Pai</option>
+                      <option value="Avó/Avô">Avó/Avô</option>
+                      <option value="Tio/Tia">Tio/Tia</option>
+                      <option value="Responsável legal">Responsável legal</option>
+                    </select>
+                  </div>
+
+                  <label class="check" style="align-self: end">
+                    <input
+                      type="checkbox"
+                      [ngModel]="vinculo.contatoEmergencia"
+                      (ngModelChange)="atualizarCampoVinculoEdicao(vinculo.responsavelId, 'contatoEmergencia', $event)"
+                    />
+                    Contato de emergência
+                  </label>
+
+                  <label class="check" style="align-self: end">
+                    <input
+                      type="checkbox"
+                      [ngModel]="vinculo.autorizadoRetirada"
+                      (ngModelChange)="atualizarCampoVinculoEdicao(vinculo.responsavelId, 'autorizadoRetirada', $event)"
+                    />
+                    Autorizado a retirar
+                  </label>
+                </div>
+
+                <label class="check">
+                  <input
+                    type="checkbox"
+                    [ngModel]="vinculo.responsavelPrincipal"
+                    (ngModelChange)="marcarResponsavelPrincipalEdicao('existente', vinculo.responsavelId, $event)"
+                  />
+                  Responsável principal
+                </label>
+              </div>
+            }
+
+            @for (responsavel of novosResponsaveisEdicao(); track $index) {
+              <div class="card card-pad">
+                <div
+                  style="display: flex; align-items: center; justify-content: space-between; gap: 12px"
+                >
+                  <div>
+                    <div class="cell-name">{{ responsavel.nomeCompleto }}</div>
+                    <span class="cell-sub">Novo responsável (será cadastrado ao salvar)</span>
+                  </div>
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-sm"
+                    (click)="removerNovoResponsavelEdicao($index)"
+                  >
+                    Remover
+                  </button>
+                </div>
+                @if (responsavel.responsavelPrincipal) {
+                  <span class="badge b-blue" style="margin-top: 8px">Principal</span>
+                }
+              </div>
+            }
+          </div>
+
+          @if (!mostrarFormNovoResponsavelEdicao()) {
+            <button type="button" class="btn btn-sm btn-ghost" (click)="abrirFormNovoResponsavelEdicao()">
+              + Adicionar responsável
+            </button>
+          } @else {
+            <div class="card card-pad">
+              <div class="form-row">
+                <div class="field">
+                  <label>Nome completo</label>
+                  <input
+                    class="input"
+                    placeholder="Nome do responsável"
+                    [ngModel]="novoResponsavelEdicao.nomeCompleto"
+                    (ngModelChange)="atualizarCampoNovoResponsavelEdicao('nomeCompleto', $event)"
+                  />
+                </div>
+
+                <div class="field">
+                  <label>Parentesco</label>
+                  <select
+                    class="select"
+                    [ngModel]="novoResponsavelEdicao.parentesco"
+                    (ngModelChange)="atualizarCampoNovoResponsavelEdicao('parentesco', $event)"
+                  >
+                    <option value="">Selecione</option>
+                    <option value="Mãe">Mãe</option>
+                    <option value="Pai">Pai</option>
+                    <option value="Avó/Avô">Avó/Avô</option>
+                    <option value="Tio/Tia">Tio/Tia</option>
+                    <option value="Responsável legal">Responsável legal</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row-3">
+                <div class="field">
+                  <label>CPF</label>
+                  <input
+                    class="input"
+                    placeholder="000.000.000-00"
+                    [ngModel]="novoResponsavelEdicao.cpf"
+                    (ngModelChange)="atualizarCampoNovoResponsavelEdicao('cpf', $event)"
+                  />
+                </div>
+                <div class="field">
+                  <label>Telefone</label>
+                  <input
+                    class="input"
+                    placeholder="(16) 90000-0000"
+                    [ngModel]="novoResponsavelEdicao.telefone"
+                    (ngModelChange)="atualizarCampoNovoResponsavelEdicao('telefone', $event)"
+                  />
+                </div>
+                <div class="field">
+                  <label>E-mail</label>
+                  <input
+                    class="input"
+                    type="email"
+                    placeholder="email@exemplo.com"
+                    [ngModel]="novoResponsavelEdicao.email"
+                    (ngModelChange)="atualizarCampoNovoResponsavelEdicao('email', $event)"
+                  />
+                </div>
+              </div>
+
+              <label class="check">
+                <input
+                  type="checkbox"
+                  [ngModel]="novoResponsavelEdicao.autorizadoRetirada"
+                  (ngModelChange)="atualizarCampoNovoResponsavelEdicao('autorizadoRetirada', $event)"
+                />
+                Autorizado a retirar o assistido
+              </label>
+
+              <label class="check">
+                <input
+                  type="checkbox"
+                  [ngModel]="novoResponsavelEdicao.contatoEmergencia"
+                  (ngModelChange)="atualizarCampoNovoResponsavelEdicao('contatoEmergencia', $event)"
+                />
+                Contato de emergência
+              </label>
+
+              <label class="check">
+                <input
+                  type="checkbox"
+                  [ngModel]="novoResponsavelEdicao.responsavelPrincipal"
+                  (ngModelChange)="atualizarCampoNovoResponsavelEdicao('responsavelPrincipal', $event)"
+                />
+                Responsável principal
+              </label>
+
+              <div style="display: flex; gap: 8px; margin-top: 12px">
+                <button type="button" class="btn btn-ghost btn-sm" (click)="fecharFormNovoResponsavelEdicao()">
+                  Cancelar
+                </button>
+                <button type="button" class="btn btn-sm" (click)="adicionarNovoResponsavelEdicao()">
+                  Adicionar à lista
+                </button>
+              </div>
+            </div>
+          }
+        }
       </div>
 
-      <div class="modal-foot">
-        <app-button variant="secondary" (click)="fecharModalEditar()">Cancelar</app-button>
-        <app-button [loading]="salvandoEdicao()" (click)="salvarEdicaoAssistido()">
-          Salvar alterações
-        </app-button>
+      <div class="modal-foot" style="flex-direction: column; align-items: stretch; gap: 8px">
+        @if (erroSalvarEdicao()) {
+          <div class="notice notice-error">{{ erroSalvarEdicao() }}</div>
+        }
+        <div style="display: flex; justify-content: flex-end; gap: 8px">
+          <app-button variant="secondary" (click)="fecharModalEditar()">Cancelar</app-button>
+          <app-button [loading]="salvandoEdicao()" (click)="salvarEdicaoAssistido()">
+            Salvar alterações
+          </app-button>
+        </div>
       </div>
     </div>
   </div>

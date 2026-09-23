@@ -16,7 +16,12 @@ import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO'
 import { PaginaResponse } from '../../../shared/models/PaginaResponse';
 
 import { ResponsavelRequestDTO } from '../../../shared/models/responsavel/ResponsavelRequestDTO';
+import { VinculoFamiliarRequestDTO } from '../../../shared/models/vinculoFamiliar/VinculoFamiliarRequestDTO';
 import { VinculoFamiliarComResponsavelRequestDTO } from '../../../shared/models/vinculoFamiliar/VinculoFamiliarComResponsavelRequestDTO';
+import { VinculoFamiliarResponseDTO } from '../../../shared/models/vinculoFamiliar/VinculoFamiliarResponseDTO';
+
+import { AuthService } from '../../../core/auth.service';
+import { Role } from '../../../shared/enum/role.enum';
 
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Input } from '../../../shared/components/input/input';
@@ -40,8 +45,12 @@ interface ResponsavelPendente extends ResponsavelRequestDTO {
 })
 export class Assistidos implements OnInit {
   private http = inject(HttpClient);
+  private auth = inject(AuthService);
 
   StatusGeral = StatusGeral;
+
+  /** CA-A04.3: só administrador pode desvincular um responsável já vinculado. */
+  ehAdministrador = computed(() => this.auth.currentProfile() === Role.ADMIN);
 
   private readonly apiAssistidos = `${environment.apiUrl}/api/assistidos`;
   private readonly apiResponsaveis = `${environment.apiUrl}/api/responsaveis`;
@@ -127,6 +136,14 @@ export class Assistidos implements OnInit {
   erroSalvarEdicao = signal<string | null>(null);
   assistidoEmEdicao = signal<AssistidoResponseDTO | null>(null);
   formEdicaoAssistido: AssistidoRequestDTO = this.assistidoVazio();
+
+  /* CA-A04: responsáveis vinculados dentro do modal de edição */
+  vinculosEmEdicao = signal<VinculoFamiliarResponseDTO[]>([]);
+  carregandoVinculosEdicao = signal(false);
+  erroVinculosEdicao = signal<string | null>(null);
+  novosResponsaveisEdicao = signal<ResponsavelPendente[]>([]);
+  mostrarFormNovoResponsavelEdicao = signal(false);
+  novoResponsavelEdicao: ResponsavelPendente = this.responsavelVazio();
 
   /* Responsáveis já salvos e vinculados */
   responsaveisVinculados = signal<ResponsavelPendente[]>([]);
@@ -346,13 +363,130 @@ export class Assistidos implements OnInit {
       confirmarApesarDeDuplicidade: false,
     };
     this.erroSalvarEdicao.set(null);
+
+    this.vinculosEmEdicao.set([]);
+    this.novosResponsaveisEdicao.set([]);
+    this.mostrarFormNovoResponsavelEdicao.set(false);
+    this.novoResponsavelEdicao = this.responsavelVazio();
+    this.erroVinculosEdicao.set(null);
+
     this.mostrarModalEditar.set(true);
+    this.carregarVinculosEdicao(assistido.assistidoId);
   }
 
   fecharModalEditar(): void {
     this.mostrarModalEditar.set(false);
     this.assistidoEmEdicao.set(null);
     this.erroSalvarEdicao.set(null);
+  }
+
+  /*
+   * ============================================================
+   * CA-A04: RESPONSÁVEIS VINCULADOS NO MODAL DE EDIÇÃO
+   * Tudo fica em memória até "Salvar alterações" - só então vai
+   * junto num único PUT (CA-A04.4).
+   * ============================================================
+   */
+  carregarVinculosEdicao(assistidoId: number): void {
+    this.carregandoVinculosEdicao.set(true);
+
+    this.http.get<VinculoFamiliarResponseDTO[]>(`${this.apiAssistidos}/${assistidoId}/responsaveis`).subscribe({
+      next: (vinculos) => {
+        this.vinculosEmEdicao.set(vinculos);
+        this.carregandoVinculosEdicao.set(false);
+      },
+      error: (erro) => {
+        console.error('Erro ao carregar responsáveis do assistido:', erro);
+        this.erroVinculosEdicao.set('Não foi possível carregar os responsáveis vinculados.');
+        this.carregandoVinculosEdicao.set(false);
+      },
+    });
+  }
+
+  /** CA-A04.3: bloqueia no próprio front se a remoção zerar os responsáveis. */
+  removerVinculoEdicao(responsavelId: number): void {
+    if (!this.ehAdministrador()) {
+      return;
+    }
+
+    const totalFinal = this.vinculosEmEdicao().length - 1 + this.novosResponsaveisEdicao().length;
+    if (totalFinal <= 0) {
+      this.erroVinculosEdicao.set('O assistido deve manter pelo menos um responsável vinculado.');
+      return;
+    }
+
+    this.erroVinculosEdicao.set(null);
+    this.vinculosEmEdicao.update((lista) => lista.filter((v) => v.responsavelId !== responsavelId));
+  }
+
+  atualizarCampoVinculoEdicao(
+    responsavelId: number,
+    campo: 'parentesco' | 'contatoEmergencia' | 'autorizadoRetirada' | 'observacoes',
+    valor: string | boolean,
+  ): void {
+    this.vinculosEmEdicao.update((lista) =>
+      lista.map((v) => (v.responsavelId === responsavelId ? { ...v, [campo]: valor } : v)),
+    );
+  }
+
+  /** Só um responsável principal no total (existentes + novos) - espelha a regra do backend. */
+  marcarResponsavelPrincipalEdicao(origem: 'existente' | 'novo', chave: number, valor: boolean): void {
+    if (!valor) {
+      if (origem === 'existente') {
+        this.vinculosEmEdicao.update((lista) =>
+          lista.map((v) => (v.responsavelId === chave ? { ...v, responsavelPrincipal: false } : v)),
+        );
+      } else {
+        this.novosResponsaveisEdicao.update((lista) =>
+          lista.map((r, i) => (i === chave ? { ...r, responsavelPrincipal: false } : r)),
+        );
+      }
+      return;
+    }
+
+    this.vinculosEmEdicao.update((lista) =>
+      lista.map((v) => ({ ...v, responsavelPrincipal: origem === 'existente' && v.responsavelId === chave })),
+    );
+    this.novosResponsaveisEdicao.update((lista) =>
+      lista.map((r, i) => ({ ...r, responsavelPrincipal: origem === 'novo' && i === chave })),
+    );
+  }
+
+  abrirFormNovoResponsavelEdicao(): void {
+    this.novoResponsavelEdicao = this.responsavelVazio();
+    this.erroVinculosEdicao.set(null);
+    this.mostrarFormNovoResponsavelEdicao.set(true);
+  }
+
+  fecharFormNovoResponsavelEdicao(): void {
+    this.mostrarFormNovoResponsavelEdicao.set(false);
+  }
+
+  atualizarCampoNovoResponsavelEdicao(campo: keyof ResponsavelPendente, valor: string | boolean): void {
+    this.novoResponsavelEdicao = { ...this.novoResponsavelEdicao, [campo]: valor };
+  }
+
+  adicionarNovoResponsavelEdicao(): void {
+    if (!this.novoResponsavelEdicao.nomeCompleto.trim()) {
+      this.erroVinculosEdicao.set('Informe o nome do responsável.');
+      return;
+    }
+
+    this.erroVinculosEdicao.set(null);
+
+    // Só um principal no total - se este entrar marcado, desmarca os demais.
+    if (this.novoResponsavelEdicao.responsavelPrincipal) {
+      this.vinculosEmEdicao.update((lista) => lista.map((v) => ({ ...v, responsavelPrincipal: false })));
+      this.novosResponsaveisEdicao.update((lista) => lista.map((r) => ({ ...r, responsavelPrincipal: false })));
+    }
+
+    this.novosResponsaveisEdicao.update((lista) => [...lista, this.novoResponsavelEdicao]);
+    this.novoResponsavelEdicao = this.responsavelVazio();
+    this.mostrarFormNovoResponsavelEdicao.set(false);
+  }
+
+  removerNovoResponsavelEdicao(index: number): void {
+    this.novosResponsaveisEdicao.update((lista) => lista.filter((_, i) => i !== index));
   }
 
   atualizarCampoEdicaoAssistido(campo: keyof AssistidoRequestDTO, valor: any): void {
@@ -371,13 +505,55 @@ export class Assistidos implements OnInit {
       return;
     }
 
+    // CA-A04.3: nunca deixa o assistido sem nenhum responsável vinculado.
+    const totalResponsaveis = this.vinculosEmEdicao().length + this.novosResponsaveisEdicao().length;
+    if (totalResponsaveis === 0) {
+      this.erroSalvarEdicao.set('O assistido deve manter pelo menos um responsável vinculado.');
+      return;
+    }
+
+    const totalPrincipais =
+      this.vinculosEmEdicao().filter((v) => v.responsavelPrincipal).length +
+      this.novosResponsaveisEdicao().filter((r) => r.responsavelPrincipal).length;
+    if (totalPrincipais !== 1) {
+      this.erroSalvarEdicao.set('Marque exatamente um responsável como principal.');
+      return;
+    }
+
     this.salvandoEdicao.set(true);
     this.erroSalvarEdicao.set(null);
 
     try {
+      const responsaveisVinculados: VinculoFamiliarRequestDTO[] = this.vinculosEmEdicao().map((v) => ({
+        responsavelId: v.responsavelId,
+        parentesco: v.parentesco || undefined,
+        responsavelPrincipal: v.responsavelPrincipal,
+        contatoEmergencia: v.contatoEmergencia,
+        autorizadoRetirada: v.autorizadoRetirada,
+        observacoes: v.observacoes || undefined,
+      }));
+
+      const responsaveisNovos: VinculoFamiliarComResponsavelRequestDTO[] = this.novosResponsaveisEdicao().map(
+        (r) => ({
+          nomeCompleto: r.nomeCompleto,
+          dataNascimento: r.dataNascimento || undefined,
+          cpf: r.cpf || undefined,
+          telefone: r.telefone || undefined,
+          email: r.email || undefined,
+          endereco: r.endereco || undefined,
+          observacoes: r.observacoes || undefined,
+          parentesco: r.parentesco || undefined,
+          responsavelPrincipal: r.responsavelPrincipal,
+          contatoEmergencia: r.contatoEmergencia,
+          autorizadoRetirada: r.autorizadoRetirada,
+        }),
+      );
+
       const payload: AssistidoRequestDTO = {
         ...this.formEdicaoAssistido,
         turmaId: this.formEdicaoAssistido.turmaId ? Number(this.formEdicaoAssistido.turmaId) : null,
+        responsaveisVinculados,
+        responsaveis: responsaveisNovos,
       };
 
       await firstValueFrom(
@@ -393,7 +569,7 @@ export class Assistidos implements OnInit {
     } catch (erro: any) {
       console.error('Erro ao atualizar assistido:', erro);
       this.erroSalvarEdicao.set(
-        erro?.error?.message ?? erro?.message ?? 'Não foi possível salvar as alterações.',
+        erro?.error?.mensagem ?? erro?.error?.message ?? erro?.message ?? 'Não foi possível salvar as alterações.',
       );
       this.salvandoEdicao.set(false);
     }
@@ -505,6 +681,19 @@ export class Assistidos implements OnInit {
   async salvarAssistido(): Promise<void> {
     if (this.salvando()) {
       return;
+    }
+
+    // Se preencheu o nome do responsável mas esqueceu de clicar em "Salvar
+    // responsável", inclui automaticamente antes de validar - evita o erro
+    // confuso de "informe um responsável" com o campo já preenchido na tela.
+    if (this.novoResponsavel.nomeCompleto.trim()) {
+      const ehPrimeiro = this.responsaveisVinculados().length === 0 && this.responsaveisPendentes().length === 0;
+      const responsavelAuto: ResponsavelPendente = {
+        ...this.novoResponsavel,
+        responsavelPrincipal: this.novoResponsavel.responsavelPrincipal || ehPrimeiro,
+      };
+      this.responsaveisVinculados.update((lista) => [...lista, responsavelAuto]);
+      this.novoResponsavel = this.responsavelVazio();
     }
 
     const erroValidacao = this.validarAssistidoAntesSalvar();
