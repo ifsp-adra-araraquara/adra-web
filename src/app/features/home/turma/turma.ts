@@ -20,6 +20,8 @@ import { AulaResponseDTO } from '../../../shared/models/aula/AulaResponseDTO';
 import { StatusAula } from '../../../shared/enum/StatusAula';
 import { OficinaResponseDTO } from '../../../shared/models/oficina/OficinaResponseDTO';
 import { UsuarioResponse } from '../../../shared/models/usuarios/UsuarioResponse';
+import { AssistidoResponseDTO } from '../../../shared/models/assistido/AssistidoResponseDTO';
+import { PaginaResponse } from '../../../shared/models/PaginaResponse';
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Modal } from '../../../shared/components/modal/modal';
 import { Table, TableColumn } from '../../../shared/components/table/table';
@@ -704,5 +706,108 @@ export class Turmas implements OnInit {
     }
   }
 
+  /* ============================================================
+   * VINCULAR ALUNOS ("+"  na tabela de turmas)
+   * Abre um modal pra selecionar assistidos ativos que ainda não estão
+   * nessa turma e vincula todos de uma vez via POST /api/turmas/{id}/alunos
+   * (cria o histórico em turma_aluno, que é o que a chamada/CA-65 usa como
+   * roster — ver PresencaService.buscarPorAula/registrarChamada no back).
+   * ============================================================ */
+  mostrarModalVincularAlunos = signal(false);
+  turmaVincularAlunos = signal<TurmaResponseDTO | null>(null);
+  carregandoCandidatos = signal(false);
+  erroVincularAlunos = signal<string | null>(null);
+  vinculandoAlunos = signal(false);
+  candidatosVincular = signal<AssistidoResponseDTO[]>([]);
+  buscaCandidato = signal('');
+  private assistidosSelecionados = signal<Set<number>>(new Set());
+
+  protected readonly candidatosFiltrados = computed(() => {
+    const termo = this.buscaCandidato().trim().toLowerCase();
+    if (!termo) return this.candidatosVincular();
+    return this.candidatosVincular().filter((a) => a.nomeCompleto.toLowerCase().includes(termo));
+  });
+
+  protected estaSelecionado(assistidoId: number): boolean {
+    return this.assistidosSelecionados().has(assistidoId);
+  }
+
+  toggleSelecaoAssistido(assistidoId: number): void {
+    const atual = new Set(this.assistidosSelecionados());
+    if (atual.has(assistidoId)) {
+      atual.delete(assistidoId);
+    } else {
+      atual.add(assistidoId);
+    }
+    this.assistidosSelecionados.set(atual);
+  }
+
+  async abrirModalVincularAlunos(turma: TurmaResponseDTO): Promise<void> {
+    this.turmaVincularAlunos.set(turma);
+    this.buscaCandidato.set('');
+    this.assistidosSelecionados.set(new Set());
+    this.erroVincularAlunos.set(null);
+    this.candidatosVincular.set([]);
+    this.mostrarModalVincularAlunos.set(true);
+    this.carregandoCandidatos.set(true);
+
+    try {
+      const [jaVinculados, pagina] = await Promise.all([
+        firstValueFrom(this.http.get<AssistidoResponseDTO[]>(`${this.apiTurmas}/${turma.turmaId}/alunos`)),
+        firstValueFrom(
+          this.http.get<PaginaResponse<AssistidoResponseDTO>>(
+            `${environment.apiUrl}/api/assistidos`,
+            { params: { status: 'ATIVO', tamanho: '500' } },
+          ),
+        ),
+      ]);
+
+      const idsJaVinculados = new Set(jaVinculados.map((a) => a.assistidoId));
+      this.candidatosVincular.set(
+        pagina.conteudo
+          .filter((a) => !idsJaVinculados.has(a.assistidoId))
+          .sort((a, b) => a.nomeCompleto.localeCompare(b.nomeCompleto)),
+      );
+    } catch (erro) {
+      console.error('Erro ao carregar assistidos para vincular:', erro);
+      this.erroVincularAlunos.set('Não foi possível carregar os assistidos disponíveis.');
+    } finally {
+      this.carregandoCandidatos.set(false);
+    }
+  }
+
+  fecharModalVincularAlunos(): void {
+    this.mostrarModalVincularAlunos.set(false);
+    this.turmaVincularAlunos.set(null);
+  }
+
+  async confirmarVincularAlunos(): Promise<void> {
+    const turma = this.turmaVincularAlunos();
+    const assistidoIds = Array.from(this.assistidosSelecionados());
+
+    if (!turma || this.vinculandoAlunos()) return;
+
+    if (assistidoIds.length === 0) {
+      this.erroVincularAlunos.set('Selecione pelo menos um assistido.');
+      return;
+    }
+
+    this.vinculandoAlunos.set(true);
+    this.erroVincularAlunos.set(null);
+
+    try {
+      await firstValueFrom(
+        this.http.post(`${this.apiTurmas}/${turma.turmaId}/alunos`, { assistidoIds }),
+      );
+      this.vinculandoAlunos.set(false);
+      this.fecharModalVincularAlunos();
+    } catch (erro: any) {
+      console.error('Erro ao vincular alunos à turma:', erro);
+      this.erroVincularAlunos.set(
+        erro?.error?.message ?? 'Não foi possível vincular os assistidos selecionados. Tente novamente.',
+      );
+      this.vinculandoAlunos.set(false);
+    }
+  }
 }
 

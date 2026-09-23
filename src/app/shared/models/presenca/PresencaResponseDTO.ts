@@ -1,11 +1,15 @@
 import { StatusPresenca } from '../../enum/StatusPresenca';
+import { MotivoFalta } from '../../enum/MotivoFalta';
 
 export interface PresencaResponseDTO {
-  presencaId: number;
+  // null quando o status é PRESENTE inferido (modelo esparso — nunca vira
+  // linha no banco, ver PresencaResponseDTO.presente() no back).
+  presencaId: number | null;
   aulaId: number;
   assistidoId: number;
   statusPresenca: StatusPresenca;
-  justificativaFalta: string | null;
-  observacaoDoDia: string | null;
-  horarioRegistro: string;
+  motivoFalta: MotivoFalta | null;
+  observacao: string | null;
+  criadoEm: string | null;
+  atualizadoEm: string | null;
 }

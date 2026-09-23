@@ -15,9 +15,11 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/auth.service';
+import { AulaService } from '../../../core/aula.service';
 import { Role } from '../../enum/role.enum';
 import { StatusAula } from '../../enum/StatusAula';
 import { StatusPresenca } from '../../enum/StatusPresenca';
+import { MotivoFalta, MOTIVO_FALTA_OPTIONS } from '../../enum/MotivoFalta';
 import { SituacaoAula } from '../../enum/SituacaoAula';
 import { calcularSituacaoAula } from '../../utils/aula.util';
 import { AulaComDetalhesResponseDTO } from '../../models/aula/AulaComDetalhesResponseDTO';
@@ -35,6 +37,9 @@ interface LinhaChamada {
   assistidoId: number;
   nomeCompleto: string;
   statusPresenca: StatusPresenca | null;
+  // só usados quando statusPresenca = FALTA_JUSTIFICADA (CA-65.2)
+  motivoFalta: MotivoFalta | null;
+  observacao: string;
 }
 
 interface FormDefinirCampos {
@@ -76,6 +81,7 @@ interface FormDefinirCampos {
 export class AulaModal implements OnChanges {
   private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
+  private readonly aulaService = inject(AulaService);
   private readonly api = environment.apiUrl;
 
   @Input() aula: AulaComDetalhesResponseDTO | null = null;
@@ -84,6 +90,8 @@ export class AulaModal implements OnChanges {
   @Output() chamadaSalva = new EventEmitter<void>();
 
   readonly StatusPresenca = StatusPresenca;
+  readonly MotivoFalta = MotivoFalta;
+  readonly motivoFaltaOptions = MOTIVO_FALTA_OPTIONS;
 
   readonly carregando = signal(false);
   readonly erro = signal<string | null>(null);
@@ -156,11 +164,16 @@ export class AulaModal implements OnChanges {
 
       this.alunos.set(
         pagina.conteudo
-          .map((assistido) => ({
-            assistidoId: assistido.assistidoId,
-            nomeCompleto: assistido.nomeCompleto,
-            statusPresenca: presencaPorAssistido.get(assistido.assistidoId)?.statusPresenca ?? null,
-          }))
+          .map((assistido) => {
+            const presenca = presencaPorAssistido.get(assistido.assistidoId);
+            return {
+              assistidoId: assistido.assistidoId,
+              nomeCompleto: assistido.nomeCompleto,
+              statusPresenca: presenca?.statusPresenca ?? null,
+              motivoFalta: presenca?.motivoFalta ?? null,
+              observacao: presenca?.observacao ?? '',
+            };
+          })
           .sort((a, b) => a.nomeCompleto.localeCompare(b.nomeCompleto)),
       );
     } catch {
@@ -172,14 +185,37 @@ export class AulaModal implements OnChanges {
 
   marcarPresenca(aluno: LinhaChamada, status: StatusPresenca): void {
     this.alunos.set(
-      this.alunos().map((a) =>
-        a.assistidoId === aluno.assistidoId ? { ...a, statusPresenca: status } : a,
-      ),
+      this.alunos().map((a) => {
+        if (a.assistidoId !== aluno.assistidoId) return a;
+        if (status !== StatusPresenca.FALTA_JUSTIFICADA) {
+          return { ...a, statusPresenca: status, motivoFalta: null, observacao: '' };
+        }
+        return { ...a, statusPresenca: status };
+      }),
+    );
+  }
+
+  atualizarMotivoFalta(aluno: LinhaChamada, motivo: MotivoFalta): void {
+    this.alunos.set(
+      this.alunos().map((a) => (a.assistidoId === aluno.assistidoId ? { ...a, motivoFalta: motivo } : a)),
+    );
+  }
+
+  atualizarObservacaoFalta(aluno: LinhaChamada, observacao: string): void {
+    this.alunos.set(
+      this.alunos().map((a) => (a.assistidoId === aluno.assistidoId ? { ...a, observacao } : a)),
     );
   }
 
   marcarTodosPresentes(): void {
-    this.alunos.set(this.alunos().map((a) => ({ ...a, statusPresenca: StatusPresenca.PRESENTE })));
+    this.alunos.set(
+      this.alunos().map((a) => ({
+        ...a,
+        statusPresenca: StatusPresenca.PRESENTE,
+        motivoFalta: null,
+        observacao: '',
+      })),
+    );
   }
 
   async salvarChamada(): Promise<void> {
@@ -191,13 +227,46 @@ export class AulaModal implements OnChanges {
       return;
     }
 
+    // CA-65.2, espelhando a validação do back.
+    const faltaJustificadaSemMotivo = this.alunos().find(
+      (a) => a.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA && !a.motivoFalta,
+    );
+    if (faltaJustificadaSemMotivo) {
+      this.erro.set(`Informe o motivo da falta justificada de ${faltaJustificadaSemMotivo.nomeCompleto}.`);
+      return;
+    }
+    const faltaJustificadaOutroSemObservacao = this.alunos().find(
+      (a) =>
+        a.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA &&
+        a.motivoFalta === MotivoFalta.OUTRO &&
+        !a.observacao?.trim(),
+    );
+    if (faltaJustificadaOutroSemObservacao) {
+      this.erro.set(
+        `Motivo "Outro" exige observação — preencha a de ${faltaJustificadaOutroSemObservacao.nomeCompleto}.`,
+      );
+      return;
+    }
+
     this.salvando.set(true);
     this.erro.set(null);
     try {
+      // CA-65.3: o back só aceita lançar chamada em aula REALIZADA — e é a
+      // própria chamada que marca a aula como realizada, então isso precisa
+      // rodar ANTES do POST de presenças (senão o back rejeita).
+      if (aula.statusAula !== StatusAula.REALIZADA) {
+        await this.marcarAulaComoRealizada(aula);
+      }
+
       const presencas: PresencaRequestDTO[] = this.alunos().map((a) => ({
         aulaId: aula.aulaId,
         assistidoId: a.assistidoId,
         statusPresenca: a.statusPresenca!,
+        motivoFalta: a.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA ? a.motivoFalta : null,
+        observacao:
+          a.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA && a.observacao?.trim()
+            ? a.observacao.trim()
+            : null,
       }));
 
       await firstValueFrom(
@@ -206,8 +275,6 @@ export class AulaModal implements OnChanges {
           presencas,
         ),
       );
-
-      await this.marcarAulaComoRealizada(aula);
 
       this.chamadaSalva.emit();
       this.fechar.emit();
@@ -219,29 +286,18 @@ export class AulaModal implements OnChanges {
   }
 
   /**
-   * Marca a aula como REALIZADA depois da chamada salva, reenviando os
-   * campos originais (o PUT de /api/aulas substitui a entidade inteira —
-   * mandar só o status zeraria título, conteúdo etc.).
+   * Marca a aula como REALIZADA depois da chamada salva, via PATCH
+   * /api/aulas/{id} (atualização pontual de status — CA-64.4). Usa
+   * AulaService.atualizarStatus em vez do PUT de /api/aulas/{id} porque
+   * esse PUT é @PreAuthorize hasRole('COORDENADOR') — o sociopedagógico
+   * (quem faz a chamada) tomava 403 aqui. O PATCH já é liberado também
+   * pro sociopedagógico (ver AulaController).
    */
   private async marcarAulaComoRealizada(aula: AulaComDetalhesResponseDTO): Promise<void> {
-    if (!aula.turmaId) return;
-    const dto: AulaRequestDTO = {
-      turmaId: aula.turmaId,
-      titulo: aula.titulo ?? undefined,
-      descricao: aula.descricao ?? undefined,
-      dataAula: aula.dataAula,
-      horarioInicio: aula.horarioInicio ?? undefined,
-      horarioFim: aula.horarioFim ?? undefined,
-      conteudoPrevisto: aula.conteudoPrevisto ?? undefined,
-      conteudoMinistrado: aula.conteudoMinistrado ?? undefined,
-      objetivos: aula.objetivos ?? undefined,
-      recursosNecessarios: aula.recursosNecessarios ?? undefined,
-      statusAula: StatusAula.REALIZADA,
-      observacoes: aula.observacoes ?? undefined,
-    };
-    await firstValueFrom(
-      this.http.put<AulaResponseDTO>(`${this.api}/api/aulas/${aula.aulaId}`, dto),
+    const atualizada = await firstValueFrom(
+      this.aulaService.atualizarStatus(aula.aulaId, StatusAula.REALIZADA),
     );
+    this.aula = { ...aula, statusAula: atualizada.statusAula };
   }
 
   /**

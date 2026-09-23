@@ -76,6 +76,15 @@
         [trackBy]="trackByTurmaId"
       >
         <ng-template #rowActions let-turma>
+          <button type="button" title="Vincular alunos" (click)="abrirModalVincularAlunos(turma)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <line x1="19" y1="8" x2="19" y2="14" />
+              <line x1="22" y1="11" x2="16" y2="11" />
+            </svg>
+          </button>
+
           <button type="button" title="Criar várias aulas" (click)="abrirModalCriarAulas(turma)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
@@ -890,6 +899,76 @@
       (click)="salvarNovaAula()"
     >
       Salvar aula
+    </app-button>
+  </ng-template>
+</app-modal>
+
+<!-- ============================================================
+     MODAL: VINCULAR ALUNOS À TURMA
+     ============================================================ -->
+<app-modal
+  [(open)]="mostrarModalVincularAlunos"
+  [title]="'Vincular alunos — ' + (turmaVincularAlunos()?.nomeTurma ?? '')"
+  [size]="'lg'"
+  (closed)="fecharModalVincularAlunos()"
+>
+  <div modal-icon class="mh-ico ico-green">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <line x1="19" y1="8" x2="19" y2="14" />
+      <line x1="22" y1="11" x2="16" y2="11" />
+    </svg>
+  </div>
+
+  <p class="page-intro" style="margin: 0 0 12px">
+    Selecione os assistidos ativos que devem ser vinculados a esta turma. Um assistido já
+    vinculado a outra turma é transferido — o vínculo anterior é encerrado automaticamente.
+  </p>
+
+  @if (erroVincularAlunos()) {
+    <div class="notice-error">{{ erroVincularAlunos() }}</div>
+  }
+
+  <app-input
+    label="Buscar assistido"
+    [hideLabel]="true"
+    placeholder="Buscar por nome…"
+    style="margin-bottom: 10px"
+    [ngModel]="buscaCandidato()"
+    (ngModelChange)="buscaCandidato.set($event)"
+  />
+
+  @if (carregandoCandidatos()) {
+    <p class="muted" style="padding: 20px; text-align: center">Carregando…</p>
+  } @else {
+    <div class="lista-candidatos" style="max-height: 320px; overflow-y: auto; border: 1px solid var(--gray-100); border-radius: 10px">
+      @for (assistido of candidatosFiltrados(); track assistido.assistidoId) {
+        <label
+          style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--gray-100); cursor: pointer"
+        >
+          <input
+            type="checkbox"
+            [checked]="estaSelecionado(assistido.assistidoId)"
+            (change)="toggleSelecaoAssistido(assistido.assistidoId)"
+          />
+          <span style="flex: 1">{{ assistido.nomeCompleto }}</span>
+          @if (assistido.nomeTurma) {
+            <span class="muted" style="font-size: 12px">já em: {{ assistido.nomeTurma }}</span>
+          }
+        </label>
+      } @empty {
+        <p class="empty" style="padding: 20px">Nenhum assistido disponível para vincular.</p>
+      }
+    </div>
+  }
+
+  <ng-template #footer>
+    <app-button variant="secondary" [disabled]="vinculandoAlunos()" (click)="fecharModalVincularAlunos()">
+      Cancelar
+    </app-button>
+    <app-button [loading]="vinculandoAlunos()" (click)="confirmarVincularAlunos()">
+      Vincular selecionados
     </app-button>
   </ng-template>
 </app-modal>

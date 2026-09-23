@@ -71,6 +71,31 @@
             title="Falta justificada"
           >FJ</button>
         </div>
+
+        @if (aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA) {
+        <div class="falta-justificada-detalhe">
+          <select
+            [disabled]="!ehSociopedagogico()"
+            [ngModel]="aluno.motivoFalta"
+            (ngModelChange)="atualizarMotivoFalta(aluno, $event)"
+          >
+            <option [ngValue]="null" disabled>Motivo da falta…</option>
+            @for (opcao of motivoFaltaOptions; track opcao.value) {
+            <option [ngValue]="opcao.value">{{ opcao.label }}</option>
+            }
+          </select>
+
+          @if (aluno.motivoFalta === MotivoFalta.OUTRO) {
+          <textarea
+            [disabled]="!ehSociopedagogico()"
+            placeholder="Descreva o motivo (obrigatório)"
+            rows="2"
+            [ngModel]="aluno.observacao"
+            (ngModelChange)="atualizarObservacaoFalta(aluno, $event)"
+          ></textarea>
+          }
+        </div>
+        }
       </article>
       } @empty {
       <p class="empty">Nenhum aluno ativo nesta turma.</p>

@@ -1,14 +1,16 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/auth.service';
+import { AulaService } from '../../../core/aula.service';
 import { Role } from '../../../shared/enum/role.enum';
 import { StatusAula } from '../../../shared/enum/StatusAula';
 import { StatusPresenca } from '../../../shared/enum/StatusPresenca';
+import { MotivoFalta, MOTIVO_FALTA_OPTIONS } from '../../../shared/enum/MotivoFalta';
 import { AulaComDetalhesResponseDTO } from '../../../shared/models/aula/AulaComDetalhesResponseDTO';
-import { AulaRequestDTO } from '../../../shared/models/aula/AulaRequestDTO';
 import { AulaResponseDTO } from '../../../shared/models/aula/AulaResponseDTO';
 import { AssistidoResponseDTO } from '../../../shared/models/assistido/AssistidoResponseDTO';
 import { PaginaResponse } from '../../../shared/models/PaginaResponse';
@@ -20,6 +22,9 @@ interface LinhaAluno {
   assistidoId: number;
   nomeCompleto: string;
   statusPresenca: StatusPresenca | null;
+  // só usados quando statusPresenca = FALTA_JUSTIFICADA (CA-65.2)
+  motivoFalta: MotivoFalta | null;
+  observacao: string;
 }
 
 type AbaAulaCompleta = 'alunos' | 'materiais';
@@ -33,7 +38,7 @@ type AbaAulaCompleta = 'alunos' | 'materiais';
 @Component({
   selector: 'app-aula-completa',
   standalone: true,
-  imports: [Button],
+  imports: [FormsModule, Button],
   templateUrl: './aula-completa.html',
   styleUrl: './aula-completa.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,9 +47,12 @@ export class AulaCompleta implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
   private readonly auth = inject(AuthService);
+  private readonly aulaService = inject(AulaService);
   private readonly api = environment.apiUrl;
 
   readonly StatusPresenca = StatusPresenca;
+  readonly MotivoFalta = MotivoFalta;
+  readonly motivoFaltaOptions = MOTIVO_FALTA_OPTIONS;
 
   readonly aba = signal<AbaAulaCompleta>('alunos');
   readonly carregando = signal(true);
@@ -118,11 +126,16 @@ export class AulaCompleta implements OnInit {
 
       this.alunos.set(
         pagina.conteudo
-          .map((assistido) => ({
-            assistidoId: assistido.assistidoId,
-            nomeCompleto: assistido.nomeCompleto,
-            statusPresenca: presencaPorAssistido.get(assistido.assistidoId)?.statusPresenca ?? null,
-          }))
+          .map((assistido) => {
+            const presenca = presencaPorAssistido.get(assistido.assistidoId);
+            return {
+              assistidoId: assistido.assistidoId,
+              nomeCompleto: assistido.nomeCompleto,
+              statusPresenca: presenca?.statusPresenca ?? null,
+              motivoFalta: presenca?.motivoFalta ?? null,
+              observacao: presenca?.observacao ?? '',
+            };
+          })
           .sort((a, b) => a.nomeCompleto.localeCompare(b.nomeCompleto)),
       );
     } catch {
@@ -135,15 +148,42 @@ export class AulaCompleta implements OnInit {
   marcarPresenca(aluno: LinhaAluno, status: StatusPresenca): void {
     if (!this.ehSociopedagogico()) return;
     this.alunos.set(
-      this.alunos().map((a) =>
-        a.assistidoId === aluno.assistidoId ? { ...a, statusPresenca: status } : a,
-      ),
+      this.alunos().map((a) => {
+        if (a.assistidoId !== aluno.assistidoId) return a;
+        // Trocar pra um status que não seja falta justificada limpa o
+        // motivo/observação — não faz sentido carregar isso escondido.
+        if (status !== StatusPresenca.FALTA_JUSTIFICADA) {
+          return { ...a, statusPresenca: status, motivoFalta: null, observacao: '' };
+        }
+        return { ...a, statusPresenca: status };
+      }),
+    );
+  }
+
+  atualizarMotivoFalta(aluno: LinhaAluno, motivo: MotivoFalta): void {
+    if (!this.ehSociopedagogico()) return;
+    this.alunos.set(
+      this.alunos().map((a) => (a.assistidoId === aluno.assistidoId ? { ...a, motivoFalta: motivo } : a)),
+    );
+  }
+
+  atualizarObservacaoFalta(aluno: LinhaAluno, observacao: string): void {
+    if (!this.ehSociopedagogico()) return;
+    this.alunos.set(
+      this.alunos().map((a) => (a.assistidoId === aluno.assistidoId ? { ...a, observacao } : a)),
     );
   }
 
   marcarTodosPresentes(): void {
     if (!this.ehSociopedagogico()) return;
-    this.alunos.set(this.alunos().map((a) => ({ ...a, statusPresenca: StatusPresenca.PRESENTE })));
+    this.alunos.set(
+      this.alunos().map((a) => ({
+        ...a,
+        statusPresenca: StatusPresenca.PRESENTE,
+        motivoFalta: null,
+        observacao: '',
+      })),
+    );
   }
 
   async salvarChamada(): Promise<void> {
@@ -155,14 +195,51 @@ export class AulaCompleta implements OnInit {
       return;
     }
 
+    // CA-65.2, espelhando a validação do back (RegraNegocioException em
+    // PresencaMapper.sincronizarFaltaJustificada) pra dar um erro claro antes
+    // de bater na API.
+    const faltaJustificadaSemMotivo = this.alunos().find(
+      (a) => a.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA && !a.motivoFalta,
+    );
+    if (faltaJustificadaSemMotivo) {
+      this.erro.set(`Informe o motivo da falta justificada de ${faltaJustificadaSemMotivo.nomeCompleto}.`);
+      return;
+    }
+    const faltaJustificadaOutroSemObservacao = this.alunos().find(
+      (a) =>
+        a.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA &&
+        a.motivoFalta === MotivoFalta.OUTRO &&
+        !a.observacao?.trim(),
+    );
+    if (faltaJustificadaOutroSemObservacao) {
+      this.erro.set(
+        `Motivo "Outro" exige observação — preencha a de ${faltaJustificadaOutroSemObservacao.nomeCompleto}.`,
+      );
+      return;
+    }
+
     this.salvando.set(true);
     this.erro.set(null);
     this.salvo.set(false);
     try {
+      // CA-65.3: o back só aceita lançar chamada em aula com status REALIZADA
+      // — e é justamente o ato de tomar a chamada que marca a aula como
+      // realizada por aqui, então isso precisa acontecer ANTES do POST de
+      // presenças (senão o back rejeita: aula ainda estaria PLANEJADA/
+      // REMARCADA no momento do POST).
+      if (aula.statusAula !== StatusAula.REALIZADA) {
+        await this.marcarAulaComoRealizada(aula);
+      }
+
       const presencas: PresencaRequestDTO[] = this.alunos().map((a) => ({
         aulaId: aula.aulaId,
         assistidoId: a.assistidoId,
         statusPresenca: a.statusPresenca!,
+        motivoFalta: a.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA ? a.motivoFalta : null,
+        observacao:
+          a.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA && a.observacao?.trim()
+            ? a.observacao.trim()
+            : null,
       }));
 
       await firstValueFrom(
@@ -172,7 +249,6 @@ export class AulaCompleta implements OnInit {
         ),
       );
 
-      await this.marcarAulaComoRealizada(aula);
       this.salvo.set(true);
     } catch {
       this.erro.set('Não foi possível salvar a chamada. Tente novamente.');
@@ -182,27 +258,15 @@ export class AulaCompleta implements OnInit {
   }
 
   /**
-   * Mesma lógica do <app-aula-modal>: o PUT de /api/aulas substitui a
-   * entidade inteira, então reenvia os campos originais junto do novo status.
+   * Marca a aula como REALIZADA via PATCH /api/aulas/{id} (atualização
+   * pontual de status — CA-64.4), usando AulaService.atualizarStatus em vez
+   * do PUT de /api/aulas/{id}: esse PUT é @PreAuthorize hasRole('COORDENADOR')
+   * e o sociopedagógico (quem faz a chamada) tomava 403 nele. O PATCH já é
+   * liberado também pro sociopedagógico (ver AulaController).
    */
   private async marcarAulaComoRealizada(aula: AulaComDetalhesResponseDTO): Promise<void> {
-    if (!aula.turmaId) return;
-    const dto: AulaRequestDTO = {
-      turmaId: aula.turmaId,
-      titulo: aula.titulo ?? undefined,
-      descricao: aula.descricao ?? undefined,
-      dataAula: aula.dataAula,
-      horarioInicio: aula.horarioInicio ?? undefined,
-      horarioFim: aula.horarioFim ?? undefined,
-      conteudoPrevisto: aula.conteudoPrevisto ?? undefined,
-      conteudoMinistrado: aula.conteudoMinistrado ?? undefined,
-      objetivos: aula.objetivos ?? undefined,
-      recursosNecessarios: aula.recursosNecessarios ?? undefined,
-      statusAula: StatusAula.REALIZADA,
-      observacoes: aula.observacoes ?? undefined,
-    };
     const atualizada = await firstValueFrom(
-      this.http.put<AulaResponseDTO>(`${this.api}/api/aulas/${aula.aulaId}`, dto),
+      this.aulaService.atualizarStatus(aula.aulaId, StatusAula.REALIZADA),
     );
     this.aula.set({ ...aula, statusAula: atualizada.statusAula });
   }

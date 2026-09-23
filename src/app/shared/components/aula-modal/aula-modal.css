@@ -70,7 +70,22 @@
   border: 1px solid var(--gray-100);
   border-radius: 8px;
 }
+.linha-aluno-chamada { flex-direction: column; align-items: stretch; }
+.linha-aluno-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .nome-aluno { font-size: 13.5px; font-weight: 600; color: var(--gray-800); }
+
+.falta-justificada-detalhe { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.falta-justificada-detalhe select,
+.falta-justificada-detalhe textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 13px;
+  resize: vertical;
+}
 
 .linha-aluno-acoes { display: flex; align-items: center; gap: 10px; }
 
