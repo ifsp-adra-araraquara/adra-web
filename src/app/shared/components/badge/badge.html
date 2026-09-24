@@ -1,0 +1,7 @@
+<span class="badge" [class]="'b-' + resolvedVariant()" [class.plain]="plain()">
+  @if (resolvedLabel()) {
+    {{ resolvedLabel() }}
+  } @else {
+    <ng-content></ng-content>
+  }
+</span>

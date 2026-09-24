@@ -1,13 +1,12 @@
 /* You can add global styles to this file, and also import other style files */
 
-@import 'tailwindcss';
 /* ============================================================
    ADRA ARARAQUARA — SISTEMA DE GESTÃO
    styles.css global — tokens de marca + componentes reutilizáveis
    Cole este arquivo em: src/styles.css
    ============================================================ */
 
-   @import 'tailwindcss';
+@import 'tailwindcss';
 
 @theme {
   --color-adra-green-50:  #E0F2EC;
@@ -115,10 +114,11 @@ button { font-family: inherit; cursor: pointer; }
   outline: none; border-color: var(--green-400); background: #fff;
   box-shadow: 0 0 0 3px var(--green-50);
 }
-.select { appearance: none; cursor: pointer;
+.select { appearance: none; cursor: pointer; min-width: 160px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%2354585A' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 12px center; padding-right: 38px;
 }
+.select:disabled { opacity: .6; cursor: not-allowed; }
 textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
 .check { display: flex; align-items: flex-start; gap: 9px; font-size: 13px; color: var(--gray-600); padding: 8px 0; cursor: pointer; }
 .check input { width: 17px; height: 17px; accent-color: var(--green-400); margin-top: 1px; flex: none; }
@@ -363,7 +363,8 @@ tbody tr:hover { background: var(--gray-50); }
   background: #fff; border-radius: var(--radius-lg); width: 100%; max-width: 580px;
   box-shadow: var(--shadow-lg); animation: rise .28s var(--ease) both; margin: auto 0;
 }
-.modal.wide { max-width: 760px; }
+.modal.wide, .modal-lg { max-width: 760px; }
+.modal-sm { max-width: 420px; }
 .modal-head { display: flex; align-items: center; gap: 12px; padding: 20px 24px; border-bottom: 1px solid var(--gray-100); }
 .modal-head h2 { font-size: 17px; }
 .modal-head .mh-ico { width: 36px; height: 36px; border-radius: 10px; flex: none; display: grid; place-items: center; }

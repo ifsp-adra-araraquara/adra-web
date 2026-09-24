@@ -1,0 +1,29 @@
+@if (open()) {
+  <div class="modal-overlay open" role="presentation" (click)="onBackdropClick()">
+    <div
+      class="modal"
+      [class.modal-sm]="size() === 'sm'"
+      [class.modal-lg]="size() === 'lg'"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="app-modal-title"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="modal-head">
+        <ng-content select="[modal-icon]"></ng-content>
+        <h2 id="app-modal-title">{{ title() }}</h2>
+        <button type="button" class="modal-close" (click)="close()" aria-label="Fechar">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <ng-content></ng-content>
+      </div>
+
+      @if (footerTemplate(); as footer) {
+        <div class="modal-foot">
+          <ng-container [ngTemplateOutlet]="footer"></ng-container>
+        </div>
+      }
+    </div>
+  </div>
+}

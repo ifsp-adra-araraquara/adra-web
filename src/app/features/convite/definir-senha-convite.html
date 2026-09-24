@@ -37,32 +37,35 @@
             <p class="login-sub">Crie sua senha</p>
             <p class="login-desc">Mínimo de 8 caracteres, com ao menos uma letra e um número.</p>
 
-            <div class="field">
-                <label for="nova-senha">Senha</label>
-                <input class="input" id="nova-senha" name="novaSenha" type="password" placeholder="••••••••"
-                    [(ngModel)]="novaSenha" autocomplete="new-password">
+            <div>
+                <app-input
+                    label="Senha"
+                    type="password"
+                    name="novaSenha"
+                    placeholder="••••••••"
+                    autocomplete="new-password"
+                    [(ngModel)]="novaSenha"
+                />
                 <app-senha-forca [senha]="novaSenha" />
             </div>
 
-            <div class="field">
-                <label for="confirmar-senha">Confirmar senha</label>
-                <input class="input" id="confirmar-senha" name="confirmarSenha" type="password" placeholder="••••••••"
-                    [(ngModel)]="confirmarSenha" autocomplete="new-password">
-                @if (confirmarSenha.length > 0 && confirmarSenha !== novaSenha) {
-                <span class="campo-erro">As senhas não coincidem.</span>
-                }
-            </div>
+            <app-input
+                label="Confirmar senha"
+                type="password"
+                name="confirmarSenha"
+                placeholder="••••••••"
+                autocomplete="new-password"
+                [(ngModel)]="confirmarSenha"
+                [errorMessage]="confirmarSenha.length > 0 && confirmarSenha !== novaSenha ? 'As senhas não coincidem.' : null"
+            />
 
             @if (erro()) {
             <p class="login-erro" role="alert">{{ erro() }}</p>
             }
 
-            <button type="submit" class="btn btn-block" [disabled]="carregando()">
-                @if (carregando()) {
-                <span class="btn-spinner" aria-hidden="true"></span>
-                }
+            <app-button type="submit" size="lg" [block]="true" [loading]="carregando()">
                 {{ carregando() ? 'Salvando...' : 'Criar senha e entrar' }}
-            </button>
+            </app-button>
             }
         </form>
 

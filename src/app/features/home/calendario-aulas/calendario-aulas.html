@@ -1,0 +1,59 @@
+<div class="cal">
+  <div class="cal-toolbar">
+    <div class="cal-filters">
+      <div class="field">
+        <label>Oficina</label>
+        <app-select [options]="oficinasOpcoes()" placeholder="Todas as oficinas" name="oficinaIdFiltro" [(ngModel)]="oficinaIdFiltro" />
+      </div>
+      <div class="field">
+        <label>De</label>
+        <input class="input" type="date" [(ngModel)]="dataInicioFiltro" name="dataInicioFiltro" />
+      </div>
+      <div class="field">
+        <label>Até</label>
+        <input class="input" type="date" [(ngModel)]="dataFimFiltro" name="dataFimFiltro" />
+      </div>
+    </div>
+
+    <div class="cal-actions">
+      <div class="seg-control" role="group" aria-label="Visualização do calendário">
+        <button type="button" class="seg-btn" [class.active]="visualizacao() === 'dayGridMonth'" (click)="alternarVisualizacao('dayGridMonth')">Mês</button>
+        <button type="button" class="seg-btn" [class.active]="visualizacao() === 'timeGridWeek'" (click)="alternarVisualizacao('timeGridWeek')">Semana</button>
+      </div>
+      @if (podeGerenciar()) {
+        <button type="button" class="btn btn-sm" (click)="abrirRecorrencia()">Gerar aulas</button>
+      }
+    </div>
+  </div>
+
+  <div class="cal-legend">
+    @for (item of legendaStatus; track item.status) {
+      <span class="legend-chip">
+        <span class="legend-dot" [style.background]="'var(--' + item.variant + '-400)'"></span>
+        {{ item.label }}
+      </span>
+    }
+  </div>
+
+  @if (aulaService.carregando()) {
+    <p class="feedback" role="status">Carregando aulas...</p>
+  }
+
+  <div class="cal-card">
+    <div class="cal-scroll">
+      <full-calendar #calendario [options]="calendarOptions()" />
+    </div>
+  </div>
+
+  @if (podeGerenciar()) {
+    <app-recorrencia-aulas-modal
+      [aberto]="mostrarRecorrencia()"
+      [turmas]="turmas()"
+      (fechar)="mostrarRecorrencia.set(false)"
+      (gerado)="aoGerarAulas()"
+    />
+    @if (aulaSelecionada(); as aula) {
+      <app-aula-status-modal [aula]="aula" (fechar)="fecharModalStatus()" (salvo)="fecharModalStatus()" />
+    }
+  }
+</div>

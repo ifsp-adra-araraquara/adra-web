@@ -1,0 +1,53 @@
+<section class="materiais-page" aria-labelledby="materiais-titulo">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Pedagógico</p>
+      <h1 id="materiais-titulo">Materiais e semanário</h1>
+      <p class="page-intro">Consulte os materiais e acompanhe os planos de aula das suas oficinas.</p>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Materiais e planos de aula">
+    <button class="tab" [class.active]="abaAtiva === 'materiais'" role="tab" [attr.aria-selected]="abaAtiva === 'materiais'" (click)="selecionarAba('materiais')">Materiais didáticos</button>
+    <button class="tab" [class.active]="abaAtiva === 'planos'" role="tab" [attr.aria-selected]="abaAtiva === 'planos'" (click)="selecionarAba('planos')">Semanário / Planos de aula</button>
+  </div>
+
+  @if (abaAtiva === 'materiais') {
+    <div class="material-grid">
+      @for (material of materiais; track material.titulo) {
+        <article class="material-card">
+          <div class="material-icon" aria-hidden="true">{{ material.formato }}</div>
+          <h2>{{ material.titulo }}</h2>
+          <p>{{ material.tipo }} · {{ material.tamanho }} · {{ material.oficina }}</p>
+          <div class="material-footer">
+            <span class="status">Ativo</span>
+            <app-button variant="secondary" size="sm">{{ material.formato === 'MP4' ? 'Abrir' : 'Baixar' }}</app-button>
+          </div>
+        </article>
+      }
+    </div>
+  } @else {
+    <div class="table-card">
+      <div class="table-header">
+        <h2>Semanário / Planos de aula</h2>
+        <app-button size="sm">Novo plano</app-button>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Oficina</th><th>Turma</th><th>Data</th><th>Conteúdo previsto</th><th>Conteúdo ministrado</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            @for (plano of planos; track plano.oficina + plano.data) {
+              <tr>
+                <td>{{ plano.oficina }}</td><td>{{ plano.turma }}</td><td>{{ plano.data }}</td>
+                <td>{{ plano.conteudoPrevisto }}</td><td>{{ plano.conteudoMinistrado }}</td>
+                <td><span class="status" [class.warning]="plano.status === 'Cancelada'">{{ plano.status }}</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</section>

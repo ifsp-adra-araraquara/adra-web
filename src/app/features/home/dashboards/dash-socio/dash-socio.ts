@@ -1,10 +1,12 @@
 import { Component } from '@angular/core';
 import { StatCard } from '../../../../shared/components/stat-card/stat-card';
+import { Badge } from '../../../../shared/components/badge/badge';
+import { Button } from '../../../../shared/components/button/button';
 
 @Component({
   selector: 'app-dash-socio',
   standalone: true,
-  imports: [StatCard],
+  imports: [StatCard, Badge, Button],
   templateUrl: './dash-socio.html'
 })
 export class DashSocio {

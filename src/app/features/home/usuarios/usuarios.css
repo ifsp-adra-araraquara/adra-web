@@ -84,54 +84,12 @@
   color: #374151;
 }
 
-.input,
-.select {
-  width: 100%;
-  box-sizing: border-box;
-  min-height: 42px;
-  padding: 9px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 7px;
-  background: #fff;
-  font-size: 14px;
-  outline: none;
-}
-
-.input:focus,
-.select:focus {
-  border-color: #64748b;
-  box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.1);
-}
-
-.textarea {
-  resize: vertical;
-  min-height: 80px;
-}
-
-.check {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 11px;
-  font-size: 13px;
-  color: #4b5563;
-}
-
-.check input {
-  width: 15px;
-  height: 15px;
-}
-
 .modal-foot {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   padding: 16px 24px;
   border-top: 1px solid #e5e7eb;
-}
-
-.modal-foot .btn {
-  min-width: 110px;
 }
 
 .card-toolbar {
@@ -148,31 +106,10 @@
   flex: 1 1 220px;
 }
 
-.search-ico {
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 15px;
-  height: 15px;
-  color: #9ca3af;
-  pointer-events: none;
-}
-
-.input-search {
-  padding-left: 34px;
-}
-
 .toolbar-filters {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-}
-
-.select-sm {
-  min-height: 38px;
-  padding: 7px 10px;
-  font-size: 13px;
 }
 
 .sr-only {

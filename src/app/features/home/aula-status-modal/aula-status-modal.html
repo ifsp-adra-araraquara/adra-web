@@ -1,0 +1,25 @@
+<app-modal [open]="true" [title]="aula().titulo ?? aula().nomeTurma ?? 'Aula'" size="sm" (closed)="fechar.emit()">
+  <p class="subtle">
+    {{ aula().nomeTurma }} · {{ aula().dataAula }}
+    @if (aula().horarioInicio && aula().horarioFim) { · {{ aula().horarioInicio }}–{{ aula().horarioFim }} }
+  </p>
+
+  <div class="field" style="display:flex; align-items:center; gap:8px;">
+    <span class="subtle">Status atual:</span>
+    <app-badge [status]="aula().statusAula" />
+  </div>
+
+  <div class="field">
+    <label>Novo status</label>
+    <app-select [options]="opcoesStatus" placeholder="Selecione o novo status" name="novoStatus" [(ngModel)]="novoStatus" />
+  </div>
+
+  @if (erro()) {
+    <p class="feedback error" role="alert">{{ erro() }}</p>
+  }
+
+  <ng-template #footer>
+    <app-button variant="secondary" (click)="fechar.emit()">Cancelar</app-button>
+    <app-button [loading]="salvando()" [disabled]="!podeSalvar()" (click)="salvarStatus()">Salvar</app-button>
+  </ng-template>
+</app-modal>

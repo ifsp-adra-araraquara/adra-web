@@ -1,17 +1,19 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UsuarioService } from '../../../core/usuario.service';
 import { Role } from '../../../shared/enum/role.enum';
 import { ROLE_LABELS } from '../../../shared/enum/role-labels';
-import { MascaraCpfDirective } from '../../../shared/directives/mascara-cpf.directive';
-import { MascaraTelefoneDirective } from '../../../shared/directives/mascara-telefone.directive';
+import { cpfValidator } from '../../../shared/validators/cpf.validator';
+import { Select, SelectOption } from '../../../shared/components/select/select';
+import { Input } from '../../../shared/components/input/input';
+import { Button } from '../../../shared/components/button/button';
 
 const PERFIS_DO_MVP = [Role.ADMIN, Role.COORD, Role.SOCIO];
 
 @Component({
   selector: 'app-cadastro-usuario',
-  imports: [ReactiveFormsModule, MascaraCpfDirective, MascaraTelefoneDirective],
+  imports: [ReactiveFormsModule, Select, Input, Button],
   templateUrl: './cadastro-usuario.html',
   styleUrl: './cadastro-usuario.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -23,6 +25,11 @@ export class CadastroUsuario {
   perfis = PERFIS_DO_MVP;
   labels = ROLE_LABELS;
 
+  perfilOptions: SelectOption<Role>[] = PERFIS_DO_MVP.map(p => ({
+    value: p,
+    label: ROLE_LABELS[p]
+  }));
+
   salvando = signal(false);
   sucesso = signal<string | null>(null);
   erro = signal<string | null>(null);
@@ -31,11 +38,16 @@ export class CadastroUsuario {
   form = this.fb.nonNullable.group({
     nomeCompleto: ['', [Validators.required, Validators.maxLength(180)]],
     email: ['', [Validators.required, Validators.email]],
-    cpf: ['', [Validators.required, Validators.pattern(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/)]],
+    cpf: ['', [Validators.required, cpfValidator()]],
     nivelPermissao: [Role.COORD, Validators.required],
     cargoFuncao: [''],
-    telefone: ['', Validators.pattern(/^$|^\(\d{2}\) \d{4,5}-\d{4}$/)]
+    telefone: ['', Validators.pattern(/^$|^\d{10,11}$/)]
   });
+
+  protected erroNome = computed(() => this.erroDoCampo('nomeCompleto', 'Informe o nome completo.'));
+  protected erroEmail = computed(() => this.erroDoCampo('email', 'Informe um e-mail válido.'));
+  protected erroCpf = computed(() => this.erroDoCampo('cpf', 'Informe um CPF válido.'));
+  protected erroTelefone = computed(() => this.erroDoCampo('telefone', 'DDD + número, 10 ou 11 dígitos.'));
 
   cadastrar(): void {
     if (this.form.invalid) {
@@ -57,6 +69,16 @@ export class CadastroUsuario {
         this.salvando.set(false);
       }
     });
+  }
+
+  private erroDoCampo(
+    nome: 'nomeCompleto' | 'email' | 'cpf' | 'telefone',
+    mensagem: string
+  ): string | null {
+    if (this.form.controls[nome].touched && this.form.controls[nome].invalid) {
+      return mensagem;
+    }
+    return this.errosPorCampo()[nome] ?? null;
   }
 
   private tratarErro(resposta: HttpErrorResponse): void {

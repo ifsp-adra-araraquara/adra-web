@@ -32,12 +32,24 @@ export function avaliarForcaSenha(senha: string): ResultadoForcaSenha {
   if (atendidos === 5 && senha.length >= 10) score = 4;
 
   const mapa: Record<number, { nivel: NivelForca; label: string; cor: string }> = {
-    0: { nivel: 'fraca', label: 'Muito fraca', cor: '#e53e3e' },
-    1: { nivel: 'fraca', label: 'Fraca', cor: '#e53e3e' },
-    2: { nivel: 'media', label: 'Média', cor: '#dd6b20' },
-    3: { nivel: 'forte', label: 'Forte', cor: '#38a169' },
-    4: { nivel: 'muito-forte', label: 'Muito forte', cor: '#2f855a' }
+    0: { nivel: 'fraca', label: 'Muito fraca', cor: '#E24B4A' },
+    1: { nivel: 'fraca', label: 'Fraca', cor: '#E24B4A' },
+    2: { nivel: 'media', label: 'Média', cor: '#BA7517' },
+    3: { nivel: 'forte', label: 'Forte', cor: '#007B5F' },
+    4: { nivel: 'muito-forte', label: 'Muito forte', cor: '#005A45' }
   };
 
   return { score, ...mapa[score], criterios };
+}
+
+/**
+ * Política mínima de senha exigida pelo backend (DefinirSenhaRequestDTO):
+ * `^(?=.*[a-zA-Z])(?=.*\d).{8,}$` — 8+ caracteres, com ao menos 1 letra e 1 número.
+ * Retorna a primeira mensagem de erro encontrada, ou `null` se a senha atende a política.
+ */
+export function validarPoliticaSenha(senha: string): string | null {
+  if (senha.length < 8) return 'A senha precisa ter no mínimo 8 caracteres.';
+  if (!/[A-Za-z]/.test(senha)) return 'A senha precisa ter ao menos uma letra.';
+  if (!/[0-9]/.test(senha)) return 'A senha precisa ter ao menos um número.';
+  return null;
 }

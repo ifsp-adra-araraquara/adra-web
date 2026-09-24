@@ -130,10 +130,6 @@
   border-top: 1px solid #e5e7eb;
 }
 
-.modal-foot .btn {
-  min-width: 110px;
-}
-
 .loading,
 .empty {
   text-align: center;

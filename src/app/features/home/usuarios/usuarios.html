@@ -9,21 +9,17 @@
       <h3>Usuários</h3>
 
       <div class="right">
-        <button class="btn btn-sm btn-ghost" (click)="abrirModalSenha()">Definir senha</button>
-        <button class="btn btn-sm" (click)="abrirModalCadastro()">+ Novo usuário</button>
+        <app-button variant="secondary" size="sm" (click)="abrirModalSenha()">Definir senha</app-button>
+        <app-button size="sm" (click)="abrirModalCadastro()">+ Novo usuário</app-button>
       </div>
     </div>
 
     <div class="card-toolbar">
       <div class="toolbar-search">
-        <label for="busca-usuario" class="sr-only">Buscar por nome ou e-mail</label>
-        <svg class="search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        </svg>
-        <input
+        <app-input
           id="busca-usuario"
-          class="input input-search"
-          type="search"
+          label="Buscar por nome ou e-mail"
+          [hideLabel]="true"
           placeholder="Buscar por nome ou e-mail…"
           [ngModel]="termoBusca()"
           (ngModelChange)="onBuscaChange($event)"
@@ -32,31 +28,29 @@
 
       <div class="toolbar-filters">
         <label for="filtro-perfil" class="sr-only">Filtrar por perfil</label>
-        <select
+        <app-select
           id="filtro-perfil"
-          class="select select-sm"
           [ngModel]="filtroPerfil()"
           (ngModelChange)="filtroPerfil.set($event); onFiltroChange()"
-        >
-          <option value="">Todos os perfis</option>
-          <option [value]="Role.ADMIN">Administrador</option>
-          <option [value]="Role.COORD">Coordenador</option>
-          <option [value]="Role.SOCIO">Sociopedagógico</option>
-        </select>
+          [options]="perfilFiltroOptions"
+        />
 
         <label for="filtro-status" class="sr-only">Filtrar por status</label>
-        <select
+        <app-select
           id="filtro-status"
-          class="select select-sm"
           [ngModel]="filtroStatus()"
           (ngModelChange)="filtroStatus.set($event); onFiltroChange()"
-        >
-          <option value="">Todos os status</option>
-          <option value="ativo">Ativo</option>
-          <option value="inativo">Inativo</option>
-        </select>
+          [options]="statusFiltroOptions"
+        />
       </div>
     </div>
+
+    @if (erroGeral()) {
+      <div class="notice notice-amber" style="margin: 0 24px 16px 24px; display: flex; justify-content: space-between; align-items: center;" role="alert">
+        <span>{{ erroGeral() }}</span>
+        <button type="button" (click)="erroGeral.set(null)" style="background: none; border: none; cursor: pointer; font-size: 16px; line-height: 1;">✕</button>
+      </div>
+    }
 
     <div class="table-wrap">
       @if (carregando()) {
@@ -81,17 +75,11 @@
                 <td>{{ usuario.email }}</td>
 
                 <td>
-                  <span class="badge" [class]="getBadgeClass(usuario.nivelPermissao)">
-                    {{ getNomePerfil(usuario.nivelPermissao) }}
-                  </span>
+                  <app-badge [variant]="getBadgeVariant(usuario.nivelPermissao)" [label]="getNomePerfil(usuario.nivelPermissao)" />
                 </td>
 
                 <td>
-                  @if (usuario.ativo) {
-                    <span class="badge b-green">Ativo</span>
-                  } @else {
-                    <span class="badge b-gray">Inativo</span>
-                  }
+                  <app-badge [status]="usuario.ativo" />
                 </td>
 
                 <td>
@@ -103,7 +91,10 @@
                       </svg>
                     </button>
 
-                    <button title="Alterar status" (click)="alterarStatus(usuario)">
+                    <button
+                      [title]="isProprioUsuario(usuario) && usuario.ativo ? 'Não é permitido inativar seu próprio usuário' : 'Alterar status'"
+                      [disabled]="isProprioUsuario(usuario) && usuario.ativo"
+                      (click)="alterarStatus(usuario)">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 2v10" />
                         <path d="M18.4 6.6a9 9 0 1 1-12.8 0" />
@@ -130,24 +121,24 @@
 
         @if (totalPaginas() > 1) {
           <div class="paginacao" role="navigation" aria-label="Paginação">
-            <button
-              class="btn btn-sm btn-ghost"
+            <app-button
+              variant="secondary"
+              size="sm"
               [disabled]="!temAnterior()"
               (click)="paginaAnterior()"
-              aria-label="Página anterior"
-            >&#8592; Anterior</button>
+            >&#8592; Anterior</app-button>
 
             <span class="pagina-info">
               Página {{ pagina() + 1 }} de {{ totalPaginas() }}
               <span class="pagina-total">({{ totalElementos() }} usuários)</span>
             </span>
 
-            <button
-              class="btn btn-sm btn-ghost"
+            <app-button
+              variant="secondary"
+              size="sm"
               [disabled]="!temProxima()"
               (click)="proximaPagina()"
-              aria-label="Próxima página"
-            >Próxima &#8594;</button>
+            >Próxima &#8594;</app-button>
           </div>
         }
       }
@@ -156,34 +147,14 @@
 </section>
 
 <!-- MODAL: CADASTRAR (componente do Pedrão, aberto por cima) -->
-@if (mostrarModalCadastro()) {
-  <div class="modal-overlay" (click)="fecharModalCadastro()">
-    <div class="modal" (click)="$event.stopPropagation()">
-      <div class="modal-head">
-        <div><h3>Novo usuário</h3></div>
-        <button class="modal-close" type="button" (click)="fecharModalCadastro()">×</button>
-      </div>
-      <div class="modal-body">
-        <app-cadastro-usuario />
-      </div>
-    </div>
-  </div>
-}
+<app-modal [(open)]="mostrarModalCadastro" title="Novo usuário" (closed)="fecharModalCadastro()">
+  <app-cadastro-usuario />
+</app-modal>
 
 <!-- MODAL: DEFINIR SENHA (componente do Pedrão, aberto por cima) -->
-@if (mostrarModalSenha()) {
-  <div class="modal-overlay" (click)="fecharModalSenha()">
-    <div class="modal" (click)="$event.stopPropagation()">
-      <div class="modal-head">
-        <div><h3>Definir senha</h3></div>
-        <button class="modal-close" type="button" (click)="fecharModalSenha()">×</button>
-      </div>
-      <div class="modal-body">
-        <app-definir-senha />
-      </div>
-    </div>
-  </div>
-}
+<app-modal [(open)]="mostrarModalSenha" title="Definir senha" (closed)="fecharModalSenha()">
+  <app-definir-senha />
+</app-modal>
 
 <!-- MODAL: EDITAR USUÁRIO -->
 @if (mostrarModalEdicao()) {
@@ -201,50 +172,39 @@
         <p class="form-sec-title">Dados do usuário</p>
 
         <div class="form-row">
-          <div class="field">
-            <label>Nome completo</label>
-            <input
-              class="input"
-              type="text"
-              placeholder="Nome completo"
-              [(ngModel)]="usuarioEdicao.nomeCompleto"
-            />
-          </div>
+          <app-input
+            label="Nome completo"
+            placeholder="Nome completo"
+            [(ngModel)]="usuarioEdicao.nomeCompleto"
+            name="nomeCompleto"
+          />
 
-          <div class="field">
-            <label>Telefone</label>
-            <input
-              class="input"
-              type="text"
-              placeholder="(16) 90000-0000"
-              [(ngModel)]="usuarioEdicao.telefone"
-            />
-          </div>
+          <app-input
+            label="Telefone"
+            placeholder="(16) 90000-0000"
+            mask="telefone"
+            [(ngModel)]="usuarioEdicao.telefone"
+            name="telefone"
+          />
         </div>
 
         <p class="form-sec-title">Dados de acesso</p>
 
         <div class="form-row">
-          <div class="field">
-            <label>E-mail institucional</label>
-            <input
-              class="input"
-              type="email"
-              placeholder="usuario@adra.org.br"
-              [(ngModel)]="usuarioEdicao.email"
-            />
-          </div>
+          <app-input
+            label="E-mail institucional"
+            type="email"
+            placeholder="usuario@adra.org.br"
+            [(ngModel)]="usuarioEdicao.email"
+            name="email"
+          />
 
           <div class="field">
             <label>Perfil de acesso</label>
-            <select class="select" [(ngModel)]="usuarioEdicao.nivelPermissao">
-              <option [value]="Role.ADMIN">Administrador</option>
-              <option [value]="Role.COORD">Coordenador</option>
-              <option [value]="Role.SOCIO">Sociopedagógico</option>
-              <option [value]="Role.PROFS">Profissional de Saúde</option>
-              <option [value]="Role.FINANCEIRO">Financeiro/Administrativo</option>
-              <option [value]="Role.OFICINEIRO">Oficineiro</option>
-            </select>
+            <app-select
+              [(ngModel)]="usuarioEdicao.nivelPermissao"
+              [options]="perfilEdicaoOptions"
+            />
           </div>
         </div>
 
@@ -252,26 +212,22 @@
           <div class="form-row">
             <div class="field">
               <label>Especialidade</label>
-              <select class="select" [(ngModel)]="usuarioEdicao.especialidade">
-                <option [value]="null" disabled>Selecione a especialidade</option>
-                <option value="NEUROLOGIA">Neurologia</option>
-                <option value="PSICOPEDAGOGIA">Psicopedagogia</option>
-                <option value="PSICOLOGIA">Psicologia</option>
-              </select>
+              <app-select
+                [(ngModel)]="usuarioEdicao.especialidade"
+                [placeholder]="'Selecione a especialidade'"
+                [options]="especialidadeOptions"
+              />
             </div>
           </div>
         }
 
         <div class="form-row">
-          <div class="field">
-            <label>Cargo / Função</label>
-            <input
-              class="input"
-              type="text"
-              placeholder="Cargo ou função"
-              [(ngModel)]="usuarioEdicao.cargoFuncao"
-            />
-          </div>
+          <app-input
+            label="Cargo / Função"
+            placeholder="Cargo ou função"
+            [(ngModel)]="usuarioEdicao.cargoFuncao"
+            name="cargoFuncao"
+          />
         </div>
 
         @if (erroEdicao()) {
@@ -285,10 +241,10 @@
       </div>
 
       <div class="modal-foot">
-        <button class="btn btn-ghost" type="button" (click)="fecharModalEdicao()">Cancelar</button>
-        <button class="btn" type="button" [disabled]="salvando()" (click)="salvarEdicao()">
-          {{ salvando() ? 'Salvando...' : 'Salvar usuário' }}
-        </button>
+        <app-button variant="secondary" type="button" (click)="fecharModalEdicao()">Cancelar</app-button>
+        <app-button type="button" [loading]="salvando()" (click)="salvarEdicao()">
+          Salvar usuário
+        </app-button>
       </div>
     </div>
   </div>
@@ -311,10 +267,10 @@
         <button class="modal-close" type="button" (click)="mostrarConfirmacaoPerfil.set(false)">×</button>
       </div>
       <div class="modal-foot">
-        <button class="btn btn-ghost" type="button" (click)="mostrarConfirmacaoPerfil.set(false)">Cancelar</button>
-        <button class="btn" type="button" [disabled]="salvando()" (click)="confirmarSalvarEdicao()">
-          {{ salvando() ? 'Salvando...' : 'Confirmar troca' }}
-        </button>
+        <app-button variant="secondary" type="button" (click)="mostrarConfirmacaoPerfil.set(false)">Cancelar</app-button>
+        <app-button type="button" [loading]="salvando()" (click)="confirmarSalvarEdicao()">
+          Confirmar troca
+        </app-button>
       </div>
     </div>
   </div>
@@ -375,11 +331,11 @@
       </div>
 
       <div class="modal-foot">
-        <button type="button" class="btn btn-ghost" (click)="mostrarModalStatus.set(false)">Cancelar</button>
+        <app-button variant="secondary" type="button" (click)="mostrarModalStatus.set(false)">Cancelar</app-button>
         @if (acaoStatus() === 'inativar') {
-          <button type="button" class="btn btn-danger" (click)="confirmarAlteracaoStatus()">Inativar Usuário</button>
+          <app-button variant="danger" type="button" (click)="confirmarAlteracaoStatus()">Inativar Usuário</app-button>
         } @else {
-          <button type="button" class="btn" (click)="confirmarAlteracaoStatus()">Reativar Usuário</button>
+          <app-button type="button" (click)="confirmarAlteracaoStatus()">Reativar Usuário</app-button>
         }
       </div>
     </div>

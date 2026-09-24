@@ -45,6 +45,8 @@ export class AuthService {
 
   currentProfile = computed<Role | null>(() => this.usuarioLogado()?.nivelPermissao ?? null);
 
+  currentUserResponse = computed<UsuarioResponse | null>(() => this.usuarioLogado());
+
   modulos = computed<ModuloDTO[]>(() => this.usuarioLogado()?.modulos ?? []);
 
   dashType = computed<DashboardType | null>(() => {
@@ -93,9 +95,14 @@ export class AuthService {
       const emRotaPublica = ROTAS_PUBLICAS_AUTH.some(rota => path.startsWith(rota));
       if (emRotaPublica) return;
 
+      // So resincroniza o token da API em segundo plano — NAO navega pra lugar
+      // nenhum. Isso roda toda vez que o app carrega do zero com uma sessao
+      // ja existente (ex.: abrir um link em outra guia, dar F5), entao forcar
+      // navegacao pro modulo padrao aqui "sequestraria" o usuario de volta pra
+      // fora da URL que ele acabou de abrir.
       const deveTrocar = evento === 'INITIAL_SESSION' || evento === 'TOKEN_REFRESHED';
       if (deveTrocar && sessao) {
-        this.trocarPorTokenDaAplicacao().subscribe({ error: () => this.logout() });
+        this.trocarPorTokenDaAplicacao(false).subscribe({ error: () => this.logout() });
       }
     });
   }
@@ -131,7 +138,15 @@ export class AuthService {
     await supabase.auth.signOut();
   }
 
-  trocarPorTokenDaAplicacao(): Observable<LoginResponse> {
+  /**
+   * @param navegarParaModuloPadrao Quando true (padrao — usado no login
+   * explicito), redireciona pro modulo padrao do usuario depois de trocar o
+   * token. Quando false (usado na resincronizacao passiva em segundo plano,
+   * disparada pelo listener de auth do Supabase), so atualiza o token/usuario
+   * sem navegar, preservando a URL atual (ex.: um link de aula aberto em
+   * outra guia).
+   */
+  trocarPorTokenDaAplicacao(navegarParaModuloPadrao: boolean = true): Observable<LoginResponse> {
     return from(supabase.auth.getSession()).pipe(
       switchMap(({ data }) => {
         const tokenSupabase = data.session?.access_token;
@@ -142,7 +157,7 @@ export class AuthService {
           headers: { Authorization: `Bearer ${tokenSupabase}` }
         });
       }),
-      tap((resposta) => this.aplicarSessao(resposta)),
+      tap((resposta) => this.aplicarSessao(resposta, navegarParaModuloPadrao)),
       catchError((err) => {
         this.logout();
         return throwError(() => err);
@@ -150,9 +165,10 @@ export class AuthService {
     );
   }
 
-    private aplicarSessao(resposta: LoginResponse): void {
+  private aplicarSessao(resposta: LoginResponse, navegarParaModuloPadrao: boolean = true): void {
     localStorage.setItem(CHAVE_TOKEN, resposta.token);
     localStorage.setItem(USER_KEY, JSON.stringify(resposta.usuario));
+
     this.usuarioLogado.set(resposta.usuario);
 
     const padrao = resposta.usuario.modulos.find(m => m.padrao)?.codigo
@@ -162,13 +178,29 @@ export class AuthService {
     if (padrao) {
       this.currentModule.set(padrao.toLowerCase() as AppModule);
       localStorage.setItem(MODULE_KEY, padrao.toLowerCase());
-      this.router.navigate([padrao.toLowerCase()]);
+    }
+
+    if (!navegarParaModuloPadrao || !padrao) {
+      return;
+    }
+
+    const modulo = padrao.toLowerCase() as AppModule;
+    if (resposta.usuario.nivelPermissao === Role.OFICINEIRO) {
+      this.router.navigate(['/oficineiro'], { queryParams: { aba: modulo } });
+    } else {
+      this.router.navigate([modulo]);
     }
   }
 
   setModule(module: AppModule): void {
     this.currentModule.set(module);
     localStorage.setItem(MODULE_KEY, module);
+    
+    if (this.currentProfile() === Role.OFICINEIRO) {
+      this.router.navigate(['/oficineiro'], { queryParams: { aba: module } });
+      return;
+    }
+    
     this.router.navigate([module]);
   }
 

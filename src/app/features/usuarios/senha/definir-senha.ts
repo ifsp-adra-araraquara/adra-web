@@ -1,12 +1,17 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UsuarioService } from '../../../core/usuario.service';
+import { Input } from '../../../shared/components/input/input';
+import { Button } from '../../../shared/components/button/button';
+import { SenhaForca } from '../../../shared/components/senha-forca/senha-forca';
+
+const SENHA_PATTERN = /^(?=.*[a-zA-Z])(?=.*\d).{8,}$/;
 
 /** Provisorio: sai quando o convite da US-02 e a listagem da US-05 entrarem. */
 @Component({
   selector: 'app-definir-senha',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, Input, Button, SenhaForca],
   templateUrl: './definir-senha.html',
   styleUrl: './definir-senha.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -21,8 +26,20 @@ export class DefinirSenha {
 
   form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
-    novaSenha: ['', [Validators.required, Validators.minLength(8)]]
+    novaSenha: ['', [Validators.required, Validators.pattern(SENHA_PATTERN)]]
   });
+
+  protected erroEmail = computed(() =>
+    this.form.controls.email.touched && this.form.controls.email.invalid
+      ? 'Informe um e-mail válido.'
+      : null
+  );
+
+  protected erroSenha = computed(() =>
+    this.form.controls.novaSenha.touched && this.form.controls.novaSenha.invalid
+      ? 'Mínimo 8 caracteres, com letra e número.'
+      : null
+  );
 
   definir(): void {
     if (this.form.invalid) {

@@ -13,7 +13,7 @@
     flex: 1;
     height: 4px;
     border-radius: 2px;
-    background: #e2e8f0;
+    background: var(--gray-200, #d3d1c7);
     transition: background 0.25s ease, transform 0.2s ease;
 }
 
@@ -39,7 +39,7 @@
 
 .senha-forca-criterios li {
     font-size: 11px;
-    color: #a0aec0;
+    color: var(--gray-400, #888780);
     transition: color 0.2s ease;
     display: flex;
     align-items: center;
@@ -47,7 +47,7 @@
 }
 
 .senha-forca-criterios li.atendido {
-    color: #38a169;
+    color: var(--green-400, #007b5f);
 }
 
 .senha-forca-icone {

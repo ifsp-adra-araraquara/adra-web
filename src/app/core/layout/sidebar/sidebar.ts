@@ -30,6 +30,7 @@ export class Sidebar {
     USUARIOS: 'Conta',
     ACESSO: 'Conta',
     NOTIFICACOES: 'Conta',
+    AULAS: 'Pedagógico',
   };
 
   private ordemSecoes = ['Principal', 'Gestão', 'Especializado', 'Pedagógico', 'Financeiro', 'Conta'];

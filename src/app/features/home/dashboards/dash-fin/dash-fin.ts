@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { StatCard } from '../../../../shared/components/stat-card/stat-card';
+import { Badge } from '../../../../shared/components/badge/badge';
 
 @Component({
   selector: 'app-dash-fin',
   standalone: true,
-  imports: [StatCard],
+  imports: [StatCard, Badge],
   templateUrl: './dash-fin.html'
 })
 export class DashFin {

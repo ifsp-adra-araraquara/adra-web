@@ -1,0 +1,178 @@
+<section class="page" id="page-showcase">
+  <div class="page-header">
+    <div>
+      <h1>Showcase de componentes</h1>
+      <p class="page-intro">
+        Página de referência para os componentes reutilizáveis de modal, tabela e badge de status
+        (US-61). Não faz chamadas à API — os dados abaixo são exemplos estáticos.
+      </p>
+    </div>
+  </div>
+
+  <!-- ================= BADGES ================= -->
+  <div class="card mt">
+    <div class="card-head">
+      <h3>app-badge</h3>
+      <span class="sub">Status de aula (agendada/realizada/cancelada/remarcada) e demais status do sistema</span>
+    </div>
+    <div class="card-pad">
+      <h4 class="showcase-subtitle">Status de aula</h4>
+      <ul class="showcase-badge-list">
+        @for (item of amostraStatusAula; track item.valor) {
+          <li>
+            <app-badge [status]="item.valor" />
+            <span class="showcase-badge-desc">{{ item.descricao }}</span>
+          </li>
+        }
+      </ul>
+
+      <h4 class="showcase-subtitle mt-s">Outros status conhecidos</h4>
+      <ul class="showcase-badge-list">
+        @for (item of amostraOutrosStatus; track item.descricao) {
+          <li>
+            <app-badge [status]="item.valor" />
+            <span class="showcase-badge-desc">{{ item.descricao }}</span>
+          </li>
+        }
+      </ul>
+
+      <h4 class="showcase-subtitle mt-s">Customizado (variante e rótulo manuais)</h4>
+      <ul class="showcase-badge-list">
+        <li>
+          <app-badge variant="blue" label="Em análise" />
+          <span class="showcase-badge-desc">variant="blue" + label customizado</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ================= APP-INPUT ================= -->
+  <div class="card mt">
+    <div class="card-head">
+      <h3>app-input</h3>
+      <span class="sub">Estados (default/foco/erro/disabled), tipos (texto/número/senha/e-mail) e máscaras (CPF/telefone)</span>
+    </div>
+    <div class="card-pad">
+      <h4 class="showcase-subtitle">Estados isolados</h4>
+      <div class="form-row-3">
+        <app-input label="Default" placeholder="Digite algo..." />
+        <app-input label="Com erro" placeholder="Digite algo..." errorMessage="Este campo é obrigatório." [required]="true" />
+        <app-input label="Desabilitado" placeholder="Não editável" [disabled]="true" />
+      </div>
+
+      <h4 class="showcase-subtitle mt-s">Tipos e máscaras</h4>
+      <div class="form-row-3">
+        <app-input label="Senha" type="password" placeholder="••••••••" />
+        <app-input label="CPF" mask="cpf" placeholder="000.000.000-00" />
+        <app-input label="Telefone" mask="telefone" placeholder="(00) 00000-0000" />
+      </div>
+
+      <h4 class="showcase-subtitle mt-s">Formulário reativo completo (formControlName)</h4>
+      <form [formGroup]="formExemplo" (ngSubmit)="enviarFormExemplo()" class="showcase-form">
+        <div class="form-row">
+          <app-input label="Nome completo" formControlName="nome" [required]="true" [errorMessage]="erroNome()" />
+          <app-input label="E-mail" type="email" formControlName="email" [required]="true" [errorMessage]="erroEmail()" />
+        </div>
+        <div class="form-row">
+          <app-input label="CPF" mask="cpf" formControlName="cpf" [required]="true" [errorMessage]="erroCpf()" />
+          <app-input label="Telefone" mask="telefone" formControlName="telefone" [errorMessage]="erroTelefone()" />
+        </div>
+        <app-input label="Senha" type="password" formControlName="senha" [required]="true" [errorMessage]="erroSenha()" />
+
+        <div style="display: flex; align-items: center; gap: 12px; margin-top: 6px">
+          <app-button type="submit" [loading]="enviando()">Enviar</app-button>
+          @if (enviado()) {
+            <span class="muted">Formulário válido — valor do CPF (só dígitos): {{ formExemplo.controls.cpf.value }}</span>
+          }
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= APP-BUTTON ================= -->
+  <div class="card mt">
+    <div class="card-head">
+      <h3>app-button</h3>
+      <span class="sub">Variantes (primária/secundária/perigo), tamanhos (sm/md/lg) e estado loading</span>
+    </div>
+    <div class="card-pad" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center">
+      <app-button variant="primary">Primária</app-button>
+      <app-button variant="secondary">Secundária</app-button>
+      <app-button variant="danger">Perigo</app-button>
+      <app-button variant="primary" size="sm">Pequeno</app-button>
+      <app-button variant="primary" size="lg">Grande</app-button>
+      <app-button variant="primary" [loading]="true">Carregando</app-button>
+      <app-button variant="primary" [disabled]="true">Desabilitado</app-button>
+    </div>
+  </div>
+
+  <!-- ================= TABELA ================= -->
+  <div class="card mt">
+    <div class="card-head">
+      <h3>app-table</h3>
+      <span class="sub">Colunas configuráveis, coluna de status via app-badge, ações por linha e paginação</span>
+    </div>
+    <div class="card-pad">
+      <app-table
+        [columns]="colunasOficinas"
+        [data]="oficinas()"
+        [pageSize]="5"
+      >
+        <ng-template #rowActions let-oficina>
+          <button
+            type="button"
+            class="t-actions-btn"
+            [title]="oficina.ativo ? 'Inativar' : 'Reativar'"
+            (click)="abrirConfirmacaoInativacao(oficina)"
+          >
+            {{ oficina.ativo ? 'Inativar' : 'Reativar' }}
+          </button>
+        </ng-template>
+      </app-table>
+    </div>
+  </div>
+
+  <!-- ================= MODAL ================= -->
+  <div class="card mt">
+    <div class="card-head">
+      <h3>app-modal</h3>
+      <span class="sub">Abre/fecha via signal, corpo e ações por projeção, fecha ao clicar fora ou ESC</span>
+    </div>
+    <div class="card-pad" style="display: flex; gap: 10px; flex-wrap: wrap">
+      <button type="button" class="btn btn-sm" (click)="modalSimplesAberto.set(true)">
+        Abrir modal simples
+      </button>
+      <button type="button" class="btn btn-sm btn-ghost" (click)="abrirConfirmacaoInativacao(oficinas()[0])">
+        Abrir modal de confirmação
+      </button>
+    </div>
+  </div>
+</section>
+
+<app-modal [(open)]="modalSimplesAberto" title="Modal de exemplo" size="md">
+  <p>Este é o conteúdo do corpo do modal, projetado normalmente via <code>&lt;ng-content&gt;</code>.</p>
+  <p class="mt-s">Feche clicando fora, apertando ESC ou no botão abaixo.</p>
+
+  <ng-template #footer>
+    <button type="button" class="btn btn-ghost" (click)="modalSimplesAberto.set(false)">Fechar</button>
+  </ng-template>
+</app-modal>
+
+<app-modal
+  [(open)]="modalConfirmacaoAberto"
+  [title]="oficinaSelecionada()?.ativo ? 'Inativar oficina' : 'Reativar oficina'"
+  size="sm"
+>
+  @if (oficinaSelecionada(); as oficina) {
+    <p>
+      Tem certeza que deseja
+      <strong>{{ oficina.ativo ? 'inativar' : 'reativar' }}</strong>
+      a oficina <strong>"{{ oficina.nomeOficina }}"</strong>?
+    </p>
+  }
+
+  <ng-template #footer>
+    <button type="button" class="btn btn-ghost" (click)="modalConfirmacaoAberto.set(false)">Cancelar</button>
+    <button type="button" class="btn" (click)="confirmarAlteracaoStatus()">Confirmar</button>
+  </ng-template>
+</app-modal>

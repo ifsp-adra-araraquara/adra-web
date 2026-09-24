@@ -1,121 +1,90 @@
 <div>
   <!-- Etapa 1: busca por CPF -->
-  <div *ngIf="etapa() === 'buscaCpf' && !responsavelEncontrado()">
-    <div class="field">
-      <label for="cpfBusca">CPF do responsável</label>
-      <input
-        id="cpfBusca"
-        class="input"
-        type="text"
-        maxlength="14"
+  @if (etapa() === 'buscaCpf' && !responsavelEncontrado()) {
+    <div>
+      <app-input
+        label="CPF do responsável"
         placeholder="000.000.000-00"
-        [value]="cpfBusca.value"
-        (input)="onCpfBuscaInput($any($event.target).value)"
+        mask="cpf"
+        [formControl]="cpfBusca"
+        [errorMessage]="erroCpfBusca()"
       />
-      <div *ngIf="cpfBusca.touched && cpfBusca.invalid" class="hint" style="color: var(--red-400)">
-        CPF inválido.
+
+      <div class="modal-foot" style="padding: 0; border: none; justify-content: flex-start;">
+        <app-button (click)="buscarPorCpf()" [loading]="buscandoCpf()">Buscar</app-button>
+        <app-button variant="secondary" type="button" (click)="cancelar()">Cancelar</app-button>
       </div>
     </div>
-
-    <div class="modal-foot" style="padding: 0; border: none; justify-content: flex-start;">
-      <button type="button" class="btn" (click)="buscarPorCpf()" [disabled]="buscandoCpf()">
-        {{ buscandoCpf() ? 'Buscando...' : 'Buscar' }}
-      </button>
-      <button type="button" class="btn btn-ghost" (click)="cancelar()">Cancelar</button>
-    </div>
-  </div>
+  }
 
   <!-- Responsável já existe: oferece reaproveitar (CA-A01.2) -->
-  <div *ngIf="responsavelEncontrado() as existente" class="card card-pad">
-    <div class="notice notice-info">
-      <span>Já existe um responsável cadastrado com este CPF.</span>
-    </div>
+  @if (responsavelEncontrado(); as existente) {
+    <div class="card card-pad">
+      <div class="notice notice-info">
+        <span>Já existe um responsável cadastrado com este CPF.</span>
+      </div>
 
-    <p class="cell-name">{{ existente.nomeCompleto }}</p>
-    <p class="cell-sub mt-s">{{ existente.telefone || 'Sem telefone cadastrado' }}</p>
+      <p class="cell-name">{{ existente.nomeCompleto }}</p>
+      <p class="cell-sub mt-s">{{ existente.telefone || 'Sem telefone cadastrado' }}</p>
 
-    <div class="modal-foot" style="padding: 18px 0 0; border: none; justify-content: flex-start;">
-      <button type="button" class="btn" (click)="usarResponsavelEncontrado()">Usar este responsável</button>
-      <button type="button" class="btn btn-ghost" (click)="buscarOutroCpf()">Buscar outro CPF</button>
-    </div>
-  </div>
-
-  <!-- Etapa 2: formulário de cadastro/edição -->
-  <form *ngIf="etapa() === 'formulario'" [formGroup]="form" (ngSubmit)="salvar()">
-    <div *ngIf="erro()" class="notice notice-amber">
-      <span>{{ erro() }}</span>
-    </div>
-
-    <div class="field">
-      <label for="nomeCompleto">Nome completo</label>
-      <input id="nomeCompleto" class="input" type="text" formControlName="nomeCompleto" />
-      <div *ngIf="errosPorCampo()['nomeCompleto']" class="hint" style="color: var(--red-400)">
-        {{ errosPorCampo()['nomeCompleto'] }}
+      <div class="modal-foot" style="padding: 18px 0 0; border: none; justify-content: flex-start;">
+        <app-button (click)="usarResponsavelEncontrado()">Usar este responsável</app-button>
+        <app-button variant="secondary" (click)="buscarOutroCpf()">Buscar outro CPF</app-button>
       </div>
     </div>
+  }
 
-    <div class="form-row">
-      <div class="field">
-        <label for="dataNascimento">Data de nascimento</label>
-        <input
-          id="dataNascimento"
-          class="input"
+  <!-- Etapa 2: formulário de cadastro/edição -->
+  @if (etapa() === 'formulario') {
+    <form [formGroup]="form" (ngSubmit)="salvar()">
+      @if (erro()) {
+        <div class="notice notice-amber">
+          <span>{{ erro() }}</span>
+        </div>
+      }
+
+      <app-input label="Nome completo" formControlName="nomeCompleto" [required]="true" [errorMessage]="erroNome()" />
+
+      <div class="form-row">
+        <app-input
+          label="Data de nascimento"
           type="date"
           formControlName="dataNascimento"
           [max]="dataMaxima"
+          [errorMessage]="erroDataNascimento()"
         />
-        <div *ngIf="errosPorCampo()['dataNascimento']" class="hint" style="color: var(--red-400)">
-          {{ errosPorCampo()['dataNascimento'] }}
-        </div>
-      </div>
 
-      <div class="field">
-        <label for="cpf">CPF</label>
-        <input
-          id="cpf"
-          class="input"
-          type="text"
-          maxlength="14"
-          [value]="form.controls.cpf.value"
-          (input)="onCpfFormInput($any($event.target).value)"
+        <app-input
+          label="CPF"
+          mask="cpf"
+          formControlName="cpf"
+          [required]="true"
           [readonly]="modoEdicao()"
+          [errorMessage]="erroCpfForm()"
         />
-        <div *ngIf="form.controls.cpf.touched && form.controls.cpf.invalid" class="hint" style="color: var(--red-400)">
-          CPF inválido.
-        </div>
-        <div *ngIf="errosPorCampo()['cpf']" class="hint" style="color: var(--red-400)">
-          {{ errosPorCampo()['cpf'] }}
-        </div>
       </div>
-    </div>
 
-    <div class="form-row">
-      <div class="field">
-        <label for="telefone">Telefone</label>
-        <input id="telefone" class="input" type="text" formControlName="telefone" />
+      <div class="form-row">
+        <app-input label="Telefone" mask="telefone" formControlName="telefone" [errorMessage]="erroTelefone()" />
+        <app-input label="E-mail" type="email" formControlName="email" [errorMessage]="erroEmail()" />
       </div>
 
       <div class="field">
-        <label for="email">E-mail</label>
-        <input id="email" class="input" type="email" formControlName="email" />
+        <label for="endereco">Endereço</label>
+        <textarea id="endereco" class="input" formControlName="endereco"></textarea>
       </div>
-    </div>
 
-    <div class="field">
-      <label for="endereco">Endereço</label>
-      <textarea id="endereco" class="input" formControlName="endereco"></textarea>
-    </div>
+      <div class="field">
+        <label for="observacoes">Observações</label>
+        <textarea id="observacoes" class="input" formControlName="observacoes"></textarea>
+      </div>
 
-    <div class="field">
-      <label for="observacoes">Observações</label>
-      <textarea id="observacoes" class="input" formControlName="observacoes"></textarea>
-    </div>
-
-    <div class="modal-foot" style="padding: 18px 0 0; border: none; justify-content: flex-start;">
-      <button type="submit" class="btn" [disabled]="salvando()">
-        {{ salvando() ? 'Salvando...' : (modoEdicao() ? 'Salvar alterações' : 'Cadastrar') }}
-      </button>
-      <button type="button" class="btn btn-ghost" (click)="cancelar()">Cancelar</button>
-    </div>
-  </form>
+      <div class="modal-foot" style="padding: 18px 0 0; border: none; justify-content: flex-start;">
+        <app-button type="submit" [loading]="salvando()">
+          {{ modoEdicao() ? 'Salvar alterações' : 'Cadastrar' }}
+        </app-button>
+        <app-button variant="secondary" type="button" (click)="cancelar()">Cancelar</app-button>
+      </div>
+    </form>
+  }
 </div>

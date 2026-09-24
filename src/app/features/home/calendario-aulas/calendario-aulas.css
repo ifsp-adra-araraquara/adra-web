@@ -1,0 +1,148 @@
+/* ===== TOOLBAR ===== */
+.cal { display: flex; flex-direction: column; gap: 14px; }
+
+.cal-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.cal-filters { display: flex; flex-wrap: wrap; gap: 14px; }
+.cal-filters .field { margin-bottom: 0; min-width: 160px; }
+.cal-actions { display: flex; align-items: center; gap: 10px; }
+
+/* Controle segmentado Mês/Semana — visual de toggle único, não dois botões soltos */
+.seg-control {
+  display: inline-flex;
+  background: var(--gray-50);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  gap: 2px;
+}
+.seg-btn {
+  border: none;
+  background: transparent;
+  color: var(--gray-600);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 7px;
+  transition: background .15s, color .15s;
+}
+.seg-btn.active { background: #fff; color: var(--green-600); box-shadow: var(--shadow-sm); }
+.seg-btn:not(.active):hover { color: var(--green-600); }
+
+/* ===== LEGENDA ===== */
+.cal-legend { display: flex; flex-wrap: wrap; gap: 16px; }
+.legend-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; font-weight: 500; color: var(--gray-600);
+}
+.legend-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+
+/* ===== CARD DO CALENDÁRIO ===== */
+.cal-card {
+  background: #fff;
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.cal-scroll { overflow-x: auto; }
+.cal-scroll .fc { min-width: 760px; padding: 14px; }
+
+:host {
+  --fc-button-bg-color: var(--gray-50);
+  --fc-button-border-color: var(--gray-200);
+  --fc-button-text-color: var(--gray-800);
+  --fc-button-hover-bg-color: var(--green-50);
+  --fc-button-hover-border-color: var(--green-400);
+  --fc-button-active-bg-color: var(--green-400);
+  --fc-button-active-border-color: var(--green-400);
+  --fc-today-bg-color: var(--green-50);
+  --fc-border-color: var(--gray-100);
+  --fc-neutral-bg-color: var(--gray-50);
+}
+
+/* Nav + título agrupados (headerToolbar left: 'prev,next title') */
+::ng-deep .fc .fc-toolbar { margin-bottom: 14px; gap: 10px; flex-wrap: wrap; }
+::ng-deep .fc .fc-toolbar-chunk { display: flex; align-items: center; gap: 10px; }
+::ng-deep .fc .fc-toolbar-title { font-size: 17px; font-weight: 600; color: var(--gray-800); margin: 0; }
+::ng-deep .fc .fc-button {
+  font-size: 13px; font-weight: 500; padding: 6px 10px; box-shadow: none !important;
+  text-transform: none;
+}
+::ng-deep .fc .fc-today-button { border-radius: var(--radius-sm); }
+::ng-deep .fc .fc-prev-button, ::ng-deep .fc .fc-next-button { padding: 6px 9px; }
+
+/* Grade mais leve: bordas sutis, sem linhas duplicadas pesadas */
+::ng-deep .fc-theme-standard td, ::ng-deep .fc-theme-standard th { border-color: var(--gray-100); }
+::ng-deep .fc .fc-scrollgrid { border-color: var(--gray-100); }
+
+/* Cabeçalho dos dias da semana: discreto, letter-spacing, separado do conteúdo */
+::ng-deep .fc .fc-col-header-cell {
+  background: var(--gray-50);
+  padding: 8px 0;
+}
+::ng-deep .fc .fc-col-header-cell-cushion {
+  font-size: 11px; font-weight: 600; letter-spacing: .5px;
+  color: var(--gray-400); text-transform: uppercase; text-decoration: none;
+}
+
+/* Células do dia: menos altura vazia, número do dia bem posicionado */
+::ng-deep .fc .fc-daygrid-day-frame { min-height: 92px; padding: 4px; }
+::ng-deep .fc .fc-daygrid-day-top { padding: 4px 6px 2px; }
+::ng-deep .fc .fc-daygrid-day-number {
+  font-size: 12.5px; font-weight: 600; color: var(--gray-600);
+  padding: 2px 6px; border-radius: 20px;
+}
+/* Dias fora do mês corrente: bem discretos */
+::ng-deep .fc .fc-day-other .fc-daygrid-day-number { color: var(--gray-200); font-weight: 400; }
+/* Dia atual: destaque elegante, sem círculo gigante */
+::ng-deep .fc .fc-day-today .fc-daygrid-day-number {
+  background: var(--green-400); color: #fff;
+}
+
+/* "+N mais" nativo do FullCalendar, com a mesma tipografia discreta */
+::ng-deep .fc .fc-daygrid-more-link {
+  font-size: 11.5px; font-weight: 600; color: var(--green-600);
+  padding: 2px 6px;
+}
+
+/* ===== EVENTOS — mini-card horário/título/subtítulo ===== */
+::ng-deep .fc-event.fc-daygrid-event {
+  border-radius: 6px;
+  margin: 2px 3px;
+  padding: 0;
+}
+::ng-deep .fc-event .fc-event-main { padding: 0; }
+::ng-deep .evt {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 3px 6px;
+  line-height: 1.25;
+  overflow: hidden;
+}
+::ng-deep .evt-hora {
+  font-size: 10.5px; font-weight: 600; opacity: .75;
+}
+::ng-deep .evt-titulo {
+  font-size: 12px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+::ng-deep .evt-sub {
+  font-size: 10.5px; opacity: .7;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ===== RESPONSIVO ===== */
+@media (max-width: 700px) {
+  .cal-toolbar { flex-direction: column; align-items: stretch; }
+  .cal-actions { justify-content: space-between; }
+  ::ng-deep .evt-sub { display: none; } /* reduz densidade em telas pequenas */
+}

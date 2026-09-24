@@ -15,22 +15,61 @@ import { UsuarioStatusRequest } from '../../../shared/models/usuarios/UsuarioSta
 
 import { CadastroUsuario } from '../../usuarios/cadastro/cadastro-usuario';
 import { DefinirSenha } from '../../usuarios/senha/definir-senha';
+import { AuthService } from '../../../core/auth.service';
+import { Select, SelectOption } from '../../../shared/components/select/select';
+import { Input } from '../../../shared/components/input/input';
+import { Button } from '../../../shared/components/button/button';
+import { Modal } from '../../../shared/components/modal/modal';
+import { Badge } from '../../../shared/components/badge/badge';
+import { BadgeVariant } from '../../../shared/utils/badge-status.util';
 
 @Component({
   selector: 'app-usuarios',
-  imports: [FormsModule, CadastroUsuario, DefinirSenha],
+  imports: [FormsModule, CadastroUsuario, DefinirSenha, Select, Input, Button, Modal, Badge],
   templateUrl: './usuarios.html',
   styleUrl: './usuarios.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Usuarios implements OnInit {
   private http = inject(HttpClient);
+  private authService = inject(AuthService);
+
+  usuarioLogadoId = computed(() => this.authService.currentUserResponse()?.usuarioId ?? null);
+  erroGeral = signal<string | null>(null);
 
   Role = Role;
   labels = ROLE_LABELS;
 
   private readonly apiUrl = `${environment.apiUrl}/api/usuarios`;
 
+  perfilFiltroOptions: SelectOption<Role | ''>[] = [
+    { value: '', label: 'Todos os perfis' },
+    { value: Role.ADMIN, label: 'Administrador' },
+    { value: Role.COORD, label: 'Coordenador' },
+    { value: Role.SOCIO, label: 'Sociopedagógico' }
+  ];
+
+  statusFiltroOptions: SelectOption<'ativo' | 'inativo' | ''>[] = [
+    { value: '', label: 'Todos os status' },
+    { value: 'ativo', label: 'Ativo' },
+    { value: 'inativo', label: 'Inativo' }
+  ];
+
+  perfilEdicaoOptions: SelectOption<Role>[] = [
+    { value: Role.ADMIN, label: 'Administrador' },
+    { value: Role.COORD, label: 'Coordenador' },
+    { value: Role.SOCIO, label: 'Sociopedagógico' },
+    { value: Role.PROFS, label: 'Profissional de Saúde' },
+    { value: Role.FINANCEIRO, label: 'Financeiro/Administrativo' },
+    { value: Role.OFICINEIRO, label: 'Oficineiro' }
+  ];
+
+  especialidadeOptions: SelectOption<string>[] = [
+    { value: 'NEUROLOGIA', label: 'Neurologia' },
+    { value: 'PSICOPEDAGOGIA', label: 'Psicopedagogia' },
+    { value: 'PSICOLOGIA', label: 'Psicologia' }
+  ];
+  
   carregando = signal(false);
   salvando = signal(false);
 
@@ -217,7 +256,14 @@ export class Usuarios implements OnInit {
       });
   }
 
+  isProprioUsuario(usuario: UsuarioResponse): boolean {
+    return this.usuarioLogadoId() === usuario.usuarioId;
+  }
+
   alterarStatus(usuario: UsuarioResponse): void {
+    if (this.isProprioUsuario(usuario) && usuario.ativo) {
+      return;
+    }
     this.usuarioSelecionadoStatus.set(usuario);
     this.acaoStatus.set(usuario.ativo ? 'inativar' : 'reativar');
     this.mostrarModalStatus.set(true);
@@ -226,6 +272,11 @@ export class Usuarios implements OnInit {
   confirmarAlteracaoStatus(): void {
     const usuario = this.usuarioSelecionadoStatus();
     if (usuario) {
+      if (this.isProprioUsuario(usuario) && this.acaoStatus() === 'inativar') {
+        this.mostrarModalStatus.set(false);
+        this.usuarioSelecionadoStatus.set(null);
+        return;
+      }
       const novoStatus = this.acaoStatus() === 'reativar';
       this.executarAlteracaoStatus(usuario, novoStatus);
     }
@@ -235,12 +286,16 @@ export class Usuarios implements OnInit {
 
   private executarAlteracaoStatus(usuario: UsuarioResponse, ativo: boolean): void {
     const request: UsuarioStatusRequest = { ativo };
+    this.erroGeral.set(null);
 
     this.http
       .patch<UsuarioResponse>(`${this.apiUrl}/${usuario.usuarioId}/status`, request)
       .subscribe({
         next: () => this.carregarUsuarios(),
-        error: (erro) => console.error('Erro ao alterar status:', erro),
+        error: (erro) => {
+          console.error('Erro ao alterar status:', erro);
+          this.erroGeral.set(erro.error?.mensagem ?? 'Não foi possível alterar o status do usuário.');
+        },
       });
   }
 
@@ -248,22 +303,22 @@ export class Usuarios implements OnInit {
     return this.labels[perfil] ?? perfil;
   }
 
-  getBadgeClass(perfil: Role): string {
+  getBadgeVariant(perfil: Role): BadgeVariant {
     switch (perfil) {
       case Role.ADMIN:
-        return 'b-gray';
+        return 'gray';
       case Role.COORD:
-        return 'b-green';
+        return 'green';
       case Role.SOCIO:
-        return 'b-teal';
+        return 'teal';
       case Role.PROFS:
-        return 'b-blue';
+        return 'blue';
       case Role.FINANCEIRO:
-        return 'b-amber';
+        return 'amber';
       case Role.OFICINEIRO:
-        return 'b-coral';
+        return 'coral';
       default:
-        return 'b-gray';
+        return 'gray';
     }
   }
 }

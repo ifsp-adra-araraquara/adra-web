@@ -1,0 +1,20 @@
+<button
+  [type]="type()"
+  [disabled]="effectiveDisabled()"
+  [attr.aria-busy]="loading() ? 'true' : null"
+  class="app-button"
+  [class.app-button--primary]="variant() === 'primary'"
+  [class.app-button--secondary]="variant() === 'secondary'"
+  [class.app-button--danger]="variant() === 'danger'"
+  [class.app-button--sm]="size() === 'sm'"
+  [class.app-button--lg]="size() === 'lg'"
+  [class.app-button--loading]="loading()"
+  [class.app-button--block]="block()"
+>
+  @if (loading()) {
+    <span class="app-button-spinner" aria-hidden="true"></span>
+  }
+  <span class="app-button-label" [class.app-button-label--hidden]="loading()">
+    <ng-content></ng-content>
+  </span>
+</button>

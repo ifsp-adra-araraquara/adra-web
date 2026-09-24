@@ -1,0 +1,57 @@
+<app-modal [open]="aberto()" title="Configurar recorrência de aulas" size="md" (closed)="fecharModal()">
+  <div class="field">
+    <label>Turma</label>
+    <app-select [options]="turmasOpcoes()" placeholder="Selecione a turma" name="turmaId" [(ngModel)]="turmaId" />
+  </div>
+
+  <fieldset class="field">
+    <legend>Dias da semana</legend>
+    <div class="flex flex-wrap gap-2">
+      @for (dia of diasSemanaOpcoes; track dia.value) {
+        <button
+          type="button"
+          class="btn btn-sm"
+          [class.btn-ghost]="!diasSelecionados().includes(dia.value)"
+          (click)="toggleDia(dia.value)"
+        >
+          {{ dia.label }}
+        </button>
+      }
+    </div>
+  </fieldset>
+
+  <div class="form-row">
+    <app-input label="Data início" type="date" name="dataInicio" [(ngModel)]="dataInicio" />
+    <app-input label="Data fim" type="date" name="dataFim" [(ngModel)]="dataFim" />
+
+    <!-- app-input não tem type="time" ainda — mantido nativo -->
+    <div class="field">
+      <label>Horário início</label>
+      <input class="input" type="time" [(ngModel)]="horarioInicio" name="horarioInicio" />
+    </div>
+    <div class="field">
+      <label>Horário fim</label>
+      <input class="input" type="time" [(ngModel)]="horarioFim" name="horarioFim" />
+    </div>
+  </div>
+
+  <app-input label="Título (opcional)" name="titulo" [(ngModel)]="titulo" />
+
+  <!-- app-input não tem variante textarea ainda — mantido nativo -->
+  <div class="field">
+    <label>Descrição (opcional)</label>
+    <textarea class="input" [(ngModel)]="descricao" name="descricao"></textarea>
+  </div>
+
+  @if (erro()) {
+    <p class="feedback error" role="alert">{{ erro() }}</p>
+  }
+  @if (resumoGeracao()) {
+    <p class="feedback success" role="status">{{ resumoGeracao() }}</p>
+  }
+
+  <ng-template #footer>
+    <app-button variant="secondary" (click)="fecharModal()">Fechar</app-button>
+    <app-button [loading]="gerando()" [disabled]="!formularioValido()" (click)="gerar()">Gerar aulas</app-button>
+  </ng-template>
+</app-modal>

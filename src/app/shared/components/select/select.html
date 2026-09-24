@@ -1,0 +1,16 @@
+<select
+  [id]="id() || null"
+  [attr.name]="name() || null"
+  [disabled]="effectiveDisabled()"
+  [value]="selectedIndex()"
+  (change)="handleChange($event)"
+  (blur)="handleBlur()"
+  class="select"
+>
+  @if (placeholder()) {
+    <option value="-1" disabled>{{ placeholder() }}</option>
+  }
+  @for (opt of options(); track $index) {
+    <option [value]="$index" [disabled]="opt.disabled ?? false">{{ opt.label }}</option>
+  }
+</select>

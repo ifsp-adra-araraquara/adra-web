@@ -1,6 +1,3 @@
-<!-- ============================================================
-     PÁGINA: TURMAS
-     ============================================================ -->
 <section class="page" id="page-turmas">
   <div
     class="page-header"
@@ -20,43 +17,46 @@
       </p>
     </div>
 
-    <button class="btn btn-sm" style="flex-shrink: 0" (click)="abrirModalNovaTurma()">
-      + Nova turma
-    </button>
+    @if (isCoordenador()) {
+      <app-button size="sm" style="flex-shrink: 0" (click)="abrirModalNovaTurma()">
+        + Nova turma
+      </app-button>
+    }
   </div>
+
+  @if (avisoPosCriacao()) {
+    <div class="notice notice-amber" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px">
+      <span>{{ avisoPosCriacao() }}</span>
+      <app-button variant="secondary" size="sm" style="flex-shrink: 0" (click)="avisoPosCriacao.set(null)">
+        Entendi
+      </app-button>
+    </div>
+  }
 
   <div class="toolbar" style="justify-content: space-between; flex-wrap: nowrap">
     <div style="display: flex; gap: 8px; flex: 1; flex-wrap: nowrap; min-width: 0">
-      <input
-        class="input"
+      <app-input
+        label="Buscar por nome da turma"
+        [hideLabel]="true"
         placeholder="Buscar por nome da turma…"
         style="flex: 1; min-width: 0"
         [ngModel]="filtroNome"
         (ngModelChange)="onFiltroNomeChange($event)"
       />
 
-      <select
-        class="select"
+      <app-select
         style="flex-shrink: 0; width: auto"
         [ngModel]="filtroTurno"
         (ngModelChange)="onFiltroTurnoChange($event)"
-      >
-        <option value="">Todos os turnos</option>
-        @for (turno of turnosDisponiveis; track turno) {
-          <option [value]="turno">{{ turno }}</option>
-        }
-      </select>
+        [options]="filtroTurnoOptions"
+      />
 
-      <select
-        class="select"
+      <app-select
         style="flex-shrink: 0; width: auto"
         [ngModel]="filtroStatus"
         (ngModelChange)="onFiltroStatusChange($event)"
-      >
-        <option value="ativas">Ativas</option>
-        <option value="inativas">Inativas</option>
-        <option value="todas">Todas</option>
-      </select>
+        [options]="filtroStatusOptions"
+      />
     </div>
   </div>
 
@@ -65,266 +65,831 @@
       <h3>Turmas cadastradas</h3>
     </div>
 
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Nome da turma</th>
-            <th>Turno</th>
-            <th>Faixa etária</th>
-            <th>Capacidade</th>
-            <th>Status</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
+    @if (carregando()) {
+      <p class="muted" style="padding: 20px; text-align: center">Carregando…</p>
+    } @else if (erroListar()) {
+      <p class="muted" style="padding: 20px; text-align: center">{{ erroListar() }}</p>
+    } @else {
+      <app-table
+        [columns]="colunasTurmas"
+        [data]="turmas()"
+        [trackBy]="trackByTurmaId"
+      >
+        <ng-template #rowActions let-turma>
+          <button type="button" title="Criar várias aulas" (click)="abrirModalCriarAulas(turma)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+              <path d="M12 6v6" />
+              <path d="M9 9h6" />
+            </svg>
+          </button>
 
-        <tbody>
-          @if (carregando()) {
-            <tr>
-              <td colspan="6" class="muted">Carregando…</td>
-            </tr>
-          } @else if (erroListar()) {
-            <tr>
-              <td colspan="6" class="muted">{{ erroListar() }}</td>
-            </tr>
-          } @else if (turmas().length === 0) {
-            <tr>
-              <td colspan="6" class="muted">Nenhuma turma encontrada.</td>
-            </tr>
-          } @else {
-            @for (turma of turmas(); track turma.turmaId) {
-              <tr>
-                <td class="cell-name">{{ turma.nomeTurma }}</td>
-                <td>{{ turma.turno }}</td>
-                <td>{{ turma.faixaEtaria || '—' }}</td>
-                <td>{{ turma.capacidade }}</td>
-                <td>
-                  @if (turma.ativo) {
-                    <span class="badge b-green">Ativa</span>
-                  } @else {
-                    <span class="badge b-gray">Inativa</span>
-                  }
-                </td>
-                <td>
-                  <div class="t-actions">
-                    <!-- Editar -->
-                    <button
-                      type="button"
-                      title="Editar turma"
-                      (click)="abrirModalEditarTurma(turma)"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                        <path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                      </svg>
-                    </button>
+          @if (isCoordenador()) {
+            <button type="button" title="Nova aula (avulsa)" (click)="abrirModalNovaAula(turma)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+                <line x1="12" y1="14" x2="12" y2="18" />
+                <line x1="10" y1="16" x2="14" y2="16" />
+              </svg>
+            </button>
 
-                    <!-- Inativar / Reativar -->
-                    <button
-                      type="button"
-                      [title]="turma.ativo ? 'Inativar turma' : 'Reativar turma'"
-                      (click)="abrirModalStatus(turma)"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2v10" />
-                        <path d="M18.4 6.6a9 9 0 1 1-12.8 0" />
-                      </svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            }
+            <button type="button" title="Editar turma" (click)="abrirModalEditarTurma(turma)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+            </button>
           }
-        </tbody>
-      </table>
-    </div>
+
+          <button
+            type="button"
+            [title]="turma.ativo ? 'Inativar turma' : 'Reativar turma'"
+            (click)="abrirModalStatus(turma)"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v10" />
+              <path d="M18.4 6.6a9 9 0 1 1-12.8 0" />
+            </svg>
+          </button>
+        </ng-template>
+      </app-table>
+    }
   </div>
 </section>
 
 <!-- ============================================================
      MODAL: NOVA / EDITAR TURMA
      ============================================================ -->
-@if (mostrarModalForm()) {
-  <div class="modal-overlay" (click)="fecharModalForm()">
-    <div class="modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
-      <div class="modal-head">
-        <div class="mh-ico ico-green">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-          </svg>
-        </div>
-        <h2>{{ turmaEmEdicao() ? 'Editar turma' : 'Nova turma' }}</h2>
-        <button class="modal-close" (click)="fecharModalForm()" aria-label="Fechar">✕</button>
-      </div>
+<app-modal
+  [(open)]="mostrarModalForm"
+  [title]="turmaEmEdicao() ? 'Editar turma' : 'Nova turma'"
+  [size]="'lg'"
+  [closeOnBackdrop]="false"
+  [closeOnEscape]="false"
+  (closed)="fecharModalForm()"
+>
+  <div modal-icon class="mh-ico ico-green">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    </svg>
+  </div>
 
-      <div class="modal-body">
-        @if (erroSalvar()) {
-          <div class="notice notice-error">{{ erroSalvar() }}</div>
+  <div class="tabs-turma" role="tablist">
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="abaAtivaForm() === 'turma'"
+      (click)="abaAtivaForm.set('turma')"
+    >
+      Turma
+    </button>
+
+    @if (!turmaEmEdicao()) {
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="abaAtivaForm() === 'aulas'"
+        (click)="abaAtivaForm.set('aulas')"
+      >
+        Aulas
+        @if (erroAulasTurma()) {
+          <span class="tab-alert">!</span>
         }
+      </button>
+    }
+  </div>
 
-        <div class="field">
-          <label>Nome da turma</label>
-          <input
-            class="input"
-            placeholder="Ex.: CJ Grupo A"
-            [ngModel]="formTurma.nomeTurma"
-            (ngModelChange)="atualizarCampoTurma('nomeTurma', $event)"
-          />
-        </div>
+  @if (abaAtivaForm() === 'turma') {
+    @if (erroSalvar()) {
+      <div class="notice-error">{{ erroSalvar() }}</div>
+    }
 
-        <div class="form-row">
-          <div class="field">
-            <label>Turno</label>
-            <select
-              class="select"
-              [ngModel]="formTurma.turno"
-              (ngModelChange)="atualizarCampoTurma('turno', $event)"
-            >
-              <option value="">Selecione</option>
-              @for (turno of turnosDisponiveis; track turno) {
-                <option [value]="turno">{{ turno }}</option>
-              }
-            </select>
-          </div>
+    <app-input
+      label="Nome da turma"
+      placeholder="Ex.: CJ Grupo A"
+      [ngModel]="formTurma.nomeTurma"
+      (ngModelChange)="atualizarCampoTurma('nomeTurma', $event)"
+    />
 
-          <div class="field">
-            <label>Capacidade</label>
-            <input
-              class="input"
-              type="number"
-              min="1"
-              placeholder="Ex.: 24"
-              [ngModel]="formTurma.capacidade"
-              (ngModelChange)="atualizarCampoTurma('capacidade', $event)"
-            />
-          </div>
-        </div>
-
-        <div class="field">
-          <label>Faixa etária</label>
-          <select
-            class="select"
-            [ngModel]="formTurma.faixaEtaria"
-            (ngModelChange)="atualizarCampoTurma('faixaEtaria', $event)"
-          >
-            <option value="" disabled selected hidden>Selecione</option>
-            <option value="6–9 anos">6–9 anos</option>
-            <option value="10–13 anos">10–13 anos</option>
-            <option value="14–17 anos">14–17 anos</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Observações</label>
-          <textarea
-            placeholder="Informações relevantes sobre a turma"
-            [ngModel]="formTurma.observacoes"
-            (ngModelChange)="atualizarCampoTurma('observacoes', $event)"
-          ></textarea>
-        </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Oficina</label>
+        <app-select
+          [ngModel]="formTurma.oficinaId"
+          (ngModelChange)="atualizarCampoTurma('oficinaId', $event)"
+          [placeholder]="'Selecione'"
+          [options]="oficinaOptions()"
+        />
       </div>
 
-      <div class="modal-foot">
-        <button class="btn btn-ghost" (click)="fecharModalForm()">Cancelar</button>
-        <button class="btn" [disabled]="salvando()" (click)="salvarTurma()">
-          {{ salvando() ? 'Salvando...' : 'Salvar turma' }}
+      <div class="field">
+        <label>Oficineiro responsável</label>
+        <app-select
+          [ngModel]="formTurma.oficineiroResponsavelId"
+          (ngModelChange)="atualizarCampoTurma('oficineiroResponsavelId', $event)"
+          [placeholder]="'Selecione'"
+          [options]="oficineiroOptions()"
+        />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label>Turno</label>
+        <app-select
+          [ngModel]="formTurma.turno"
+          (ngModelChange)="atualizarCampoTurma('turno', $event)"
+          [placeholder]="'Selecione'"
+          [options]="turnoOptions"
+        />
+      </div>
+
+      <app-input
+        label="Capacidade"
+        type="number"
+        min="1"
+        placeholder="Ex.: 24"
+        [ngModel]="formTurma.capacidade"
+        (ngModelChange)="atualizarCampoTurma('capacidade', $event)"
+      />
+    </div>
+
+    <div class="field">
+      <label>Faixa etária</label>
+      <app-select
+        [ngModel]="formTurma.faixaEtaria"
+        (ngModelChange)="atualizarCampoTurma('faixaEtaria', $event)"
+        [placeholder]="'Selecione'"
+        [options]="faixaEtariaOptions"
+      />
+    </div>
+
+    <div class="field">
+      <label>Observações</label>
+      <textarea
+        placeholder="Informações relevantes sobre a turma"
+        [ngModel]="formTurma.observacoes"
+        (ngModelChange)="atualizarCampoTurma('observacoes', $event)"
+      ></textarea>
+    </div>
+  }
+
+  @if (abaAtivaForm() === 'aulas' && !turmaEmEdicao()) {
+    <div class="notice notice-info" style="margin-bottom: 16px">
+      Essa aba é opcional: se você não preencher nada aqui, vai ser perguntado se quer criar a
+      turma sem aulas. Se preferir, preencha tudo abaixo para já sair criando as primeiras aulas
+      dessa turma.
+    </div>
+
+    @if (erroAulasTurma()) {
+      <div class="notice-error">{{ erroAulasTurma() }}</div>
+    }
+
+    <div class="form-row">
+      <app-input
+        label="Data de início"
+        type="date"
+        [ngModel]="formAulasTurma.dataInicio"
+        (ngModelChange)="atualizarCampoAulasTurma('dataInicio', $event)"
+      />
+
+      <app-input
+        label="Data de fim"
+        type="date"
+        [ngModel]="formAulasTurma.dataFim"
+        (ngModelChange)="atualizarCampoAulasTurma('dataFim', $event)"
+      />
+    </div>
+
+    <div class="field">
+      <label>Dias da semana</label>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px;">
+        <button
+          type="button"
+          class="btn btn-sm"
+          [class.btn-primary]="formAulasTurma.diasDaSemana.includes('MONDAY')"
+          [class.btn-ghost]="!formAulasTurma.diasDaSemana.includes('MONDAY')"
+          (click)="toggleDiaSemanaNovaTurma('MONDAY')"
+        >
+          Segunda
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm"
+          [class.btn-primary]="formAulasTurma.diasDaSemana.includes('TUESDAY')"
+          [class.btn-ghost]="!formAulasTurma.diasDaSemana.includes('TUESDAY')"
+          (click)="toggleDiaSemanaNovaTurma('TUESDAY')"
+        >
+          Terça
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm"
+          [class.btn-primary]="formAulasTurma.diasDaSemana.includes('WEDNESDAY')"
+          [class.btn-ghost]="!formAulasTurma.diasDaSemana.includes('WEDNESDAY')"
+          (click)="toggleDiaSemanaNovaTurma('WEDNESDAY')"
+        >
+          Quarta
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm"
+          [class.btn-primary]="formAulasTurma.diasDaSemana.includes('THURSDAY')"
+          [class.btn-ghost]="!formAulasTurma.diasDaSemana.includes('THURSDAY')"
+          (click)="toggleDiaSemanaNovaTurma('THURSDAY')"
+        >
+          Quinta
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm"
+          [class.btn-primary]="formAulasTurma.diasDaSemana.includes('FRIDAY')"
+          [class.btn-ghost]="!formAulasTurma.diasDaSemana.includes('FRIDAY')"
+          (click)="toggleDiaSemanaNovaTurma('FRIDAY')"
+        >
+          Sexta
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm"
+          [class.btn-primary]="formAulasTurma.diasDaSemana.includes('SATURDAY')"
+          [class.btn-ghost]="!formAulasTurma.diasDaSemana.includes('SATURDAY')"
+          (click)="toggleDiaSemanaNovaTurma('SATURDAY')"
+        >
+          Sábado
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm"
+          [class.btn-primary]="formAulasTurma.diasDaSemana.includes('SUNDAY')"
+          [class.btn-ghost]="!formAulasTurma.diasDaSemana.includes('SUNDAY')"
+          (click)="toggleDiaSemanaNovaTurma('SUNDAY')"
+        >
+          Domingo
         </button>
       </div>
     </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label>Horário de início</label>
+        <input
+          class="input"
+          type="time"
+          [ngModel]="formAulasTurma.horarioInicio"
+          (ngModelChange)="atualizarCampoAulasTurma('horarioInicio', $event)"
+        />
+      </div>
+
+      <div class="field">
+        <label>Horário de fim</label>
+        <input
+          class="input"
+          type="time"
+          [ngModel]="formAulasTurma.horarioFim"
+          (ngModelChange)="atualizarCampoAulasTurma('horarioFim', $event)"
+        />
+      </div>
+    </div>
+
+    <div class="field">
+      <label>As aulas vão ter título e descrição?</label>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px;">
+        <button
+          type="button"
+          class="btn btn-sm"
+          [class.btn-primary]="comTituloDescricao()"
+          [class.btn-ghost]="!comTituloDescricao()"
+          (click)="definirComTituloDescricao()"
+        >
+          Com título e descrição
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm"
+          [class.btn-primary]="!comTituloDescricao()"
+          [class.btn-ghost]="comTituloDescricao()"
+          (click)="definirSemTituloDescricao()"
+        >
+          Sem título e descrição
+        </button>
+      </div>
+      @if (!comTituloDescricao()) {
+        <p class="muted" style="font-size: 12px; margin-top: 6px">
+          As aulas serão criadas sem título nem descrição. O oficineiro responsável vai definir o
+          título ao abrir a aula pela primeira vez.
+        </p>
+      }
+    </div>
+
+    <app-input
+      [label]="'Título' + (comTituloDescricao() ? ' (opcional)' : '')"
+      placeholder="Ex.: Aula de introdução"
+      [disabled]="!comTituloDescricao()"
+      [ngModel]="formAulasTurma.titulo"
+      (ngModelChange)="atualizarCampoAulasTurma('titulo', $event)"
+    />
+
+    <div class="field">
+      <label>Descrição {{ comTituloDescricao() ? '(opcional)' : '' }}</label>
+      <textarea
+        placeholder="Descrição das aulas"
+        [disabled]="!comTituloDescricao()"
+        [ngModel]="formAulasTurma.descricao"
+        (ngModelChange)="atualizarCampoAulasTurma('descricao', $event)"
+        rows="3"
+      ></textarea>
+    </div>
+
+    <div class="field">
+      <label>Conteúdo previsto (opcional)</label>
+      <textarea
+        placeholder="Conteúdo que será abordado"
+        [ngModel]="formAulasTurma.conteudoPrevisto"
+        (ngModelChange)="atualizarCampoAulasTurma('conteudoPrevisto', $event)"
+        rows="3"
+      ></textarea>
+    </div>
+
+    <div class="field">
+      <label>Objetivos (opcional)</label>
+      <textarea
+        placeholder="Objetivos das aulas"
+        [ngModel]="formAulasTurma.objetivos"
+        (ngModelChange)="atualizarCampoAulasTurma('objetivos', $event)"
+        rows="3"
+      ></textarea>
+    </div>
+
+    <div class="field">
+      <label>Recursos necessários (opcional)</label>
+      <textarea
+        placeholder="Materiais e recursos necessários"
+        [ngModel]="formAulasTurma.recursosNecessarios"
+        (ngModelChange)="atualizarCampoAulasTurma('recursosNecessarios', $event)"
+        rows="3"
+      ></textarea>
+    </div>
+
+    <div class="field">
+      <label>Observações (opcional)</label>
+      <textarea
+        placeholder="Observações adicionais"
+        [ngModel]="formAulasTurma.observacoes"
+        (ngModelChange)="atualizarCampoAulasTurma('observacoes', $event)"
+        rows="3"
+      ></textarea>
+    </div>
+  }
+
+  <ng-template #footer>
+    <app-button variant="secondary" (click)="fecharModalForm()">Cancelar</app-button>
+    <app-button [loading]="salvando()" (click)="salvarTurma()">Salvar turma</app-button>
+  </ng-template>
+</app-modal>
+
+<!-- ============================================================
+     MODAL: CONFIRMAR CRIAÇÃO SEM AULAS
+     ============================================================ -->
+<app-modal
+  [(open)]="mostrarConfirmacaoSemAulas"
+  title="Criar turma sem aulas?"
+  [closeOnBackdrop]="false"
+  [closeOnEscape]="false"
+  (closed)="cancelarCriarSemAulas()"
+>
+  <div modal-icon class="mh-ico ico-coral">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path
+        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+      />
+    </svg>
   </div>
-}
+
+  <p>
+    Você não preencheu a aba <strong>"Aulas"</strong>. Tem certeza que deseja criar a turma
+    <strong>"{{ formTurma.nomeTurma }}"</strong> sem nenhuma aula cadastrada?
+  </p>
+  <p class="muted" style="font-size: 13px">
+    Você pode criar as aulas depois, a qualquer momento, pela ação "Criar várias aulas" na lista
+    de turmas.
+  </p>
+
+  <ng-template #footer>
+    <app-button variant="secondary" (click)="cancelarCriarSemAulas()">
+      Cancelar, voltar pra aba Aulas
+    </app-button>
+    <app-button (click)="confirmarCriarSemAulas()">
+      Criar sem aulas
+    </app-button>
+  </ng-template>
+</app-modal>
 
 <!-- ============================================================
      MODAL: CONFIRMAR INATIVAÇÃO / REATIVAÇÃO
      ============================================================ -->
-@if (mostrarModalStatus() && turmaSelecionadaStatus()) {
-  <div class="modal-overlay open" (click)="fecharModalStatus()">
-    <div class="modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
-      <div class="modal-head">
-        <div class="mh-ico" [class]="turmaSelecionadaStatus()!.ativo ? 'ico-coral' : 'ico-green'">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            @if (turmaSelecionadaStatus()!.ativo) {
-              <path
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            } @else {
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-              <polyline points="22 4 12 14.01 9 11.01" />
-            }
-          </svg>
-        </div>
-        <div style="flex: 1">
-          <h2>
-            {{ turmaSelecionadaStatus()!.ativo ? 'Confirmar Inativação' : 'Confirmar Reativação' }}
-          </h2>
-          <p class="cell-sub">
-            Turma: <strong>{{ turmaSelecionadaStatus()!.nomeTurma }}</strong>
-          </p>
-        </div>
-        <button type="button" class="modal-close" (click)="fecharModalStatus()">✕</button>
-      </div>
+<app-modal
+  [(open)]="mostrarModalStatus"
+  [title]="turmaSelecionadaStatus()?.ativo ? 'Confirmar inativação' : 'Confirmar reativação'"
+  (closed)="fecharModalStatus()"
+>
+  <div modal-icon class="mh-ico" [class]="turmaSelecionadaStatus()?.ativo ? 'ico-coral' : 'ico-green'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      @if (turmaSelecionadaStatus()?.ativo) {
+        <path
+          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+        />
+      } @else {
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+        <polyline points="22 4 12 14.01 9 11.01" />
+      }
+    </svg>
+  </div>
 
-      <div class="modal-body">
-        @if (turmaSelecionadaStatus()!.ativo) {
-          <div class="notice notice-amber">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 8v4m0 4h.01" />
-            </svg>
-            <div>
-              <b>Impactos de inativar esta turma:</b>
-              <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px">
-                <li>
-                  <strong>Sem novos vínculos:</strong> a turma não poderá receber novos assistidos.
-                </li>
-                <li>
-                  <strong>Histórico preservado:</strong> vínculos já existentes continuam
-                  registrados.
-                </li>
-              </ul>
-            </div>
-          </div>
-        } @else {
-          <div class="notice notice-info">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 8v4m0 4h.01" />
-            </svg>
-            <div>
-              <b>Impactos de reativar esta turma:</b>
-              <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px">
-                <li>
-                  <strong>Turma volta a ficar disponível</strong> para novos vínculos de assistidos.
-                </li>
-              </ul>
-            </div>
-          </div>
-        }
-      </div>
+  <p>
+    Tem certeza que deseja
+    <strong>{{ turmaSelecionadaStatus()?.ativo ? 'inativar' : 'reativar' }}</strong>
+    a turma <strong>"{{ turmaSelecionadaStatus()?.nomeTurma }}"</strong>?
+  </p>
 
-      <div class="modal-foot">
-        <button type="button" class="btn btn-ghost" (click)="fecharModalStatus()">Cancelar</button>
-        @if (turmaSelecionadaStatus()!.ativo) {
-          <button
-            type="button"
-            class="btn btn-danger"
-            [disabled]="alterandoStatus()"
-            (click)="confirmarAlteracaoStatus()"
-          >
-            {{ alterandoStatus() ? 'Inativando...' : 'Inativar turma' }}
-          </button>
-        } @else {
-          <button
-            type="button"
-            class="btn"
-            [disabled]="alterandoStatus()"
-            (click)="confirmarAlteracaoStatus()"
-          >
-            {{ alterandoStatus() ? 'Reativando...' : 'Reativar turma' }}
-          </button>
-        }
+  @if (turmaSelecionadaStatus()?.ativo) {
+    <div class="notice notice-amber mt-s">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 8v4m0 4h.01" />
+      </svg>
+      <div>
+        <b>Impactos de inativar esta turma:</b>
+        <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px">
+          <li><strong>Sem novos vínculos:</strong> a turma não poderá receber novos assistidos.</li>
+          <li><strong>Histórico preservado:</strong> vínculos já existentes continuam registrados.</li>
+        </ul>
       </div>
     </div>
+  } @else {
+    <div class="notice notice-info mt-s">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 8v4m0 4h.01" />
+      </svg>
+      <div>
+        <b>Impactos de reativar esta turma:</b>
+        <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px">
+          <li><strong>Turma volta a ficar disponível</strong> para novos vínculos de assistidos.</li>
+        </ul>
+      </div>
+    </div>
+  }
+
+  <ng-template #footer>
+    <app-button variant="secondary" (click)="fecharModalStatus()">Cancelar</app-button>
+    @if (turmaSelecionadaStatus()?.ativo) {
+      <app-button variant="danger" [loading]="alterandoStatus()" (click)="confirmarAlteracaoStatus()">
+        Inativar turma
+      </app-button>
+    } @else {
+      <app-button [loading]="alterandoStatus()" (click)="confirmarAlteracaoStatus()">
+        Reativar turma
+      </app-button>
+    }
+  </ng-template>
+</app-modal>
+
+<!-- ============================================================
+     MODAL: CRIAR VÁRIAS AULAS
+     ============================================================ -->
+<app-modal
+  [(open)]="mostrarModalCriarAulas"
+  title="Criar várias aulas"
+  size="lg"
+  (closed)="fecharModalCriarAulas()"
+>
+  <div modal-icon class="mh-ico ico-blue">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+      <path d="M12 6v6" />
+      <path d="M9 9h6" />
+    </svg>
   </div>
-}
+
+  @if (erroSalvarAulas()) {
+    <div class="notice-error">{{ erroSalvarAulas() }}</div>
+  }
+
+  <app-input label="Turma ID" [ngModel]="formCriarAulas.turmaId" [disabled]="true" />
+
+  <div class="form-row">
+    <app-input
+      label="Data de início"
+      type="date"
+      [ngModel]="formCriarAulas.dataInicio"
+      (ngModelChange)="atualizarCampoCriarAulas('dataInicio', $event)"
+    />
+
+    <app-input
+      label="Data de fim"
+      type="date"
+      [ngModel]="formCriarAulas.dataFim"
+      (ngModelChange)="atualizarCampoCriarAulas('dataFim', $event)"
+    />
+  </div>
+
+  <div class="field">
+    <label>Dias da semana</label>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px;">
+      <button
+        type="button"
+        class="btn btn-sm"
+        [class.btn-primary]="formCriarAulas.diasDaSemana.includes('MONDAY')"
+        [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('MONDAY')"
+        (click)="toggleDiaSemana('MONDAY')"
+      >
+        Segunda
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm"
+        [class.btn-primary]="formCriarAulas.diasDaSemana.includes('TUESDAY')"
+        [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('TUESDAY')"
+        (click)="toggleDiaSemana('TUESDAY')"
+      >
+        Terça
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm"
+        [class.btn-primary]="formCriarAulas.diasDaSemana.includes('WEDNESDAY')"
+        [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('WEDNESDAY')"
+        (click)="toggleDiaSemana('WEDNESDAY')"
+      >
+        Quarta
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm"
+        [class.btn-primary]="formCriarAulas.diasDaSemana.includes('THURSDAY')"
+        [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('THURSDAY')"
+        (click)="toggleDiaSemana('THURSDAY')"
+      >
+        Quinta
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm"
+        [class.btn-primary]="formCriarAulas.diasDaSemana.includes('FRIDAY')"
+        [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('FRIDAY')"
+        (click)="toggleDiaSemana('FRIDAY')"
+      >
+        Sexta
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm"
+        [class.btn-primary]="formCriarAulas.diasDaSemana.includes('SATURDAY')"
+        [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('SATURDAY')"
+        (click)="toggleDiaSemana('SATURDAY')"
+      >
+        Sábado
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm"
+        [class.btn-primary]="formCriarAulas.diasDaSemana.includes('SUNDAY')"
+        [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('SUNDAY')"
+        (click)="toggleDiaSemana('SUNDAY')"
+      >
+        Domingo
+      </button>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="field">
+      <label>Horário de início</label>
+      <input
+        class="input"
+        type="time"
+        [ngModel]="formCriarAulas.horarioInicio"
+        (ngModelChange)="atualizarCampoCriarAulas('horarioInicio', $event)"
+      />
+    </div>
+
+    <div class="field">
+      <label>Horário de fim</label>
+      <input
+        class="input"
+        type="time"
+        [ngModel]="formCriarAulas.horarioFim"
+        (ngModelChange)="atualizarCampoCriarAulas('horarioFim', $event)"
+      />
+    </div>
+  </div>
+
+  <app-input
+    label="Título (opcional)"
+    placeholder="Ex.: Aula de introdução"
+    [maxLength]="150"
+    [ngModel]="formCriarAulas.titulo"
+    (ngModelChange)="atualizarCampoCriarAulas('titulo', $event)"
+  />
+
+  <div class="field">
+    <label>Descrição (opcional)</label>
+    <textarea
+      placeholder="Descrição das aulas"
+      [ngModel]="formCriarAulas.descricao"
+      (ngModelChange)="atualizarCampoCriarAulas('descricao', $event)"
+      rows="3"
+    ></textarea>
+  </div>
+
+  <div class="field">
+    <label>Conteúdo previsto (opcional)</label>
+    <textarea
+      placeholder="Conteúdo que será abordado"
+      [ngModel]="formCriarAulas.conteudoPrevisto"
+      (ngModelChange)="atualizarCampoCriarAulas('conteudoPrevisto', $event)"
+      rows="3"
+    ></textarea>
+  </div>
+
+  <div class="field">
+    <label>Objetivos (opcional)</label>
+    <textarea
+      placeholder="Objetivos das aulas"
+      [ngModel]="formCriarAulas.objetivos"
+      (ngModelChange)="atualizarCampoCriarAulas('objetivos', $event)"
+      rows="3"
+    ></textarea>
+  </div>
+
+  <div class="field">
+    <label>Recursos necessários (opcional)</label>
+    <textarea
+      placeholder="Materiais e recursos necessários"
+      [ngModel]="formCriarAulas.recursosNecessarios"
+      (ngModelChange)="atualizarCampoCriarAulas('recursosNecessarios', $event)"
+      rows="3"
+    ></textarea>
+  </div>
+
+  <div class="field">
+    <label>Observações (opcional)</label>
+    <textarea
+      placeholder="Observações adicionais"
+      [ngModel]="formCriarAulas.observacoes"
+      (ngModelChange)="atualizarCampoCriarAulas('observacoes', $event)"
+      rows="3"
+    ></textarea>
+  </div>
+
+  <ng-template #footer>
+    <app-button variant="secondary" (click)="fecharModalCriarAulas()">Cancelar</app-button>
+    <app-button [loading]="salvandoAulas()" (click)="salvarCriarAulas()">Criar aulas</app-button>
+  </ng-template>
+</app-modal>
+
+<!-- ============================================================
+     MODAL: NOVA AULA (AVULSA) - Coordenador
+     ============================================================ -->
+<app-modal
+  [(open)]="mostrarModalNovaAula"
+  [title]="'Nova aula — ' + (turmaNovaAula()?.nomeTurma ?? '')"
+  size="lg"
+  (closed)="fecharModalNovaAula()"
+>
+  <div modal-icon class="mh-ico ico-green">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+      <line x1="12" y1="14" x2="12" y2="18" />
+      <line x1="10" y1="16" x2="14" y2="16" />
+    </svg>
+  </div>
+
+  @if (erroSalvarNovaAula()) {
+    <div class="notice-error">{{ erroSalvarNovaAula() }}</div>
+  }
+
+  <div class="form-row">
+    <app-input
+      label="Data da aula"
+      type="date"
+      [required]="true"
+      [(ngModel)]="formNovaAula.dataAula"
+    />
+
+    <div class="field">
+      <label>Status</label>
+      <app-select
+        [(ngModel)]="formNovaAula.statusAula"
+        [options]="statusAulaOptions"
+      />
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="field">
+      <label>Horário de início</label>
+      <input
+        class="input"
+        type="time"
+        [(ngModel)]="formNovaAula.horarioInicio"
+      />
+    </div>
+
+    <div class="field">
+      <label>Horário de término</label>
+      <input
+        class="input"
+        type="time"
+        [(ngModel)]="formNovaAula.horarioFim"
+      />
+    </div>
+  </div>
+
+  <app-input
+    label="Título (opcional)"
+    [(ngModel)]="formNovaAula.titulo"
+    placeholder="Ex.: Aula Inaugural ou Reposição"
+  />
+
+  <div class="field">
+    <label>Descrição (opcional)</label>
+    <textarea
+      placeholder="Descrição da aula"
+      [(ngModel)]="formNovaAula.descricao"
+      rows="2"
+    ></textarea>
+  </div>
+
+  <div class="form-row">
+    <div class="field">
+      <label>Conteúdo previsto (opcional)</label>
+      <textarea
+        placeholder="Conteúdo planejado para a aula"
+        [(ngModel)]="formNovaAula.conteudoPrevisto"
+        rows="2"
+      ></textarea>
+    </div>
+
+    <div class="field">
+      <label>Conteúdo ministrado (opcional)</label>
+      <textarea
+        placeholder="Conteúdo que foi ministrado na aula"
+        [(ngModel)]="formNovaAula.conteudoMinistrado"
+        rows="2"
+      ></textarea>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="field">
+      <label>Objetivos (opcional)</label>
+      <textarea
+        placeholder="Objetivos pedagógicos"
+        [(ngModel)]="formNovaAula.objetivos"
+        rows="2"
+      ></textarea>
+    </div>
+
+    <div class="field">
+      <label>Recursos necessários (opcional)</label>
+      <textarea
+        placeholder="Materiais e recursos necessários"
+        [(ngModel)]="formNovaAula.recursosNecessarios"
+        rows="2"
+      ></textarea>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Observações (opcional)</label>
+    <textarea
+      placeholder="Observações adicionais"
+      [(ngModel)]="formNovaAula.observacoes"
+      rows="2"
+    ></textarea>
+  </div>
+
+  <ng-template #footer>
+    <app-button variant="secondary" [disabled]="salvandoNovaAula()" (click)="fecharModalNovaAula()">
+      Cancelar
+    </app-button>
+    <app-button
+      [loading]="salvandoNovaAula()"
+      [disabled]="!formNovaAula.dataAula"
+      (click)="salvarNovaAula()"
+    >
+      Salvar aula
+    </app-button>
+  </ng-template>
+</app-modal>

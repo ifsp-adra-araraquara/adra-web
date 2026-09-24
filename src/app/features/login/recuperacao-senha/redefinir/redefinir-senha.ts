@@ -3,12 +3,16 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/auth.service';
 import { BrandLogo } from '../../../../shared/components/brand-logo/brand-logo';
+import { SenhaForca } from '../../../../shared/components/senha-forca/senha-forca';
+import { Input } from '../../../../shared/components/input/input';
+import { Button } from '../../../../shared/components/button/button';
+import { validarPoliticaSenha } from '../../../../shared/utils/senha-forca';
 import { supabase } from '../../../../core/supabase.client';
 
 @Component({
   selector: 'app-redefinir-senha',
   standalone: true,
-  imports: [FormsModule, RouterLink, BrandLogo],
+  imports: [FormsModule, RouterLink, BrandLogo, SenhaForca, Input, Button],
   templateUrl: './redefinir-senha.html',
   styleUrl: './redefinir-senha.css'
 })
@@ -28,17 +32,10 @@ export class RedefinirSenha implements OnInit {
     this.linkValido.set(!!data.session);
   }
 
-  private validarPolitica(senha: string): string | null {
-    if (senha.length < 8) return 'A senha precisa ter no minimo 8 caracteres.';
-    if (!/[A-Za-z]/.test(senha)) return 'A senha precisa ter ao menos uma letra.';
-    if (!/[0-9]/.test(senha)) return 'A senha precisa ter ao menos um numero.';
-    return null;
-  }
-
   async redefinir(): Promise<void> {
     this.erro.set(null);
 
-    const erroPolitica = this.validarPolitica(this.novaSenha);
+    const erroPolitica = validarPoliticaSenha(this.novaSenha);
     if (erroPolitica) {
       this.erro.set(erroPolitica);
       return;

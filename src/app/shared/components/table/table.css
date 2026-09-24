@@ -1,0 +1,40 @@
+:host { display: block; }
+
+th.sortable { cursor: pointer; user-select: none; }
+th.sortable:hover { color: var(--gray-600); }
+
+.sort-icon {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 9px;
+  opacity: .3;
+  transform: rotate(180deg);
+  transition: opacity .12s, transform .12s;
+}
+.sort-icon.asc { opacity: 1; transform: rotate(180deg); }
+.sort-icon.desc { opacity: 1; transform: rotate(0deg); }
+
+.col-actions { width: 1%; white-space: nowrap; }
+
+.table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 14px 0 4px;
+}
+.page-info { font-size: 12.5px; color: var(--gray-600); }
+.page-btn {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--gray-200);
+  background: #fff;
+  border-radius: 7px;
+  font-size: 15px;
+  color: var(--gray-600);
+  transition: .14s;
+}
+.page-btn:hover:not(:disabled) { border-color: var(--green-400); color: var(--green-400); background: var(--green-50); }
+.page-btn:disabled { opacity: .4; cursor: not-allowed; }

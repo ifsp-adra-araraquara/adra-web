@@ -16,8 +16,6 @@ import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO'
 import { PaginaResponse } from '../../../shared/models/PaginaResponse';
 
 import { ResponsavelRequestDTO } from '../../../shared/models/responsavel/ResponsavelRequestDTO';
-import { ResponsavelResponseDTO } from '../../../shared/models/responsavel/ResponsavelResponseDTO';
-
 import { VinculoFamiliarRequestDTO } from '../../../shared/models/vinculoFamiliar/VinculoFamiliarRequestDTO';
 import { VinculoFamiliarComResponsavelRequestDTO } from '../../../shared/models/vinculoFamiliar/VinculoFamiliarComResponsavelRequestDTO';
 import { VinculoFamiliarResponseDTO } from '../../../shared/models/vinculoFamiliar/VinculoFamiliarResponseDTO';
@@ -25,13 +23,12 @@ import { VinculoFamiliarResponseDTO } from '../../../shared/models/vinculoFamili
 import { AuthService } from '../../../core/auth.service';
 import { Role } from '../../../shared/enum/role.enum';
 
-/*
- * Responsável ainda não salvo no backend — vive só no
- * estado local do modal até o assistido ser criado.
- * Junta os campos do ResponsavelRequestDTO com os campos
- * do vínculo familiar (que só existem depois que o
- * responsável e o assistido têm ID).
- */
+import { Select, SelectOption } from '../../../shared/components/select/select';
+import { Input } from '../../../shared/components/input/input';
+import { Button } from '../../../shared/components/button/button';
+import { Modal } from '../../../shared/components/modal/modal';
+import { Badge } from '../../../shared/components/badge/badge';
+
 interface ResponsavelPendente extends ResponsavelRequestDTO {
   parentesco: string;
   responsavelPrincipal: boolean;
@@ -42,7 +39,7 @@ interface ResponsavelPendente extends ResponsavelRequestDTO {
 @Component({
   selector: 'app-assistidos',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, Select, Input, Button, Modal, Badge],
   templateUrl: './assistidos.html',
   styleUrl: './assistidos.css',
 })
@@ -106,6 +103,31 @@ export class Assistidos implements OnInit {
   novoAssistido: AssistidoRequestDTO = this.assistidoVazio();
   assistidoIdCriado = signal<number | null>(null);
   turmasAtivas = computed(() => this.turmas().filter((turma) => turma.ativo));
+
+  filtroTurmaOptions = computed<SelectOption<number | ''>[]>(() => [
+    { value: '', label: 'Todas as turmas' },
+    ...this.turmas().map((turma) => ({ value: turma.turmaId, label: turma.nomeTurma })),
+  ]);
+
+  turmaNovoAssistidoOptions = computed<SelectOption<number | null>[]>(() => [
+    { value: null, label: 'Selecione uma turma ativa' },
+    ...this.turmasAtivas().map((turma) => ({ value: turma.turmaId, label: turma.nomeTurma })),
+  ]);
+
+  turmaEdicaoOptions = computed<SelectOption<number | null>[]>(() => [
+    { value: null, label: 'Sem turma' },
+    ...this.turmas().map((turma) => ({ value: turma.turmaId, label: turma.nomeTurma })),
+  ]);
+
+  parentescoOptions: SelectOption<string>[] = [
+    { value: '', label: 'Selecione' },
+    { value: 'Mãe', label: 'Mãe' },
+    { value: 'Pai', label: 'Pai' },
+    { value: 'Avó/Avô', label: 'Avó/Avô' },
+    { value: 'Tio/Tia', label: 'Tio/Tia' },
+    { value: 'Responsável legal', label: 'Responsável legal' },
+  ];
+
   private debounceTimerDuplicidade?: ReturnType<typeof setTimeout>;
 
   /* Modal editar assistido */
