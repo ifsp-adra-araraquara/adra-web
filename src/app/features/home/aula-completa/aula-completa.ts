@@ -10,6 +10,8 @@ import { Role } from '../../../shared/enum/role.enum';
 import { StatusAula } from '../../../shared/enum/StatusAula';
 import { StatusPresenca } from '../../../shared/enum/StatusPresenca';
 import { MotivoFalta, MOTIVO_FALTA_OPTIONS } from '../../../shared/enum/MotivoFalta';
+import { SituacaoAula } from '../../../shared/enum/SituacaoAula';
+import { calcularSituacaoAula, ehAulaDeHoje } from '../../../shared/utils/aula.util';
 import { AulaComDetalhesResponseDTO } from '../../../shared/models/aula/AulaComDetalhesResponseDTO';
 import { AulaResponseDTO } from '../../../shared/models/aula/AulaResponseDTO';
 import { AssistidoResponseDTO } from '../../../shared/models/assistido/AssistidoResponseDTO';
@@ -65,6 +67,41 @@ export class AulaCompleta implements OnInit {
   private readonly perfil = computed(() => this.auth.currentProfile());
   readonly ehSociopedagogico = computed(() => this.perfil() === Role.SOCIO);
 
+  readonly situacao = computed<SituacaoAula | null>(() => {
+    const aula = this.aula();
+    return aula ? calcularSituacaoAula(aula.dataAula, aula.statusAula) : null;
+  });
+  readonly situacaoFinalizada = computed(() => this.situacao() === SituacaoAula.FINALIZADA);
+
+  /**
+   * CA-65.3: sociopedagógico só realiza a chamada no dia da aula — a tela
+   * "Chamada" já nem deixa abrir aula de outro dia pra esse perfil, isso
+   * aqui é defesa em profundidade pra quem chega direto nessa página (ex.:
+   * link salvo, "Ver aula completa" com a aula ainda aberta de outro dia).
+   */
+  private readonly aulaEhHoje = computed(() => {
+    const aula = this.aula();
+    return aula ? ehAulaDeHoje(aula.dataAula) : false;
+  });
+  readonly mostrarAvisoForaDoDia = computed(() => this.ehSociopedagogico() && !this.aulaEhHoje());
+
+  /** Trava de edição pra chamada já finalizada — mesma lógica do <app-aula-modal>. */
+  readonly desbloquearEdicaoChamada = signal(false);
+  readonly mostrarAvisoChamadaFeita = computed(
+    () =>
+      this.ehSociopedagogico() &&
+      this.aulaEhHoje() &&
+      this.situacaoFinalizada() &&
+      !this.desbloquearEdicaoChamada(),
+  );
+  readonly textoBotaoSalvar = computed(() =>
+    this.situacaoFinalizada() ? 'Salvar alterações' : 'Salvar chamada',
+  );
+
+  desbloquearEdicao(): void {
+    this.desbloquearEdicaoChamada.set(true);
+  }
+
   readonly totalPresentes = computed(
     () => this.alunos().filter((a) => a.statusPresenca === StatusPresenca.PRESENTE).length,
   );
@@ -92,6 +129,7 @@ export class AulaCompleta implements OnInit {
   private async carregarTudo(aulaId: number): Promise<void> {
     this.carregando.set(true);
     this.erro.set(null);
+    this.desbloquearEdicaoChamada.set(false);
     try {
       const aulaBasica = await firstValueFrom(
         this.http.get<AulaResponseDTO>(`${this.api}/api/aulas/${aulaId}`),
@@ -131,7 +169,9 @@ export class AulaCompleta implements OnInit {
             return {
               assistidoId: assistido.assistidoId,
               nomeCompleto: assistido.nomeCompleto,
-              statusPresenca: presenca?.statusPresenca ?? null,
+              // Chamada nova (sem presença lançada ainda) já começa com todos
+              // presentes — o sociopedagógico só precisa mexer em quem faltou.
+              statusPresenca: presenca?.statusPresenca ?? StatusPresenca.PRESENTE,
               motivoFalta: presenca?.motivoFalta ?? null,
               observacao: presenca?.observacao ?? '',
             };
@@ -146,7 +186,7 @@ export class AulaCompleta implements OnInit {
   }
 
   marcarPresenca(aluno: LinhaAluno, status: StatusPresenca): void {
-    if (!this.ehSociopedagogico()) return;
+    if (!this.ehSociopedagogico() || this.mostrarAvisoChamadaFeita() || this.mostrarAvisoForaDoDia()) return;
     this.alunos.set(
       this.alunos().map((a) => {
         if (a.assistidoId !== aluno.assistidoId) return a;
@@ -161,21 +201,21 @@ export class AulaCompleta implements OnInit {
   }
 
   atualizarMotivoFalta(aluno: LinhaAluno, motivo: MotivoFalta): void {
-    if (!this.ehSociopedagogico()) return;
+    if (!this.ehSociopedagogico() || this.mostrarAvisoChamadaFeita() || this.mostrarAvisoForaDoDia()) return;
     this.alunos.set(
       this.alunos().map((a) => (a.assistidoId === aluno.assistidoId ? { ...a, motivoFalta: motivo } : a)),
     );
   }
 
   atualizarObservacaoFalta(aluno: LinhaAluno, observacao: string): void {
-    if (!this.ehSociopedagogico()) return;
+    if (!this.ehSociopedagogico() || this.mostrarAvisoChamadaFeita() || this.mostrarAvisoForaDoDia()) return;
     this.alunos.set(
       this.alunos().map((a) => (a.assistidoId === aluno.assistidoId ? { ...a, observacao } : a)),
     );
   }
 
   marcarTodosPresentes(): void {
-    if (!this.ehSociopedagogico()) return;
+    if (!this.ehSociopedagogico() || this.mostrarAvisoChamadaFeita() || this.mostrarAvisoForaDoDia()) return;
     this.alunos.set(
       this.alunos().map((a) => ({
         ...a,
@@ -188,7 +228,14 @@ export class AulaCompleta implements OnInit {
 
   async salvarChamada(): Promise<void> {
     const aula = this.aula();
-    if (!aula || this.salvando() || !this.ehSociopedagogico()) return;
+    if (
+      !aula ||
+      this.salvando() ||
+      !this.ehSociopedagogico() ||
+      this.mostrarAvisoChamadaFeita() ||
+      this.mostrarAvisoForaDoDia()
+    )
+      return;
 
     if (this.alunos().some((a) => !a.statusPresenca)) {
       this.erro.set('Marque a presença de todos os alunos antes de salvar.');

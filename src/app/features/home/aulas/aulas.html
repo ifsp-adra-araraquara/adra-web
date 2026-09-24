@@ -27,8 +27,36 @@
       <section class="panel" aria-labelledby="turmas-titulo">
         <div class="panel-header">
           <h2 id="turmas-titulo">Turmas</h2>
-          <span class="subtle">{{ turmas().length }} turma(s)</span>
+          <span class="subtle">{{ turmasFiltradas().length }} turma(s)</span>
         </div>
+
+        <div class="toolbar" style="justify-content: space-between; flex-wrap: nowrap">
+          <div style="display: flex; gap: 8px; flex: 1; flex-wrap: nowrap; min-width: 0">
+            <app-input
+              label="Buscar por nome da turma"
+              [hideLabel]="true"
+              placeholder="Buscar por nome da turma…"
+              style="flex: 1; min-width: 0"
+              [ngModel]="filtroTurmasNome()"
+              (ngModelChange)="filtroTurmasNome.set($event)"
+            />
+
+            <app-select
+              style="flex-shrink: 0; width: auto"
+              [ngModel]="filtroTurmasTurno()"
+              (ngModelChange)="filtroTurmasTurno.set($event)"
+              [options]="filtroTurmasTurnoOptions"
+            />
+
+            <app-select
+              style="flex-shrink: 0; width: auto"
+              [ngModel]="filtroTurmasStatus()"
+              (ngModelChange)="filtroTurmasStatus.set($event)"
+              [options]="filtroTurmasStatusOptions"
+            />
+          </div>
+        </div>
+
         <div class="table-wrapper">
           <table>
             <thead>
@@ -43,7 +71,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (turma of turmas(); track turma.turmaId) {
+              @for (turma of turmasFiltradas(); track turma.turmaId) {
               <tr>
                 <td class="strong">{{ turma.nomeTurma }}</td>
                 <td>{{ nomeOficina(turma) }}</td>
@@ -57,7 +85,7 @@
                 </td>
               </tr>
               } @empty {
-              <tr><td colspan="7" class="empty">Nenhuma turma cadastrada.</td></tr>
+              <tr><td colspan="7" class="empty">Nenhuma turma encontrada com esse filtro.</td></tr>
               }
             </tbody>
           </table>

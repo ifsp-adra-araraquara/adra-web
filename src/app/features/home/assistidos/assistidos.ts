@@ -7,12 +7,15 @@ import { firstValueFrom } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
 
+import { AuthService } from '../../../core/auth.service';
+import { Role } from '../../../shared/enum/role.enum';
 import { StatusGeral } from '../../../shared/enum/StatusGeral';
 
 import { AssistidoRequestDTO } from '../../../shared/models/assistido/AssistidoRequestDTO';
 import { AssistidoResponseDTO } from '../../../shared/models/assistido/AssistidoResponseDTO';
 import { AssistidoStatusRequestDTO } from '../../../shared/models/assistido/AssistidoStatusRequestDTO';
 import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO';
+import { VinculoTurmaAssistidoResponseDTO } from '../../../shared/models/turma/VinculoTurmaAssistidoResponseDTO';
 import { PaginaResponse } from '../../../shared/models/PaginaResponse';
 
 import { ResponsavelRequestDTO } from '../../../shared/models/responsavel/ResponsavelRequestDTO';
@@ -23,6 +26,7 @@ import { Input } from '../../../shared/components/input/input';
 import { Button } from '../../../shared/components/button/button';
 import { Modal } from '../../../shared/components/modal/modal';
 import { Badge } from '../../../shared/components/badge/badge';
+import { AulasTurmaModal } from '../aulas-turma-modal/aulas-turma-modal';
 
 interface ResponsavelPendente extends ResponsavelRequestDTO {
   parentesco: string;
@@ -34,18 +38,22 @@ interface ResponsavelPendente extends ResponsavelRequestDTO {
 @Component({
   selector: 'app-assistidos',
   standalone: true,
-  imports: [CommonModule, FormsModule, Select, Input, Button, Modal, Badge],
+  imports: [CommonModule, FormsModule, Select, Input, Button, Modal, Badge, AulasTurmaModal],
   templateUrl: './assistidos.html',
   styleUrl: './assistidos.css',
 })
 export class Assistidos implements OnInit {
   private http = inject(HttpClient);
+  private readonly auth = inject(AuthService);
 
   StatusGeral = StatusGeral;
 
   private readonly apiAssistidos = `${environment.apiUrl}/api/assistidos`;
   private readonly apiResponsaveis = `${environment.apiUrl}/api/responsaveis`;
   private readonly apiTurmas = `${environment.apiUrl}/api/turmas`;
+
+  /** Aba "Turmas" do modal do assistido (histórico + ver alunos/aulas) é só pro coordenador. */
+  readonly ehCoordenador = computed(() => this.auth.currentProfile() === Role.COORD);
 
   /* Listagem e Paginação */
   assistidos = signal<AssistidoResponseDTO[]>([]);
@@ -74,10 +82,15 @@ export class Assistidos implements OnInit {
   assistidoSelecionadoStatus = signal<AssistidoResponseDTO | null>(null);
   novoStatusDesejado = signal<StatusGeral>(StatusGeral.INATIVO);
 
-  abaVerAssistido = signal<'dados' | 'fam' | 'cham' | 'disc' | 'prn'>('dados');
+  abaVerAssistido = signal<'dados' | 'fam' | 'cham' | 'turmas' | 'disc' | 'prn'>('dados');
 
-  trocarAbaVerAssistido(aba: 'dados' | 'fam' | 'cham' | 'disc' | 'prn') {
+  trocarAbaVerAssistido(aba: 'dados' | 'fam' | 'cham' | 'turmas' | 'disc' | 'prn') {
     this.abaVerAssistido.set(aba);
+
+    // Carrega o histórico de turmas só na primeira vez que a aba é aberta.
+    if (aba === 'turmas' && this.ehCoordenador() && this.assistidoSelecionado()) {
+      this.carregarHistoricoTurmas(this.assistidoSelecionado()!.assistidoId);
+    }
   }
 
   mostrarFormNovoResponsavelVinculado = signal(false);
@@ -636,6 +649,12 @@ export class Assistidos implements OnInit {
 
     this.erroResponsaveis.set(null);
 
+    this.historicoTurmasAssistido.set([]);
+
+    this.erroHistoricoTurmas.set(null);
+
+    this.historicoTurmasCarregado = false;
+
     this.mostrarModalVisualizar.set(true);
 
     this.carregarResponsaveis(assistido.assistidoId);
@@ -649,6 +668,87 @@ export class Assistidos implements OnInit {
     this.responsaveisDoAssistido.set([]);
 
     this.erroResponsaveis.set(null);
+
+    this.historicoTurmasAssistido.set([]);
+
+    this.erroHistoricoTurmas.set(null);
+
+    this.historicoTurmasCarregado = false;
+  }
+
+  // ============================================================
+  // ABA "TURMAS" (histórico de vínculos, turma_aluno) — só coordenador
+  // ============================================================
+
+  historicoTurmasAssistido = signal<VinculoTurmaAssistidoResponseDTO[]>([]);
+
+  carregandoHistoricoTurmas = signal(false);
+
+  erroHistoricoTurmas = signal<string | null>(null);
+
+  /** Evita recarregar toda vez que a pessoa clica de novo na aba. */
+  private historicoTurmasCarregado = false;
+
+  carregarHistoricoTurmas(assistidoId: number): void {
+    if (this.historicoTurmasCarregado) return;
+
+    this.carregandoHistoricoTurmas.set(true);
+    this.erroHistoricoTurmas.set(null);
+
+    this.http
+      .get<VinculoTurmaAssistidoResponseDTO[]>(`${this.apiAssistidos}/${assistidoId}/turmas`)
+      .subscribe({
+        next: (historico) => {
+          this.historicoTurmasAssistido.set(historico);
+          this.historicoTurmasCarregado = true;
+          this.carregandoHistoricoTurmas.set(false);
+        },
+        error: (erro) => {
+          console.error('Erro ao carregar histórico de turmas:', erro);
+          this.erroHistoricoTurmas.set('Não foi possível carregar o histórico de turmas deste assistido.');
+          this.carregandoHistoricoTurmas.set(false);
+        },
+      });
+  }
+
+  /** "Ver alunos" de uma turma do histórico — mesmo padrão da tela "Aulas" do coordenador. */
+  turmaHistoricoAlunosSelecionada = signal<VinculoTurmaAssistidoResponseDTO | null>(null);
+
+  mostrarAlunosHistoricoTurma = signal(false);
+
+  alunosHistoricoTurma = signal<{ assistidoId: number; nomeCompleto: string }[]>([]);
+
+  abrirAlunosHistoricoTurma(vinculo: VinculoTurmaAssistidoResponseDTO): void {
+    this.turmaHistoricoAlunosSelecionada.set(vinculo);
+    this.mostrarAlunosHistoricoTurma.set(true);
+    this.http
+      .get<PaginaResponse<AssistidoResponseDTO>>(`${this.apiAssistidos}`, {
+        params: { turmaId: vinculo.turmaId.toString(), status: 'ATIVO', tamanho: '200' },
+      })
+      .subscribe({
+        next: (pagina) =>
+          this.alunosHistoricoTurma.set(
+            pagina.conteudo.map((a) => ({ assistidoId: a.assistidoId, nomeCompleto: a.nomeCompleto })),
+          ),
+        error: () => this.erroHistoricoTurmas.set('Não foi possível carregar os alunos da turma.'),
+      });
+  }
+
+  fecharAlunosHistoricoTurma(): void {
+    this.mostrarAlunosHistoricoTurma.set(false);
+    this.turmaHistoricoAlunosSelecionada.set(null);
+    this.alunosHistoricoTurma.set([]);
+  }
+
+  /** "Ver aulas" de uma turma do histórico — reaproveita <app-aulas-turma-modal>, com abertura de aula liberada (só coordenador chega aqui). */
+  turmaHistoricoAulasSelecionada = signal<VinculoTurmaAssistidoResponseDTO | null>(null);
+
+  abrirAulasHistoricoTurma(vinculo: VinculoTurmaAssistidoResponseDTO): void {
+    this.turmaHistoricoAulasSelecionada.set(vinculo);
+  }
+
+  fecharAulasHistoricoTurma(): void {
+    this.turmaHistoricoAulasSelecionada.set(null);
   }
 
   carregarResponsaveis(assistidoId: number): void {

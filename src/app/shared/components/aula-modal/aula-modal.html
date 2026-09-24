@@ -112,7 +112,49 @@
         <p class="feedback error" role="alert">{{ erro() }}</p>
         }
 
-        @if (mostrarFormularioChamada()) {
+        @if (mostrarAvisoForaDoDia()) {
+        <!-- ================= SOCIOPEDAGÓGICO: aula de outro dia, sem acesso à chamada ================= -->
+        <p class="feedback" role="status">
+          A chamada só pode ser realizada no dia da aula ({{ aula.dataAula }}).
+        </p>
+        } @else if (mostrarAvisoChamadaFeita()) {
+        <!-- ================= SOCIOPEDAGÓGICO: chamada já feita, travada ================= -->
+        <div class="pres-counts">
+          <div class="pc pc-p"><b>{{ totalPresentes() }}</b><span>Presentes</span></div>
+          <div class="pc pc-f"><b>{{ totalFaltas() }}</b><span>Faltas</span></div>
+          <div class="pc pc-fj"><b>{{ totalFaltasJustificadas() }}</b><span>Faltas justificadas</span></div>
+        </div>
+
+        <div class="aviso-chamada-feita">
+          <span>Esta chamada já foi realizada. Quer alterar as presenças lançadas?</span>
+          <app-button variant="secondary" size="sm" (click)="desbloquearEdicao()">Alterar chamada</app-button>
+        </div>
+
+        <ul class="lista-alunos">
+          @for (aluno of alunos(); track aluno.assistidoId) {
+          <li class="linha-aluno">
+            <span class="nome-aluno">{{ aluno.nomeCompleto }}</span>
+            @if (aluno.statusPresenca) {
+            <span
+              class="mini-badge"
+              [class.presente]="aluno.statusPresenca === StatusPresenca.PRESENTE"
+              [class.falta]="aluno.statusPresenca === StatusPresenca.FALTA"
+              [class.justificada]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+            >
+              @switch (aluno.statusPresenca) {
+                @case (StatusPresenca.PRESENTE) { Presente }
+                @case (StatusPresenca.FALTA) { Falta }
+                @case (StatusPresenca.FALTA_JUSTIFICADA) { Falta justificada }
+              }
+            </span>
+            }
+          </li>
+          } @empty {
+          <li class="empty">Nenhum aluno ativo nesta turma.</li>
+          }
+        </ul>
+
+        } @else if (mostrarFormularioChamada()) {
         <!-- ================= SOCIOPEDAGÓGICO: chamada ================= -->
         <div class="pres-counts">
           <div class="pc pc-p"><b>{{ totalPresentes() }}</b><span>Presentes</span></div>
@@ -193,11 +235,11 @@
 
         <div class="dialog-actions">
           <app-button variant="secondary" (click)="fecharModal()">Cancelar</app-button>
-          <app-button [loading]="salvando()" (click)="salvarChamada()">Salvar chamada</app-button>
+          <app-button [loading]="salvando()" (click)="salvarChamada()">{{ textoBotaoSalvar() }}</app-button>
         </div>
 
         } @else {
-        <!-- ================= OFICINEIRO / COORDENADOR, ou aula já finalizada: somente leitura ================= -->
+        <!-- ================= OFICINEIRO / COORDENADOR: somente leitura ================= -->
         <ul class="lista-alunos">
           @for (aluno of alunos(); track aluno.assistidoId) {
           <li class="linha-aluno">

@@ -2,7 +2,13 @@
   <header class="page-header">
     <p class="eyebrow">Pedagógico</p>
     <h1 id="chamada-titulo">Chamada</h1>
-    <p class="page-intro">Aulas do dia selecionado, de todas as turmas. Clique em uma aula de hoje ou já passada para abrir a chamada.</p>
+    <p class="page-intro">
+      @if (ehCoordenador()) {
+      Aulas do dia selecionado, de todas as turmas. Clique em uma aula de hoje ou já passada para abrir a chamada.
+      } @else {
+      Aulas de hoje, de todas as turmas. Clique em uma aula para realizar a chamada.
+      }
+    </p>
   </header>
 
   <section class="panel">
@@ -11,6 +17,7 @@
         <h2>Aulas do dia</h2>
         <span class="subtle">{{ dataSelecionada() === hojeISO() ? 'Hoje' : dataSelecionada() }}</span>
       </div>
+      @if (ehCoordenador()) {
       <div class="filtros">
         <app-input
           type="date"
@@ -28,6 +35,7 @@
           Hoje
         </app-button>
       </div>
+      }
     </div>
 
     @if (carregando()) {
@@ -53,7 +61,7 @@
           <tr
             [class.linha-hoje]="ehHoje(aula)"
             [class.linha-bloqueada]="!podeAbrir(aula)"
-            [attr.title]="podeAbrir(aula) ? 'Abrir aula' : 'Só é possível abrir aulas de hoje ou já passadas'"
+            [attr.title]="podeAbrir(aula) ? 'Abrir aula' : (ehCoordenador() ? 'Só é possível abrir aulas de hoje ou já passadas' : 'Você só pode realizar a chamada de aulas de hoje')"
             (click)="abrirAula(aula)"
           >
             <td>{{ aula.horarioInicio && aula.horarioFim ? aula.horarioInicio + ' - ' + aula.horarioFim : '-' }} @if (ehHoje(aula)) { <span class="tag-hoje">Hoje</span> }</td>

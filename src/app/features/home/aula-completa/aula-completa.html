@@ -27,15 +27,28 @@
   @switch (aba()) {
   @case ('alunos') {
   <section class="panel-alunos">
-    @if (ehSociopedagogico()) {
+    @if (ehSociopedagogico() && mostrarAvisoForaDoDia()) {
+    <p class="feedback" role="status">
+      A chamada só pode ser realizada no dia da aula ({{ aulaAtual.dataAula }}).
+    </p>
+    } @else if (ehSociopedagogico()) {
     <div class="toolbar">
       <div class="pres-counts">
         <div class="pc pc-p"><b>{{ totalPresentes() }}</b><span>Presentes</span></div>
         <div class="pc pc-f"><b>{{ totalFaltas() }}</b><span>Faltas</span></div>
         <div class="pc pc-fj"><b>{{ totalFaltasJustificadas() }}</b><span>Faltas justificadas</span></div>
       </div>
+      @if (!mostrarAvisoChamadaFeita()) {
       <app-button variant="secondary" size="sm" (click)="marcarTodosPresentes()">Marcar todos presentes</app-button>
+      }
     </div>
+
+    @if (mostrarAvisoChamadaFeita()) {
+    <div class="aviso-chamada-feita">
+      <span>Esta chamada já foi realizada. Quer alterar as presenças lançadas?</span>
+      <app-button variant="secondary" size="sm" (click)="desbloquearEdicao()">Alterar chamada</app-button>
+    </div>
+    }
     }
 
     <div class="alunos-grid">
@@ -50,7 +63,7 @@
             type="button"
             class="presenca-btn presente"
             [class.ativo]="aluno.statusPresenca === StatusPresenca.PRESENTE"
-            [disabled]="!ehSociopedagogico()"
+            [disabled]="!ehSociopedagogico() || mostrarAvisoChamadaFeita() || mostrarAvisoForaDoDia()"
             (click)="marcarPresenca(aluno, StatusPresenca.PRESENTE)"
             title="Presente"
           >P</button>
@@ -58,7 +71,7 @@
             type="button"
             class="presenca-btn falta"
             [class.ativo]="aluno.statusPresenca === StatusPresenca.FALTA"
-            [disabled]="!ehSociopedagogico()"
+            [disabled]="!ehSociopedagogico() || mostrarAvisoChamadaFeita() || mostrarAvisoForaDoDia()"
             (click)="marcarPresenca(aluno, StatusPresenca.FALTA)"
             title="Falta"
           >F</button>
@@ -66,7 +79,7 @@
             type="button"
             class="presenca-btn justificada"
             [class.ativo]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
-            [disabled]="!ehSociopedagogico()"
+            [disabled]="!ehSociopedagogico() || mostrarAvisoChamadaFeita() || mostrarAvisoForaDoDia()"
             (click)="marcarPresenca(aluno, StatusPresenca.FALTA_JUSTIFICADA)"
             title="Falta justificada"
           >FJ</button>
@@ -75,7 +88,7 @@
         @if (aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA) {
         <div class="falta-justificada-detalhe">
           <select
-            [disabled]="!ehSociopedagogico()"
+            [disabled]="!ehSociopedagogico() || mostrarAvisoChamadaFeita() || mostrarAvisoForaDoDia()"
             [ngModel]="aluno.motivoFalta"
             (ngModelChange)="atualizarMotivoFalta(aluno, $event)"
           >
@@ -87,7 +100,7 @@
 
           @if (aluno.motivoFalta === MotivoFalta.OUTRO) {
           <textarea
-            [disabled]="!ehSociopedagogico()"
+            [disabled]="!ehSociopedagogico() || mostrarAvisoChamadaFeita() || mostrarAvisoForaDoDia()"
             placeholder="Descreva o motivo (obrigatório)"
             rows="2"
             [ngModel]="aluno.observacao"
@@ -102,9 +115,9 @@
       }
     </div>
 
-    @if (ehSociopedagogico()) {
+    @if (ehSociopedagogico() && !mostrarAvisoChamadaFeita() && !mostrarAvisoForaDoDia()) {
     <div class="acoes-finais">
-      <app-button [loading]="salvando()" (click)="salvarChamada()">Salvar chamada</app-button>
+      <app-button [loading]="salvando()" (click)="salvarChamada()">{{ textoBotaoSalvar() }}</app-button>
     </div>
     }
   </section>

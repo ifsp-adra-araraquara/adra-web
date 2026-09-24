@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { AuthService } from '../../../core/auth.service';
+import { Role } from '../../../shared/enum/role.enum';
 import { AulaComDetalhesResponseDTO } from '../../../shared/models/aula/AulaComDetalhesResponseDTO';
 import { AulaModal } from '../../../shared/components/aula-modal/aula-modal';
 import { calcularSituacaoAula, ehAulaDeHoje, hojeISO, podeAbrirAula } from '../../../shared/utils/aula.util';
@@ -12,8 +14,11 @@ import { Button } from '../../../shared/components/button/button';
 
 /**
  * Tela "Chamada" do sociopedagogico (também acessível ao coordenador):
- * mostra, por padrao, as aulas de hoje (de todas as turmas), com um filtro
- * de data em cima pra trocar o dia e encontrar aulas passadas ou futuras.
+ * mostra, por padrao, as aulas de hoje (de todas as turmas). O filtro de
+ * data pra trocar o dia e encontrar aulas passadas/futuras só aparece pro
+ * coordenador (CA-65.3) — o sociopedagogico fica travado em hoje, tanto no
+ * filtro (escondido) quanto em `podeAbrir` (defesa em profundidade caso a
+ * lista traga alguma aula de outro dia).
  * Reaproveita o mesmo <app-aula-modal> das outras telas de aula — pro
  * sociopedagogico, clicar numa aula abre a chamada.
  *
@@ -32,6 +37,7 @@ import { Button } from '../../../shared/components/button/button';
 })
 export class Chamada implements OnInit {
   private readonly http = inject(HttpClient);
+  private readonly auth = inject(AuthService);
   private readonly api = environment.apiUrl;
 
   readonly carregando = signal(false);
@@ -42,12 +48,23 @@ export class Chamada implements OnInit {
 
   readonly hojeISO = hojeISO;
 
+  /**
+   * Só o coordenador escolhe o dia da chamada (filtro de data liberado);
+   * o sociopedagógico só realiza a chamada do dia — a tela fica travada em
+   * hoje pra esse perfil (ver template e `podeAbrir`/`ngOnInit`).
+   */
+  private readonly perfil = computed(() => this.auth.currentProfile());
+  readonly ehCoordenador = computed(() => this.perfil() === Role.COORD);
+
   ngOnInit(): void {
+    if (!this.ehCoordenador() && this.dataSelecionada() !== hojeISO()) {
+      this.dataSelecionada.set(hojeISO());
+    }
     this.carregarAulas();
   }
 
   onDataChange(valor: string): void {
-    if (!valor) return;
+    if (!valor || !this.ehCoordenador()) return;
     this.dataSelecionada.set(valor);
     this.carregarAulas();
   }
@@ -70,7 +87,12 @@ export class Chamada implements OnInit {
   }
 
   podeAbrir(aula: AulaComDetalhesResponseDTO): boolean {
-    return podeAbrirAula(aula.dataAula, aula.statusAula);
+    if (!podeAbrirAula(aula.dataAula, aula.statusAula)) return false;
+    // CA-65.3: o sociopedagógico só realiza a chamada do dia — aulas
+    // passadas (que o coordenador ainda pode abrir, pra corrigir) ficam
+    // fora do alcance dele aqui.
+    if (!this.ehCoordenador() && !ehAulaDeHoje(aula.dataAula)) return false;
+    return true;
   }
 
   ehHoje(aula: AulaComDetalhesResponseDTO): boolean {

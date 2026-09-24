@@ -9,6 +9,7 @@
     @for (item of [
     { id: 'turmas', label: 'Turmas' },
     { id: 'aulas', label: 'Aulas' },
+    { id: 'calendario', label: 'Calendário' },
     { id: 'materiais', label: 'Materiais' },
     { id: 'comunicados', label: 'Comunicados' }
     ]; track item.id) {
@@ -99,6 +100,19 @@
         </tbody>
       </table>
     </div>
+  </section>
+  }
+  @case ('calendario') {
+  <section class="panel" aria-labelledby="calendario-titulo">
+    <div class="panel-header">
+      <div><h2 id="calendario-titulo">Calendário</h2><span class="subtle">Aulas das suas turmas</span></div>
+    </div>
+    <app-calendario-aulas
+      [turmas]="[]"
+      [oficinas]="oficinasProprias()"
+      [podeGerenciar]="false"
+      [turmaIdsPermitidos]="turmaIdsPermitidos()"
+    />
   </section>
   }
   @case ('materiais') {

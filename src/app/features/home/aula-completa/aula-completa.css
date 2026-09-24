@@ -12,6 +12,21 @@ h1 { margin: 0 0 6px; font-size: 24px; }
 
 .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
 
+.aviso-chamada-feita {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 0 0 20px;
+  padding: 10px 14px;
+  border: 1px solid var(--amber-600, #d97706);
+  background: var(--amber-50, #fffbeb);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--amber-600, #d97706);
+}
+
 .pres-counts { display: flex; gap: 24px; }
 .pc { display: flex; flex-direction: column; align-items: center; min-width: 64px; }
 .pc b { font-size: 20px; line-height: 1.2; }

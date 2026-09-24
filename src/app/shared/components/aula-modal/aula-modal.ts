@@ -21,7 +21,7 @@ import { StatusAula } from '../../enum/StatusAula';
 import { StatusPresenca } from '../../enum/StatusPresenca';
 import { MotivoFalta, MOTIVO_FALTA_OPTIONS } from '../../enum/MotivoFalta';
 import { SituacaoAula } from '../../enum/SituacaoAula';
-import { calcularSituacaoAula } from '../../utils/aula.util';
+import { calcularSituacaoAula, ehAulaDeHoje } from '../../utils/aula.util';
 import { AulaComDetalhesResponseDTO } from '../../models/aula/AulaComDetalhesResponseDTO';
 import { AulaRequestDTO } from '../../models/aula/AulaRequestDTO';
 import { AulaResponseDTO } from '../../models/aula/AulaResponseDTO';
@@ -109,10 +109,43 @@ export class AulaModal implements OnChanges {
   );
   readonly situacaoFinalizada = computed(() => this.situacao() === SituacaoAula.FINALIZADA);
 
-  /** Mostra o formulário de chamada só pro sociopedagógico, e só quando a aula ainda não foi finalizada. */
+  /**
+   * Trava de edição pra chamada já finalizada: precisa de um clique
+   * explícito em "Alterar chamada" pra reabrir os campos de edição.
+   * Reseta toda vez que uma aula diferente é aberta (ver ngOnChanges).
+   */
+  readonly desbloquearEdicaoChamada = signal(false);
+
+  /**
+   * CA-65.3: sociopedagógico só realiza a chamada no dia da aula — a tela
+   * "Chamada" já nem deixa abrir aula de outro dia pra esse perfil, isso
+   * aqui é defesa em profundidade (ex.: acesso direto pela "Aula completa").
+   */
+  private readonly aulaEhHoje = computed(() => (this.aula ? ehAulaDeHoje(this.aula.dataAula) : false));
+
+  /** Mostra o formulário de chamada só pro sociopedagógico, no dia da aula — direto se ainda não foi finalizada, ou depois de desbloquear. */
   readonly mostrarFormularioChamada = computed(
-    () => this.ehSociopedagogico() && !this.situacaoFinalizada(),
+    () =>
+      this.ehSociopedagogico() &&
+      this.aulaEhHoje() &&
+      (!this.situacaoFinalizada() || this.desbloquearEdicaoChamada()),
   );
+
+  /** Aviso "essa chamada já foi feita" pro sociopedagógico, antes de liberar a edição. */
+  readonly mostrarAvisoChamadaFeita = computed(
+    () =>
+      this.ehSociopedagogico() &&
+      this.aulaEhHoje() &&
+      this.situacaoFinalizada() &&
+      !this.desbloquearEdicaoChamada(),
+  );
+
+  /** Aviso pro sociopedagógico quando a aula não é de hoje (não dá pra realizar/alterar a chamada). */
+  readonly mostrarAvisoForaDoDia = computed(() => this.ehSociopedagogico() && !this.aulaEhHoje());
+
+  desbloquearEdicao(): void {
+    this.desbloquearEdicaoChamada.set(true);
+  }
 
   readonly totalPresentes = computed(
     () => this.alunos().filter((a) => a.statusPresenca === StatusPresenca.PRESENTE).length,
@@ -124,11 +157,17 @@ export class AulaModal implements OnChanges {
     () => this.alunos().filter((a) => a.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA).length,
   );
 
+  /** Rótulo do botão de salvar: distingue "lançar pela primeira vez" de "corrigir uma já feita". */
+  readonly textoBotaoSalvar = computed(() =>
+    this.situacaoFinalizada() ? 'Salvar alterações' : 'Salvar chamada',
+  );
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['aula'] && this.aula) {
       const semTitulo = !this.aula.titulo || !this.aula.titulo.trim();
       this.mostrarDefinirCampos.set(semTitulo);
       this.erroDefinirCampos.set(null);
+      this.desbloquearEdicaoChamada.set(false);
 
       this.formDefinirCampos = {
         titulo: this.aula.titulo ?? '',
@@ -169,7 +208,9 @@ export class AulaModal implements OnChanges {
             return {
               assistidoId: assistido.assistidoId,
               nomeCompleto: assistido.nomeCompleto,
-              statusPresenca: presenca?.statusPresenca ?? null,
+              // Chamada nova (sem presença lançada ainda) já começa com todos
+              // presentes — o sociopedagógico só precisa mexer em quem faltou.
+              statusPresenca: presenca?.statusPresenca ?? StatusPresenca.PRESENTE,
               motivoFalta: presenca?.motivoFalta ?? null,
               observacao: presenca?.observacao ?? '',
             };

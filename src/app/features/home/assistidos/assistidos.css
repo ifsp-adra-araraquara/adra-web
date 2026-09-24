@@ -9,6 +9,28 @@
   padding: 20px;
 }
 
+/* Modal "Alunos da turma" da aba "Turmas" — abre de dentro do modal do
+   assistido (que já usa .modal-overlay com z-index 1000 acima), por isso
+   precisa de um z-index maior para não abrir atrás dele. Mesma ideia do
+   z-index: 1200 do aula-modal.css por cima do aulas-turma-modal. */
+.turmas-alunos-overlay {
+  z-index: 1200;
+}
+
+.modal-alunos-turma {
+  max-width: 480px;
+}
+
+.turmas-aluno-item {
+  margin: 0;
+  padding: 12px 20px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.turmas-aluno-item:last-child {
+  border-bottom: none;
+}
+
 .modal {
   width: 100%;
   max-width: 760px;

@@ -60,6 +60,21 @@
 
 .chamada-toolbar { display: flex; justify-content: flex-end; padding: 12px 20px 0; }
 
+.aviso-chamada-feita {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 12px 20px 0;
+  padding: 10px 14px;
+  border: 1px solid var(--amber-400);
+  background: var(--amber-50);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--amber-600);
+}
+
 .lista-alunos { list-style: none; margin: 0; padding: 8px 20px 20px; display: flex; flex-direction: column; gap: 6px; }
 .linha-aluno {
   display: flex;

@@ -11,6 +11,7 @@ import { CriacaoAulasRequestDTO, DiaDaSemana } from '../../../shared/models/aula
 import { OficineiroComunicadoDTO } from '../../../shared/models/oficineiro/OficineiroComunicadoDTO';
 import { OficineiroMaterialDTO } from '../../../shared/models/oficineiro/OficineiroMaterialDTO';
 import { OficineiroTurmaDTO } from '../../../shared/models/oficineiro/OficineiroTurmaDTO';
+import { OficinaResponseDTO } from '../../../shared/models/oficina/OficinaResponseDTO';
 import { AuthService } from '../../../core/auth.service';
 import { AulasTurmaModal } from '../aulas-turma-modal/aulas-turma-modal';
 import { AulaModal } from '../../../shared/components/aula-modal/aula-modal';
@@ -22,12 +23,13 @@ import { Badge } from '../../../shared/components/badge/badge';
 import { Input } from '../../../shared/components/input/input';
 import { Button } from '../../../shared/components/button/button';
 import { Modal } from '../../../shared/components/modal/modal';
+import { CalendarioAulas } from '../calendario-aulas/calendario-aulas';
 
-type AbaOficineiro = 'turmas' | 'aulas' | 'materiais' | 'comunicados';
+type AbaOficineiro = 'turmas' | 'aulas' | 'calendario' | 'materiais' | 'comunicados';
 
 @Component({
   selector: 'app-oficineiro',
-  imports: [FormsModule, AulasTurmaModal, AulaModal, Select, Badge, Input, Button, Modal],
+  imports: [FormsModule, AulasTurmaModal, AulaModal, Select, Badge, Input, Button, Modal, CalendarioAulas],
   templateUrl: './oficineiro.html',
   styleUrl: './oficineiro.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -69,6 +71,9 @@ export class Oficineiro implements OnInit {
     this.turmaAulasSelecionada.set(null);
   }
 
+  /** Aba "Calendário" — mesmo calendário do coordenador, mas só com as turmas do oficineiro. */
+  readonly turmaIdsPermitidos = computed<number[]>(() => this.turmas().map((t) => t.turmaId));
+
   readonly turmasFiltroOptions = computed<SelectOption<number | null>[]>(() => [
     { value: null, label: 'Todas as turmas' },
     ...this.turmas().map((turma) => ({
@@ -98,6 +103,8 @@ export class Oficineiro implements OnInit {
   readonly carregando = signal(false);
   readonly erro = signal<string | null>(null);
   readonly turmas = signal<OficineiroTurmaDTO[]>([]);
+  /** Só pra popular o filtro "Oficina" do calendário — GET /api/oficinas/minhas-oficinas/{id}. */
+  readonly oficinasProprias = signal<OficinaResponseDTO[]>([]);
   readonly aulas = signal<AulaComDetalhesResponseDTO[]>([]);
   readonly filtroTurmaId = signal<number | null>(null);
   readonly materiais = signal<OficineiroMaterialDTO[]>([]);
@@ -295,6 +302,7 @@ export class Oficineiro implements OnInit {
     try {
       if (aba === 'turmas') await this.carregarTurmas();
       if (aba === 'aulas') await this.carregarAulas();
+      if (aba === 'calendario') await Promise.all([this.carregarTurmas(), this.carregarOficinasProprias()]);
       if (aba === 'materiais') await this.carregarMateriais();
       if (aba === 'comunicados') await this.carregarComunicados();
     } catch {
@@ -313,6 +321,18 @@ export class Oficineiro implements OnInit {
       ),
     );
     this.turmas.set(turmas);
+  }
+
+  /** Filtro "Oficina" da aba Calendário — só as oficinas do próprio oficineiro. */
+  private async carregarOficinasProprias(): Promise<void> {
+    const usuario = this.usuarioLogado();
+    if (!usuario) return;
+    const oficinas = await firstValueFrom(
+      this.http.get<OficinaResponseDTO[]>(
+        `${this.api}/api/oficinas/minhas-oficinas/${usuario.usuarioId}`,
+      ),
+    );
+    this.oficinasProprias.set(oficinas);
   }
 
   private async carregarAulas(): Promise<void> {
@@ -361,7 +381,11 @@ export class Oficineiro implements OnInit {
 
   private ehAba(valor: string | null): valor is AbaOficineiro {
     return (
-      valor === 'turmas' || valor === 'aulas' || valor === 'materiais' || valor === 'comunicados'
+      valor === 'turmas' ||
+      valor === 'aulas' ||
+      valor === 'calendario' ||
+      valor === 'materiais' ||
+      valor === 'comunicados'
     );
   }
 

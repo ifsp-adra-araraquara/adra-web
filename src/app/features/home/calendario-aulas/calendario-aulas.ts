@@ -44,6 +44,12 @@ export class CalendarioAulas implements OnInit {
   readonly oficinas = input.required<OficinaResponseDTO[]>();
   /** Só Coordenador gera aulas e edita status; Sociopedagógico só visualiza (decisão confirmada). */
   readonly podeGerenciar = input.required<boolean>();
+  /**
+   * Restringe os eventos mostrados às turmas desta lista (usado pelo
+   * oficineiro, que só pode ver o calendário das turmas dele). `null`
+   * (padrão) mostra tudo, como no calendário do coordenador/sociopedagógico.
+   */
+  readonly turmaIdsPermitidos = input<number[] | null>(null);
 
   protected readonly oficinasOpcoes = computed<SelectOption<number>[]>(() =>
     this.oficinas().map((o) => ({ value: o.oficinaId, label: o.nomeOficina }))
@@ -89,8 +95,13 @@ export class CalendarioAulas implements OnInit {
     eventClick: (arg: EventClickArg) => this.abrirDetalheAula(arg),
   }));
 
-  readonly eventosCalendario = computed<EventInput[]>(() =>
-    this.aulaService.aulas().map((aula) => {
+  readonly eventosCalendario = computed<EventInput[]>(() => {
+    const permitidas = this.turmaIdsPermitidos();
+    const aulas = permitidas
+      ? this.aulaService.aulas().filter((aula) => aula.turmaId != null && permitidas.includes(aula.turmaId))
+      : this.aulaService.aulas();
+
+    return aulas.map((aula) => {
       const info = resolveBadgeStatus(aula.statusAula);
       const cores = this.CORES_STATUS[info?.variant ?? 'gray'];
       const titulo = aula.titulo ?? aula.nomeTurma ?? 'Aula';
@@ -104,8 +115,8 @@ export class CalendarioAulas implements OnInit {
         textColor: cores.text,
         extendedProps: { aula },
       };
-    })
-  );
+    });
+  });
 
   constructor() {
     effect(() => {

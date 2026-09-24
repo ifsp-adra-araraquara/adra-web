@@ -488,6 +488,15 @@
           >
             Chamadas
           </button>
+          @if (ehCoordenador()) {
+          <button
+            class="tab"
+            [class.active]="abaVerAssistido() === 'turmas'"
+            (click)="trocarAbaVerAssistido('turmas')"
+          >
+            Turmas
+          </button>
+          }
           <button
             class="tab"
             [class.active]="abaVerAssistido() === 'disc'"
@@ -767,6 +776,60 @@
           </div>
         }
 
+        <!-- ==================== ABA: TURMAS (histórico turma_aluno, só coordenador) ==================== -->
+        @if (abaVerAssistido() === 'turmas' && ehCoordenador()) {
+          <p class="form-sec-title">Turmas</p>
+
+          @if (carregandoHistoricoTurmas()) {
+            <div class="card card-pad"><p class="muted">Carregando turmas...</p></div>
+          } @else if (erroHistoricoTurmas()) {
+            <div class="notice notice-error">{{ erroHistoricoTurmas() }}</div>
+          } @else if (historicoTurmasAssistido().length === 0) {
+            <div class="card card-pad">
+              <p class="muted">Este assistido nunca foi vinculado a uma turma.</p>
+            </div>
+          } @else {
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Turma</th>
+                    <th>Data de entrada</th>
+                    <th>Data de saída</th>
+                    <th>Vínculo</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (vinculo of historicoTurmasAssistido(); track vinculo.turmaId + '-' + vinculo.dataEntrada) {
+                  <tr>
+                    <td class="strong">
+                      {{ vinculo.nomeTurma }}
+                      @if (!vinculo.turmaAtiva) {
+                      <span class="cell-sub"> (turma inativa)</span>
+                      }
+                    </td>
+                    <td>{{ vinculo.dataEntrada | date: 'dd/MM/yyyy' }}</td>
+                    <td>{{ vinculo.dataSaida ? (vinculo.dataSaida | date: 'dd/MM/yyyy') : '-' }}</td>
+                    <td>
+                      <app-badge [status]="vinculo.status" />
+                    </td>
+                    <td class="acoes-cell">
+                      <app-button variant="secondary" size="sm" (click)="abrirAlunosHistoricoTurma(vinculo)">
+                        Ver alunos
+                      </app-button>
+                      <app-button variant="secondary" size="sm" (click)="abrirAulasHistoricoTurma(vinculo)">
+                        Ver aulas
+                      </app-button>
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        }
+
         <!-- ==================== ABA: DISCIPLINAR ==================== -->
         @if (abaVerAssistido() === 'disc') {
           <p class="form-sec-title">Registros disciplinares</p>
@@ -805,6 +868,51 @@
     </div>
   </div>
 }
+
+<!-- MODAL: ALUNOS DA TURMA (histórico de turmas do assistido, aba "Turmas").
+     Escrito direto aqui (em vez do <app-modal> genérico) com CSS próprio da
+     assistidos, do mesmo jeito que o modal "Visualizar assistido" acima —
+     é o mesmo padrão que o "Ver aulas" (aulas-turma-modal) já usa e funciona,
+     por isso abre por cima do modal do assistido corretamente. -->
+@if (mostrarAlunosHistoricoTurma()) {
+  <div class="modal-overlay turmas-alunos-overlay" (click)="fecharAlunosHistoricoTurma()">
+    <div class="modal modal-alunos-turma" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div style="flex: 1">
+          <h3>Alunos de {{ turmaHistoricoAlunosSelecionada()?.nomeTurma ?? '' }}</h3>
+        </div>
+        <button
+          type="button"
+          class="modal-close"
+          (click)="fecharAlunosHistoricoTurma()"
+          aria-label="Fechar"
+        >
+          ✕
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="turmas-alunos-grid">
+          @for (aluno of alunosHistoricoTurma(); track aluno.assistidoId) {
+          <article class="turmas-aluno-card">
+            <span class="turmas-aluno-nome">{{ aluno.nomeCompleto }}</span>
+          </article>
+          } @empty {
+          <p class="empty">Nenhum aluno ativo encontrado.</p>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- MODAL: AULAS DA TURMA (histórico de turmas do assistido, aba "Turmas") -->
+<app-aulas-turma-modal
+  [turmaId]="turmaHistoricoAulasSelecionada()?.turmaId ?? 0"
+  [nomeTurma]="turmaHistoricoAulasSelecionada()?.nomeTurma ?? ''"
+  [aberto]="turmaHistoricoAulasSelecionada() !== null"
+  [permiteAbrirAula]="true"
+  (fechar)="fecharAulasHistoricoTurma()">
+</app-aulas-turma-modal>
 
 <!-- MODAL: CONFIRMAR ALTERAÇÃO DE STATUS ASSISTIDO (INATIVAR / REATIVAR) -->
 @if (mostrarModalStatus()) {
