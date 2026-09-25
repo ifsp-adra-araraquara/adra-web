@@ -7,6 +7,7 @@ export interface PresencaResponseDTO {
   presencaId: number | null;
   aulaId: number;
   assistidoId: number;
+  nomeCompleto: string;
   statusPresenca: StatusPresenca;
   motivoFalta: MotivoFalta | null;
   observacao: string | null;

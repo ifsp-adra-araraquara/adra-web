@@ -25,8 +25,6 @@ import { calcularSituacaoAula, ehAulaDeHoje } from '../../utils/aula.util';
 import { AulaComDetalhesResponseDTO } from '../../models/aula/AulaComDetalhesResponseDTO';
 import { AulaRequestDTO } from '../../models/aula/AulaRequestDTO';
 import { AulaResponseDTO } from '../../models/aula/AulaResponseDTO';
-import { AssistidoResponseDTO } from '../../models/assistido/AssistidoResponseDTO';
-import { PaginaResponse } from '../../models/PaginaResponse';
 import { PresencaRequestDTO } from '../../models/presenca/PresencaRequestDTO';
 import { PresencaResponseDTO } from '../../models/presenca/PresencaResponseDTO';
 import { Badge } from '../badge/badge';
@@ -182,39 +180,33 @@ export class AulaModal implements OnChanges {
     }
   }
 
+  /**
+   * Fonte única do roster: GET /api/chamadas/aula/{id} já devolve, por
+   * assistido elegível na data da aula (CA-70.1/70.2 — filtro de desligados
+   * feito no back), o status de presença inferido/lançado. Não busca mais
+   * em /api/assistidos (isso duplicava a fonte de roster com um filtro por
+   * status ATUAL do assistido, que quebrava a chamada de aulas passadas
+   * assim que alguém era desligado — ver CA-70.2).
+   */
   private async carregarDados(): Promise<void> {
     const aula = this.aula;
     if (!aula || !aula.turmaId) return;
     this.carregando.set(true);
     this.erro.set(null);
     try {
-      const [pagina, presencas] = await Promise.all([
-        firstValueFrom(
-          this.http.get<PaginaResponse<AssistidoResponseDTO>>(`${this.api}/api/assistidos`, {
-            params: { turmaId: String(aula.turmaId), status: 'ATIVO', tamanho: '200' },
-          }),
-        ),
-        firstValueFrom(
-          this.http.get<PresencaResponseDTO[]>(`${this.api}/api/chamadas/aula/${aula.aulaId}`),
-        ),
-      ]);
-
-      const presencaPorAssistido = new Map(presencas.map((p) => [p.assistidoId, p]));
+      const presencas = await firstValueFrom(
+        this.http.get<PresencaResponseDTO[]>(`${this.api}/api/chamadas/aula/${aula.aulaId}`),
+      );
 
       this.alunos.set(
-        pagina.conteudo
-          .map((assistido) => {
-            const presenca = presencaPorAssistido.get(assistido.assistidoId);
-            return {
-              assistidoId: assistido.assistidoId,
-              nomeCompleto: assistido.nomeCompleto,
-              // Chamada nova (sem presença lançada ainda) já começa com todos
-              // presentes — o sociopedagógico só precisa mexer em quem faltou.
-              statusPresenca: presenca?.statusPresenca ?? StatusPresenca.PRESENTE,
-              motivoFalta: presenca?.motivoFalta ?? null,
-              observacao: presenca?.observacao ?? '',
-            };
-          })
+        presencas
+          .map((p) => ({
+            assistidoId: p.assistidoId,
+            nomeCompleto: p.nomeCompleto,
+            statusPresenca: p.statusPresenca,
+            motivoFalta: p.motivoFalta,
+            observacao: p.observacao ?? '',
+          }))
           .sort((a, b) => a.nomeCompleto.localeCompare(b.nomeCompleto)),
       );
     } catch {
