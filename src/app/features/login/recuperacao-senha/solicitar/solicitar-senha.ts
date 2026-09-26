@@ -10,8 +10,7 @@ import { Button } from '../../../../shared/components/button/button';
   selector: 'app-solicitar-senha',
   standalone: true,
   imports: [FormsModule, RouterLink, BrandLogo, Input, Button],
-  templateUrl: './solicitar-senha.html',
-  styleUrl: './solicitar-senha.css'
+  templateUrl: './solicitar-senha.html'
 })
 export class SolicitarSenha {
   private auth = inject(AuthService);

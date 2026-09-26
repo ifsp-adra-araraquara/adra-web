@@ -1,4 +1,4 @@
-<div class="table-wrap">
+<div class="table-wrap" role="region" tabindex="0" [attr.aria-label]="label()">
   <table>
     <thead>
       <tr>
@@ -6,17 +6,20 @@
           <th
             [style.width]="column.width"
             [style.text-align]="column.align ?? 'left'"
-            [class.sortable]="column.sortable"
-            (click)="onHeaderClick(column)"
+            [attr.aria-sort]="ariaSort(column)"
           >
-            {{ column.header }}
             @if (column.sortable) {
-              <span
-                class="sort-icon"
-                [class.asc]="sortIndicator(column) === 'asc'"
-                [class.desc]="sortIndicator(column) === 'desc'"
-                aria-hidden="true"
-              >▲</span>
+              <button type="button" class="th-sort" (click)="onHeaderClick(column)">
+                {{ column.header }}
+                <span
+                  class="sort-icon"
+                  [class.asc]="sortIndicator(column) === 'asc'"
+                  [class.desc]="sortIndicator(column) === 'desc'"
+                  aria-hidden="true"
+                >▲</span>
+              </button>
+            } @else {
+              {{ column.header }}
             }
           </th>
         }

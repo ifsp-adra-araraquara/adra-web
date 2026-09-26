@@ -42,7 +42,8 @@
   width: 100%;
   min-height: 44px;
   padding: 11px 13px;
-  font-size: 14px;
+  font-size: 16px;
+  line-height: 1.25;
   font-family: inherit;
   color: var(--gray-800, #2c2c2a);
   background: var(--gray-50, #f8f7f4);
@@ -64,14 +65,14 @@
 }
 
 .app-input-control--password .app-input-control-el {
-  padding-right: 42px;
+  padding-right: 48px;
 }
 
 .app-input-toggle {
   position: absolute;
-  right: 6px;
-  width: 32px;
-  height: 32px;
+  right: 0;
+  width: 44px;
+  height: 44px;
   border: none;
   background: transparent;
   color: var(--gray-400, #888780);

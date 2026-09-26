@@ -1,8 +1,11 @@
 .sidebar {
   position: fixed; top: 0; left: 0; bottom: 0; width: var(--sidebar-w);
   background: var(--green-900); color: var(--green-100);
-  display: flex; flex-direction: column; z-index: 40;
+  display: flex; flex-direction: column; z-index: 50;
+  transform: translateX(-100%); visibility: hidden;
+  transition: transform .2s var(--ease), visibility .2s;
 }
+.sidebar.open { transform: none; visibility: visible; }
 .sidebar-head { display: flex; align-items: center; gap: 10px; padding: 16px 18px; height: var(--topbar-h); }
 .sidebar-head .brand-mark { width: 32px; height: 32px; border-radius: 8px; }
 .sidebar-logo { font-family: 'DM Serif Display', serif; font-size: 19px; color: #fff; }
@@ -24,6 +27,7 @@
   display: flex;
   align-items: center;
   gap: 11px;
+  min-height: 44px;
   padding: 9px 11px;
   border-radius: var(--radius-sm);
   color: var(--green-100);
@@ -61,9 +65,7 @@
 .sidebar-user .who { flex: 1; min-width: 0; }
 .sidebar-user .who b { display: block; color: #fff; font-size: 13px; font-weight: 600; }
 .sidebar-user .who span { font-size: 11.5px; color: var(--green-200); }
-.icon-btn {
-  width: 34px; height: 34px; border-radius: 8px; border: none; background: transparent;
-  color: var(--green-100); display: grid; place-items: center; transition: background .14s;
+
+@media (min-width: 1200px) {
+  .sidebar { transform: none; visibility: visible; transition: none; z-index: 40; }
 }
-.icon-btn:hover { background: var(--green-800); color: #fff; }
-.icon-btn svg { width: 18px; height: 18px; }

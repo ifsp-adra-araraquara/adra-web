@@ -1,4 +1,4 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, model } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../auth.service';
 import { AppModule } from '../../../shared/enum/module.enum';
@@ -14,6 +14,8 @@ import { Router } from '@angular/router';
 export class Sidebar {
   auth = inject(AuthService);
   router = inject(Router);
+
+  open = model(false);
 
   private secoesPorModulo: Record<string, string> = {
     DASHBOARD: 'Principal',
@@ -65,6 +67,7 @@ export class Sidebar {
 
   selecionarModulo(codigo: AppModule) {
     this.auth.setModule(codigo);
+    this.open.set(false);
   }
 
   logout(): void {

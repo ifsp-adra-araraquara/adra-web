@@ -21,24 +21,20 @@
     </app-button>
   </div>
 
-  <div class="toolbar" style="justify-content: space-between; flex-wrap: nowrap">
-    <div style="display: flex; gap: 8px; flex: 1; flex-wrap: nowrap; min-width: 0">
-      <app-input
-        label="Buscar por nome da oficina"
-        [hideLabel]="true"
-        placeholder="Buscar por nome da oficina…"
-        style="flex: 1; min-width: 0"
-        [ngModel]="filtroNome"
-        (ngModelChange)="onFiltroNomeChange($event)"
-      />
+  <div class="toolbar">
+    <app-input
+      label="Buscar por nome da oficina"
+      [hideLabel]="true"
+      placeholder="Buscar por nome da oficina…"
+      [ngModel]="filtroNome"
+      (ngModelChange)="onFiltroNomeChange($event)"
+    />
 
-      <app-select
-        style="flex-shrink: 0; width: auto"
-        [ngModel]="filtroStatus"
-        (ngModelChange)="onFiltroStatusChange($event)"
-        [options]="filtroStatusOptions"
-      />
-    </div>
+    <app-select
+      [ngModel]="filtroStatus"
+      (ngModelChange)="onFiltroStatusChange($event)"
+      [options]="filtroStatusOptions"
+    />
   </div>
 
   <div class="card">
@@ -52,6 +48,7 @@
       <p class="muted" style="padding: 20px; text-align: center">{{ erroListar() }}</p>
     } @else {
       <app-table
+        label="Oficinas"
         [columns]="colunasOficinas"
         [data]="oficinas()"
         [trackBy]="trackByOficinaId"

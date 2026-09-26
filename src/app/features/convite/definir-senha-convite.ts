@@ -13,8 +13,7 @@ import { validarPoliticaSenha } from '../../shared/utils/senha-forca';
   selector: 'app-definir-senha-convite',
   standalone: true,
   imports: [FormsModule, RouterLink, BrandLogo, SenhaForca, Input, Button],
-  templateUrl: './definir-senha-convite.html',
-  styleUrl: './definir-senha-convite.css'
+  templateUrl: './definir-senha-convite.html'
 })
 
 export class DefinirSenhaConvite implements OnInit {

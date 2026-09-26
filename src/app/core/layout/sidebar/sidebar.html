@@ -1,4 +1,4 @@
-<aside class="sidebar">
+<aside id="app-sidebar" class="sidebar" [class.open]="open()">
   <div class="sidebar-head">
     <div class="brand-mark" aria-hidden="true">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -18,6 +18,7 @@
 
       @for (item of grupo.itens; track item.codigo) {
         <button
+          type="button"
           class="nav-item"
           [class.active]="auth.currentModule() === item.codigo"
           (click)="selecionarModulo(item.codigo)">
@@ -33,7 +34,7 @@
       <b>{{ auth.currentUser()?.name }}</b>
       <span>{{ auth.currentUser()?.role }}</span>
     </div>
-    <button class="icon-btn" (click)="logout()" title="Sair">
+    <button type="button" class="icon-btn" (click)="logout()" title="Sair" aria-label="Sair">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
     </button>
   </div>
