@@ -400,6 +400,20 @@ tbody tr { transition: background .12s; }
 .export-fields .chip { font-size: 12px; background: var(--gray-50); border: 1px solid var(--gray-200); color: var(--gray-600); border-radius: 8px; padding: 6px 11px; display: flex; align-items: center; gap: 6px; }
 .export-fields .chip svg { width: 13px; height: 13px; color: var(--green-400); }
 
+/* ===== PRESENÇA ===== */
+.presenca-botoes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; width: 100%; }
+.presenca-btn {
+  min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  padding: 0 4px; border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm);
+  background: #fff; color: var(--gray-600); font-size: 13px; font-weight: 600; transition: .14s;
+}
+.presenca-btn svg { width: 16px; height: 16px; flex: none; }
+.presenca-btn:disabled { cursor: default; opacity: .8; }
+.presenca-btn.presente.ativo { background: var(--green-400); border-color: var(--green-400); color: #fff; }
+.presenca-btn.falta.ativo { background: var(--coral-600); border-color: var(--coral-600); color: #fff; }
+.presenca-btn.justificada.ativo { background: var(--amber-600); border-color: var(--amber-600); color: #fff; }
+.falta-justificada-detalhe { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+
 /* ===== TOOLBAR ===== */
 .toolbar { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
 .toolbar > * { width: 100%; }

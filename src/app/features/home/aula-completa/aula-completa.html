@@ -63,31 +63,41 @@
             type="button"
             class="presenca-btn presente"
             [class.ativo]="aluno.statusPresenca === StatusPresenca.PRESENTE"
+            [attr.aria-pressed]="aluno.statusPresenca === StatusPresenca.PRESENTE"
             [disabled]="!ehSociopedagogico() || mostrarAvisoChamadaFeita() || mostrarAvisoForaDoDia()"
             (click)="marcarPresenca(aluno, StatusPresenca.PRESENTE)"
-            title="Presente"
-          >P</button>
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            Presente
+          </button>
           <button
             type="button"
             class="presenca-btn falta"
             [class.ativo]="aluno.statusPresenca === StatusPresenca.FALTA"
+            [attr.aria-pressed]="aluno.statusPresenca === StatusPresenca.FALTA"
             [disabled]="!ehSociopedagogico() || mostrarAvisoChamadaFeita() || mostrarAvisoForaDoDia()"
             (click)="marcarPresenca(aluno, StatusPresenca.FALTA)"
-            title="Falta"
-          >F</button>
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Falta
+          </button>
           <button
             type="button"
             class="presenca-btn justificada"
             [class.ativo]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+            [attr.aria-pressed]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
             [disabled]="!ehSociopedagogico() || mostrarAvisoChamadaFeita() || mostrarAvisoForaDoDia()"
             (click)="marcarPresenca(aluno, StatusPresenca.FALTA_JUSTIFICADA)"
-            title="Falta justificada"
-          >FJ</button>
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+            Justificada
+          </button>
         </div>
 
         @if (aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA) {
         <div class="falta-justificada-detalhe">
           <select
+            class="select"
             [disabled]="!ehSociopedagogico() || mostrarAvisoChamadaFeita() || mostrarAvisoForaDoDia()"
             [ngModel]="aluno.motivoFalta"
             (ngModelChange)="atualizarMotivoFalta(aluno, $event)"

@@ -3,12 +3,12 @@
 .page-header { margin-bottom: 24px; }
 .eyebrow { margin: 0 0 6px; color: var(--green-400); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 h1, h2, p { margin-top: 0; }
-h1 { margin-bottom: 8px; font-size: 26px; }
+h1 { margin-bottom: 8px; font-size: 22px; }
 h2 { margin-bottom: 0; font-size: 17px; }
 .page-intro, .subtle { color: var(--gray-600); }
 
 .panel { width: 100%; border: 1px solid var(--gray-100); border-radius: 10px; background: #fff; box-shadow: var(--shadow-sm); box-sizing: border-box; }
-.panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--gray-100); flex-wrap: wrap; }
+.panel-header { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--gray-100); flex-wrap: wrap; }
 .subtle { font-size: 12px; }
 
 .filtros { display: flex; gap: 8px; align-items: center; }
@@ -28,11 +28,10 @@ h2 { margin-bottom: 0; font-size: 17px; }
   box-shadow: 0 0 0 3px var(--green-50);
 }
 
-.acoes-cell { display: flex; gap: 8px; white-space: nowrap; }
+.acoes-cell { white-space: nowrap; }
+.acoes-cell > * + * { margin-left: 8px; }
 
-.table-wrapper { width: 100%; overflow-x: auto; border-radius: 0 0 10px 10px; box-sizing: border-box; }
-
-table { width: 100%; min-width: 900px; border-collapse: collapse; font-size: 13px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
 
 th, td { padding: 12px 14px; border-bottom: 1px solid var(--gray-100); text-align: left; white-space: nowrap; }
 
@@ -74,7 +73,7 @@ tbody tr.linha-bloqueada { cursor: not-allowed; opacity: .55; }
 
 .student { margin: 0; padding: 12px 20px; border-bottom: 1px solid var(--gray-100); }
 
-@media (max-width: 640px) {
-  h1 { font-size: 22px; }
-  .panel-header { align-items: flex-start; flex-direction: column; }
+@media (min-width: 720px) {
+  h1 { font-size: 26px; }
+  .panel-header { align-items: center; flex-direction: row; }
 }

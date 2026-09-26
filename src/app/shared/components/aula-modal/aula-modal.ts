@@ -30,6 +30,7 @@ import { PresencaResponseDTO } from '../../models/presenca/PresencaResponseDTO';
 import { Badge } from '../badge/badge';
 import { Input as AppInput } from '../input/input';
 import { Button as AppButton } from '../button/button';
+import { Modal } from '../modal/modal';
 
 interface LinhaChamada {
   assistidoId: number;
@@ -70,8 +71,7 @@ interface FormDefinirCampos {
  */
 @Component({
   selector: 'app-aula-modal',
-  standalone: true,
-  imports: [FormsModule, Badge, AppInput, AppButton],
+  imports: [FormsModule, Badge, AppInput, AppButton, Modal],
   templateUrl: './aula-modal.html',
   styleUrl: './aula-modal.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
