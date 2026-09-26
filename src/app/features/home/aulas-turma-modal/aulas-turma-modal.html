@@ -1,17 +1,18 @@
 @if (aberto) {
-<div class="overlay" role="presentation" (click)="fecharModal()">
-  <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="aulas-turma-titulo" (click)="$event.stopPropagation()">
-    <div class="panel-header">
-      <h2 id="aulas-turma-titulo">Aulas de {{ nomeTurma || 'turma selecionada' }}</h2>
-      <button type="button" class="close-button" (click)="fecharModal()" aria-label="Fechar">X</button>
-    </div>
+  <app-modal
+    [open]="true"
+    size="lg"
+    [title]="'Aulas de ' + (nomeTurma || 'turma selecionada')"
+    [subtitle]="permiteAbrirAula ? 'Só é possível abrir aulas de hoje ou já passadas.' : 'Somente consulta.'"
+    (closed)="fecharModal()"
+  >
 
     @if (carregando()) {
     <p class="feedback" role="status">Carregando aulas...</p>
     } @else if (erro()) {
     <p class="feedback error" role="alert">{{ erro() }}</p>
     } @else {
-    <div class="table-wrapper">
+    <div class="table-wrap" role="region" tabindex="0" aria-label="Aulas da turma">
       <table class="aulas-table">
         <thead>
         <tr>
@@ -28,6 +29,8 @@
           [class.linha-bloqueada]="!podeAbrir(aula)"
           [attr.title]="tituloLinha(aula)"
           (click)="abrirAula(aula)"
+          [attr.tabindex]="permiteAbrirAula && podeAbrir(aula) ? 0 : null"
+          (keydown.enter)="abrirAula(aula)"
         >
           <td>{{ aula.dataAula }} @if (ehHoje(aula)) { <span class="tag-hoje">Hoje</span> }</td>
           <td>{{ aula.horarioInicio && aula.horarioFim ? aula.horarioInicio + ' - ' + aula.horarioFim : '-' }}</td>
@@ -41,12 +44,11 @@
       </table>
     </div>
     }
+  </app-modal>
 
-    <app-aula-modal
-      [aula]="aulaAberta()"
-      (fechar)="fecharAulaModal()"
-      (chamadaSalva)="aoSalvarChamada()">
-    </app-aula-modal>
-  </section>
-</div>
+  <app-aula-modal
+    [aula]="aulaAberta()"
+    (fechar)="fecharAulaModal()"
+    (chamadaSalva)="aoSalvarChamada()">
+  </app-aula-modal>
 }

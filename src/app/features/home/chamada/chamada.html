@@ -44,7 +44,7 @@
     <p class="feedback error" role="alert">{{ erro() }}</p>
     }
 
-    <div class="table-wrapper">
+    <div class="table-wrap" role="region" tabindex="0" aria-label="Aulas do dia">
       <table>
         <thead>
           <tr>
@@ -63,6 +63,8 @@
             [class.linha-bloqueada]="!podeAbrir(aula)"
             [attr.title]="podeAbrir(aula) ? 'Abrir aula' : (ehCoordenador() ? 'Só é possível abrir aulas de hoje ou já passadas' : 'Você só pode realizar a chamada de aulas de hoje')"
             (click)="abrirAula(aula)"
+            [attr.tabindex]="podeAbrir(aula) ? 0 : null"
+            (keydown.enter)="abrirAula(aula)"
           >
             <td>{{ aula.horarioInicio && aula.horarioFim ? aula.horarioInicio + ' - ' + aula.horarioFim : '-' }} @if (ehHoje(aula)) { <span class="tag-hoje">Hoje</span> }</td>
             <td class="strong">{{ aula.nomeTurma || '-' }}</td>

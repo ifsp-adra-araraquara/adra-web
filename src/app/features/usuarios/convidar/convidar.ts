@@ -12,8 +12,7 @@ import { Button } from '../../../shared/components/button/button';
   selector: 'app-convidar',
   standalone: true,
   imports: [FormsModule, RouterLink, BrandLogo, Select, Input, Button],
-  templateUrl: './convidar.html',
-  styleUrl: './convidar.css'
+  templateUrl: './convidar.html'
 })
 export class Convidar {
   private http = inject(HttpClient);

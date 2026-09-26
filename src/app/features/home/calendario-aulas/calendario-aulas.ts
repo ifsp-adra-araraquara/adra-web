@@ -8,10 +8,12 @@ import {
   input,
   signal,
 } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CalendarOptions, EventClickArg, EventContentArg, EventInput } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
+import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import { FullCalendarComponent, FullCalendarModule } from '@fullcalendar/angular';
 import { AulaService, FiltroListaAulas } from '../../../core/aula.service';
@@ -23,6 +25,8 @@ import { BadgeVariant, resolveBadgeStatus } from '../../../shared/utils/badge-st
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { RecorrenciaAulasModal } from '../recorrencia-aulas-modal/recorrencia-aulas-modal';
 import { AulaStatusModal } from '../aula-status-modal/aula-status-modal';
+
+type CalendarView = 'dayGridMonth' | 'timeGridWeek' | 'listWeek';
 
 @Component({
   selector: 'app-calendario-aulas',
@@ -76,13 +80,14 @@ export class CalendarioAulas implements OnInit {
   readonly oficinaIdFiltro = signal<number | null>(null);
   readonly dataInicioFiltro = signal<string>('');
   readonly dataFimFiltro = signal<string>('');
-  readonly visualizacao = signal<'dayGridMonth' | 'timeGridWeek'>('dayGridMonth');
+  private readonly isWide = inject(DOCUMENT).defaultView?.matchMedia('(min-width: 720px)').matches ?? true;
+  readonly visualizacao = signal<CalendarView>(this.isWide ? 'dayGridMonth' : 'listWeek');
 
   readonly mostrarRecorrencia = signal(false);
   readonly aulaSelecionada = signal<AulaComDetalhesResponseDTO | null>(null);
 
   readonly calendarOptions = computed<CalendarOptions>(() => ({
-    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
+    plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin],
     initialView: this.visualizacao(),
     locale: 'pt-br',
     headerToolbar: { left: 'prev,next title', center: '', right: 'today' },
@@ -137,7 +142,7 @@ export class CalendarioAulas implements OnInit {
     this.dataFimFiltro.set(ultimoDia.toISOString().slice(0, 10));
   }
 
-  alternarVisualizacao(view: 'dayGridMonth' | 'timeGridWeek') {
+  alternarVisualizacao(view: CalendarView) {
     this.visualizacao.set(view);
     this.calendarioRef?.getApi().changeView(view);
   }

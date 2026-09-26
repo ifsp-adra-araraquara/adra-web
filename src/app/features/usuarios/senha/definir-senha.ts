@@ -13,7 +13,6 @@ const SENHA_PATTERN = /^(?=.*[a-zA-Z])(?=.*\d).{8,}$/;
   selector: 'app-definir-senha',
   imports: [ReactiveFormsModule, Input, Button, SenhaForca],
   templateUrl: './definir-senha.html',
-  styleUrl: './definir-senha.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DefinirSenha {

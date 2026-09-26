@@ -1,20 +1,13 @@
 @if (aula) {
-<div class="overlay" role="presentation" (click)="fecharModal()">
-  <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="aula-modal-titulo" (click)="$event.stopPropagation()">
-    <div class="panel-header">
-      <div>
-        <h2 id="aula-modal-titulo">{{ aula.nomeTurma || 'Aula' }}{{ aula.titulo ? ' — ' + aula.titulo : '' }}</h2>
-        <span class="subtle">
-          {{ aula.dataAula }}{{ aula.horarioInicio && aula.horarioFim ? ' · ' + aula.horarioInicio + ' - ' + aula.horarioFim : '' }}
-        </span>
-      </div>
-      <div class="panel-header-acoes">
-        @if (!mostrarDefinirCampos()) {
-          <app-button variant="secondary" size="sm" (click)="abrirAulaCompleta()">Ver aula completa</app-button>
-        }
-        <button type="button" class="close-button" (click)="fecharModal()" aria-label="Fechar">X</button>
-      </div>
-    </div>
+<app-modal
+  [open]="true"
+  [title]="(aula.nomeTurma || 'Aula') + (aula.titulo ? ' — ' + aula.titulo : '')"
+  [subtitle]="aula.dataAula + (aula.horarioInicio && aula.horarioFim ? ' · ' + aula.horarioInicio + ' - ' + aula.horarioFim : '')"
+  (closed)="fecharModal()"
+>
+    @if (!mostrarDefinirCampos()) {
+      <app-button modal-actions variant="secondary" size="sm" (click)="abrirAulaCompleta()">Ver aula completa</app-button>
+    }
 
     @if (situacao(); as s) {
       <div class="badge-situacao-wrap"><app-badge [status]="s" /></div>
@@ -94,13 +87,6 @@
           [(ngModel)]="formDefinirCampos.observacoes"
         ></textarea>
       </div>
-
-      <div class="dialog-actions">
-        <app-button variant="secondary" (click)="fecharModal()">Cancelar</app-button>
-        <app-button [loading]="salvandoDefinirCampos()" (click)="salvarDefinirCampos()">
-          Salvar e continuar
-        </app-button>
-      </div>
     </div>
     } @else {
 
@@ -176,31 +162,31 @@
                   type="button"
                   class="presenca-btn presente"
                   [class.ativo]="aluno.statusPresenca === StatusPresenca.PRESENTE"
+                  [attr.aria-pressed]="aluno.statusPresenca === StatusPresenca.PRESENTE"
                   (click)="marcarPresenca(aluno, StatusPresenca.PRESENTE)"
-                  title="Presente"
-                  aria-label="Marcar presente"
                 >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  Presente
                 </button>
                 <button
                   type="button"
                   class="presenca-btn falta"
                   [class.ativo]="aluno.statusPresenca === StatusPresenca.FALTA"
+                  [attr.aria-pressed]="aluno.statusPresenca === StatusPresenca.FALTA"
                   (click)="marcarPresenca(aluno, StatusPresenca.FALTA)"
-                  title="Falta"
-                  aria-label="Marcar falta"
                 >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  Falta
                 </button>
                 <button
                   type="button"
                   class="presenca-btn justificada"
                   [class.ativo]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+                  [attr.aria-pressed]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
                   (click)="marcarPresenca(aluno, StatusPresenca.FALTA_JUSTIFICADA)"
-                  title="Falta justificada"
-                  aria-label="Marcar falta justificada"
                 >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                  Justificada
                 </button>
               </div>
             </div>
@@ -208,6 +194,7 @@
             @if (aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA) {
             <div class="falta-justificada-detalhe">
               <select
+                class="select"
                 [ngModel]="aluno.motivoFalta"
                 (ngModelChange)="atualizarMotivoFalta(aluno, $event)"
               >
@@ -232,11 +219,6 @@
           <li class="empty">Nenhum aluno ativo nesta turma.</li>
           }
         </ul>
-
-        <div class="dialog-actions">
-          <app-button variant="secondary" (click)="fecharModal()">Cancelar</app-button>
-          <app-button [loading]="salvando()" (click)="salvarChamada()">{{ textoBotaoSalvar() }}</app-button>
-        </div>
 
         } @else {
         <!-- ================= OFICINEIRO / COORDENADOR: somente leitura ================= -->
@@ -285,6 +267,16 @@
         }
       }
     }
-  </section>
-</div>
+
+    @if (mostrarDefinirCampos() || (mostrarFormularioChamada() && !carregando())) {
+      <ng-template #footer>
+        <app-button variant="secondary" (click)="fecharModal()">Cancelar</app-button>
+        @if (mostrarDefinirCampos()) {
+          <app-button [loading]="salvandoDefinirCampos()" (click)="salvarDefinirCampos()">Salvar e continuar</app-button>
+        } @else {
+          <app-button [loading]="salvando()" (click)="salvarChamada()">{{ textoBotaoSalvar() }}</app-button>
+        }
+      </ng-template>
+    }
+</app-modal>
 }

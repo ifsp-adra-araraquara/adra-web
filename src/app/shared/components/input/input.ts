@@ -66,6 +66,7 @@ export class Input implements ControlValueAccessor {
   });
 
   protected inputMode = computed<string | null>(() => {
+    if (this.mask() === 'telefone') return 'tel';
     if (this.mask() !== 'none') return 'numeric';
     if (this.type() === 'number') return 'decimal';
     if (this.type() === 'email') return 'email';

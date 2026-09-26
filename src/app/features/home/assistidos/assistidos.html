@@ -40,24 +40,20 @@
     </button>
   </div>
 
-  <div class="toolbar" style="justify-content: space-between; flex-wrap: nowrap">
-    <div style="display: flex; gap: 8px; flex: 1; flex-wrap: nowrap; min-width: 0">
-      <app-input
-        label="Buscar por nome"
-        [hideLabel]="true"
-        placeholder="Buscar por nome…"
-        style="flex: 1; min-width: 0"
-        [ngModel]="termoBusca()"
-        (ngModelChange)="onBuscaChange($event)"
-      />
+  <div class="toolbar">
+    <app-input
+      label="Buscar por nome"
+      [hideLabel]="true"
+      placeholder="Buscar por nome…"
+      [ngModel]="termoBusca()"
+      (ngModelChange)="onBuscaChange($event)"
+    />
 
-      <app-select
-        style="flex-shrink: 0; width: auto"
-        [ngModel]="filtroTurma()"
-        (ngModelChange)="onFiltroTurmaChange($event)"
-        [options]="filtroTurmaOptions()"
-      />
-    </div>
+    <app-select
+      [ngModel]="filtroTurma()"
+      (ngModelChange)="onFiltroTurmaChange($event)"
+      [options]="filtroTurmaOptions()"
+    />
   </div>
 
   @if (abaAtiva() === 'acomp') {
@@ -434,475 +430,443 @@
      ============================================================ -->
 
 @if (mostrarModalVisualizar() && assistidoSelecionado()) {
-  <div class="modal-overlay" (click)="fecharModalVisualizarAssistido()">
-    <div class="modal wide" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
-      <!-- CABEÇALHO -->
-      <div class="modal-head">
-        <div class="mh-ico ico-green">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-          </svg>
-        </div>
-
-        <div style="flex: 1">
-          <h2>{{ assistidoSelecionado()!.nomeCompleto }}</h2>
-          <span class="cell-sub">
-            {{ calcularIdade(assistidoSelecionado()!.dataNascimento) }} anos ·
-            <app-badge [status]="assistidoSelecionado()!.status" />
-          </span>
-        </div>
-
-        <button
-          type="button"
-          class="modal-close"
-          (click)="fecharModalVisualizarAssistido()"
-          aria-label="Fechar"
-        >
-          ✕
-        </button>
-      </div>
-
-      <!-- CORPO -->
-      <div class="modal-body">
-        <!-- ABAS -->
-        <div class="tabs">
-          <button
-            class="tab"
-            [class.active]="abaVerAssistido() === 'dados'"
-            (click)="trocarAbaVerAssistido('dados')"
-          >
-            Dados pessoais
-          </button>
-          <button
-            class="tab"
-            [class.active]="abaVerAssistido() === 'fam'"
-            (click)="trocarAbaVerAssistido('fam')"
-          >
-            Família
-          </button>
-          <button
-            class="tab"
-            [class.active]="abaVerAssistido() === 'cham'"
-            (click)="trocarAbaVerAssistido('cham')"
-          >
-            Chamadas
-          </button>
-          @if (ehCoordenador()) {
-          <button
-            class="tab"
-            [class.active]="abaVerAssistido() === 'turmas'"
-            (click)="trocarAbaVerAssistido('turmas')"
-          >
-            Turmas
-          </button>
-          }
-          <button
-            class="tab"
-            [class.active]="abaVerAssistido() === 'disc'"
-            (click)="trocarAbaVerAssistido('disc')"
-          >
-            Disciplinar
-          </button>
-          <button
-            class="tab"
-            [class.active]="abaVerAssistido() === 'prn'"
-            (click)="trocarAbaVerAssistido('prn')"
-          >
-            Prontuários
-          </button>
-        </div>
-
-        <!-- ==================== ABA: DADOS PESSOAIS ==================== -->
-        @if (abaVerAssistido() === 'dados') {
-          <p class="form-sec-title">Dados pessoais</p>
-
-          <div class="form-row">
-            <div class="field">
-              <label>Nome completo</label>
-              <div class="input" style="background: var(--gray-50)">
-                {{ assistidoSelecionado()!.nomeCompleto }}
-              </div>
-            </div>
-
-            <div class="field">
-              <label>Data de nascimento</label>
-              <div class="input" style="background: var(--gray-50)">
-                {{ assistidoSelecionado()!.dataNascimento | date: 'dd/MM/yyyy' }}
-              </div>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="field">
-              <label>CPF</label>
-              <div class="input" style="background: var(--gray-50)">
-                {{ assistidoSelecionado()!.cpf || 'Não informado' }}
-              </div>
-            </div>
-
-            <div class="field">
-              <label>Data de entrada</label>
-              <div class="input" style="background: var(--gray-50)">
-                {{
-                  assistidoSelecionado()!.dataEntrada
-                    ? (assistidoSelecionado()!.dataEntrada | date: 'dd/MM/yyyy')
-                    : 'Não informado'
-                }}
-              </div>
-            </div>
-          </div>
-
-          <div class="field mt-s">
-            <label>Necessidades específicas</label>
-            <div class="input" style="background: var(--gray-50); min-height: 45px">
-              {{ assistidoSelecionado()!.necessidadesEspecificas || 'Nenhuma registrada' }}
-            </div>
-          </div>
-
-          <div class="field mt-s">
-            <label>Observações</label>
-            <div
-              class="input"
-              style="background: var(--gray-50); min-height: 70px; white-space: pre-wrap"
-            >
-              {{ assistidoSelecionado()!.observacoes || 'Nenhuma observação registrada.' }}
-            </div>
-          </div>
-        }
-
-        <!-- ==================== ABA: FAMÍLIA ==================== -->
-        @if (abaVerAssistido() === 'fam') {
-          <p class="form-sec-title">Responsáveis</p>
-
-          @if (carregandoResponsaveis()) {
-            <div class="card card-pad"><p class="muted">Carregando responsáveis...</p></div>
-          } @else if (erroResponsaveis()) {
-            <div class="notice notice-error">{{ erroResponsaveis() }}</div>
-          } @else if (responsaveisDoAssistido().length === 0) {
-            <div class="card card-pad">
-              @if (!mostrarFormNovoResponsavelVinculado()) {
-                <p class="muted mb-s">Nenhum responsável cadastrado para este assistido.</p>
-
-                <app-button size="sm" (click)="abrirFormNovoResponsavelVinculado()">
-                  + Cadastrar responsável
-                </app-button>
-              } @else {
-                @if (erroResponsavelVinculado()) {
-                  <div class="notice notice-error mb-s">{{ erroResponsavelVinculado() }}</div>
-                }
-
-                <div class="form-row">
-                  <app-input
-                    label="Nome completo"
-                    placeholder="Nome do responsável"
-                    [ngModel]="novoResponsavelVinculado.nomeCompleto"
-                    (ngModelChange)="atualizarCampoResponsavelVinculado('nomeCompleto', $event)"
-                  />
-
-                  <div class="field">
-                    <label>Parentesco</label>
-                    <app-select
-                      [ngModel]="novoResponsavelVinculado.parentesco"
-                      (ngModelChange)="atualizarCampoResponsavelVinculado('parentesco', $event)"
-                      [options]="parentescoOptions"
-                    />
-                  </div>
-                </div>
-
-                <div class="form-row-3">
-                  <app-input
-                    label="CPF"
-                    mask="cpf"
-                    placeholder="000.000.000-00"
-                    [ngModel]="novoResponsavelVinculado.cpf"
-                    (ngModelChange)="atualizarCampoResponsavelVinculado('cpf', $event)"
-                  />
-
-                  <app-input
-                    label="Telefone"
-                    mask="telefone"
-                    placeholder="(16) 90000-0000"
-                    [ngModel]="novoResponsavelVinculado.telefone"
-                    (ngModelChange)="atualizarCampoResponsavelVinculado('telefone', $event)"
-                  />
-
-                  <app-input
-                    label="E-mail"
-                    type="email"
-                    placeholder="email@exemplo.com"
-                    [ngModel]="novoResponsavelVinculado.email"
-                    (ngModelChange)="atualizarCampoResponsavelVinculado('email', $event)"
-                  />
-                </div>
-
-                <label class="check">
-                  <input
-                    type="checkbox"
-                    [ngModel]="novoResponsavelVinculado.autorizadoRetirada"
-                    (ngModelChange)="
-                      atualizarCampoResponsavelVinculado('autorizadoRetirada', $event)
-                    "
-                  />
-                  Autorizado a retirar o assistido
-                </label>
-
-                <label class="check">
-                  <input
-                    type="checkbox"
-                    [ngModel]="novoResponsavelVinculado.contatoEmergencia"
-                    (ngModelChange)="
-                      atualizarCampoResponsavelVinculado('contatoEmergencia', $event)
-                    "
-                  />
-                  Contato de emergência
-                </label>
-
-                <label class="check">
-                  <input
-                    type="checkbox"
-                    [ngModel]="novoResponsavelVinculado.responsavelPrincipal"
-                    (ngModelChange)="
-                      atualizarCampoResponsavelVinculado('responsavelPrincipal', $event)
-                    "
-                  />
-                  Responsável principal
-                </label>
-
-                <div style="display: flex; gap: 8px; margin-top: 12px">
-                  <app-button
-                    variant="secondary"
-                    size="sm"
-                    (click)="fecharFormNovoResponsavelVinculado()"
-                  >
-                    Cancelar
-                  </app-button>
-
-                  <app-button
-                    size="sm"
-                    [loading]="salvandoResponsavelVinculado()"
-                    (click)="salvarResponsavelVinculado()"
-                  >
-                    Salvar responsável
-                  </app-button>
-                </div>
-              }
-            </div>
-          } @else {
-            <div style="display: flex; flex-direction: column; gap: 12px">
-              @for (responsavel of responsaveisDoAssistido(); track responsavel.responsavelId) {
-                <div class="card card-pad">
-                  <div
-                    style="
-                      display: flex;
-                      align-items: center;
-                      justify-content: space-between;
-                      gap: 12px;
-                      margin-bottom: 14px;
-                    "
-                  >
-                    <div>
-                      <div class="cell-name" style="font-size: 16px">
-                        {{ responsavel.nomeResponsavel }}
-                      </div>
-                      <span class="cell-sub">{{
-                        responsavel.parentesco || 'Parentesco não informado'
-                      }}</span>
-                    </div>
-
-                    <div
-                      style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end"
-                    >
-                      @if (responsavel.responsavelPrincipal) {
-                        <app-badge variant="blue" label="Principal" />
-                      }
-                      @if (responsavel.contatoEmergencia) {
-                        <app-badge variant="green" label="Emergência" />
-                      }
-                      @if (responsavel.autorizadoRetirada) {
-                        <app-badge variant="amber" label="Pode retirar" />
-                      }
-                    </div>
-                  </div>
-
-                  <div class="form-row">
-                    <div class="field">
-                      <label>CPF</label>
-                      <div class="input" style="background: var(--gray-50)">
-                        {{ responsavel.cpfResponsavel || 'Não informado' }}
-                      </div>
-                    </div>
-                    <div class="field">
-                      <label>Telefone</label>
-                      <div class="input" style="background: var(--gray-50)">
-                        {{ responsavel.telefoneResponsavel || 'Não informado' }}
-                      </div>
-                    </div>
-                    <div class="field">
-                      <label>E-mail</label>
-                      <div class="input" style="background: var(--gray-50)">
-                        {{ responsavel.emailResponsavel || 'Não informado' }}
-                      </div>
-                    </div>
-                  </div>
-
-                  @if (responsavel.observacoes) {
-                    <div class="field">
-                      <label>Observações</label>
-                      <div class="input" style="background: var(--gray-50); white-space: pre-wrap">
-                        {{ responsavel.observacoes }}
-                      </div>
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-          }
-        }
-
-        <!-- ==================== ABA: CHAMADAS ==================== -->
-        @if (abaVerAssistido() === 'cham') {
-          <p class="form-sec-title">Frequência</p>
-
-          <!--
-            Ainda não há endpoint de chamadas/frequência por assistido.
-            Placeholder no mesmo padrão da aba "Em acompanhamento" da listagem.
-          -->
-          <div class="card card-pad">
-            <p class="muted">
-              Exibição de frequência e histórico de chamadas depende de um endpoint que ainda não
-              existe — aba placeholder por enquanto.
-            </p>
-          </div>
-        }
-
-        <!-- ==================== ABA: TURMAS (histórico turma_aluno, só coordenador) ==================== -->
-        @if (abaVerAssistido() === 'turmas' && ehCoordenador()) {
-          <p class="form-sec-title">Turmas</p>
-
-          @if (carregandoHistoricoTurmas()) {
-            <div class="card card-pad"><p class="muted">Carregando turmas...</p></div>
-          } @else if (erroHistoricoTurmas()) {
-            <div class="notice notice-error">{{ erroHistoricoTurmas() }}</div>
-          } @else if (historicoTurmasAssistido().length === 0) {
-            <div class="card card-pad">
-              <p class="muted">Este assistido nunca foi vinculado a uma turma.</p>
-            </div>
-          } @else {
-            <div class="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Turma</th>
-                    <th>Data de entrada</th>
-                    <th>Data de saída</th>
-                    <th>Vínculo</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (vinculo of historicoTurmasAssistido(); track vinculo.turmaId + '-' + vinculo.dataEntrada) {
-                  <tr>
-                    <td class="strong">
-                      {{ vinculo.nomeTurma }}
-                      @if (!vinculo.turmaAtiva) {
-                      <span class="cell-sub"> (turma inativa)</span>
-                      }
-                    </td>
-                    <td>{{ vinculo.dataEntrada | date: 'dd/MM/yyyy' }}</td>
-                    <td>{{ vinculo.dataSaida ? (vinculo.dataSaida | date: 'dd/MM/yyyy') : '-' }}</td>
-                    <td>
-                      <app-badge [status]="vinculo.status" />
-                    </td>
-                    <td class="acoes-cell">
-                      <app-button variant="secondary" size="sm" (click)="abrirAlunosHistoricoTurma(vinculo)">
-                        Ver alunos
-                      </app-button>
-                      <app-button variant="secondary" size="sm" (click)="abrirAulasHistoricoTurma(vinculo)">
-                        Ver aulas
-                      </app-button>
-                    </td>
-                  </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
-        }
-
-        <!-- ==================== ABA: DISCIPLINAR ==================== -->
-        @if (abaVerAssistido() === 'disc') {
-          <p class="form-sec-title">Registros disciplinares</p>
-
-          <div class="card card-pad">
-            <p class="muted">
-              Exibição de registros disciplinares depende de um endpoint que ainda não existe — aba
-              placeholder por enquanto.
-            </p>
-          </div>
-        }
-
-        <!-- ==================== ABA: PRONTUÁRIOS ==================== -->
-        @if (abaVerAssistido() === 'prn') {
-          <p class="form-sec-title">Prontuários</p>
-
-          <div class="notice notice-lock">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="11" width="18" height="11" rx="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
-            <span>
-              Prontuários visíveis conforme o perfil de acesso. Conteúdo de relato e motivo
-              criptografado — depende de endpoint próprio que ainda não existe.
-            </span>
-          </div>
-        }
-      </div>
-
-      <!-- RODAPÉ -->
-      <div class="modal-foot">
-        <app-button variant="secondary" (click)="fecharModalVisualizarAssistido()">
-          Fechar
-        </app-button>
-      </div>
+  <app-modal
+    [open]="true"
+    [title]="assistidoSelecionado()!.nomeCompleto"
+    size="lg"
+    (closed)="fecharModalVisualizarAssistido()"
+  >
+    <div modal-icon class="mh-ico ico-green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
     </div>
-  </div>
+
+    <p class="cell-sub">
+      {{ calcularIdade(assistidoSelecionado()!.dataNascimento) }} anos ·
+      <app-badge [status]="assistidoSelecionado()!.status" />
+    </p>
+
+    <!-- ABAS -->
+    <div class="tabs">
+      <button
+        class="tab"
+        [class.active]="abaVerAssistido() === 'dados'"
+        (click)="trocarAbaVerAssistido('dados')"
+      >
+        Dados pessoais
+      </button>
+      <button
+        class="tab"
+        [class.active]="abaVerAssistido() === 'fam'"
+        (click)="trocarAbaVerAssistido('fam')"
+      >
+        Família
+      </button>
+      <button
+        class="tab"
+        [class.active]="abaVerAssistido() === 'cham'"
+        (click)="trocarAbaVerAssistido('cham')"
+      >
+        Chamadas
+      </button>
+      @if (ehCoordenador()) {
+      <button
+        class="tab"
+        [class.active]="abaVerAssistido() === 'turmas'"
+        (click)="trocarAbaVerAssistido('turmas')"
+      >
+        Turmas
+      </button>
+      }
+      <button
+        class="tab"
+        [class.active]="abaVerAssistido() === 'disc'"
+        (click)="trocarAbaVerAssistido('disc')"
+      >
+        Disciplinar
+      </button>
+      <button
+        class="tab"
+        [class.active]="abaVerAssistido() === 'prn'"
+        (click)="trocarAbaVerAssistido('prn')"
+      >
+        Prontuários
+      </button>
+    </div>
+
+    <!-- ==================== ABA: DADOS PESSOAIS ==================== -->
+    @if (abaVerAssistido() === 'dados') {
+      <p class="form-sec-title">Dados pessoais</p>
+
+      <div class="form-row">
+        <div class="field">
+          <label>Nome completo</label>
+          <div class="input" style="background: var(--gray-50)">
+            {{ assistidoSelecionado()!.nomeCompleto }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Data de nascimento</label>
+          <div class="input" style="background: var(--gray-50)">
+            {{ assistidoSelecionado()!.dataNascimento | date: 'dd/MM/yyyy' }}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="field">
+          <label>CPF</label>
+          <div class="input" style="background: var(--gray-50)">
+            {{ assistidoSelecionado()!.cpf || 'Não informado' }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Data de entrada</label>
+          <div class="input" style="background: var(--gray-50)">
+            {{
+              assistidoSelecionado()!.dataEntrada
+                ? (assistidoSelecionado()!.dataEntrada | date: 'dd/MM/yyyy')
+                : 'Não informado'
+            }}
+          </div>
+        </div>
+      </div>
+
+      <div class="field mt-s">
+        <label>Necessidades específicas</label>
+        <div class="input" style="background: var(--gray-50); min-height: 45px">
+          {{ assistidoSelecionado()!.necessidadesEspecificas || 'Nenhuma registrada' }}
+        </div>
+      </div>
+
+      <div class="field mt-s">
+        <label>Observações</label>
+        <div
+          class="input"
+          style="background: var(--gray-50); min-height: 70px; white-space: pre-wrap"
+        >
+          {{ assistidoSelecionado()!.observacoes || 'Nenhuma observação registrada.' }}
+        </div>
+      </div>
+    }
+
+    <!-- ==================== ABA: FAMÍLIA ==================== -->
+    @if (abaVerAssistido() === 'fam') {
+      <p class="form-sec-title">Responsáveis</p>
+
+      @if (carregandoResponsaveis()) {
+        <div class="card card-pad"><p class="muted">Carregando responsáveis...</p></div>
+      } @else if (erroResponsaveis()) {
+        <div class="notice notice-error">{{ erroResponsaveis() }}</div>
+      } @else if (responsaveisDoAssistido().length === 0) {
+        <div class="card card-pad">
+          @if (!mostrarFormNovoResponsavelVinculado()) {
+            <p class="muted mb-s">Nenhum responsável cadastrado para este assistido.</p>
+
+            <app-button size="sm" (click)="abrirFormNovoResponsavelVinculado()">
+              + Cadastrar responsável
+            </app-button>
+          } @else {
+            @if (erroResponsavelVinculado()) {
+              <div class="notice notice-error mb-s">{{ erroResponsavelVinculado() }}</div>
+            }
+
+            <div class="form-row">
+              <app-input
+                label="Nome completo"
+                placeholder="Nome do responsável"
+                [ngModel]="novoResponsavelVinculado.nomeCompleto"
+                (ngModelChange)="atualizarCampoResponsavelVinculado('nomeCompleto', $event)"
+              />
+
+              <div class="field">
+                <label>Parentesco</label>
+                <app-select
+                  [ngModel]="novoResponsavelVinculado.parentesco"
+                  (ngModelChange)="atualizarCampoResponsavelVinculado('parentesco', $event)"
+                  [options]="parentescoOptions"
+                />
+              </div>
+            </div>
+
+            <div class="form-row-3">
+              <app-input
+                label="CPF"
+                mask="cpf"
+                placeholder="000.000.000-00"
+                [ngModel]="novoResponsavelVinculado.cpf"
+                (ngModelChange)="atualizarCampoResponsavelVinculado('cpf', $event)"
+              />
+
+              <app-input
+                label="Telefone"
+                mask="telefone"
+                placeholder="(16) 90000-0000"
+                [ngModel]="novoResponsavelVinculado.telefone"
+                (ngModelChange)="atualizarCampoResponsavelVinculado('telefone', $event)"
+              />
+
+              <app-input
+                label="E-mail"
+                type="email"
+                placeholder="email@exemplo.com"
+                [ngModel]="novoResponsavelVinculado.email"
+                (ngModelChange)="atualizarCampoResponsavelVinculado('email', $event)"
+              />
+            </div>
+
+            <label class="check">
+              <input
+                type="checkbox"
+                [ngModel]="novoResponsavelVinculado.autorizadoRetirada"
+                (ngModelChange)="
+                  atualizarCampoResponsavelVinculado('autorizadoRetirada', $event)
+                "
+              />
+              Autorizado a retirar o assistido
+            </label>
+
+            <label class="check">
+              <input
+                type="checkbox"
+                [ngModel]="novoResponsavelVinculado.contatoEmergencia"
+                (ngModelChange)="
+                  atualizarCampoResponsavelVinculado('contatoEmergencia', $event)
+                "
+              />
+              Contato de emergência
+            </label>
+
+            <label class="check">
+              <input
+                type="checkbox"
+                [ngModel]="novoResponsavelVinculado.responsavelPrincipal"
+                (ngModelChange)="
+                  atualizarCampoResponsavelVinculado('responsavelPrincipal', $event)
+                "
+              />
+              Responsável principal
+            </label>
+
+            <div style="display: flex; gap: 8px; margin-top: 12px">
+              <app-button
+                variant="secondary"
+                size="sm"
+                (click)="fecharFormNovoResponsavelVinculado()"
+              >
+                Cancelar
+              </app-button>
+
+              <app-button
+                size="sm"
+                [loading]="salvandoResponsavelVinculado()"
+                (click)="salvarResponsavelVinculado()"
+              >
+                Salvar responsável
+              </app-button>
+            </div>
+          }
+        </div>
+      } @else {
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          @for (responsavel of responsaveisDoAssistido(); track responsavel.responsavelId) {
+            <div class="card card-pad">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  gap: 12px;
+                  margin-bottom: 14px;
+                "
+              >
+                <div>
+                  <div class="cell-name" style="font-size: 16px">
+                    {{ responsavel.nomeResponsavel }}
+                  </div>
+                  <span class="cell-sub">{{
+                    responsavel.parentesco || 'Parentesco não informado'
+                  }}</span>
+                </div>
+
+                <div
+                  style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end"
+                >
+                  @if (responsavel.responsavelPrincipal) {
+                    <app-badge variant="blue" label="Principal" />
+                  }
+                  @if (responsavel.contatoEmergencia) {
+                    <app-badge variant="green" label="Emergência" />
+                  }
+                  @if (responsavel.autorizadoRetirada) {
+                    <app-badge variant="amber" label="Pode retirar" />
+                  }
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="field">
+                  <label>CPF</label>
+                  <div class="input" style="background: var(--gray-50)">
+                    {{ responsavel.cpfResponsavel || 'Não informado' }}
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Telefone</label>
+                  <div class="input" style="background: var(--gray-50)">
+                    {{ responsavel.telefoneResponsavel || 'Não informado' }}
+                  </div>
+                </div>
+                <div class="field">
+                  <label>E-mail</label>
+                  <div class="input" style="background: var(--gray-50)">
+                    {{ responsavel.emailResponsavel || 'Não informado' }}
+                  </div>
+                </div>
+              </div>
+
+              @if (responsavel.observacoes) {
+                <div class="field">
+                  <label>Observações</label>
+                  <div class="input" style="background: var(--gray-50); white-space: pre-wrap">
+                    {{ responsavel.observacoes }}
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    }
+
+    <!-- ==================== ABA: CHAMADAS ==================== -->
+    @if (abaVerAssistido() === 'cham') {
+      <p class="form-sec-title">Frequência</p>
+
+      <!--
+        Ainda não há endpoint de chamadas/frequência por assistido.
+        Placeholder no mesmo padrão da aba "Em acompanhamento" da listagem.
+      -->
+      <div class="card card-pad">
+        <p class="muted">
+          Exibição de frequência e histórico de chamadas depende de um endpoint que ainda não
+          existe — aba placeholder por enquanto.
+        </p>
+      </div>
+    }
+
+    <!-- ==================== ABA: TURMAS (histórico turma_aluno, só coordenador) ==================== -->
+    @if (abaVerAssistido() === 'turmas' && ehCoordenador()) {
+      <p class="form-sec-title">Turmas</p>
+
+      @if (carregandoHistoricoTurmas()) {
+        <div class="card card-pad"><p class="muted">Carregando turmas...</p></div>
+      } @else if (erroHistoricoTurmas()) {
+        <div class="notice notice-error">{{ erroHistoricoTurmas() }}</div>
+      } @else if (historicoTurmasAssistido().length === 0) {
+        <div class="card card-pad">
+          <p class="muted">Este assistido nunca foi vinculado a uma turma.</p>
+        </div>
+      } @else {
+        <div class="table-wrap" role="region" tabindex="0" aria-label="Histórico de turmas">
+          <table>
+            <thead>
+              <tr>
+                <th>Turma</th>
+                <th>Data de entrada</th>
+                <th>Data de saída</th>
+                <th>Vínculo</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (vinculo of historicoTurmasAssistido(); track vinculo.turmaId + '-' + vinculo.dataEntrada) {
+              <tr>
+                <td class="strong">
+                  {{ vinculo.nomeTurma }}
+                  @if (!vinculo.turmaAtiva) {
+                  <span class="cell-sub"> (turma inativa)</span>
+                  }
+                </td>
+                <td>{{ vinculo.dataEntrada | date: 'dd/MM/yyyy' }}</td>
+                <td>{{ vinculo.dataSaida ? (vinculo.dataSaida | date: 'dd/MM/yyyy') : '-' }}</td>
+                <td>
+                  <app-badge [status]="vinculo.status" />
+                </td>
+                <td class="acoes-cell">
+                  <app-button variant="secondary" size="sm" (click)="abrirAlunosHistoricoTurma(vinculo)">
+                    Ver alunos
+                  </app-button>
+                  <app-button variant="secondary" size="sm" (click)="abrirAulasHistoricoTurma(vinculo)">
+                    Ver aulas
+                  </app-button>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+
+    <!-- ==================== ABA: DISCIPLINAR ==================== -->
+    @if (abaVerAssistido() === 'disc') {
+      <p class="form-sec-title">Registros disciplinares</p>
+
+      <div class="card card-pad">
+        <p class="muted">
+          Exibição de registros disciplinares depende de um endpoint que ainda não existe — aba
+          placeholder por enquanto.
+        </p>
+      </div>
+    }
+
+    <!-- ==================== ABA: PRONTUÁRIOS ==================== -->
+    @if (abaVerAssistido() === 'prn') {
+      <p class="form-sec-title">Prontuários</p>
+
+      <div class="notice notice-lock">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+        <span>
+          Prontuários visíveis conforme o perfil de acesso. Conteúdo de relato e motivo
+          criptografado — depende de endpoint próprio que ainda não existe.
+        </span>
+      </div>
+    }
+
+    <ng-template #footer>
+      <app-button variant="secondary" (click)="fecharModalVisualizarAssistido()">
+        Fechar
+      </app-button>
+    </ng-template>
+  </app-modal>
 }
 
-<!-- MODAL: ALUNOS DA TURMA (histórico de turmas do assistido, aba "Turmas").
-     Escrito direto aqui (em vez do <app-modal> genérico) com CSS próprio da
-     assistidos, do mesmo jeito que o modal "Visualizar assistido" acima —
-     é o mesmo padrão que o "Ver aulas" (aulas-turma-modal) já usa e funciona,
-     por isso abre por cima do modal do assistido corretamente. -->
+<!-- MODAL: ALUNOS DA TURMA (histórico de turmas do assistido, aba "Turmas") -->
 @if (mostrarAlunosHistoricoTurma()) {
-  <div class="modal-overlay turmas-alunos-overlay" (click)="fecharAlunosHistoricoTurma()">
-    <div class="modal modal-alunos-turma" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
-      <div class="modal-head">
-        <div style="flex: 1">
-          <h3>Alunos de {{ turmaHistoricoAlunosSelecionada()?.nomeTurma ?? '' }}</h3>
-        </div>
-        <button
-          type="button"
-          class="modal-close"
-          (click)="fecharAlunosHistoricoTurma()"
-          aria-label="Fechar"
-        >
-          ✕
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="turmas-alunos-grid">
-          @for (aluno of alunosHistoricoTurma(); track aluno.assistidoId) {
-          <article class="turmas-aluno-card">
-            <span class="turmas-aluno-nome">{{ aluno.nomeCompleto }}</span>
-          </article>
-          } @empty {
-          <p class="empty">Nenhum aluno ativo encontrado.</p>
-          }
-        </div>
-      </div>
+  <app-modal
+    [open]="true"
+    title="Alunos de {{ turmaHistoricoAlunosSelecionada()?.nomeTurma ?? '' }}"
+    size="sm"
+    (closed)="fecharAlunosHistoricoTurma()"
+  >
+    <div class="turmas-alunos-grid">
+      @for (aluno of alunosHistoricoTurma(); track aluno.assistidoId) {
+      <article class="turmas-aluno-card">
+        <span class="turmas-aluno-nome">{{ aluno.nomeCompleto }}</span>
+      </article>
+      } @empty {
+      <p class="empty">Nenhum aluno ativo encontrado.</p>
+      }
     </div>
-  </div>
+  </app-modal>
 }
 
 <!-- MODAL: AULAS DA TURMA (histórico de turmas do assistido, aba "Turmas") -->
@@ -916,68 +880,63 @@
 
 <!-- MODAL: CONFIRMAR ALTERAÇÃO DE STATUS ASSISTIDO (INATIVAR / REATIVAR) -->
 @if (mostrarModalStatus()) {
-  <div class="modal-overlay open" (click)="mostrarModalStatus.set(false)">
-    <div class="modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
-      <div class="modal-head">
-        <div class="mh-ico" [class]="novoStatusDesejado() === StatusGeral.INATIVO ? 'ico-coral' : 'ico-green'">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            @if (novoStatusDesejado() === StatusGeral.INATIVO) {
-              <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-            } @else {
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-              <polyline points="22 4 12 14.01 9 11.01"/>
-            }
-          </svg>
-        </div>
-        <div style="flex: 1;">
-          <h2>{{ novoStatusDesejado() === StatusGeral.INATIVO ? 'Confirmar Inativação' : 'Confirmar Reativação' }}</h2>
-          <p class="cell-sub">Assistido: <strong>{{ assistidoSelecionadoStatus()?.nomeCompleto }}</strong></p>
-        </div>
-        <button type="button" class="modal-close" (click)="mostrarModalStatus.set(false)">✕</button>
-      </div>
-
-      <div class="modal-body">
+  <app-modal
+    [open]="true"
+    [title]="novoStatusDesejado() === StatusGeral.INATIVO ? 'Confirmar Inativação' : 'Confirmar Reativação'"
+    (closed)="mostrarModalStatus.set(false)"
+  >
+    <div modal-icon class="mh-ico" [class]="novoStatusDesejado() === StatusGeral.INATIVO ? 'ico-coral' : 'ico-green'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         @if (novoStatusDesejado() === StatusGeral.INATIVO) {
-          <div class="notice notice-amber">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
-            </svg>
-            <div>
-              <b>Impactos de inativar este assistido:</b>
-              <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px;">
-                <li><strong>Desvinculação de Turmas:</strong> O assistido deixará de constar nas chamadas ativas e oficinas.</li>
-                <li><strong>Suspensão de Encaminhamentos:</strong> Não será possível realizar novas matrículas enquanto inativo.</li>
-                <li><strong>Histórico Preservado:</strong> Ficha social, atendimentos e prontuários continuam salvos.</li>
-              </ul>
-            </div>
-          </div>
+          <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
         } @else {
-          <div class="notice notice-info">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
-            </svg>
-            <div>
-              <b>Impactos de reativar este assistido:</b>
-              <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px;">
-                <li><strong>Retorno às Atividades:</strong> O assistido voltará ao cadastro ativo e poderá participar das turmas.</li>
-                <li><strong>Novas Matrículas Habilitadas:</strong> Será possível agendar novos atendimentos e oficinas.</li>
-                <li><strong>Prontuários Acessíveis:</strong> Todo o histórico anterior continua disponível na ficha.</li>
-              </ul>
-            </div>
-          </div>
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
         }
-      </div>
-
-      <div class="modal-foot">
-        <app-button variant="secondary" (click)="mostrarModalStatus.set(false)">Cancelar</app-button>
-        @if (novoStatusDesejado() === StatusGeral.INATIVO) {
-          <app-button variant="danger" (click)="confirmarAlteracaoStatus()">Inativar Assistido</app-button>
-        } @else {
-          <app-button (click)="confirmarAlteracaoStatus()">Reativar Assistido</app-button>
-        }
-      </div>
+      </svg>
     </div>
-  </div>
+
+    <p class="cell-sub">Assistido: <strong>{{ assistidoSelecionadoStatus()?.nomeCompleto }}</strong></p>
+
+    @if (novoStatusDesejado() === StatusGeral.INATIVO) {
+      <div class="notice notice-amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
+        </svg>
+        <div>
+          <b>Impactos de inativar este assistido:</b>
+          <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px;">
+            <li><strong>Desvinculação de Turmas:</strong> O assistido deixará de constar nas chamadas ativas e oficinas.</li>
+            <li><strong>Suspensão de Encaminhamentos:</strong> Não será possível realizar novas matrículas enquanto inativo.</li>
+            <li><strong>Histórico Preservado:</strong> Ficha social, atendimentos e prontuários continuam salvos.</li>
+          </ul>
+        </div>
+      </div>
+    } @else {
+      <div class="notice notice-info">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
+        </svg>
+        <div>
+          <b>Impactos de reativar este assistido:</b>
+          <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px;">
+            <li><strong>Retorno às Atividades:</strong> O assistido voltará ao cadastro ativo e poderá participar das turmas.</li>
+            <li><strong>Novas Matrículas Habilitadas:</strong> Será possível agendar novos atendimentos e oficinas.</li>
+            <li><strong>Prontuários Acessíveis:</strong> Todo o histórico anterior continua disponível na ficha.</li>
+          </ul>
+        </div>
+      </div>
+    }
+
+    <ng-template #footer>
+      <app-button variant="secondary" (click)="mostrarModalStatus.set(false)">Cancelar</app-button>
+      @if (novoStatusDesejado() === StatusGeral.INATIVO) {
+        <app-button variant="danger" (click)="confirmarAlteracaoStatus()">Inativar Assistido</app-button>
+      } @else {
+        <app-button (click)="confirmarAlteracaoStatus()">Reativar Assistido</app-button>
+      }
+    </ng-template>
+  </app-modal>
 }
 
 <!-- ============================================================
@@ -985,90 +944,83 @@
      ============================================================ -->
 
 @if (mostrarModalEditar()) {
-  <div class="modal-overlay" (click)="fecharModalEditar()">
-    <div class="modal wide" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
-      <div class="modal-head">
-        <div class="mh-ico ico-green">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-            <path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-          </svg>
-        </div>
-        <div style="flex: 1;">
-          <h2>Editar assistido</h2>
-          <p class="cell-sub" style="margin: 0;">Atualize os dados cadastrais e o vínculo do assistido.</p>
-        </div>
-        <button type="button" class="modal-close" (click)="fecharModalEditar()" aria-label="Fechar">
-          ✕
-        </button>
-      </div>
+  <app-modal
+    [open]="true"
+    title="Editar assistido"
+    subtitle="Atualize os dados cadastrais e o vínculo do assistido."
+    size="lg"
+    (closed)="fecharModalEditar()"
+  >
+    <div modal-icon class="mh-ico ico-green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+        <path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+      </svg>
+    </div>
 
-      <div class="modal-body">
-        @if (erroSalvarEdicao()) {
-          <div class="notice notice-error">{{ erroSalvarEdicao() }}</div>
-        }
+    @if (erroSalvarEdicao()) {
+      <div class="notice notice-error">{{ erroSalvarEdicao() }}</div>
+    }
 
-        <p class="form-sec-title">Dados pessoais</p>
+    <p class="form-sec-title">Dados pessoais</p>
 
-        <app-input
-          label="Nome completo"
-          placeholder="Nome do assistido"
-          [ngModel]="formEdicaoAssistido.nomeCompleto"
-          (ngModelChange)="atualizarCampoEdicaoAssistido('nomeCompleto', $event)"
+    <app-input
+      label="Nome completo"
+      placeholder="Nome do assistido"
+      [ngModel]="formEdicaoAssistido.nomeCompleto"
+      (ngModelChange)="atualizarCampoEdicaoAssistido('nomeCompleto', $event)"
+    />
+
+    <div class="form-row-3">
+      <app-input
+        label="Data de nascimento"
+        type="date"
+        [ngModel]="formEdicaoAssistido.dataNascimento"
+        (ngModelChange)="atualizarCampoEdicaoAssistido('dataNascimento', $event)"
+      />
+
+      <app-input
+        label="CPF"
+        mask="cpf"
+        placeholder="000.000.000-00"
+        [ngModel]="formEdicaoAssistido.cpf"
+        (ngModelChange)="atualizarCampoEdicaoAssistido('cpf', $event)"
+      />
+
+      <div class="field">
+        <label>Turma</label>
+        <app-select
+          [ngModel]="formEdicaoAssistido.turmaId"
+          (ngModelChange)="atualizarCampoEdicaoAssistido('turmaId', $event)"
+          [options]="turmaEdicaoOptions()"
         />
-
-        <div class="form-row-3">
-          <app-input
-            label="Data de nascimento"
-            type="date"
-            [ngModel]="formEdicaoAssistido.dataNascimento"
-            (ngModelChange)="atualizarCampoEdicaoAssistido('dataNascimento', $event)"
-          />
-
-          <app-input
-            label="CPF"
-            mask="cpf"
-            placeholder="000.000.000-00"
-            [ngModel]="formEdicaoAssistido.cpf"
-            (ngModelChange)="atualizarCampoEdicaoAssistido('cpf', $event)"
-          />
-
-          <div class="field">
-            <label>Turma</label>
-            <app-select
-              [ngModel]="formEdicaoAssistido.turmaId"
-              (ngModelChange)="atualizarCampoEdicaoAssistido('turmaId', $event)"
-              [options]="turmaEdicaoOptions()"
-            />
-          </div>
-        </div>
-
-        <app-input
-          label="Necessidades específicas"
-          placeholder="Ex.: TEA, TDAH, mobilidade reduzida…"
-          [ngModel]="formEdicaoAssistido.necessidadesEspecificas"
-          (ngModelChange)="atualizarCampoEdicaoAssistido('necessidadesEspecificas', $event)"
-        />
-
-        <div class="field">
-          <label>Observações gerais</label>
-          <textarea
-            placeholder="Informações relevantes para o acompanhamento"
-            [ngModel]="formEdicaoAssistido.observacoes"
-            (ngModelChange)="atualizarCampoEdicaoAssistido('observacoes', $event)"
-          >
-          </textarea>
-        </div>
-      </div>
-
-      <div class="modal-foot">
-        <app-button variant="secondary" (click)="fecharModalEditar()">Cancelar</app-button>
-        <app-button [loading]="salvandoEdicao()" (click)="salvarEdicaoAssistido()">
-          Salvar alterações
-        </app-button>
       </div>
     </div>
-  </div>
+
+    <app-input
+      label="Necessidades específicas"
+      placeholder="Ex.: TEA, TDAH, mobilidade reduzida…"
+      [ngModel]="formEdicaoAssistido.necessidadesEspecificas"
+      (ngModelChange)="atualizarCampoEdicaoAssistido('necessidadesEspecificas', $event)"
+    />
+
+    <div class="field">
+      <label>Observações gerais</label>
+      <textarea
+        placeholder="Informações relevantes para o acompanhamento"
+        [ngModel]="formEdicaoAssistido.observacoes"
+        (ngModelChange)="atualizarCampoEdicaoAssistido('observacoes', $event)"
+      >
+      </textarea>
+    </div>
+
+    <ng-template #footer>
+      <app-button variant="secondary" (click)="fecharModalEditar()">Cancelar</app-button>
+      <app-button [loading]="salvandoEdicao()" (click)="salvarEdicaoAssistido()">
+        Salvar alterações
+      </app-button>
+    </ng-template>
+  </app-modal>
 }
 
 

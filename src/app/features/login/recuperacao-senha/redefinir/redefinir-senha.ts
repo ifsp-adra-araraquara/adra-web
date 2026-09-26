@@ -13,8 +13,7 @@ import { supabase } from '../../../../core/supabase.client';
   selector: 'app-redefinir-senha',
   standalone: true,
   imports: [FormsModule, RouterLink, BrandLogo, SenhaForca, Input, Button],
-  templateUrl: './redefinir-senha.html',
-  styleUrl: './redefinir-senha.css'
+  templateUrl: './redefinir-senha.html'
 })
 export class RedefinirSenha implements OnInit {
   private auth = inject(AuthService);

@@ -19,6 +19,7 @@
       <div class="seg-control" role="group" aria-label="Visualização do calendário">
         <button type="button" class="seg-btn" [class.active]="visualizacao() === 'dayGridMonth'" (click)="alternarVisualizacao('dayGridMonth')">Mês</button>
         <button type="button" class="seg-btn" [class.active]="visualizacao() === 'timeGridWeek'" (click)="alternarVisualizacao('timeGridWeek')">Semana</button>
+        <button type="button" class="seg-btn" [class.active]="visualizacao() === 'listWeek'" (click)="alternarVisualizacao('listWeek')">Lista</button>
       </div>
       @if (podeGerenciar()) {
         <button type="button" class="btn btn-sm" (click)="abrirRecorrencia()">Gerar aulas</button>

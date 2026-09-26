@@ -39,12 +39,14 @@ h2 {
 
 .tabs {
   display: flex;
+  overflow-x: auto;
   gap: 4px;
   margin-bottom: 20px;
   border-bottom: 1px solid var(--gray-200);
 }
 
 .tab {
+  white-space: nowrap;
   padding: 10px 14px;
   border: 0;
   border-bottom: 3px solid transparent;
@@ -131,10 +133,6 @@ h2 {
   margin-bottom: 0;
 }
 
-.table-wrapper {
-  overflow-x: auto;
-}
-
 table {
   width: 100%;
   border-collapse: collapse;
@@ -154,12 +152,3 @@ th {
   text-transform: uppercase;
 }
 
-@media (max-width: 640px) {
-  .tabs {
-    overflow-x: auto;
-  }
-
-  .tab {
-    white-space: nowrap;
-  }
-}

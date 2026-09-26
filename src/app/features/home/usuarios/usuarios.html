@@ -158,187 +158,161 @@
 
 <!-- MODAL: EDITAR USUÁRIO -->
 @if (mostrarModalEdicao()) {
-  <div class="modal-overlay" (click)="fecharModalEdicao()">
-    <div class="modal" (click)="$event.stopPropagation()">
-      <div class="modal-head">
-        <div>
-          <h3>Editar usuário</h3>
-          <p>Atualize os dados do usuário selecionado.</p>
-        </div>
-        <button class="modal-close" type="button" (click)="fecharModalEdicao()">×</button>
-      </div>
+  <app-modal [open]="true" title="Editar usuário" subtitle="Atualize os dados do usuário selecionado." (closed)="fecharModalEdicao()">
+    <p class="form-sec-title">Dados do usuário</p>
 
-      <div class="modal-body">
-        <p class="form-sec-title">Dados do usuário</p>
+    <div class="form-row">
+      <app-input
+        label="Nome completo"
+        placeholder="Nome completo"
+        [(ngModel)]="usuarioEdicao.nomeCompleto"
+        name="nomeCompleto"
+      />
 
-        <div class="form-row">
-          <app-input
-            label="Nome completo"
-            placeholder="Nome completo"
-            [(ngModel)]="usuarioEdicao.nomeCompleto"
-            name="nomeCompleto"
-          />
+      <app-input
+        label="Telefone"
+        placeholder="(16) 90000-0000"
+        mask="telefone"
+        [(ngModel)]="usuarioEdicao.telefone"
+        name="telefone"
+      />
+    </div>
 
-          <app-input
-            label="Telefone"
-            placeholder="(16) 90000-0000"
-            mask="telefone"
-            [(ngModel)]="usuarioEdicao.telefone"
-            name="telefone"
-          />
-        </div>
+    <p class="form-sec-title">Dados de acesso</p>
 
-        <p class="form-sec-title">Dados de acesso</p>
+    <div class="form-row">
+      <app-input
+        label="E-mail institucional"
+        type="email"
+        placeholder="usuario@adra.org.br"
+        [(ngModel)]="usuarioEdicao.email"
+        name="email"
+      />
 
-        <div class="form-row">
-          <app-input
-            label="E-mail institucional"
-            type="email"
-            placeholder="usuario@adra.org.br"
-            [(ngModel)]="usuarioEdicao.email"
-            name="email"
-          />
-
-          <div class="field">
-            <label>Perfil de acesso</label>
-            <app-select
-              [(ngModel)]="usuarioEdicao.nivelPermissao"
-              [options]="perfilEdicaoOptions"
-            />
-          </div>
-        </div>
-
-        @if (usuarioEdicao.nivelPermissao === Role.PROFS) {
-          <div class="form-row">
-            <div class="field">
-              <label>Especialidade</label>
-              <app-select
-                [(ngModel)]="usuarioEdicao.especialidade"
-                [placeholder]="'Selecione a especialidade'"
-                [options]="especialidadeOptions"
-              />
-            </div>
-          </div>
-        }
-
-        <div class="form-row">
-          <app-input
-            label="Cargo / Função"
-            placeholder="Cargo ou função"
-            [(ngModel)]="usuarioEdicao.cargoFuncao"
-            name="cargoFuncao"
-          />
-        </div>
-
-        @if (erroEdicao()) {
-          <div class="notice notice-amber" role="alert">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
-            </svg>
-            <div>{{ erroEdicao() }}</div>
-          </div>
-        }
-      </div>
-
-      <div class="modal-foot">
-        <app-button variant="secondary" type="button" (click)="fecharModalEdicao()">Cancelar</app-button>
-        <app-button type="button" [loading]="salvando()" (click)="salvarEdicao()">
-          Salvar usuário
-        </app-button>
+      <div class="field">
+        <label>Perfil de acesso</label>
+        <app-select
+          [(ngModel)]="usuarioEdicao.nivelPermissao"
+          [options]="perfilEdicaoOptions"
+        />
       </div>
     </div>
-  </div>
+
+    @if (usuarioEdicao.nivelPermissao === Role.PROFS) {
+      <div class="form-row">
+        <div class="field">
+          <label>Especialidade</label>
+          <app-select
+            [(ngModel)]="usuarioEdicao.especialidade"
+            [placeholder]="'Selecione a especialidade'"
+            [options]="especialidadeOptions"
+          />
+        </div>
+      </div>
+    }
+
+    <div class="form-row">
+      <app-input
+        label="Cargo / Função"
+        placeholder="Cargo ou função"
+        [(ngModel)]="usuarioEdicao.cargoFuncao"
+        name="cargoFuncao"
+      />
+    </div>
+
+    @if (erroEdicao()) {
+      <div class="notice notice-amber" role="alert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
+        </svg>
+        <div>{{ erroEdicao() }}</div>
+      </div>
+    }
+
+    <ng-template #footer>
+      <app-button variant="secondary" type="button" (click)="fecharModalEdicao()">Cancelar</app-button>
+      <app-button type="button" [loading]="salvando()" (click)="salvarEdicao()">
+        Salvar usuário
+      </app-button>
+    </ng-template>
+  </app-modal>
 }
 
 <!-- MODAL: CONFIRMAR TROCA DE PERFIL -->
 @if (mostrarConfirmacaoPerfil()) {
-  <div class="modal-overlay" (click)="mostrarConfirmacaoPerfil.set(false)">
-    <div class="modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
-      <div class="modal-head">
-        <div>
-          <h3>Confirmar troca de perfil</h3>
-          <p>
-            {{ usuarioSelecionado()?.nomeCompleto }} passará de
-            <strong>{{ getNomePerfil(usuarioSelecionado()!.nivelPermissao) }}</strong> para
-            <strong>{{ getNomePerfil(usuarioEdicao.nivelPermissao) }}</strong>.
-            As permissões novas valem a partir do próximo acesso.
-          </p>
-        </div>
-        <button class="modal-close" type="button" (click)="mostrarConfirmacaoPerfil.set(false)">×</button>
-      </div>
-      <div class="modal-foot">
-        <app-button variant="secondary" type="button" (click)="mostrarConfirmacaoPerfil.set(false)">Cancelar</app-button>
-        <app-button type="button" [loading]="salvando()" (click)="confirmarSalvarEdicao()">
-          Confirmar troca
-        </app-button>
-      </div>
-    </div>
-  </div>
+  <app-modal [open]="true" title="Confirmar troca de perfil" (closed)="mostrarConfirmacaoPerfil.set(false)">
+    <p>
+      {{ usuarioSelecionado()?.nomeCompleto }} passará de
+      <strong>{{ getNomePerfil(usuarioSelecionado()!.nivelPermissao) }}</strong> para
+      <strong>{{ getNomePerfil(usuarioEdicao.nivelPermissao) }}</strong>.
+      As permissões novas valem a partir do próximo acesso.
+    </p>
+
+    <ng-template #footer>
+      <app-button variant="secondary" type="button" (click)="mostrarConfirmacaoPerfil.set(false)">Cancelar</app-button>
+      <app-button type="button" [loading]="salvando()" (click)="confirmarSalvarEdicao()">
+        Confirmar troca
+      </app-button>
+    </ng-template>
+  </app-modal>
 }
 
 <!-- MODAL: CONFIRMAR ALTERAÇÃO DE STATUS (INATIVAR / REATIVAR) -->
 @if (mostrarModalStatus()) {
-  <div class="modal-overlay open" (click)="mostrarModalStatus.set(false)">
-    <div class="modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
-      <div class="modal-head">
-        <div class="mh-ico" [class]="acaoStatus() === 'inativar' ? 'ico-coral' : 'ico-green'">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            @if (acaoStatus() === 'inativar') {
-              <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-            } @else {
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-              <polyline points="22 4 12 14.01 9 11.01"/>
-            }
-          </svg>
-        </div>
-        <div style="flex: 1;">
-          <h2>{{ acaoStatus() === 'inativar' ? 'Confirmar Inativação' : 'Confirmar Reativação' }}</h2>
-          <p class="cell-sub">Usuário: <strong>{{ usuarioSelecionadoStatus()?.nomeCompleto }}</strong></p>
-        </div>
-        <button type="button" class="modal-close" (click)="mostrarModalStatus.set(false)">✕</button>
-      </div>
-
-      <div class="modal-body">
+  <app-modal
+    [open]="true"
+    [title]="acaoStatus() === 'inativar' ? 'Confirmar Inativação' : 'Confirmar Reativação'"
+    [subtitle]="'Usuário: ' + (usuarioSelecionadoStatus()?.nomeCompleto ?? '')"
+    (closed)="mostrarModalStatus.set(false)"
+  >
+    <div modal-icon class="mh-ico" [class]="acaoStatus() === 'inativar' ? 'ico-coral' : 'ico-green'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         @if (acaoStatus() === 'inativar') {
-          <div class="notice notice-amber">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
-            </svg>
-            <div>
-              <b>Impactos de inativar este usuário:</b>
-              <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px;">
-                <li><strong>Acesso Bloqueado:</strong> O usuário não conseguirá mais fazer login no sistema.</li>
-                <li><strong>Permissões Revogadas:</strong> Suas atribuições e acessos serão suspensos.</li>
-                <li><strong>Histórico Salvo:</strong> Registros e ações anteriores continuarão preservados para auditoria.</li>
-              </ul>
-            </div>
-          </div>
+          <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
         } @else {
-          <div class="notice notice-info">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
-            </svg>
-            <div>
-              <b>Impactos de reativar este usuário:</b>
-              <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px;">
-                <li><strong>Acesso Restaurado:</strong> O usuário poderá realizar login novamente na plataforma.</li>
-                <li><strong>Permissões Restabelecidas:</strong> Suas atribuições no sistema voltarão a ficar ativas.</li>
-                <li><strong>Vinculação Liberada:</strong> O usuário estará disponível para novos lançamentos e tarefas.</li>
-              </ul>
-            </div>
-          </div>
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
         }
-      </div>
-
-      <div class="modal-foot">
-        <app-button variant="secondary" type="button" (click)="mostrarModalStatus.set(false)">Cancelar</app-button>
-        @if (acaoStatus() === 'inativar') {
-          <app-button variant="danger" type="button" (click)="confirmarAlteracaoStatus()">Inativar Usuário</app-button>
-        } @else {
-          <app-button type="button" (click)="confirmarAlteracaoStatus()">Reativar Usuário</app-button>
-        }
-      </div>
+      </svg>
     </div>
-  </div>
-}
 
+    @if (acaoStatus() === 'inativar') {
+      <div class="notice notice-amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
+        </svg>
+        <div>
+          <b>Impactos de inativar este usuário:</b>
+          <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px;">
+            <li><strong>Acesso Bloqueado:</strong> O usuário não conseguirá mais fazer login no sistema.</li>
+            <li><strong>Permissões Revogadas:</strong> Suas atribuições e acessos serão suspensos.</li>
+            <li><strong>Histórico Salvo:</strong> Registros e ações anteriores continuarão preservados para auditoria.</li>
+          </ul>
+        </div>
+      </div>
+    } @else {
+      <div class="notice notice-info">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
+        </svg>
+        <div>
+          <b>Impactos de reativar este usuário:</b>
+          <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px;">
+            <li><strong>Acesso Restaurado:</strong> O usuário poderá realizar login novamente na plataforma.</li>
+            <li><strong>Permissões Restabelecidas:</strong> Suas atribuições no sistema voltarão a ficar ativas.</li>
+            <li><strong>Vinculação Liberada:</strong> O usuário estará disponível para novos lançamentos e tarefas.</li>
+          </ul>
+        </div>
+      </div>
+    }
+
+    <ng-template #footer>
+      <app-button variant="secondary" type="button" (click)="mostrarModalStatus.set(false)">Cancelar</app-button>
+      @if (acaoStatus() === 'inativar') {
+        <app-button variant="danger" type="button" (click)="confirmarAlteracaoStatus()">Inativar Usuário</app-button>
+      } @else {
+        <app-button type="button" (click)="confirmarAlteracaoStatus()">Reativar Usuário</app-button>
+      }
+    </ng-template>
+  </app-modal>
+}

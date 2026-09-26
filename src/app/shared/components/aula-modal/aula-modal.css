@@ -1,56 +1,13 @@
 :host { display: contents; }
 
-.overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1200;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  background: rgba(0, 42, 31, .45);
-}
-
-.dialog {
-  width: min(680px, 100%);
-  max-height: 90vh;
-  overflow-y: auto;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: var(--shadow-lg);
-}
-
-.panel-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--gray-100);
-}
-.panel-header h2 { font-size: 17px; margin-bottom: 2px; }
-.subtle { font-size: 12px; color: var(--gray-600); }
-
-.panel-header-acoes { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-
-.close-button {
-  flex-shrink: 0;
-  border: 1px solid var(--gray-200);
-  background: #fff;
-  color: var(--green-600);
-  border-radius: 7px;
-  padding: 6px 10px;
-  font: inherit;
-  cursor: pointer;
-}
-
 .badge-situacao-wrap {
-  margin: 16px 20px 0;
+  margin-bottom: 12px;
 }
 
-.feedback { margin: 16px 20px 0; color: var(--gray-600); font-size: 13px; }
+.feedback { margin: 0 0 12px; color: var(--gray-600); font-size: 13px; }
 .feedback.error { color: var(--coral-600); }
 
-.pres-counts { display: flex; gap: 12px; padding: 16px 20px 0; }
+.pres-counts { display: flex; gap: 12px; }
 .pc { flex: 1; padding: 10px 12px; border: 1px solid var(--gray-100); border-radius: 8px; text-align: center; }
 .pc b { display: block; font-size: 20px; line-height: 1.2; }
 .pc span { font-size: 11px; color: var(--gray-600); text-transform: uppercase; letter-spacing: .03em; }
@@ -58,7 +15,7 @@
 .pc-f b { color: var(--coral-600); }
 .pc-fj b { color: var(--amber-600); }
 
-.chamada-toolbar { display: flex; justify-content: flex-end; padding: 12px 20px 0; }
+.chamada-toolbar { display: flex; justify-content: flex-end; padding-top: 12px; }
 
 .aviso-chamada-feita {
   display: flex;
@@ -66,7 +23,7 @@
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  margin: 12px 20px 0;
+  margin-top: 12px;
   padding: 10px 14px;
   border: 1px solid var(--amber-400);
   background: var(--amber-50);
@@ -75,7 +32,7 @@
   color: var(--amber-600);
 }
 
-.lista-alunos { list-style: none; margin: 0; padding: 8px 20px 20px; display: flex; flex-direction: column; gap: 6px; }
+.lista-alunos { list-style: none; margin: 0; padding-top: 12px; display: flex; flex-direction: column; gap: 6px; }
 .linha-aluno {
   display: flex;
   align-items: center;
@@ -86,41 +43,10 @@
   border-radius: 8px;
 }
 .linha-aluno-chamada { flex-direction: column; align-items: stretch; }
-.linha-aluno-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.linha-aluno-topo { display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
 .nome-aluno { font-size: 13.5px; font-weight: 600; color: var(--gray-800); }
 
-.falta-justificada-detalhe { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
-.falta-justificada-detalhe select,
-.falta-justificada-detalhe textarea {
-  width: 100%;
-  box-sizing: border-box;
-  border: 1px solid var(--gray-200);
-  border-radius: 8px;
-  padding: 8px 10px;
-  font: inherit;
-  font-size: 13px;
-  resize: vertical;
-}
-
 .linha-aluno-acoes { display: flex; align-items: center; gap: 10px; }
-
-.presenca-botoes { display: flex; gap: 6px; }
-.presenca-btn {
-  width: 32px;
-  height: 32px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--gray-200);
-  border-radius: 7px;
-  background: #fff;
-  color: var(--gray-400);
-  cursor: pointer;
-  transition: .14s;
-}
-.presenca-btn svg { width: 16px; height: 16px; }
-.presenca-btn.presente.ativo { background: var(--green-400); border-color: var(--green-400); color: #fff; }
-.presenca-btn.falta.ativo { background: var(--coral-400); border-color: var(--coral-400); color: #fff; }
-.presenca-btn.justificada.ativo { background: var(--amber-400); border-color: var(--amber-400); color: #fff; }
 
 .mini-badge {
   padding: 3px 9px;
@@ -135,8 +61,8 @@
 
 .icon-button {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   border: 1px solid var(--gray-200);
@@ -151,13 +77,11 @@
 
 .empty { padding: 20px; text-align: center; color: var(--gray-600); font-size: 13px; }
 
-.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 16px 20px 20px; }
-
 /* =========================
    DEFINIR TÍTULO/DESCRIÇÃO (aula criada sem título)
    ========================= */
 
-.definir-campos { padding: 16px 20px 20px; display: flex; flex-direction: column; }
+.definir-campos { display: flex; flex-direction: column; }
 
 .campo { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
 
@@ -171,7 +95,7 @@
   border-radius: 8px;
   background: #fff;
   font: inherit;
-  font-size: 14px;
+  font-size: 16px;
   outline: none;
   resize: vertical;
 }

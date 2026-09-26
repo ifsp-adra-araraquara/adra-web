@@ -33,7 +33,7 @@
     margin: 0;
     padding: 0;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 2px 12px;
 }
 
@@ -65,5 +65,11 @@
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+@media (min-width: 720px) {
+    .senha-forca-criterios {
+        grid-template-columns: 1fr 1fr;
     }
 }

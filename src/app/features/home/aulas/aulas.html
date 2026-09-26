@@ -30,34 +30,29 @@
           <span class="subtle">{{ turmasFiltradas().length }} turma(s)</span>
         </div>
 
-        <div class="toolbar" style="justify-content: space-between; flex-wrap: nowrap">
-          <div style="display: flex; gap: 8px; flex: 1; flex-wrap: nowrap; min-width: 0">
-            <app-input
-              label="Buscar por nome da turma"
-              [hideLabel]="true"
-              placeholder="Buscar por nome da turma…"
-              style="flex: 1; min-width: 0"
-              [ngModel]="filtroTurmasNome()"
-              (ngModelChange)="filtroTurmasNome.set($event)"
-            />
+        <div class="toolbar">
+          <app-input
+            label="Buscar por nome da turma"
+            [hideLabel]="true"
+            placeholder="Buscar por nome da turma…"
+            [ngModel]="filtroTurmasNome()"
+            (ngModelChange)="filtroTurmasNome.set($event)"
+          />
 
-            <app-select
-              style="flex-shrink: 0; width: auto"
-              [ngModel]="filtroTurmasTurno()"
-              (ngModelChange)="filtroTurmasTurno.set($event)"
-              [options]="filtroTurmasTurnoOptions"
-            />
+          <app-select
+            [ngModel]="filtroTurmasTurno()"
+            (ngModelChange)="filtroTurmasTurno.set($event)"
+            [options]="filtroTurmasTurnoOptions"
+          />
 
-            <app-select
-              style="flex-shrink: 0; width: auto"
-              [ngModel]="filtroTurmasStatus()"
-              (ngModelChange)="filtroTurmasStatus.set($event)"
-              [options]="filtroTurmasStatusOptions"
-            />
-          </div>
+          <app-select
+            [ngModel]="filtroTurmasStatus()"
+            (ngModelChange)="filtroTurmasStatus.set($event)"
+            [options]="filtroTurmasStatusOptions"
+          />
         </div>
 
-        <div class="table-wrapper">
+        <div class="table-wrap" role="region" tabindex="0" aria-label="Turmas">
           <table>
             <thead>
               <tr>

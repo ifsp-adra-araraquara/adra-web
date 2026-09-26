@@ -48,6 +48,7 @@ export interface TableColumn<T = unknown> {
 })
 export class Table<T = unknown> {
   columns = input.required<TableColumn<T>[]>();
+  label = input('Tabela');
   data = input.required<T[]>();
 
   /** true = paginação/ordenação são feitas pelo pai (API); a tabela só exibe `data()`. */
@@ -119,6 +120,12 @@ export class Table<T = unknown> {
     }
     const sort = this.internalSort();
     return sort?.key === column.key ? sort.direction : null;
+  }
+
+  protected ariaSort(column: TableColumn<T>): 'ascending' | 'descending' | null {
+    const direction = this.sortIndicator(column);
+    if (!direction) return null;
+    return direction === 'asc' ? 'ascending' : 'descending';
   }
 
   protected trackRow(index: number, row: T): unknown {
