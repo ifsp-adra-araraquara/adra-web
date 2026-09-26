@@ -29,7 +29,7 @@
   @case ('turmas') {
   <section class="panel" aria-labelledby="turmas-titulo">
     <div class="panel-header"><h2 id="turmas-titulo">Minhas turmas</h2><span class="subtle">Somente leitura</span></div>
-    <div class="table-wrapper">
+    <div class="table-wrap" role="region" tabindex="0" aria-label="Turmas">
       <table>
         <thead><tr><th>Turma</th><th>Oficina</th><th>Turno</th><th>Alunos</th><th>Capacidade</th><th></th></tr></thead>
         <tbody>
@@ -51,19 +51,18 @@
   @case ('aulas') {
   <section class="panel" aria-labelledby="aulas-titulo">
     <div class="panel-header">
-      <div><h2 id="aulas-titulo">Aulas</h2><span class="subtle">Planos de aula das suas turmas</span></div>
+      <div><h2 id="aulas-titulo">Aulas</h2><span class="subtle">Planos de aula das suas turmas</span><p class="hint">Só é possível abrir aulas de hoje ou já passadas.</p></div>
       <div style="display: flex; gap: 8px; align-items: center;">
         <label for="filtro-turma-aulas" class="sr-only">Filtrar por turma</label>
         <app-select
           id="filtro-turma-aulas"
-          class="filtro-turma"
           [ngModel]="filtroTurmaId()"
           (ngModelChange)="onFiltroTurmaChange($event)"
           [options]="turmasFiltroOptions()"
         />
       </div>
     </div>
-    <div class="table-wrapper table-wrapper-aulas">
+    <div class="table-wrap" role="region" tabindex="0" aria-label="Aulas">
       <table class="aulas-table-principal">
         <thead>
         <tr>
@@ -85,6 +84,8 @@
           [class.linha-bloqueada]="!podeAbrir(aula)"
           [attr.title]="podeAbrir(aula) ? 'Abrir aula' : 'Só é possível abrir aulas de hoje ou já passadas'"
           (click)="abrirAula(aula)"
+          [attr.tabindex]="podeAbrir(aula) ? 0 : null"
+          (keydown.enter)="abrirAula(aula)"
         >
           <td>{{ aula.dataAula }} @if (ehHoje(aula)) { <span class="tag-hoje">Hoje</span> }</td>
           <td>{{ aula.horarioInicio && aula.horarioFim ? aula.horarioInicio + ' - ' + aula.horarioFim : '-' }}</td>
@@ -148,17 +149,15 @@
   </app-modal>
 
   @if (mostrarFormularioAula()) {
-  <div class="overlay" role="presentation" (click)="fecharFormularioAula()">
-    <section class="dialog dialog-lg" role="dialog" aria-modal="true" aria-labelledby="nova-aula-titulo" (click)="$event.stopPropagation()" style="max-height: 90vh; overflow-y: auto;">
-      <div class="panel-header"><h2 id="nova-aula-titulo">Nova aula</h2><button type="button" class="close-button" (click)="fecharFormularioAula()" aria-label="Fechar">X</button></div>
+  <app-modal [open]="true" title="Nova aula" size="lg" (closed)="fecharFormularioAula()">
       <div class="dialog-body">
         <div class="form-row">
         <label>Turma<app-select [(ngModel)]="aulaForm.turmaId" [options]="turmasFormOptions()" /></label>
         <app-input label="Data" type="date" [(ngModel)]="aulaForm.dataAula" />
         </div>
         <div class="form-row">
-          <label>Horário de início<input type="time" [(ngModel)]="aulaForm.horarioInicio"></label>
-          <label>Horário de fim<input type="time" [(ngModel)]="aulaForm.horarioFim"></label>
+          <label>Horário de início<input type="time" class="input" [(ngModel)]="aulaForm.horarioInicio"></label>
+          <label>Horário de fim<input type="time" class="input" [(ngModel)]="aulaForm.horarioFim"></label>
         </div>
         <div class="form-row">
           <app-input label="Título (opcional)" [(ngModel)]="aulaForm.titulo" placeholder="Ex.: Aula de introdução" />
@@ -175,25 +174,19 @@
         </div>
         <label>Observações (opcional)<textarea [(ngModel)]="aulaForm.observacoes" rows="3"></textarea></label>
       </div>
-      <div class="dialog-actions"><app-button variant="secondary" (click)="fecharFormularioAula()">Cancelar</app-button><app-button [loading]="salvandoAula()" (click)="salvarAula()">Salvar aula</app-button></div>
-    </section>
-  </div>
+      <ng-template #footer><app-button variant="secondary" (click)="fecharFormularioAula()">Cancelar</app-button><app-button [loading]="salvandoAula()" (click)="salvarAula()">Salvar aula</app-button></ng-template>
+  </app-modal>
   }
 
   @if (mostrarUploadMaterial()) {
-  <div class="overlay" role="presentation" (click)="mostrarUploadMaterial.set(false)">
-    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="novo-material-titulo" (click)="$event.stopPropagation()">
-      <div class="panel-header"><h2 id="novo-material-titulo">Novo material</h2><button type="button" class="close-button" (click)="mostrarUploadMaterial.set(false)" aria-label="Fechar">X</button></div>
-      <label>Arquivo<input type="file" (change)="selecionarArquivo($event)" accept=".pdf,.mp4,.doc,.docx,.ppt,.pptx"></label>
-      <div class="dialog-actions"><app-button variant="secondary" (click)="mostrarUploadMaterial.set(false)">Cancelar</app-button><app-button [loading]="enviandoMaterial()" (click)="enviarMaterial()">Enviar</app-button></div>
-    </section>
-  </div>
+  <app-modal [open]="true" title="Novo material" (closed)="mostrarUploadMaterial.set(false)">
+      <label>Arquivo<input type="file" class="input" (change)="selecionarArquivo($event)" accept=".pdf,.mp4,.doc,.docx,.ppt,.pptx"></label>
+      <ng-template #footer><app-button variant="secondary" (click)="mostrarUploadMaterial.set(false)">Cancelar</app-button><app-button [loading]="enviandoMaterial()" (click)="enviarMaterial()">Enviar</app-button></ng-template>
+  </app-modal>
   }
 
   @if (mostrarModalCriarAulas()) {
-  <div class="overlay" role="presentation" (click)="fecharModalCriarAulas()">
-    <section class="dialog dialog-xl" role="dialog" aria-modal="true" aria-labelledby="criar-varias-aulas-titulo" (click)="$event.stopPropagation()" style="max-height: 90vh; overflow-y: auto;">
-      <div class="panel-header"><h2 id="criar-varias-aulas-titulo">Criar várias aulas</h2><button type="button" class="close-button" (click)="fecharModalCriarAulas()" aria-label="Fechar">X</button></div>
+  <app-modal [open]="true" title="Criar várias aulas" size="lg" (closed)="fecharModalCriarAulas()">
       <div class="dialog-body">
         @if (erroCriarAulas()) {
         <p class="feedback error" role="alert">{{ erroCriarAulas() }}</p>
@@ -207,8 +200,8 @@
           <app-input label="Data de fim" type="date" [(ngModel)]="formCriarAulas.dataFim" />
         </div>
         <div class="form-row">
-          <label>Horário de início<input type="time" [(ngModel)]="formCriarAulas.horarioInicio"></label>
-          <label>Horário de fim<input type="time" [(ngModel)]="formCriarAulas.horarioFim"></label>
+          <label>Horário de início<input type="time" class="input" [(ngModel)]="formCriarAulas.horarioInicio"></label>
+          <label>Horário de fim<input type="time" class="input" [(ngModel)]="formCriarAulas.horarioFim"></label>
         </div>
         <label>Dias da semana
           <div class="dias-semana-grid">
@@ -229,9 +222,8 @@
         <label>Recursos necessários (opcional)<textarea [(ngModel)]="formCriarAulas.recursosNecessarios" placeholder="Materiais e recursos necessários" rows="3"></textarea></label>
         <label>Observações (opcional)<textarea [(ngModel)]="formCriarAulas.observacoes" placeholder="Observações adicionais" rows="3"></textarea></label>
       </div>
-      <div class="dialog-actions"><app-button variant="secondary" (click)="fecharModalCriarAulas()">Cancelar</app-button><app-button [loading]="salvandoCriarAulas()" (click)="salvarCriarAulas()">Criar aulas</app-button></div>
-    </section>
-  </div>
+      <ng-template #footer><app-button variant="secondary" (click)="fecharModalCriarAulas()">Cancelar</app-button><app-button [loading]="salvandoCriarAulas()" (click)="salvarCriarAulas()">Criar aulas</app-button></ng-template>
+  </app-modal>
   }
 
   <app-aulas-turma-modal

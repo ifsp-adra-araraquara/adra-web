@@ -1,13 +1,15 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   TemplateRef,
   contentChild,
+  inject,
   input,
   model,
   output,
 } from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
+import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
 
 /**
  * Modal padronizado — abre/fecha por um signal (`[(open)]`), fecha ao clicar fora
@@ -23,9 +25,10 @@ import { NgTemplateOutlet } from '@angular/common';
  *     </ng-template>
  *   </app-modal>
  */
+let nextId = 0;
+
 @Component({
   selector: 'app-modal',
-  standalone: true,
   imports: [NgTemplateOutlet],
   templateUrl: './modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,12 +41,18 @@ export class Modal {
   open = model(false);
 
   title = input('');
+  subtitle = input('');
   size = input<'sm' | 'md' | 'lg'>('md');
   closeOnBackdrop = input(true);
   closeOnEscape = input(true);
 
   /** Emitido sempre que o modal é fechado (clique fora, ESC ou botão de fechar). */
   closed = output<void>();
+
+  private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly document = inject(DOCUMENT);
+
+  protected readonly titleId = `app-modal-title-${nextId++}`;
 
   /** Rodapé opcional — projetado via `<ng-template #footer>` no conteúdo do modal. */
   footerTemplate = contentChild<TemplateRef<unknown>>('footer');
@@ -55,9 +64,14 @@ export class Modal {
   }
 
   protected onEscapeKey(): void {
-    if (this.open() && this.closeOnEscape()) {
+    if (this.open() && this.closeOnEscape() && this.isTopmost()) {
       this.close();
     }
+  }
+
+  private isTopmost(): boolean {
+    const overlays = this.document.querySelectorAll('.modal-overlay');
+    return overlays[overlays.length - 1]?.parentElement === this.host.nativeElement;
   }
 
   protected close(): void {

@@ -16,11 +16,11 @@ import { AulaComDetalhesResponseDTO } from '../../../shared/models/aula/AulaComD
 import { AulaModal } from '../../../shared/components/aula-modal/aula-modal';
 import { calcularSituacaoAula, ehAulaDeHoje, podeAbrirAula } from '../../../shared/utils/aula.util';
 import { Badge } from '../../../shared/components/badge/badge';
+import { Modal } from '../../../shared/components/modal/modal';
 
 @Component({
   selector: 'app-aulas-turma-modal',
-  standalone: true,
-  imports: [AulaModal, Badge],
+  imports: [AulaModal, Badge, Modal],
   templateUrl: './aulas-turma-modal.html',
   styleUrl: './aulas-turma-modal.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
