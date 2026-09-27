@@ -55,9 +55,12 @@ interface FormDefinirCampos {
  * oficineiro quanto no modal de aulas por turma.
  *
  * Comportamento por perfil:
- * - SOCIOPEDAGOGICO: faz a chamada dos assistidos da turma da aula.
- * - OFICINEIRO / COORDENADOR: só visualiza a lista de alunos, com um ícone
- *   para registrar ocorrência (sem ação implementada ainda).
+ * - SOCIOPEDAGOGICO: lança/corrige a chamada dos assistidos da turma, mas só
+ *   no dia da aula (CA-65.3/CA-67.2) — a validação que vale mesmo é a do
+ *   backend (PresencaService), isso aqui só evita a UX de erro seco.
+ * - COORDENADOR: lança/corrige a chamada de qualquer data (CA-67.1).
+ * - OFICINEIRO: só visualiza a lista de alunos, com um ícone para registrar
+ *   ocorrência (sem ação implementada ainda).
  *
  * Só é possível abrir aulas de hoje ou passadas (nunca pendentes/futuras
  * nem canceladas) — quem decide isso é `podeAbrirAula()`, em
@@ -98,9 +101,13 @@ export class AulaModal implements OnChanges {
 
   private readonly perfil = computed(() => this.auth.currentProfile());
   readonly ehSociopedagogico = computed(() => this.perfil() === Role.SOCIO);
+  readonly ehCoordenador = computed(() => this.perfil() === Role.COORD);
   readonly ehOficineiroOuCoordenador = computed(
     () => this.perfil() === Role.OFICINEIRO || this.perfil() === Role.COORD,
   );
+
+  /** US-67: quem tem acesso à edição/correção de chamada (lançar ou corrigir). */
+  private readonly podeEditarChamada = computed(() => this.ehSociopedagogico() || this.ehCoordenador());
 
   readonly situacao = computed<SituacaoAula | null>(() =>
     this.aula ? calcularSituacaoAula(this.aula.dataAula, this.aula.statusAula) : null,
@@ -115,31 +122,34 @@ export class AulaModal implements OnChanges {
   readonly desbloquearEdicaoChamada = signal(false);
 
   /**
-   * CA-65.3: sociopedagógico só realiza a chamada no dia da aula — a tela
-   * "Chamada" já nem deixa abrir aula de outro dia pra esse perfil, isso
-   * aqui é defesa em profundidade (ex.: acesso direto pela "Aula completa").
+   * CA-65.3/US-67: sociopedagógico só realiza/corrige a chamada no dia da
+   * aula; coordenador corrige chamada de qualquer data. A tela "Chamada" já
+   * nem deixa o sociopedagógico abrir aula de outro dia, isso aqui é defesa
+   * em profundidade (ex.: acesso direto pela "Aula completa") — a validação
+   * que vale de verdade é sempre a do backend (PresencaService).
    */
   private readonly aulaEhHoje = computed(() => (this.aula ? ehAulaDeHoje(this.aula.dataAula) : false));
+  private readonly podeCorrigirData = computed(() => this.ehCoordenador() || this.aulaEhHoje());
 
-  /** Mostra o formulário de chamada só pro sociopedagógico, no dia da aula — direto se ainda não foi finalizada, ou depois de desbloquear. */
+  /** Mostra o formulário de chamada pra quem edita e pode corrigir a data desta aula — direto se ainda não foi finalizada, ou depois de desbloquear. */
   readonly mostrarFormularioChamada = computed(
     () =>
-      this.ehSociopedagogico() &&
-      this.aulaEhHoje() &&
+      this.podeEditarChamada() &&
+      this.podeCorrigirData() &&
       (!this.situacaoFinalizada() || this.desbloquearEdicaoChamada()),
   );
 
-  /** Aviso "essa chamada já foi feita" pro sociopedagógico, antes de liberar a edição. */
+  /** Aviso "essa chamada já foi feita", antes de liberar a edição. */
   readonly mostrarAvisoChamadaFeita = computed(
     () =>
-      this.ehSociopedagogico() &&
-      this.aulaEhHoje() &&
+      this.podeEditarChamada() &&
+      this.podeCorrigirData() &&
       this.situacaoFinalizada() &&
       !this.desbloquearEdicaoChamada(),
   );
 
-  /** Aviso pro sociopedagógico quando a aula não é de hoje (não dá pra realizar/alterar a chamada). */
-  readonly mostrarAvisoForaDoDia = computed(() => this.ehSociopedagogico() && !this.aulaEhHoje());
+  /** Aviso pro sociopedagógico quando a aula não é de hoje (não dá pra realizar/corrigir a chamada) — nunca dispara pro coordenador. */
+  readonly mostrarAvisoForaDoDia = computed(() => this.podeEditarChamada() && !this.podeCorrigirData());
 
   desbloquearEdicao(): void {
     this.desbloquearEdicaoChamada.set(true);

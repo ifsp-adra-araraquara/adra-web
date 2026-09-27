@@ -99,12 +99,12 @@
         }
 
         @if (mostrarAvisoForaDoDia()) {
-        <!-- ================= SOCIOPEDAGÓGICO: aula de outro dia, sem acesso à chamada ================= -->
+        <!-- ================= SOCIOPEDAGÓGICO: aula de outro dia, sem acesso à chamada (US-67) ================= -->
         <p class="feedback" role="status">
           A chamada só pode ser realizada no dia da aula ({{ aula.dataAula }}).
         </p>
         } @else if (mostrarAvisoChamadaFeita()) {
-        <!-- ================= SOCIOPEDAGÓGICO: chamada já feita, travada ================= -->
+        <!-- ================= SOCIOPEDAGÓGICO/COORDENADOR: chamada já feita, travada ================= -->
         <div class="pres-counts">
           <div class="pc pc-p"><b>{{ totalPresentes() }}</b><span>Presentes</span></div>
           <div class="pc pc-f"><b>{{ totalFaltas() }}</b><span>Faltas</span></div>
@@ -141,7 +141,7 @@
         </ul>
 
         } @else if (mostrarFormularioChamada()) {
-        <!-- ================= SOCIOPEDAGÓGICO: chamada ================= -->
+        <!-- ================= SOCIOPEDAGÓGICO/COORDENADOR: chamada (lançar ou corrigir — US-67) ================= -->
         <div class="pres-counts">
           <div class="pc pc-p"><b>{{ totalPresentes() }}</b><span>Presentes</span></div>
           <div class="pc pc-f"><b>{{ totalFaltas() }}</b><span>Faltas</span></div>
@@ -221,7 +221,7 @@
         </ul>
 
         } @else {
-        <!-- ================= OFICINEIRO / COORDENADOR: somente leitura ================= -->
+        <!-- ================= OFICINEIRO: somente leitura ================= -->
         <ul class="lista-alunos">
           @for (aluno of alunos(); track aluno.assistidoId) {
           <li class="linha-aluno">

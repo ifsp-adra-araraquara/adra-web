@@ -112,3 +112,72 @@ describe('AulaModal', () => {
     ]);
   });
 });
+
+/**
+ * US-67 (CA-67.1/CA-67.2/CA-67.3): coordenador corrige chamada de qualquer
+ * data; sociopedagógico só a do dia atual — a tela precisa bloquear
+ * visualmente a edição antes mesmo de chamar a API. A validação que vale de
+ * verdade é sempre a do backend (PresencaService); isso aqui é só a UX.
+ */
+describe('AulaModal — US-67 correção de chamada por perfil e data', () => {
+  const aulaSemanaPassadaMock: AulaComDetalhesResponseDTO = {
+    aulaId: 20,
+    turmaId: 1,
+    nomeTurma: 'CJ Grupo A',
+    nomeOficineiro: 'Fulano',
+    quantidadeAlunos: 1,
+    titulo: 'Aula de uma semana atrás',
+    descricao: null,
+    dataAula: '2020-01-01',
+    horarioInicio: '08:00',
+    horarioFim: '09:00',
+    conteudoPrevisto: null,
+    conteudoMinistrado: null,
+    objetivos: null,
+    recursosNecessarios: null,
+    statusAula: StatusAula.REALIZADA,
+    observacoes: null,
+    criadoEm: '',
+    atualizadoEm: '',
+  };
+
+  async function montarComponente(perfil: Role): Promise<{ component: AulaModal; httpMock: HttpTestingController }> {
+    await TestBed.configureTestingModule({
+      imports: [AulaModal, HttpClientTestingModule],
+      providers: [{ provide: AuthService, useValue: { currentProfile: () => perfil } }],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(AulaModal);
+    const component = fixture.componentInstance;
+    const httpMock = TestBed.inject(HttpTestingController);
+
+    component.aula = aulaSemanaPassadaMock;
+    component.ngOnChanges({ aula: {} as any });
+    httpMock.expectOne(`${environment.apiUrl}/api/chamadas/aula/${aulaSemanaPassadaMock.aulaId}`).flush([]);
+    await fixture.whenStable();
+
+    return { component, httpMock };
+  }
+
+  it('CA-67.1: coordenador vê a chamada (travada, com opção de alterar) mesmo numa aula de uma semana atrás', async () => {
+    const { component, httpMock } = await montarComponente(Role.COORD);
+
+    expect(component.mostrarAvisoForaDoDia()).toBe(false);
+    expect(component.mostrarAvisoChamadaFeita()).toBe(true); // já finalizada -> precisa clicar em "Alterar chamada"
+
+    component.desbloquearEdicao();
+    expect(component.mostrarFormularioChamada()).toBe(true);
+
+    httpMock.verify();
+  });
+
+  it('CA-67.2/CA-67.3: sociopedagógico é bloqueado visualmente numa aula de uma semana atrás, sem chegar a chamar a API de correção', async () => {
+    const { component, httpMock } = await montarComponente(Role.SOCIO);
+
+    expect(component.mostrarAvisoForaDoDia()).toBe(true);
+    expect(component.mostrarFormularioChamada()).toBe(false);
+    expect(component.mostrarAvisoChamadaFeita()).toBe(false);
+
+    httpMock.verify();
+  });
+});
