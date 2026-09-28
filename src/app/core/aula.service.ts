@@ -7,6 +7,7 @@ import { AulaStatusPatchRequestDTO } from '../shared/models/aula/AulaStatusPatch
 import { CriacaoAulasRequestDTO } from '../shared/models/aula/CriacaoAulasRequestDTO';
 import { GerarAulasResponseDTO } from '../shared/models/aula/GerarAulasResponseDTO';
 import { AulaResponseDTO } from '../shared/models/aula/AulaResponseDTO';
+import { AulaStatusChamadaResponseDTO } from '../shared/models/aula/AulaStatusChamadaResponseDTO';
 import { StatusAula } from '../shared/enum/StatusAula';
 
 /** Filtros do GET /api/aulas/com-detalhes — não existe DTO de filtro no back, fica local ao service. */
@@ -18,6 +19,13 @@ export interface FiltroListaAulas {
   nomeTurma?: string;
   titulo?: string;
   dataAula?: string;
+}
+
+/** Filtros do GET /api/aulas/status-chamada (US-71). */
+export interface FiltroStatusChamada {
+  turmaId?: number;
+  dataInicio?: string;
+  dataFim?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -51,6 +59,16 @@ export class AulaService {
         this.carregando.set(false);
       })
     );
+  }
+
+  /** US-71: status de lançamento da chamada por aula (GET /api/aulas/status-chamada). */
+  listarStatusChamada(filtro: FiltroStatusChamada): Observable<AulaStatusChamadaResponseDTO[]> {
+    let params = new HttpParams();
+    if (filtro.turmaId != null) params = params.set('turma_id', filtro.turmaId);
+    if (filtro.dataInicio) params = params.set('data_inicio', filtro.dataInicio);
+    if (filtro.dataFim) params = params.set('data_fim', filtro.dataFim);
+
+    return this.http.get<AulaStatusChamadaResponseDTO[]>(`${this.api}/api/aulas/status-chamada`, { params });
   }
 
   // CA-64.4: PATCH real é /api/aulas/{id} (não /{id}/status).

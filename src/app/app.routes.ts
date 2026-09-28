@@ -90,6 +90,13 @@ export const routes: Routes = [
         canActivate: [roleGuard]
       },
       {
+        path: 'chamada/status',
+        loadComponent: () =>
+          import('./features/home/status-chamada/status-chamada').then((m) => m.StatusChamadaPainel),
+        data: { roles: [Role.COORD] },
+        canActivate: [roleGuard]
+      },
+      {
         path: 'aulas/:aulaId/completa',
         component: AulaCompleta,
         data: { roles: [Role.COORD, Role.SOCIO, Role.OFICINEIRO] },

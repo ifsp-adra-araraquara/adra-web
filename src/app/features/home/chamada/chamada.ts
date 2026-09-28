@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/auth.service';
@@ -38,6 +39,8 @@ import { Button } from '../../../shared/components/button/button';
 export class Chamada implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly api = environment.apiUrl;
 
   readonly carregando = signal(false);
@@ -56,11 +59,33 @@ export class Chamada implements OnInit {
   private readonly perfil = computed(() => this.auth.currentProfile());
   readonly ehCoordenador = computed(() => this.perfil() === Role.COORD);
 
+  /**
+   * US-71 (CA-71.4): o painel de status das chamadas chega aqui com
+   * `?data=YYYY-MM-DD&aulaId=N` — a tela já abre naquele dia e com a
+   * chamada da aula aberta. A data só é aceita pro coordenador; pro
+   * sociopedagógico continua valendo a trava em hoje.
+   */
+  private aulaIdParaAbrir: number | null = null;
+
   ngOnInit(): void {
+    const params = this.route.snapshot.queryParamMap;
+    const dataParam = params.get('data');
+    const aulaIdParam = Number(params.get('aulaId'));
+    if (this.ehCoordenador() && dataParam) {
+      this.dataSelecionada.set(dataParam);
+    }
+    if (Number.isInteger(aulaIdParam) && aulaIdParam > 0) {
+      this.aulaIdParaAbrir = aulaIdParam;
+    }
+
     if (!this.ehCoordenador() && this.dataSelecionada() !== hojeISO()) {
       this.dataSelecionada.set(hojeISO());
     }
     this.carregarAulas();
+  }
+
+  irParaStatusChamadas(): void {
+    this.router.navigate(['/chamada/status']);
   }
 
   onDataChange(valor: string): void {
@@ -115,6 +140,12 @@ export class Chamada implements OnInit {
       this.aulas.set(
         [...aulas].sort((a, b) => (a.horarioInicio ?? '').localeCompare(b.horarioInicio ?? '')),
       );
+
+      if (this.aulaIdParaAbrir != null) {
+        const aula = aulas.find((a) => a.aulaId === this.aulaIdParaAbrir);
+        this.aulaIdParaAbrir = null;
+        if (aula) this.abrirAula(aula);
+      }
     } catch {
       this.erro.set('Não foi possível carregar as aulas desta data.');
     } finally {

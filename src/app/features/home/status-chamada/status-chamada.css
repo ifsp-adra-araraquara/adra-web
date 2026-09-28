@@ -1,0 +1,24 @@
+:host { display: block; width: 100%; }
+.status-chamada-page { width: 100%; max-width: 100%; }
+.page-header { margin-bottom: 24px; }
+.eyebrow { margin: 0 0 6px; color: var(--green-400); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+h1, p { margin-top: 0; }
+h1 { margin-bottom: 8px; font-size: 22px; }
+.page-intro { color: var(--gray-600); }
+
+.panel { width: 100%; border: 1px solid var(--gray-100); border-radius: 10px; background: #fff; box-shadow: var(--shadow-sm); box-sizing: border-box; }
+.panel-header { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--gray-100); }
+
+.filtros { display: flex; flex-wrap: wrap; gap: 14px; width: 100%; }
+.filtros .field { flex: 1 1 160px; margin-bottom: 0; }
+
+.resumo { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.feedback { padding: 12px 20px; color: var(--gray-600); }
+.feedback.error { color: var(--coral-600); }
+
+@media (min-width: 720px) {
+  h1 { font-size: 26px; }
+  .panel-header { flex-direction: row; align-items: flex-end; justify-content: space-between; }
+  .filtros { width: auto; flex: 1; }
+}
