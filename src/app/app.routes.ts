@@ -18,7 +18,6 @@ import { Oficinas } from './features/home/oficinas/oficinas';
 import { Materiais } from './features/home/materiais/materiais';
 import { Oficineiro } from './features/home/oficineiro/oficineiro';
 import { Aulas } from './features/home/aulas/aulas';
-import { Chamada } from './features/home/chamada/chamada';
 import { AulaCompleta } from './features/home/aula-completa/aula-completa';
 import { Showcase } from './features/showcase/showcase';
 
@@ -85,7 +84,7 @@ export const routes: Routes = [
       },
       {
         path: 'chamada',
-        component: Chamada,
+        loadComponent: () => import('./features/home/chamada/chamada').then((m) => m.Chamada),
         data: { roles: [Role.COORD, Role.SOCIO] },
         canActivate: [roleGuard]
       },

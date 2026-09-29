@@ -11,6 +11,11 @@ export interface PresencaResponseDTO {
   statusPresenca: StatusPresenca;
   motivoFalta: MotivoFalta | null;
   observacao: string | null;
+  // US-68: rastreabilidade de autoria de chamada
+  criadoPorId: number | null;
+  criadoPorNome: string | null;
+  atualizadoPorId: number | null;
+  atualizadoPorNome: string | null;
   criadoEm: string | null;
   atualizadoEm: string | null;
 }

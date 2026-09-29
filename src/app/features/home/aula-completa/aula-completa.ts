@@ -27,6 +27,13 @@ interface LinhaAluno {
   // só usados quando statusPresenca = FALTA_JUSTIFICADA (CA-65.2)
   motivoFalta: MotivoFalta | null;
   observacao: string;
+  // US-68: rastreabilidade de quem lançou ou alterou
+  criadoPorId?: number | null;
+  criadoPorNome?: string | null;
+  atualizadoPorId?: number | null;
+  atualizadoPorNome?: string | null;
+  criadoEm?: string | null;
+  atualizadoEm?: string | null;
 }
 
 type AbaAulaCompleta = 'alunos' | 'materiais';
@@ -174,6 +181,12 @@ export class AulaCompleta implements OnInit {
               statusPresenca: presenca?.statusPresenca ?? StatusPresenca.PRESENTE,
               motivoFalta: presenca?.motivoFalta ?? null,
               observacao: presenca?.observacao ?? '',
+              criadoPorId: presenca?.criadoPorId ?? null,
+              criadoPorNome: presenca?.criadoPorNome ?? null,
+              atualizadoPorId: presenca?.atualizadoPorId ?? null,
+              atualizadoPorNome: presenca?.atualizadoPorNome ?? null,
+              criadoEm: presenca?.criadoEm ?? null,
+              atualizadoEm: presenca?.atualizadoEm ?? null,
             };
           })
           .sort((a, b) => a.nomeCompleto.localeCompare(b.nomeCompleto)),

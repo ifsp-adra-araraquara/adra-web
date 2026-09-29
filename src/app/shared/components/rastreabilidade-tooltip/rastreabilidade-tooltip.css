@@ -1,0 +1,142 @@
+:host {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.rastreabilidade-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  outline: none;
+  cursor: pointer;
+}
+
+.gatilho-icone {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  background: var(--gray-100);
+  border: 1px solid var(--gray-300, #d1d5db);
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--gray-700, #374151);
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.icone-relogio {
+  width: 12px;
+  height: 12px;
+  color: var(--gray-600);
+  flex-shrink: 0;
+}
+
+.gatilho-texto {
+  font-size: 11px;
+  font-weight: 600;
+  display: inline;
+  white-space: nowrap;
+}
+
+.rastreabilidade-container:hover .gatilho-icone,
+.rastreabilidade-container:focus-visible .gatilho-icone {
+  background: var(--green-50);
+  border-color: var(--green-200);
+  color: var(--green-600);
+}
+
+.rastreabilidade-container:hover .icone-relogio,
+.rastreabilidade-container:focus-visible .icone-relogio {
+  color: var(--green-400);
+}
+
+/* Tooltip popup */
+.tooltip-conteudo {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 1000;
+  min-width: 210px;
+  max-width: 280px;
+  background: #ffffff;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--gray-800);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  white-space: normal;
+}
+
+/* Exibe no hover ou no foco por teclado */
+.rastreabilidade-container:hover .tooltip-conteudo,
+.rastreabilidade-container:focus .tooltip-conteudo,
+.rastreabilidade-container:focus-visible .tooltip-conteudo {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green-600);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--gray-100);
+  margin-bottom: 8px;
+}
+
+.header-icon {
+  width: 13px;
+  height: 13px;
+  color: var(--green-400);
+}
+
+.tooltip-secao {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.linha-autor {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.rotulo {
+  color: var(--gray-600);
+  font-size: 11px;
+}
+
+.nome {
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.linha-data {
+  font-size: 10.5px;
+  color: var(--gray-500);
+}
+
+.tooltip-divisor {
+  height: 1px;
+  background: var(--gray-100);
+  margin: 6px 0;
+}
+
+.tooltip-secao.alterado .rotulo {
+  color: var(--amber-600);
+}

@@ -31,6 +31,7 @@ import { Badge } from '../badge/badge';
 import { Input as AppInput } from '../input/input';
 import { Button as AppButton } from '../button/button';
 import { Modal } from '../modal/modal';
+import { RastreabilidadeTooltip } from '../rastreabilidade-tooltip/rastreabilidade-tooltip';
 
 interface LinhaChamada {
   assistidoId: number;
@@ -39,6 +40,13 @@ interface LinhaChamada {
   // só usados quando statusPresenca = FALTA_JUSTIFICADA (CA-65.2)
   motivoFalta: MotivoFalta | null;
   observacao: string;
+  // US-68: rastreabilidade de quem lançou ou alterou a chamada
+  criadoPorId: number | null;
+  criadoPorNome: string | null;
+  atualizadoPorId: number | null;
+  atualizadoPorNome: string | null;
+  criadoEm: string | null;
+  atualizadoEm: string | null;
 }
 
 interface FormDefinirCampos {
@@ -74,7 +82,7 @@ interface FormDefinirCampos {
  */
 @Component({
   selector: 'app-aula-modal',
-  imports: [FormsModule, Badge, AppInput, AppButton, Modal],
+  imports: [FormsModule, Badge, AppInput, AppButton, Modal, RastreabilidadeTooltip],
   templateUrl: './aula-modal.html',
   styleUrl: './aula-modal.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -216,6 +224,12 @@ export class AulaModal implements OnChanges {
             statusPresenca: p.statusPresenca,
             motivoFalta: p.motivoFalta,
             observacao: p.observacao ?? '',
+            criadoPorId: p.criadoPorId ?? null,
+            criadoPorNome: p.criadoPorNome ?? null,
+            atualizadoPorId: p.atualizadoPorId ?? null,
+            atualizadoPorNome: p.atualizadoPorNome ?? null,
+            criadoEm: p.criadoEm ?? null,
+            atualizadoEm: p.atualizadoEm ?? null,
           }))
           .sort((a, b) => a.nomeCompleto.localeCompare(b.nomeCompleto)),
       );
