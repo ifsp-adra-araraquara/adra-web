@@ -51,7 +51,7 @@
   box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
-.cal-scroll .fc { padding: 14px; }
+.cal-scroll .fc { padding: 8px; }
 
 :host {
   --fc-button-bg-color: var(--gray-50);
@@ -61,7 +61,10 @@
   --fc-button-hover-border-color: var(--green-400);
   --fc-button-active-bg-color: var(--green-400);
   --fc-button-active-border-color: var(--green-400);
-  --fc-today-bg-color: var(--green-50);
+  /* Hoje é destacado via anel na .fc-daygrid-day-frame (mais abaixo), não
+     pelo preenchimento plano padrão do FullCalendar — fica mais "atual"
+     e não se confunde com o hover do dia. */
+  --fc-today-bg-color: transparent;
   --fc-border-color: var(--gray-100);
   --fc-neutral-bg-color: var(--gray-50);
 }
@@ -91,58 +94,97 @@
   color: var(--gray-400); text-transform: uppercase; text-decoration: none;
 }
 
-/* Células do dia: menos altura vazia, número do dia bem posicionado */
-::ng-deep .fc .fc-daygrid-day-frame { min-height: 92px; padding: 4px; }
-::ng-deep .fc .fc-daygrid-day-top { padding: 4px 6px 2px; }
+/* Células do dia: compactas por padrão (mobile-first), crescem um pouco
+   em telas maiores. Cantos arredondados + hover dão a leitura de "cartão
+   clicável", não só uma grade de planilha. */
+::ng-deep .fc .fc-daygrid-day-frame {
+  min-height: 58px;
+  padding: 3px;
+  margin: 1px;
+  border-radius: 8px;
+  transition: background-color .14s ease, box-shadow .14s ease;
+}
+::ng-deep .fc .fc-daygrid-day { cursor: pointer; }
+::ng-deep .fc .fc-daygrid-day:hover .fc-daygrid-day-frame {
+  background: var(--green-50);
+  box-shadow: inset 0 0 0 1px var(--green-200);
+}
+::ng-deep .fc .fc-daygrid-day-top { padding: 3px 4px 1px; }
 ::ng-deep .fc .fc-daygrid-day-number {
-  font-size: 12.5px; font-weight: 600; color: var(--gray-600);
-  padding: 2px 6px; border-radius: 20px;
+  font-size: 12px; font-weight: 700; color: var(--gray-600);
+  padding: 1px 6px; border-radius: 20px;
 }
 /* Dias fora do mês corrente: bem discretos */
 ::ng-deep .fc .fc-day-other .fc-daygrid-day-number { color: var(--gray-200); font-weight: 400; }
-/* Dia atual: destaque elegante, sem círculo gigante */
+/* Dia atual: anel de cor na célula inteira (não um preenchimento chapado)
+   + número em destaque sólido — mais "atual", menos bloco monocromático. */
+::ng-deep .fc .fc-day-today .fc-daygrid-day-frame {
+  background: var(--green-50);
+  box-shadow: inset 0 0 0 1.5px var(--green-400);
+}
+::ng-deep .fc .fc-day-today:hover .fc-daygrid-day-frame {
+  box-shadow: inset 0 0 0 1.5px var(--green-600);
+}
 ::ng-deep .fc .fc-day-today .fc-daygrid-day-number {
   background: var(--green-400); color: #fff;
 }
 
 /* "+N mais" nativo do FullCalendar, com a mesma tipografia discreta */
 ::ng-deep .fc .fc-daygrid-more-link {
-  font-size: 11.5px; font-weight: 600; color: var(--green-600);
-  padding: 2px 6px;
+  font-size: 11px; font-weight: 600; color: var(--green-600);
+  padding: 1px 6px;
 }
 
-/* ===== EVENTOS — mini-card horário/título/subtítulo ===== */
+/* ===== EVENTOS — chip compacto com acento de cor na lateral (em vez de
+   fundo pastel inteiro, que ficava "lavado") ===== */
 ::ng-deep .fc-event.fc-daygrid-event {
-  border-radius: 6px;
-  margin: 2px 3px;
+  border-radius: 5px;
+  margin: 1px 2px;
   padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  transition: filter .12s ease;
 }
+::ng-deep .fc-event.fc-daygrid-event:hover { filter: brightness(0.97); }
 ::ng-deep .fc-event .fc-event-main { padding: 0; }
 ::ng-deep .evt {
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding: 3px 6px;
-  line-height: 1.25;
+  padding: 2px 6px 2px 7px;
+  line-height: 1.22;
   overflow: hidden;
+  border-left: 3px solid var(--evt-accent, var(--gray-400));
 }
 ::ng-deep .evt-hora {
-  font-size: 10.5px; font-weight: 600; opacity: .75;
+  font-size: 10px; font-weight: 700; opacity: .8;
 }
 ::ng-deep .evt-titulo {
-  font-size: 12px; font-weight: 600;
+  font-size: 11.5px; font-weight: 600;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 ::ng-deep .evt-sub {
   display: none;
-  font-size: 10.5px; opacity: .7;
+  font-size: 10px; opacity: .72;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
 ::ng-deep .fc-list .evt-sub { display: block; }
 ::ng-deep .fc-list .evt-hora { display: none; }
+::ng-deep .fc-list-event { cursor: pointer; }
 
 @media (min-width: 720px) {
+  .cal-scroll .fc { padding: 14px; }
   .cal-toolbar { flex-direction: row; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; }
+  ::ng-deep .fc .fc-daygrid-day-frame { min-height: 84px; padding: 4px; margin: 2px; }
   ::ng-deep .evt-sub { display: block; }
 }
+
+/* ===== PAINEL "AULAS DO DIA" (clique numa célula vazia do calendário) ===== */
+.dia-aulas-lista { display: flex; flex-direction: column; gap: 10px; }
+.dia-aula-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 12px; border: 1px solid var(--gray-100); border-radius: var(--radius-sm);
+}
+.dia-aula-info { display: flex; flex-direction: column; gap: 2px; font-size: 13.5px; }
+.dia-aula-info strong { font-size: 12px; color: var(--green-600); }

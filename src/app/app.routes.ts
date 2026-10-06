@@ -17,7 +17,6 @@ import { Turmas } from './features/home/turma/turma';
 import { Oficinas } from './features/home/oficinas/oficinas';
 import { Materiais } from './features/home/materiais/materiais';
 import { Oficineiro } from './features/home/oficineiro/oficineiro';
-import { Aulas } from './features/home/aulas/aulas';
 import { AulaCompleta } from './features/home/aula-completa/aula-completa';
 import { Showcase } from './features/showcase/showcase';
 
@@ -77,10 +76,10 @@ export const routes: Routes = [
         canActivate: [roleGuard]
       },
       {
+        // "Aulas" foi unificada em "Turmas" (Fase 2) — redirect preserva links/favoritos antigos.
         path: 'aulas',
-        component: Aulas,
-        data: { roles: [Role.COORD, Role.SOCIO] },
-        canActivate: [roleGuard]
+        redirectTo: 'turmas',
+        pathMatch: 'full'
       },
       {
         path: 'chamada',
@@ -93,6 +92,15 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/home/status-chamada/status-chamada').then((m) => m.StatusChamadaPainel),
         data: { roles: [Role.COORD] },
+        canActivate: [roleGuard]
+      },
+      {
+        path: 'chamada/turma/:turmaId/grade',
+        loadComponent: () =>
+          import('./features/home/grade-frequencia-turma/grade-frequencia-turma').then(
+            (m) => m.GradeFrequenciaTurma,
+          ),
+        data: { roles: [Role.COORD, Role.SOCIO] },
         canActivate: [roleGuard]
       },
       {

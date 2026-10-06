@@ -57,4 +57,34 @@
       <app-aula-status-modal [aula]="aula" (fechar)="fecharModalStatus()" (salvo)="fecharModalStatus()" />
     }
   }
+
+  <app-modal
+    [open]="diaSelecionado() !== null"
+    [title]="tituloPainelDia()"
+    size="sm"
+    (closed)="fecharPainelDia()"
+  >
+    @if (aulasDoDiaSelecionado().length === 0) {
+      <p class="empty">Nenhuma aula neste dia.</p>
+    } @else {
+      <div class="dia-aulas-lista">
+        @for (aula of aulasDoDiaSelecionado(); track aula.aulaId) {
+          <div class="dia-aula-item">
+            <div class="dia-aula-info">
+              <strong>{{ aula.horarioInicio?.slice(0, 5) ?? '—' }}</strong>
+              <span>{{ aula.titulo ?? aula.nomeTurma ?? 'Aula' }}</span>
+              @if (aula.nomeOficineiro) {
+                <span class="muted">{{ aula.nomeOficineiro }}</span>
+              }
+            </div>
+            @if (podeIrParaChamada()) {
+              <app-button size="sm" variant="secondary" (click)="abrirChamadaDaAula(aula)">
+                Abrir chamada
+              </app-button>
+            }
+          </div>
+        }
+      </div>
+    }
+  </app-modal>
 </div>

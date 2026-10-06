@@ -6,10 +6,22 @@
   transition: transform .2s var(--ease), visibility .2s;
 }
 .sidebar.open { transform: none; visibility: visible; }
-.sidebar-head { display: flex; align-items: center; gap: 10px; padding: 16px 18px; height: var(--topbar-h); }
-.sidebar-head .brand-mark { width: 32px; height: 32px; border-radius: 8px; }
-.sidebar-logo { font-family: 'DM Serif Display', serif; font-size: 19px; color: #fff; }
+.sidebar-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 16px 18px; min-height: var(--topbar-h); transition: padding .2s var(--ease); }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; overflow: hidden; }
+.brand app-brand-logo { display: block; flex: none; }
+.sidebar-logo { font-family: 'Space Grotesk', sans-serif; font-size: 19px; font-weight: 600; color: #fff; overflow: hidden; white-space: nowrap; }
 .sidebar-logo small { display: block; font-family: 'DM Sans'; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--green-200); font-weight: 500; }
+
+.collapse-btn {
+  display: none;
+  flex: none;
+  width: 32px; height: 32px; border: none; border-radius: 8px;
+  background: transparent; color: var(--green-200);
+  align-items: center; justify-content: center;
+  transition: background .14s, transform .2s var(--ease);
+}
+.collapse-btn:hover { background: var(--green-800); color: #fff; }
+.collapse-btn .chevron { width: 16px; height: 16px; transition: transform .2s var(--ease); }
 
 .nav {
   flex: 1;
@@ -18,10 +30,15 @@
   display: flex;
   flex-direction: column;
   gap: 2px; /* opcional, espaçamento entre itens */
+  background:
+    linear-gradient(to bottom, var(--green-900) 30%, transparent) top / 100% 24px no-repeat local,
+    linear-gradient(to top, var(--green-900) 30%, transparent) bottom / 100% 24px no-repeat local,
+    radial-gradient(farthest-side at 50% 0, rgba(0,0,0,.4), transparent) top / 100% 10px no-repeat scroll,
+    radial-gradient(farthest-side at 50% 100%, rgba(0,0,0,.4), transparent) bottom / 100% 10px no-repeat scroll;
 }
 .nav::-webkit-scrollbar { width: 6px; }
 .nav::-webkit-scrollbar-thumb { background: var(--green-800); border-radius: 4px; }
-.nav-section { font-size: 10.5px; text-transform: uppercase; letter-spacing: 1px; color: var(--green-200); opacity: .8; padding: 16px 10px 6px; font-weight: 600; }
+.nav-section { font-size: 10.5px; text-transform: uppercase; letter-spacing: 1px; color: var(--green-200); opacity: .8; padding: 16px 10px 6px; font-weight: 600; white-space: nowrap; overflow: hidden; }
 
 .nav-item {
   display: flex;
@@ -52,10 +69,14 @@
 
 .nav-item:hover { background: var(--green-800); color: #fff; }
 .nav-item.active { background: var(--green-400); color: #fff; }
+.nav-item-label { overflow: hidden; text-overflow: ellipsis; }
+.nav-item-icon { width: 18px; height: 18px; flex: none; display: flex; align-items: center; justify-content: center; }
+.nav-item-icon svg { width: 100%; height: 100%; }
 
 .sidebar-user {
   border-top: 1px solid var(--green-800); padding: 12px 14px;
   display: flex; align-items: center; gap: 10px;
+  transition: flex-direction .2s var(--ease), padding .2s var(--ease);
 }
 .avatar {
   width: 36px; height: 36px; border-radius: 50%; flex: none;
@@ -67,5 +88,16 @@
 .sidebar-user .who span { font-size: 11.5px; color: var(--green-200); }
 
 @media (min-width: 1200px) {
-  .sidebar { transform: none; visibility: visible; transition: none; z-index: 40; }
+  .sidebar { transform: none; visibility: visible; transition: width .2s var(--ease); z-index: 40; }
+  .collapse-btn { display: flex; }
+
+  .sidebar.collapsed { width: 72px; }
+  .sidebar.collapsed .sidebar-head { flex-direction: column; padding: 14px 8px; gap: 10px; }
+  .sidebar.collapsed .sidebar-logo,
+  .sidebar.collapsed .nav-item-label,
+  .sidebar.collapsed .nav-section,
+  .sidebar.collapsed .sidebar-user .who { display: none; }
+  .sidebar.collapsed .collapse-btn .chevron { transform: rotate(180deg); }
+  .sidebar.collapsed .nav-item { justify-content: center; padding: 9px; }
+  .sidebar.collapsed .sidebar-user { flex-direction: column; padding: 12px 8px; gap: 10px; }
 }

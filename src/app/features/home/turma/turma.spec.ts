@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 
 import { Turmas } from './turma';
 import { Turno } from '../../../shared/enum/Turno';
@@ -12,6 +13,7 @@ describe('Turmas', () => {
   let httpMock: HttpTestingController;
 
   const apiTurmas = `${environment.apiUrl}/api/turmas`;
+  const apiOficinas = `${environment.apiUrl}/api/oficinas`;
 
   const turmaMock: TurmaResponseDTO = {
     turmaId: 1,
@@ -23,9 +25,16 @@ describe('Turmas', () => {
     observacoes: '',
   };
 
+  /** ngOnInit dispara carregarTurmas() + carregarOficinas() juntos — mocka ambos. */
+  function flushCargaInicial(turmas: TurmaResponseDTO[] = []): void {
+    httpMock.expectOne((r) => r.url === apiTurmas).flush(turmas);
+    httpMock.expectOne((r) => r.url === apiOficinas).flush([]);
+  }
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Turmas, HttpClientTestingModule],
+      providers: [provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Turmas);
@@ -50,6 +59,7 @@ describe('Turmas', () => {
     expect(req.request.method).toBe('GET');
 
     req.flush([turmaMock]);
+    httpMock.expectOne((r) => r.url === apiOficinas).flush([]);
 
     expect(component.turmas()).toEqual([turmaMock]);
     expect(component.carregando()).toBe(false);
@@ -60,6 +70,7 @@ describe('Turmas', () => {
 
     const req = httpMock.expectOne((r) => r.url === apiTurmas);
     req.flush('erro', { status: 500, statusText: 'Server Error' });
+    httpMock.expectOne((r) => r.url === apiOficinas).flush([]);
 
     expect(component.erroListar()).toContain('Não foi possível carregar');
     expect(component.carregando()).toBe(false);
@@ -67,7 +78,7 @@ describe('Turmas', () => {
 
   it('não deve permitir salvar turma sem nome preenchido', async () => {
     fixture.detectChanges();
-    httpMock.expectOne((r) => r.url === apiTurmas).flush([]);
+    flushCargaInicial();
 
     component.abrirModalNovaTurma();
     component.formTurma.nomeTurma = '';
@@ -80,7 +91,7 @@ describe('Turmas', () => {
 
   it('não deve permitir salvar turma sem turno selecionado', async () => {
     fixture.detectChanges();
-    httpMock.expectOne((r) => r.url === apiTurmas).flush([]);
+    flushCargaInicial();
 
     component.abrirModalNovaTurma();
     component.formTurma.nomeTurma = 'CJ Grupo B';
@@ -95,7 +106,7 @@ describe('Turmas', () => {
 
   it('não deve permitir salvar turma com capacidade inválida', async () => {
     fixture.detectChanges();
-    httpMock.expectOne((r) => r.url === apiTurmas).flush([]);
+    flushCargaInicial();
 
     component.abrirModalNovaTurma();
     component.formTurma.nomeTurma = 'CJ Grupo B';
@@ -110,7 +121,7 @@ describe('Turmas', () => {
 
   it('deve enviar POST ao criar uma turma válida', async () => {
     fixture.detectChanges();
-    httpMock.expectOne((r) => r.url === apiTurmas).flush([]);
+    flushCargaInicial();
 
     component.abrirModalNovaTurma();
     component.formTurma = {
@@ -137,7 +148,7 @@ describe('Turmas', () => {
 
   it('deve enviar PUT ao editar uma turma existente', async () => {
     fixture.detectChanges();
-    httpMock.expectOne((r) => r.url === apiTurmas).flush([turmaMock]);
+    flushCargaInicial([turmaMock]);
 
     component.abrirModalEditarTurma(turmaMock);
     component.formTurma.capacidade = 30;
@@ -158,7 +169,7 @@ describe('Turmas', () => {
 
   it('deve enviar PATCH de status ao confirmar inativação', async () => {
     fixture.detectChanges();
-    httpMock.expectOne((r) => r.url === apiTurmas).flush([turmaMock]);
+    flushCargaInicial([turmaMock]);
 
     component.abrirModalStatus(turmaMock);
     expect(component.mostrarModalStatus()).toBe(true);
@@ -180,7 +191,7 @@ describe('Turmas', () => {
 
   it('deve reenviar filtro de turno como query param ao trocar o filtro', () => {
     fixture.detectChanges();
-    httpMock.expectOne((r) => r.url === apiTurmas).flush([]);
+    flushCargaInicial();
 
     component.onFiltroTurnoChange(Turno.INTEGRAL);
 
@@ -188,5 +199,18 @@ describe('Turmas', () => {
       (r) => r.url === apiTurmas && r.params.get('turno') === Turno.INTEGRAL,
     );
     req.flush([]);
+  });
+
+  it('monta o nome da oficina de cada turma a partir de /api/oficinas (coluna "Oficina")', () => {
+    fixture.detectChanges();
+
+    httpMock.expectOne((r) => r.url === apiTurmas).flush([
+      { ...turmaMock, oficinaId: 7 },
+    ]);
+    httpMock.expectOne((r) => r.url === apiOficinas).flush([
+      { oficinaId: 7, nomeOficina: 'Futebol', ativo: true, oficineiroResponsavelId: null },
+    ]);
+
+    expect(component.nomeOficina(component.turmas()[0])).toBe('Futebol');
   });
 });

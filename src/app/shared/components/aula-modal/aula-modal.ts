@@ -11,43 +11,38 @@ import {
   signal,
 } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/auth.service';
-import { AulaService } from '../../../core/aula.service';
+import { ChamadaService } from '../../../core/chamada.service';
 import { Role } from '../../enum/role.enum';
-import { StatusAula } from '../../enum/StatusAula';
 import { StatusPresenca } from '../../enum/StatusPresenca';
 import { MotivoFalta, MOTIVO_FALTA_OPTIONS } from '../../enum/MotivoFalta';
 import { SituacaoAula } from '../../enum/SituacaoAula';
 import { calcularSituacaoAula, ehAulaDeHoje } from '../../utils/aula.util';
+import {
+  DIAS_FAIXA_HISTORICO,
+  LIMIAR_FALTAS_CONSECUTIVAS,
+  LinhaChamada,
+  atualizarMotivoFalta as atualizarMotivoFaltaUtil,
+  atualizarObservacaoFalta as atualizarObservacaoFaltaUtil,
+  contarFaltasConsecutivas,
+  marcarPresenca as marcarPresencaUtil,
+  marcarTodosPresentes as marcarTodosPresentesUtil,
+  podeCorrigirDataChamada,
+  podeEditarChamada as podeEditarChamadaUtil,
+  validarChamada,
+} from '../../utils/chamada.util';
 import { AulaComDetalhesResponseDTO } from '../../models/aula/AulaComDetalhesResponseDTO';
 import { AulaRequestDTO } from '../../models/aula/AulaRequestDTO';
 import { AulaResponseDTO } from '../../models/aula/AulaResponseDTO';
-import { PresencaRequestDTO } from '../../models/presenca/PresencaRequestDTO';
-import { PresencaResponseDTO } from '../../models/presenca/PresencaResponseDTO';
 import { Badge } from '../badge/badge';
 import { Input as AppInput } from '../input/input';
 import { Button as AppButton } from '../button/button';
 import { Modal } from '../modal/modal';
 import { RastreabilidadeTooltip } from '../rastreabilidade-tooltip/rastreabilidade-tooltip';
-
-interface LinhaChamada {
-  assistidoId: number;
-  nomeCompleto: string;
-  statusPresenca: StatusPresenca | null;
-  // só usados quando statusPresenca = FALTA_JUSTIFICADA (CA-65.2)
-  motivoFalta: MotivoFalta | null;
-  observacao: string;
-  // US-68: rastreabilidade de quem lançou ou alterou a chamada
-  criadoPorId: number | null;
-  criadoPorNome: string | null;
-  atualizadoPorId: number | null;
-  atualizadoPorNome: string | null;
-  criadoEm: string | null;
-  atualizadoEm: string | null;
-}
 
 interface FormDefinirCampos {
   titulo: string;
@@ -90,7 +85,8 @@ interface FormDefinirCampos {
 export class AulaModal implements OnChanges {
   private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
-  private readonly aulaService = inject(AulaService);
+  private readonly chamadaService = inject(ChamadaService);
+  private readonly router = inject(Router);
   private readonly api = environment.apiUrl;
 
   @Input() aula: AulaComDetalhesResponseDTO | null = null;
@@ -108,14 +104,12 @@ export class AulaModal implements OnChanges {
   readonly alunos = signal<LinhaChamada[]>([]);
 
   private readonly perfil = computed(() => this.auth.currentProfile());
-  readonly ehSociopedagogico = computed(() => this.perfil() === Role.SOCIO);
-  readonly ehCoordenador = computed(() => this.perfil() === Role.COORD);
   readonly ehOficineiroOuCoordenador = computed(
     () => this.perfil() === Role.OFICINEIRO || this.perfil() === Role.COORD,
   );
 
   /** US-67: quem tem acesso à edição/correção de chamada (lançar ou corrigir). */
-  private readonly podeEditarChamada = computed(() => this.ehSociopedagogico() || this.ehCoordenador());
+  private readonly podeEditarChamada = computed(() => podeEditarChamadaUtil(this.perfil()));
 
   readonly situacao = computed<SituacaoAula | null>(() =>
     this.aula ? calcularSituacaoAula(this.aula.dataAula, this.aula.statusAula) : null,
@@ -137,7 +131,7 @@ export class AulaModal implements OnChanges {
    * que vale de verdade é sempre a do backend (PresencaService).
    */
   private readonly aulaEhHoje = computed(() => (this.aula ? ehAulaDeHoje(this.aula.dataAula) : false));
-  private readonly podeCorrigirData = computed(() => this.ehCoordenador() || this.aulaEhHoje());
+  private readonly podeCorrigirData = computed(() => podeCorrigirDataChamada(this.perfil(), this.aulaEhHoje()));
 
   /** Mostra o formulário de chamada pra quem edita e pode corrigir a data desta aula — direto se ainda não foi finalizada, ou depois de desbloquear. */
   readonly mostrarFormularioChamada = computed(
@@ -173,6 +167,29 @@ export class AulaModal implements OnChanges {
     () => this.alunos().filter((a) => a.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA).length,
   );
 
+  readonly limiarFaltasConsecutivas = LIMIAR_FALTAS_CONSECUTIVAS;
+  readonly diasFaixaHistorico = DIAS_FAIXA_HISTORICO;
+
+  /** Iniciais pro avatar do aluno (mesmo padrão de `sidebar.ts`, até 2 letras). */
+  iniciaisAluno(nomeCompleto: string): string {
+    return nomeCompleto
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((p) => p[0]?.toUpperCase())
+      .join('');
+  }
+
+  /** Faltas seguidas mais recentes do aluno — deriva de `historicoRecente`, já vindo no mesmo request do roster. */
+  faltasConsecutivasDe(aluno: LinhaChamada): number {
+    return contarFaltasConsecutivas(aluno.historicoRecente);
+  }
+
+  /** Os últimos `diasFaixaHistorico` dias, mais recente primeiro — pra faixa de bolinhas no roster. */
+  faixaHistoricoDe(aluno: LinhaChamada) {
+    return aluno.historicoRecente.slice(0, this.diasFaixaHistorico);
+  }
+
   /** Rótulo do botão de salvar: distingue "lançar pela primeira vez" de "corrigir uma já feita". */
   readonly textoBotaoSalvar = computed(() =>
     this.situacaoFinalizada() ? 'Salvar alterações' : 'Salvar chamada',
@@ -198,41 +215,13 @@ export class AulaModal implements OnChanges {
     }
   }
 
-  /**
-   * Fonte única do roster: GET /api/chamadas/aula/{id} já devolve, por
-   * assistido elegível na data da aula (CA-70.1/70.2 — filtro de desligados
-   * feito no back), o status de presença inferido/lançado. Não busca mais
-   * em /api/assistidos (isso duplicava a fonte de roster com um filtro por
-   * status ATUAL do assistido, que quebrava a chamada de aulas passadas
-   * assim que alguém era desligado — ver CA-70.2).
-   */
   private async carregarDados(): Promise<void> {
     const aula = this.aula;
     if (!aula || !aula.turmaId) return;
     this.carregando.set(true);
     this.erro.set(null);
     try {
-      const presencas = await firstValueFrom(
-        this.http.get<PresencaResponseDTO[]>(`${this.api}/api/chamadas/aula/${aula.aulaId}`),
-      );
-
-      this.alunos.set(
-        presencas
-          .map((p) => ({
-            assistidoId: p.assistidoId,
-            nomeCompleto: p.nomeCompleto,
-            statusPresenca: p.statusPresenca,
-            motivoFalta: p.motivoFalta,
-            observacao: p.observacao ?? '',
-            criadoPorId: p.criadoPorId ?? null,
-            criadoPorNome: p.criadoPorNome ?? null,
-            atualizadoPorId: p.atualizadoPorId ?? null,
-            atualizadoPorNome: p.atualizadoPorNome ?? null,
-            criadoEm: p.criadoEm ?? null,
-            atualizadoEm: p.atualizadoEm ?? null,
-          }))
-          .sort((a, b) => a.nomeCompleto.localeCompare(b.nomeCompleto)),
-      );
+      this.alunos.set(await this.chamadaService.carregarRoster(aula.aulaId));
     } catch {
       this.erro.set('Não foi possível carregar os alunos desta aula.');
     } finally {
@@ -241,97 +230,36 @@ export class AulaModal implements OnChanges {
   }
 
   marcarPresenca(aluno: LinhaChamada, status: StatusPresenca): void {
-    this.alunos.set(
-      this.alunos().map((a) => {
-        if (a.assistidoId !== aluno.assistidoId) return a;
-        if (status !== StatusPresenca.FALTA_JUSTIFICADA) {
-          return { ...a, statusPresenca: status, motivoFalta: null, observacao: '' };
-        }
-        return { ...a, statusPresenca: status };
-      }),
-    );
+    this.alunos.set(marcarPresencaUtil(this.alunos(), aluno.assistidoId, status));
   }
 
   atualizarMotivoFalta(aluno: LinhaChamada, motivo: MotivoFalta): void {
-    this.alunos.set(
-      this.alunos().map((a) => (a.assistidoId === aluno.assistidoId ? { ...a, motivoFalta: motivo } : a)),
-    );
+    this.alunos.set(atualizarMotivoFaltaUtil(this.alunos(), aluno.assistidoId, motivo));
   }
 
   atualizarObservacaoFalta(aluno: LinhaChamada, observacao: string): void {
-    this.alunos.set(
-      this.alunos().map((a) => (a.assistidoId === aluno.assistidoId ? { ...a, observacao } : a)),
-    );
+    this.alunos.set(atualizarObservacaoFaltaUtil(this.alunos(), aluno.assistidoId, observacao));
   }
 
   marcarTodosPresentes(): void {
-    this.alunos.set(
-      this.alunos().map((a) => ({
-        ...a,
-        statusPresenca: StatusPresenca.PRESENTE,
-        motivoFalta: null,
-        observacao: '',
-      })),
-    );
+    this.alunos.set(marcarTodosPresentesUtil(this.alunos()));
   }
 
   async salvarChamada(): Promise<void> {
     const aula = this.aula;
     if (!aula || this.salvando()) return;
 
-    if (this.alunos().some((a) => !a.statusPresenca)) {
-      this.erro.set('Marque a presença de todos os alunos antes de salvar.');
-      return;
-    }
-
-    // CA-65.2, espelhando a validação do back.
-    const faltaJustificadaSemMotivo = this.alunos().find(
-      (a) => a.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA && !a.motivoFalta,
-    );
-    if (faltaJustificadaSemMotivo) {
-      this.erro.set(`Informe o motivo da falta justificada de ${faltaJustificadaSemMotivo.nomeCompleto}.`);
-      return;
-    }
-    const faltaJustificadaOutroSemObservacao = this.alunos().find(
-      (a) =>
-        a.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA &&
-        a.motivoFalta === MotivoFalta.OUTRO &&
-        !a.observacao?.trim(),
-    );
-    if (faltaJustificadaOutroSemObservacao) {
-      this.erro.set(
-        `Motivo "Outro" exige observação — preencha a de ${faltaJustificadaOutroSemObservacao.nomeCompleto}.`,
-      );
+    const erroValidacao = validarChamada(this.alunos());
+    if (erroValidacao) {
+      this.erro.set(erroValidacao);
       return;
     }
 
     this.salvando.set(true);
     this.erro.set(null);
     try {
-      // CA-65.3: o back só aceita lançar chamada em aula REALIZADA — e é a
-      // própria chamada que marca a aula como realizada, então isso precisa
-      // rodar ANTES do POST de presenças (senão o back rejeita).
-      if (aula.statusAula !== StatusAula.REALIZADA) {
-        await this.marcarAulaComoRealizada(aula);
-      }
-
-      const presencas: PresencaRequestDTO[] = this.alunos().map((a) => ({
-        aulaId: aula.aulaId,
-        assistidoId: a.assistidoId,
-        statusPresenca: a.statusPresenca!,
-        motivoFalta: a.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA ? a.motivoFalta : null,
-        observacao:
-          a.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA && a.observacao?.trim()
-            ? a.observacao.trim()
-            : null,
-      }));
-
-      await firstValueFrom(
-        this.http.post<PresencaResponseDTO[]>(
-          `${this.api}/api/chamadas/aula/${aula.aulaId}`,
-          presencas,
-        ),
-      );
+      const statusAula = await this.chamadaService.salvar(aula.aulaId, aula.statusAula, this.alunos());
+      this.aula = { ...aula, statusAula };
 
       this.chamadaSalva.emit();
       this.fechar.emit();
@@ -340,21 +268,6 @@ export class AulaModal implements OnChanges {
     } finally {
       this.salvando.set(false);
     }
-  }
-
-  /**
-   * Marca a aula como REALIZADA depois da chamada salva, via PATCH
-   * /api/aulas/{id} (atualização pontual de status — CA-64.4). Usa
-   * AulaService.atualizarStatus em vez do PUT de /api/aulas/{id} porque
-   * esse PUT é @PreAuthorize hasRole('COORDENADOR') — o sociopedagógico
-   * (quem faz a chamada) tomava 403 aqui. O PATCH já é liberado também
-   * pro sociopedagógico (ver AulaController).
-   */
-  private async marcarAulaComoRealizada(aula: AulaComDetalhesResponseDTO): Promise<void> {
-    const atualizada = await firstValueFrom(
-      this.aulaService.atualizarStatus(aula.aulaId, StatusAula.REALIZADA),
-    );
-    this.aula = { ...aula, statusAula: atualizada.statusAula };
   }
 
   /**
@@ -370,13 +283,29 @@ export class AulaModal implements OnChanges {
   }
 
   /**
-   * Abre a página "Aula completa" (alunos em grade de cartões + aba de
-   * materiais, ainda não funcional) em outra guia do navegador.
+   * Navega para a página "Aula completa" (alunos em grade de cartões + aba
+   * de materiais, ainda não funcional) dentro do próprio SPA — abrir em nova
+   * guia (window.open) quebrava o fluxo e perdia o histórico do navegador,
+   * especialmente ruim em mobile.
    */
   abrirAulaCompleta(): void {
     if (!this.aula) return;
-    const url = `${window.location.origin}/aulas/${this.aula.aulaId}/completa`;
-    window.open(url, '_blank', 'noopener');
+    const aulaId = this.aula.aulaId;
+    this.fecharModal();
+    this.router.navigate(['/aulas', aulaId, 'completa']);
+  }
+
+  /**
+   * "Ver grade da turma" — tela separada (dias x alunos, estilo planilha),
+   * carregada só quando a pessoa pede, pra não pesar o fluxo rápido de
+   * marcar presença. Fecha este modal antes de navegar (mesmo padrão de
+   * `abrirAulaCompleta`, evita empilhar overlay).
+   */
+  verGradeTurma(): void {
+    if (!this.aula?.turmaId) return;
+    const turmaId = this.aula.turmaId;
+    this.fecharModal();
+    this.router.navigate(['/chamada/turma', turmaId, 'grade']);
   }
 
   /* ============================================================

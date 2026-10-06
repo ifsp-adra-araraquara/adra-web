@@ -18,6 +18,7 @@ import { AulaModal } from '../../../shared/components/aula-modal/aula-modal';
 import { PaginaResponse } from '../../../shared/models/PaginaResponse';
 import { AssistidoResponseDTO } from '../../../shared/models/assistido/AssistidoResponseDTO';
 import { calcularSituacaoAula, ehAulaDeHoje, podeAbrirAula } from '../../../shared/utils/aula.util';
+import { ocupacaoTurma as ocupacaoTurmaUtil } from '../../../shared/utils/ocupacao.util';
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Badge } from '../../../shared/components/badge/badge';
 import { Input } from '../../../shared/components/input/input';
@@ -65,6 +66,11 @@ export class Oficineiro implements OnInit {
 
   abrirAulasDaTurma(turma: OficineiroTurmaDTO): void {
     this.turmaAulasSelecionada.set(turma);
+  }
+
+  /** Ver `shared/utils/ocupacao.util.ts` — mesma conta reutilizada em `turma.ts`. */
+  ocupacaoTurma(turma: OficineiroTurmaDTO): number {
+    return ocupacaoTurmaUtil(turma.quantidadeAlunos, turma.capacidade);
   }
 
   fecharAulasDaTurma(): void {

@@ -1,5 +1,9 @@
 <section class="chamada-page" aria-labelledby="chamada-titulo">
   <header class="page-header">
+    <button type="button" class="btn-voltar" (click)="voltar()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+      Voltar
+    </button>
     <p class="eyebrow">Pedagógico</p>
     <h1 id="chamada-titulo">Chamada</h1>
     <p class="page-intro">
@@ -47,40 +51,88 @@
     <p class="feedback error" role="alert">{{ erro() }}</p>
     }
 
-    <div class="table-wrap" role="region" tabindex="0" aria-label="Aulas do dia">
-      <table>
-        <thead>
-          <tr>
-            <th>Horário</th>
-            <th>Turma</th>
-            <th>Oficineiro</th>
-            <th>Alunos</th>
-            <th>Título</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (aula of aulas(); track aula.aulaId) {
-          <tr
-            [class.linha-hoje]="ehHoje(aula)"
-            [class.linha-bloqueada]="!podeAbrir(aula)"
-            [attr.title]="podeAbrir(aula) ? 'Abrir aula' : (ehCoordenador() ? 'Só é possível abrir aulas de hoje ou já passadas' : 'Você só pode realizar a chamada de aulas de hoje')"
-            (click)="abrirAula(aula)"
-            [attr.tabindex]="podeAbrir(aula) ? 0 : null"
-            (keydown.enter)="abrirAula(aula)"
-          >
-            <td>{{ aula.horarioInicio && aula.horarioFim ? aula.horarioInicio + ' - ' + aula.horarioFim : '-' }} @if (ehHoje(aula)) { <span class="tag-hoje">Hoje</span> }</td>
-            <td class="strong">{{ aula.nomeTurma || '-' }}</td>
-            <td>{{ aula.nomeOficineiro || '-' }}</td>
-            <td>{{ aula.quantidadeAlunos ?? '-' }}</td>
-            <td>{{ aula.titulo || '-' }}</td>
-            <td><app-badge [status]="situacaoAula(aula)" /></td>
-          </tr>
-          } @empty {
-          <tr><td colspan="6" class="empty">Nenhuma aula cadastrada para esta data.</td></tr>
+    <div data-tour="chamada-tabela">
+      <!-- Mobile (<720px): cards, horário/turma/ação em destaque — ver chamada.css -->
+      <ul class="chamada-cards" role="list">
+        @for (aula of aulas(); track aula.aulaId) {
+        <li
+          class="chamada-card"
+          [class.hoje]="ehHoje(aula)"
+          [class.bloqueada]="!podeAbrir(aula)"
+          [attr.tabindex]="podeAbrir(aula) ? 0 : null"
+          [attr.aria-disabled]="!podeAbrir(aula)"
+          (click)="abrirAula(aula)"
+          (keydown.enter)="abrirAula(aula)"
+        >
+          <div class="cc-topo">
+            <span class="cc-horario">
+              {{ aula.horarioInicio && aula.horarioFim ? aula.horarioInicio + ' - ' + aula.horarioFim : '-' }}
+              @if (ehHoje(aula)) { <span class="tag-hoje">Hoje</span> }
+            </span>
+            @if (rotuloAcao(aula); as acao) {
+              <app-badge [variant]="acao.variant" [label]="acao.label" />
+            } @else {
+              <app-badge [status]="situacaoAula(aula)" />
+            }
+          </div>
+          <strong class="cc-turma">{{ aula.nomeTurma || '-' }}</strong>
+          <span class="cc-meta">
+            {{ aula.nomeOficineiro || '-' }} · {{ aula.quantidadeAlunos ?? 0 }} alunos
+            @if (aula.titulo) { · {{ aula.titulo }} }
+          </span>
+          @if (!podeAbrir(aula)) {
+            <span class="cc-bloqueio">
+              {{ ehCoordenador() ? 'Só aulas de hoje ou já passadas' : 'Só aulas de hoje' }}
+            </span>
           }
-        </tbody>
-      </table>
+        </li>
+        } @empty {
+        <li class="empty">Nenhuma aula cadastrada para esta data.</li>
+        }
+      </ul>
+
+      <!-- Desktop (≥720px): tabela, todas as colunas -->
+      <div class="table-wrap chamada-table-desktop" role="region" tabindex="0" aria-label="Aulas do dia">
+        <table>
+          <thead>
+            <tr>
+              <th>Horário</th>
+              <th>Turma</th>
+              <th>Oficineiro</th>
+              <th>Alunos</th>
+              <th>Título</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (aula of aulas(); track aula.aulaId) {
+            <tr
+              [class.linha-hoje]="ehHoje(aula)"
+              [class.linha-bloqueada]="!podeAbrir(aula)"
+              [attr.title]="podeAbrir(aula) ? 'Abrir aula' : (ehCoordenador() ? 'Só é possível abrir aulas de hoje ou já passadas' : 'Você só pode realizar a chamada de aulas de hoje')"
+              (click)="abrirAula(aula)"
+              [attr.tabindex]="podeAbrir(aula) ? 0 : null"
+              (keydown.enter)="abrirAula(aula)"
+            >
+              <td>{{ aula.horarioInicio && aula.horarioFim ? aula.horarioInicio + ' - ' + aula.horarioFim : '-' }} @if (ehHoje(aula)) { <span class="tag-hoje">Hoje</span> }</td>
+              <td class="strong">{{ aula.nomeTurma || '-' }}</td>
+              <td>{{ aula.nomeOficineiro || '-' }}</td>
+              <td>{{ aula.quantidadeAlunos ?? '-' }}</td>
+              <td>{{ aula.titulo || '-' }}</td>
+              <td>
+                @if (rotuloAcao(aula); as acao) {
+                  <app-badge [variant]="acao.variant" [label]="acao.label" />
+                } @else {
+                  <app-badge [status]="situacaoAula(aula)" />
+                }
+              </td>
+            </tr>
+            } @empty {
+            <tr><td colspan="6" class="empty">Nenhuma aula cadastrada para esta data.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 

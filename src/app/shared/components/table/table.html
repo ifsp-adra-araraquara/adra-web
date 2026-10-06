@@ -36,6 +36,8 @@
             <td [style.text-align]="column.align ?? 'left'">
               @if (column.type === 'badge') {
                 <app-badge [status]="cellStatus(row, column)" />
+              } @else if (column.type === 'custom' && cellTemplate(); as cell) {
+                <ng-container [ngTemplateOutlet]="cell" [ngTemplateOutletContext]="{ $implicit: row, column: column }" />
               } @else {
                 {{ cellValue(row, column) }}
               }

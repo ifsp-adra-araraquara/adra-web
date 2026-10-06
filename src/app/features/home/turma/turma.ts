@@ -3,12 +3,14 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
 
 import { Turno, TURNOS_DISPONIVEIS } from '../../../shared/enum/Turno';
 import { Role } from '../../../shared/enum/role.enum';
+import { ocupacaoTurma as ocupacaoTurmaUtil } from '../../../shared/utils/ocupacao.util';
 
 import { TurmaRequestDTO } from '../../../shared/models/turma/TurmaRequestDTO';
 import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO';
@@ -24,21 +26,36 @@ import { AssistidoResponseDTO } from '../../../shared/models/assistido/Assistido
 import { PaginaResponse } from '../../../shared/models/PaginaResponse';
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Modal } from '../../../shared/components/modal/modal';
+import { Drawer } from '../../../shared/components/drawer/drawer';
 import { Table, TableColumn } from '../../../shared/components/table/table';
 import { Input } from '../../../shared/components/input/input';
 import { Button } from '../../../shared/components/button/button';
+import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
+import { AulasTurmaModal } from '../aulas-turma-modal/aulas-turma-modal';
 import { AuthService } from '../../../core/auth.service';
 
 @Component({
   selector: 'app-turmas',
   standalone: true,
-  imports: [CommonModule, FormsModule, Select, Modal, Table, Input, Button],
+  imports: [
+    CommonModule,
+    FormsModule,
+    Select,
+    Modal,
+    Drawer,
+    Table,
+    Input,
+    Button,
+    TooltipDirective,
+    AulasTurmaModal,
+  ],
   templateUrl: './turma.html',
   styleUrl: './turma.css',
 })
 export class Turmas implements OnInit {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   private readonly apiTurmas = `${environment.apiUrl}/api/turmas`;
   private readonly apiAulas = `${environment.apiUrl}/api/aulas`;
@@ -54,6 +71,8 @@ export class Turmas implements OnInit {
    * nem tentamos chamá-lo pra esse perfil - CA acordado com o usuário).
    */
   isCoordenador = computed(() => this.authService.currentProfile() === Role.COORD);
+  /** Só Sociopedagógico abre a aula pra tomar chamada a partir daqui (mesma regra que já existia na extinta aba "Aulas"). */
+  ehSociopedagogico = computed(() => this.authService.currentProfile() === Role.SOCIO);
 
   turnoOptions: SelectOption<string>[] = this.turnosDisponiveis.map(t => ({
     value: t,
@@ -86,11 +105,25 @@ export class Turmas implements OnInit {
 
   readonly colunasTurmas: TableColumn<TurmaResponseDTO>[] = [
     { key: 'nomeTurma', header: 'Nome da turma', sortable: true },
+    { key: 'oficina', header: 'Oficina', value: (t) => this.nomeOficina(t) },
     { key: 'turno', header: 'Turno', sortable: true },
     { key: 'faixaEtaria', header: 'Faixa etária', value: (t) => t.faixaEtaria || '—' },
-    { key: 'capacidade', header: 'Capacidade', align: 'center' },
+    { key: 'ocupacao', header: 'Ocupação', align: 'center', type: 'custom', width: '160px' },
     { key: 'ativo', header: 'Status', type: 'badge', width: '140px' },
   ];
+
+  /** Ver `shared/utils/ocupacao.util.ts` — mesma conta reutilizada em `oficineiro.ts`. */
+  ocupacaoTurma(turma: TurmaResponseDTO): number {
+    return ocupacaoTurmaUtil(turma.quantidadeAlunos, turma.capacidade);
+  }
+
+  /** Lookup O(1) por oficinaId — evita um `.find()` em `oficinas()` por linha a cada render da tabela. */
+  private readonly oficinasPorId = computed(() => new Map(this.oficinas().map((o) => [o.oficinaId, o])));
+
+  nomeOficina(turma: TurmaResponseDTO): string {
+    if (!turma.oficinaId) return '-';
+    return this.oficinasPorId().get(turma.oficinaId)?.nomeOficina ?? '-';
+  }
 
   protected readonly trackByTurmaId = (turma: TurmaResponseDTO) => turma.turmaId;
 
@@ -102,11 +135,45 @@ export class Turmas implements OnInit {
 
   ngOnInit(): void {
     this.carregarTurmas();
-    this.carregarOficinasParaSelect();
+    this.carregarOficinas();
 
     if (this.isCoordenador()) {
       this.carregarOficineirosParaSelect();
     }
+  }
+
+  /* ============================================================
+   * VER ALUNOS / VER AULAS — absorvidos da extinta tela "Aulas"
+   * ============================================================ */
+  turmaAulasSelecionada = signal<TurmaResponseDTO | null>(null);
+
+  /** Leva à ficha completa do assistido (cadastro, não só nome) já filtrada por essa turma. */
+  verAlunos(turma: TurmaResponseDTO): void {
+    this.router.navigate(['/assistidos'], { queryParams: { turmaId: turma.turmaId } });
+  }
+
+  abrirAulasDaTurma(turma: TurmaResponseDTO): void {
+    this.turmaAulasSelecionada.set(turma);
+  }
+
+  fecharAulasDaTurma(): void {
+    this.turmaAulasSelecionada.set(null);
+  }
+
+  /**
+   * Drawer lateral "Abrir turma" — substitui os ~7 ícones soltos por linha
+   * na tabela por um único ponto de entrada com as ações agrupadas. Cada
+   * botão do drawer fecha ele antes de acionar a ação (evita empilhar dois
+   * overlays — mesma preocupação já registrada no plano pra modais aninhadas).
+   */
+  turmaDrawerAberta = signal<TurmaResponseDTO | null>(null);
+
+  abrirDrawerTurma(turma: TurmaResponseDTO): void {
+    this.turmaDrawerAberta.set(turma);
+  }
+
+  fecharDrawerTurma(): void {
+    this.turmaDrawerAberta.set(null);
   }
 
   onFiltroNomeChange(valor: string): void {
@@ -159,20 +226,22 @@ export class Turmas implements OnInit {
   }
 
   /* ============================================================
-   * SELECTS: OFICINA E OFICINEIRO RESPONSÁVEL
+   * OFICINAS — lista completa (nomes p/ coluna + calendário) e o
+   * recorte de ativas p/ o select de criar/editar turma.
    * ============================================================ */
-  oficinaOptions = signal<SelectOption<number>[]>([]);
+  oficinas = signal<OficinaResponseDTO[]>([]);
+  oficinaOptions = computed<SelectOption<number>[]>(() =>
+    this.oficinas()
+      .filter((o) => o.ativo)
+      .map((o) => ({ value: o.oficinaId, label: o.nomeOficina })),
+  );
   oficineiroOptions = signal<SelectOption<number>[]>([]);
 
-  private carregarOficinasParaSelect(): void {
-    this.http
-      .get<OficinaResponseDTO[]>(this.apiOficinas, { params: new HttpParams().set('ativo', 'true') })
-      .subscribe({
-        next: (lista) => {
-          this.oficinaOptions.set(lista.map((o) => ({ value: o.oficinaId, label: o.nomeOficina })));
-        },
-        error: (erro) => console.error('Erro ao carregar oficinas para seleção:', erro),
-      });
+  private carregarOficinas(): void {
+    this.http.get<OficinaResponseDTO[]>(this.apiOficinas).subscribe({
+      next: (lista) => this.oficinas.set(lista),
+      error: (erro) => console.error('Erro ao carregar oficinas:', erro),
+    });
   }
 
   private carregarOficineirosParaSelect(): void {
