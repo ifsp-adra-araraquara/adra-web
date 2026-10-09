@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 
 import { AulaModal } from './aula-modal';
 import { AuthService } from '../../../core/auth.service';
@@ -58,6 +59,7 @@ describe('AulaModal', () => {
       atualizadoPorNome: null,
       criadoEm: null,
       atualizadoEm: null,
+      historicoRecente: [],
     },
     {
       presencaId: 99,
@@ -73,13 +75,20 @@ describe('AulaModal', () => {
       atualizadoPorNome: 'Coordenador Silva',
       criadoEm: '2026-09-10T10:00:00',
       atualizadoEm: '2026-09-10T10:00:00',
+      historicoRecente: [
+        { dataAula: '2026-09-08', statusPresenca: StatusPresenca.FALTA },
+        { dataAula: '2026-09-03', statusPresenca: StatusPresenca.FALTA },
+      ],
     },
   ];
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AulaModal, HttpClientTestingModule],
-      providers: [{ provide: AuthService, useValue: { currentProfile: () => Role.SOCIO } }],
+      providers: [
+        { provide: AuthService, useValue: { currentProfile: () => Role.SOCIO } },
+        provideRouter([]),
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(AulaModal);
@@ -115,6 +124,10 @@ describe('AulaModal', () => {
         atualizadoPorNome: 'Coordenador Silva',
         criadoEm: '2026-09-10T10:00:00',
         atualizadoEm: '2026-09-10T10:00:00',
+        historicoRecente: [
+          { dataAula: '2026-09-08', statusPresenca: StatusPresenca.FALTA },
+          { dataAula: '2026-09-03', statusPresenca: StatusPresenca.FALTA },
+        ],
       },
       {
         assistidoId: 1,
@@ -128,6 +141,7 @@ describe('AulaModal', () => {
         atualizadoPorNome: null,
         criadoEm: null,
         atualizadoEm: null,
+        historicoRecente: [],
       },
     ]);
   });
@@ -164,7 +178,10 @@ describe('AulaModal — US-67 correção de chamada por perfil e data', () => {
   async function montarComponente(perfil: Role): Promise<{ component: AulaModal; httpMock: HttpTestingController }> {
     await TestBed.configureTestingModule({
       imports: [AulaModal, HttpClientTestingModule],
-      providers: [{ provide: AuthService, useValue: { currentProfile: () => perfil } }],
+      providers: [
+        { provide: AuthService, useValue: { currentProfile: () => perfil } },
+        provideRouter([]),
+      ],
     }).compileComponents();
 
     const fixture = TestBed.createComponent(AulaModal);

@@ -1,0 +1,61 @@
+<section class="grade-page" aria-labelledby="grade-titulo">
+  <header class="page-header">
+    <button type="button" class="btn-voltar" (click)="voltar()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+      Voltar
+    </button>
+    <p class="eyebrow">Pedagógico</p>
+    <h1 id="grade-titulo">Grade de frequência</h1>
+    <p class="page-intro">
+      Últimas aulas da turma, uma coluna por dia (mais recente à esquerda). Pensada pra uma olhada
+      com calma — pra marcar presença do dia, use a tela de Chamada.
+    </p>
+  </header>
+
+  @if (carregando()) {
+    <p class="feedback" role="status">Carregando...</p>
+  } @else if (erro()) {
+    <p class="feedback error" role="alert">{{ erro() }}</p>
+  } @else if (datas().length === 0) {
+    <p class="feedback">Nenhuma aula realizada ainda nesta turma.</p>
+  } @else {
+    <div class="legenda">
+      <app-badge [status]="StatusPresenca.PRESENTE" />
+      <app-badge [status]="StatusPresenca.FALTA" />
+      <app-badge [status]="StatusPresenca.FALTA_JUSTIFICADA" />
+    </div>
+
+    <div class="grade-wrap" role="region" tabindex="0" aria-label="Grade de frequência da turma">
+      <table>
+        <thead>
+          <tr>
+            <th class="col-aluno">Aluno</th>
+            @for (data of datas(); track data) {
+              <th>{{ data | date: 'dd/MM' }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (aluno of alunos(); track aluno.assistidoId) {
+            <tr>
+              <td class="col-aluno">{{ aluno.nomeCompleto }}</td>
+              @for (status of aluno.presencas; track $index) {
+                <td>
+                  <span
+                    class="grade-dot"
+                    [class.presente]="status === StatusPresenca.PRESENTE"
+                    [class.falta]="status === StatusPresenca.FALTA"
+                    [class.justificada]="status === StatusPresenca.FALTA_JUSTIFICADA"
+                    [title]="status === StatusPresenca.PRESENTE ? 'Presente' : status === StatusPresenca.FALTA ? 'Falta' : 'Falta justificada'"
+                  ></span>
+                </td>
+              }
+            </tr>
+          } @empty {
+            <tr><td [attr.colspan]="datas().length + 1" class="empty">Nenhum aluno vinculado a esta turma.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

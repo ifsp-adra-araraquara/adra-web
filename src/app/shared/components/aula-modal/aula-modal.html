@@ -6,7 +6,10 @@
   (closed)="fecharModal()"
 >
     @if (!mostrarDefinirCampos()) {
-      <app-button modal-actions variant="secondary" size="sm" (click)="abrirAulaCompleta()">Ver aula completa</app-button>
+      <div modal-actions class="acoes-cabecalho">
+        <app-button variant="secondary" size="sm" (click)="verGradeTurma()">Ver grade da turma</app-button>
+        <app-button variant="secondary" size="sm" (click)="abrirAulaCompleta()">Ver aula completa</app-button>
+      </div>
     }
 
     @if (situacao(); as s) {
@@ -120,7 +123,36 @@
           @for (aluno of alunos(); track aluno.assistidoId) {
           <li class="linha-aluno">
             <div class="nome-aluno-wrap">
+              <span
+                class="aluno-avatar"
+                aria-hidden="true"
+                [class.presente]="aluno.statusPresenca === StatusPresenca.PRESENTE"
+                [class.falta]="aluno.statusPresenca === StatusPresenca.FALTA"
+                [class.justificada]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+              >{{ iniciaisAluno(aluno.nomeCompleto) }}</span>
               <span class="nome-aluno">{{ aluno.nomeCompleto }}</span>
+              @if (aluno.historicoRecente.length > 0) {
+                <span class="faixa-dias" aria-hidden="true">
+                  @for (dia of faixaHistoricoDe(aluno); track dia.dataAula) {
+                    <span
+                      class="faixa-dia"
+                      [class.presente]="dia.statusPresenca === StatusPresenca.PRESENTE"
+                      [class.falta]="dia.statusPresenca === StatusPresenca.FALTA"
+                      [class.justificada]="dia.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+                    ></span>
+                  }
+                </span>
+              }
+              @if (faltasConsecutivasDe(aluno) >= limiarFaltasConsecutivas) {
+                <span class="alerta-faltas" role="status">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                  {{ faltasConsecutivasDe(aluno) }} faltas seguidas
+                </span>
+              }
               @if (aluno.criadoPorNome || aluno.atualizadoPorNome) {
                 @defer (on hover; prefetch on idle) {
                   <app-rastreabilidade-tooltip
@@ -177,7 +209,36 @@
           <li class="linha-aluno linha-aluno-chamada">
             <div class="linha-aluno-topo">
               <div class="nome-aluno-wrap">
+                <span
+                  class="aluno-avatar"
+                  aria-hidden="true"
+                  [class.presente]="aluno.statusPresenca === StatusPresenca.PRESENTE"
+                  [class.falta]="aluno.statusPresenca === StatusPresenca.FALTA"
+                  [class.justificada]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+                >{{ iniciaisAluno(aluno.nomeCompleto) }}</span>
                 <span class="nome-aluno">{{ aluno.nomeCompleto }}</span>
+                @if (aluno.historicoRecente.length > 0) {
+                  <span class="faixa-dias" aria-hidden="true">
+                    @for (dia of faixaHistoricoDe(aluno); track dia.dataAula) {
+                      <span
+                        class="faixa-dia"
+                        [class.presente]="dia.statusPresenca === StatusPresenca.PRESENTE"
+                        [class.falta]="dia.statusPresenca === StatusPresenca.FALTA"
+                        [class.justificada]="dia.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+                      ></span>
+                    }
+                  </span>
+                }
+                @if (faltasConsecutivasDe(aluno) >= limiarFaltasConsecutivas) {
+                  <span class="alerta-faltas" role="status">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
+                      <line x1="12" y1="9" x2="12" y2="13"/>
+                      <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    {{ faltasConsecutivasDe(aluno) }} faltas seguidas
+                  </span>
+                }
                 @if (aluno.criadoPorNome || aluno.atualizadoPorNome) {
                   @defer (on hover; prefetch on idle) {
                     <app-rastreabilidade-tooltip
@@ -197,7 +258,7 @@
                   }
                 }
               </div>
-              <div class="presenca-botoes">
+              <div class="presenca-botoes presenca-botoes-pill">
                 <button
                   type="button"
                   class="presenca-btn presente"
@@ -266,7 +327,36 @@
           @for (aluno of alunos(); track aluno.assistidoId) {
           <li class="linha-aluno">
             <div class="nome-aluno-wrap">
+              <span
+                class="aluno-avatar"
+                aria-hidden="true"
+                [class.presente]="aluno.statusPresenca === StatusPresenca.PRESENTE"
+                [class.falta]="aluno.statusPresenca === StatusPresenca.FALTA"
+                [class.justificada]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+              >{{ iniciaisAluno(aluno.nomeCompleto) }}</span>
               <span class="nome-aluno">{{ aluno.nomeCompleto }}</span>
+              @if (aluno.historicoRecente.length > 0) {
+                <span class="faixa-dias" aria-hidden="true">
+                  @for (dia of faixaHistoricoDe(aluno); track dia.dataAula) {
+                    <span
+                      class="faixa-dia"
+                      [class.presente]="dia.statusPresenca === StatusPresenca.PRESENTE"
+                      [class.falta]="dia.statusPresenca === StatusPresenca.FALTA"
+                      [class.justificada]="dia.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+                    ></span>
+                  }
+                </span>
+              }
+              @if (faltasConsecutivasDe(aluno) >= limiarFaltasConsecutivas) {
+                <span class="alerta-faltas" role="status">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                  {{ faltasConsecutivasDe(aluno) }} faltas seguidas
+                </span>
+              }
               @if (aluno.criadoPorNome || aluno.atualizadoPorNome) {
                 @defer (on hover; prefetch on idle) {
                   <app-rastreabilidade-tooltip

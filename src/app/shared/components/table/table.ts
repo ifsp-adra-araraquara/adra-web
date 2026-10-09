@@ -16,8 +16,13 @@ export interface TableColumn<T = unknown> {
   sortable?: boolean;
   align?: 'left' | 'center' | 'right';
   width?: string;
-  /** 'badge' renderiza o valor da célula com `app-badge`. Padrão: texto simples. */
-  type?: 'text' | 'badge';
+  /**
+   * 'badge' renderiza o valor da célula com `app-badge`. 'custom' projeta o
+   * `<ng-template #cell let-row let-column="column">` do pai (ver barra de
+   * ocupação em Turmas) — para células com markup que texto/badge não cobrem.
+   * Padrão: texto simples.
+   */
+  type?: 'text' | 'badge' | 'custom';
   /** Acessor customizado, para quando o valor a exibir não é `row[key]` diretamente. */
   value?: (row: T) => unknown;
 }
@@ -66,6 +71,8 @@ export class Table<T = unknown> {
 
   /** Ações por linha — projetadas via `<ng-template #rowActions let-row>`. */
   rowActionsTemplate = contentChild<TemplateRef<unknown>>('rowActions');
+  /** Célula customizada (colunas `type: 'custom'`) — projetada via `<ng-template #cell let-row let-column="column">`. */
+  cellTemplate = contentChild<TemplateRef<unknown>>('cell');
 
   private readonly internalPage = signal(1);
   private readonly internalSort = signal<TableSortState | null>(null);

@@ -1,6 +1,12 @@
 import { StatusPresenca } from '../../enum/StatusPresenca';
 import { MotivoFalta } from '../../enum/MotivoFalta';
 
+/** Um dia do histórico recente — ver PresencaResponseDTO.historicoRecente. */
+export interface PresencaHistoricoDTO {
+  dataAula: string;
+  statusPresenca: StatusPresenca;
+}
+
 export interface PresencaResponseDTO {
   // null quando o status é PRESENTE inferido (modelo esparso — nunca vira
   // linha no banco, ver PresencaResponseDTO.presente() no back).
@@ -18,4 +24,8 @@ export interface PresencaResponseDTO {
   atualizadoPorNome: string | null;
   criadoEm: string | null;
   atualizadoEm: string | null;
+  // Só vem preenchido em GET /api/chamadas/aula/{id} — últimos dias (mais
+  // recente primeiro) do aluno na turma, pra faixa de dias no roster.
+  // Vazio nos outros usos deste DTO.
+  historicoRecente: PresencaHistoricoDTO[];
 }

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -32,6 +33,7 @@ import { hojeISO } from '../../../shared/utils/aula.util';
 export class StatusChamadaPainel implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
   private readonly aulaService = inject(AulaService);
   private readonly api = environment.apiUrl;
 
@@ -90,6 +92,10 @@ export class StatusChamadaPainel implements OnInit {
   /** CA-71.4: abre a tela de chamada (US-66) já na data e com a aula aberta. */
   abrirChamada(aula: AulaStatusChamadaResponseDTO): void {
     this.router.navigate(['/chamada'], { queryParams: { data: aula.dataAula, aulaId: aula.aulaId } });
+  }
+
+  voltar(): void {
+    this.location.back();
   }
 
   private async carregarAulas(turmaId: number | null, dataInicio: string, dataFim: string): Promise<void> {

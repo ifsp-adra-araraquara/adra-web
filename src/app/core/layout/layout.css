@@ -14,6 +14,14 @@
 }
 .menu-btn svg { width: 22px; height: 22px; }
 
+.help-btn {
+  width: 44px; height: 44px; margin-left: auto; border: none; border-radius: var(--radius-sm);
+  background: transparent; color: var(--gray-400); display: grid; place-items: center;
+  transition: background .14s, color .14s;
+}
+.help-btn:hover { background: var(--gray-100); color: var(--gray-800); }
+.help-btn svg { width: 20px; height: 20px; }
+
 .backdrop { position: fixed; inset: 0; z-index: 45; background: rgba(0,42,31,.5); }
 
 .content { padding: 16px; max-width: 100%; }
@@ -24,6 +32,7 @@
 }
 
 @media (min-width: 1200px) {
-  .main { margin-left: var(--sidebar-w); }
+  .main { margin-left: var(--sidebar-w); transition: margin-left .2s var(--ease); }
+  .main.sidebar-collapsed { margin-left: 72px; }
   .menu-btn, .backdrop { display: none; }
 }

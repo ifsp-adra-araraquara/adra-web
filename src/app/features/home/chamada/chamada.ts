@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -9,6 +10,9 @@ import { Role } from '../../../shared/enum/role.enum';
 import { AulaComDetalhesResponseDTO } from '../../../shared/models/aula/AulaComDetalhesResponseDTO';
 import { AulaModal } from '../../../shared/components/aula-modal/aula-modal';
 import { calcularSituacaoAula, ehAulaDeHoje, hojeISO, podeAbrirAula } from '../../../shared/utils/aula.util';
+import { podeCorrigirDataChamada } from '../../../shared/utils/chamada.util';
+import { SituacaoAula } from '../../../shared/enum/SituacaoAula';
+import { BadgeVariant } from '../../../shared/utils/badge-status.util';
 import { Badge } from '../../../shared/components/badge/badge';
 import { Input } from '../../../shared/components/input/input';
 import { Button } from '../../../shared/components/button/button';
@@ -41,6 +45,7 @@ export class Chamada implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
   private readonly api = environment.apiUrl;
 
   readonly carregando = signal(false);
@@ -88,6 +93,10 @@ export class Chamada implements OnInit {
     this.router.navigate(['/chamada/status']);
   }
 
+  voltar(): void {
+    this.location.back();
+  }
+
   onDataChange(valor: string): void {
     if (!valor || !this.ehCoordenador()) return;
     this.dataSelecionada.set(valor);
@@ -113,11 +122,10 @@ export class Chamada implements OnInit {
 
   podeAbrir(aula: AulaComDetalhesResponseDTO): boolean {
     if (!podeAbrirAula(aula.dataAula, aula.statusAula)) return false;
-    // CA-65.3: o sociopedagógico só realiza a chamada do dia — aulas
-    // passadas (que o coordenador ainda pode abrir, pra corrigir) ficam
-    // fora do alcance dele aqui.
-    if (!this.ehCoordenador() && !ehAulaDeHoje(aula.dataAula)) return false;
-    return true;
+    // CA-65.3: mesma regra de `chamada.util.podeCorrigirDataChamada` (não
+    // reimplementada aqui) — sociopedagógico só realiza a chamada do dia;
+    // aulas passadas ficam fora do alcance dele, coordenador abre qualquer uma.
+    return podeCorrigirDataChamada(this.perfil(), ehAulaDeHoje(aula.dataAula));
   }
 
   ehHoje(aula: AulaComDetalhesResponseDTO): boolean {
@@ -126,6 +134,17 @@ export class Chamada implements OnInit {
 
   situacaoAula(aula: AulaComDetalhesResponseDTO) {
     return calcularSituacaoAula(aula.dataAula, aula.statusAula);
+  }
+
+  /**
+   * Nesta tela, "Disponível" (aula de hoje/passada sem chamada lançada) vira
+   * um rótulo de ação direto — só aqui, via override de `app-badge`
+   * ([variant]/[label] em vez de [status]), sem tocar no mapa global de
+   * badges nem afetar outras telas que mostram o mesmo `SituacaoAula`.
+   */
+  rotuloAcao(aula: AulaComDetalhesResponseDTO): { variant: BadgeVariant; label: string } | null {
+    if (this.situacaoAula(aula) !== SituacaoAula.DISPONIVEL) return null;
+    return { variant: 'blue', label: 'Fazer chamada' };
   }
 
   private async carregarAulas(): Promise<void> {

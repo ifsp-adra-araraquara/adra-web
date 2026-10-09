@@ -1,3 +1,38 @@
+.link-voltar {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 8px;
+}
+
+/* ===== ABA FREQUÊNCIA ===== */
+.freq-resumo { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+.freq-resumo-item {
+  flex: 1; min-width: 110px; padding: 12px 14px; border: 1px solid var(--gray-100);
+  border-radius: var(--radius); text-align: center;
+}
+.freq-resumo-item b { display: block; font-size: 20px; line-height: 1.2; color: var(--gray-800); }
+.freq-resumo-item span { font-size: 11px; color: var(--gray-600); text-transform: uppercase; letter-spacing: .03em; }
+.freq-resumo-item.alerta { border-color: var(--coral-400); background: var(--coral-50); }
+.freq-resumo-item.alerta b { color: var(--coral-600); }
+
+.freq-mes-titulo { font-size: 12px; font-weight: 700; color: var(--gray-600); margin: 18px 0 8px; text-transform: capitalize; }
+.freq-mes-titulo:first-of-type { margin-top: 0; }
+
+.freq-lista { list-style: none; margin: 0 0 4px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.freq-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid var(--gray-100); border-radius: 8px; }
+.freq-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--gray-300, #d1d5db); }
+.freq-dot.presente { background: var(--green-400); }
+.freq-dot.falta { background: var(--coral-600); }
+.freq-dot.justificada { background: var(--amber-600); }
+.freq-data { font-size: 12.5px; color: var(--gray-600); flex: none; }
+.freq-turma { font-size: 13px; font-weight: 600; flex: 1; }
+
 .turmas-aluno-item {
   margin: 0;
   padding: 12px 20px;

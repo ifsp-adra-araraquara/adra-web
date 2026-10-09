@@ -2,12 +2,4 @@
   Bem-vindo(a), {{ auth.currentUser()?.name }} — {{ auth.currentUser()?.role }}
 </p>
 
-@switch (auth.dashType()) {
-  @case (DashboardType.COORDENADOR)     { <app-dash-coord /> }
-  @case (DashboardType.SOCIOPEDAGOGICO) { <app-dash-socio /> }
-  @default {
-    <div class="notice notice-lock">
-      <span>Este perfil não possui dashboard.</span>
-    </div>
-  }
-}
+<app-calendario-aulas [turmas]="turmas()" [oficinas]="oficinas()" [podeGerenciar]="podeGerenciar()" />

@@ -31,18 +31,30 @@
     <div class="panel-header"><h2 id="turmas-titulo">Minhas turmas</h2><span class="subtle">Somente leitura</span></div>
     <div class="table-wrap" role="region" tabindex="0" aria-label="Turmas">
       <table>
-        <thead><tr><th>Turma</th><th>Oficina</th><th>Turno</th><th>Alunos</th><th>Capacidade</th><th></th></tr></thead>
+        <thead><tr><th>Turma</th><th>Oficina</th><th>Turno</th><th>Ocupação</th><th></th></tr></thead>
         <tbody>
         @for (turma of turmas(); track turma.turmaId) {
         <tr>
           <td class="strong">{{ turma.nomeTurma }}</td><td>{{ turma.nomeOficina || '-' }}</td><td>{{ turma.turno }}</td>
-          <td>{{ turma.quantidadeAlunos }}</td><td>{{ turma.capacidade }}</td>
+          <td>
+            <div
+              class="freq"
+              role="img"
+              [attr.aria-label]="turma.quantidadeAlunos + ' de ' + turma.capacidade + ' vagas preenchidas (' + ocupacaoTurma(turma) + '%)'"
+              [class.f-good]="ocupacaoTurma(turma) < 70"
+              [class.f-mid]="ocupacaoTurma(turma) >= 70 && ocupacaoTurma(turma) < 90"
+              [class.f-low]="ocupacaoTurma(turma) >= 90"
+            >
+              <div class="track"><div class="fill" [style.width.%]="ocupacaoTurma(turma)"></div></div>
+              <span class="pct">{{ turma.quantidadeAlunos }}/{{ turma.capacidade }}</span>
+            </div>
+          </td>
           <td class="acoes-cell">
             <app-button variant="secondary" size="sm" (click)="abrirTurma(turma)">Ver alunos</app-button>
             <app-button variant="secondary" size="sm" (click)="abrirAulasDaTurma(turma)">Ver aulas</app-button>
           </td>
         </tr>
-        } @empty { <tr><td colspan="6" class="empty">Nenhuma turma vinculada ao seu usuário.</td></tr> }
+        } @empty { <tr><td colspan="5" class="empty">Nenhuma turma vinculada ao seu usuário.</td></tr> }
         </tbody>
       </table>
     </div>

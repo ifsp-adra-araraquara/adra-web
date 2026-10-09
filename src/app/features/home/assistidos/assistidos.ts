@@ -3,6 +3,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
@@ -10,13 +11,16 @@ import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/auth.service';
 import { Role } from '../../../shared/enum/role.enum';
 import { StatusGeral } from '../../../shared/enum/StatusGeral';
+import { StatusPresenca } from '../../../shared/enum/StatusPresenca';
 
 import { AssistidoRequestDTO } from '../../../shared/models/assistido/AssistidoRequestDTO';
 import { AssistidoResponseDTO } from '../../../shared/models/assistido/AssistidoResponseDTO';
 import { AssistidoStatusRequestDTO } from '../../../shared/models/assistido/AssistidoStatusRequestDTO';
 import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO';
 import { VinculoTurmaAssistidoResponseDTO } from '../../../shared/models/turma/VinculoTurmaAssistidoResponseDTO';
+import { FrequenciaAulaDTO } from '../../../shared/models/presenca/FrequenciaAulaDTO';
 import { PaginaResponse } from '../../../shared/models/PaginaResponse';
+import { ChamadaService } from '../../../core/chamada.service';
 
 import { ResponsavelRequestDTO } from '../../../shared/models/responsavel/ResponsavelRequestDTO';
 import { VinculoFamiliarComResponsavelRequestDTO } from '../../../shared/models/vinculoFamiliar/VinculoFamiliarComResponsavelRequestDTO';
@@ -45,6 +49,9 @@ interface ResponsavelPendente extends ResponsavelRequestDTO {
 export class Assistidos implements OnInit {
   private http = inject(HttpClient);
   private readonly auth = inject(AuthService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly chamadaService = inject(ChamadaService);
 
   StatusGeral = StatusGeral;
 
@@ -90,6 +97,10 @@ export class Assistidos implements OnInit {
     // Carrega o histórico de turmas só na primeira vez que a aba é aberta.
     if (aba === 'turmas' && this.ehCoordenador() && this.assistidoSelecionado()) {
       this.carregarHistoricoTurmas(this.assistidoSelecionado()!.assistidoId);
+    }
+
+    if (aba === 'cham' && this.assistidoSelecionado()) {
+      this.carregarFrequencia(this.assistidoSelecionado()!.assistidoId);
     }
   }
 
@@ -151,6 +162,14 @@ export class Assistidos implements OnInit {
   novoResponsavel: ResponsavelPendente = this.responsavelVazio();
 
   ngOnInit(): void {
+    const turmaIdParam = this.route.snapshot.queryParamMap.get('turmaId');
+    if (turmaIdParam) {
+      const id = Number(turmaIdParam);
+      if (Number.isInteger(id) && id > 0) {
+        this.filtroTurma.set(id);
+      }
+    }
+
     this.carregarTurmas();
     this.carregarAssistidos();
   }
@@ -181,6 +200,25 @@ export class Assistidos implements OnInit {
     this.filtroTurma.set(num);
     this.pagina.set(0);
     this.carregarAssistidos();
+  }
+
+  /**
+   * Turma do filtro ativo (vindo de "Ver alunos" em Turmas, ou escolhido no
+   * próprio select) — usada pro banner de contexto no topo da lista, já que
+   * sem isso o único indício do filtro era o texto dentro do select.
+   */
+  readonly turmaFiltroAtual = computed(() => {
+    const id = this.filtroTurma();
+    if (id === '') return null;
+    return this.turmas().find((turma) => turma.turmaId === id) ?? null;
+  });
+
+  removerFiltroTurma(): void {
+    this.onFiltroTurmaChange('');
+  }
+
+  voltarParaTurmas(): void {
+    this.router.navigate(['/turmas']);
   }
 
   trocarAbaStatus(aba: 'todos' | 'ativos' | 'inativos' | 'acomp'): void {
@@ -655,6 +693,12 @@ export class Assistidos implements OnInit {
 
     this.historicoTurmasCarregado = false;
 
+    this.frequenciaAssistido.set([]);
+
+    this.erroFrequencia.set(null);
+
+    this.frequenciaCarregada = false;
+
     this.mostrarModalVisualizar.set(true);
 
     this.carregarResponsaveis(assistido.assistidoId);
@@ -674,6 +718,12 @@ export class Assistidos implements OnInit {
     this.erroHistoricoTurmas.set(null);
 
     this.historicoTurmasCarregado = false;
+
+    this.frequenciaAssistido.set([]);
+
+    this.erroFrequencia.set(null);
+
+    this.frequenciaCarregada = false;
   }
 
   // ============================================================
@@ -711,33 +761,96 @@ export class Assistidos implements OnInit {
       });
   }
 
-  /** "Ver alunos" de uma turma do histórico — mesmo padrão da tela "Aulas" do coordenador. */
-  turmaHistoricoAlunosSelecionada = signal<VinculoTurmaAssistidoResponseDTO | null>(null);
+  // ============================================================
+  // ABA "CHAMADAS" (frequência) — todos os perfis que abrem a ficha
+  // ============================================================
 
-  mostrarAlunosHistoricoTurma = signal(false);
+  readonly StatusPresenca = StatusPresenca;
 
-  alunosHistoricoTurma = signal<{ assistidoId: number; nomeCompleto: string }[]>([]);
+  frequenciaAssistido = signal<FrequenciaAulaDTO[]>([]);
 
-  abrirAlunosHistoricoTurma(vinculo: VinculoTurmaAssistidoResponseDTO): void {
-    this.turmaHistoricoAlunosSelecionada.set(vinculo);
-    this.mostrarAlunosHistoricoTurma.set(true);
-    this.http
-      .get<PaginaResponse<AssistidoResponseDTO>>(`${this.apiAssistidos}`, {
-        params: { turmaId: vinculo.turmaId.toString(), status: 'ATIVO', tamanho: '200' },
-      })
-      .subscribe({
-        next: (pagina) =>
-          this.alunosHistoricoTurma.set(
-            pagina.conteudo.map((a) => ({ assistidoId: a.assistidoId, nomeCompleto: a.nomeCompleto })),
-          ),
-        error: () => this.erroHistoricoTurmas.set('Não foi possível carregar os alunos da turma.'),
-      });
+  carregandoFrequencia = signal(false);
+
+  erroFrequencia = signal<string | null>(null);
+
+  /** Evita recarregar toda vez que a pessoa clica de novo na aba. */
+  private frequenciaCarregada = false;
+
+  /** Resumo no topo da aba: total de aulas no histórico, % de presença e faltas seguidas mais recentes (sem contar justificadas). */
+  readonly resumoFrequencia = computed(() => {
+    const lista = this.frequenciaAssistido();
+    const total = lista.length;
+    const presentes = lista.filter((f) => f.statusPresenca === StatusPresenca.PRESENTE).length;
+    const percentual = total > 0 ? Math.round((presentes / total) * 100) : 0;
+
+    let faltasConsecutivas = 0;
+    for (const item of lista) {
+      // já vem ordenado da aula mais recente pra mais antiga
+      if (item.statusPresenca !== StatusPresenca.FALTA) break;
+      faltasConsecutivas++;
+    }
+
+    return { total, percentual, faltasConsecutivas };
+  });
+
+  /** Lista agrupada por mês (mais recente primeiro), pra não virar uma lista infinita de datas soltas. */
+  readonly frequenciaAgrupada = computed(() => {
+    const grupos = new Map<string, FrequenciaAulaDTO[]>();
+    for (const item of this.frequenciaAssistido()) {
+      const chave = item.dataAula.slice(0, 7); // YYYY-MM
+      const grupo = grupos.get(chave);
+      if (grupo) {
+        grupo.push(item);
+      } else {
+        grupos.set(chave, [item]);
+      }
+    }
+    return Array.from(grupos.entries()).map(([chave, itens]) => ({
+      rotulo: this.rotuloMesAno(chave),
+      itens,
+    }));
+  });
+
+  private rotuloMesAno(chaveAnoMes: string): string {
+    const [ano, mes] = chaveAnoMes.split('-').map(Number);
+    const rotulo = new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', {
+      month: 'long',
+      year: 'numeric',
+    });
+    return rotulo.charAt(0).toUpperCase() + rotulo.slice(1);
   }
 
-  fecharAlunosHistoricoTurma(): void {
-    this.mostrarAlunosHistoricoTurma.set(false);
-    this.turmaHistoricoAlunosSelecionada.set(null);
-    this.alunosHistoricoTurma.set([]);
+  carregarFrequencia(assistidoId: number): void {
+    if (this.frequenciaCarregada) return;
+
+    this.carregandoFrequencia.set(true);
+    this.erroFrequencia.set(null);
+
+    this.chamadaService
+      .carregarFrequencia(assistidoId)
+      .then((frequencia) => {
+        this.frequenciaAssistido.set(frequencia);
+        this.frequenciaCarregada = true;
+      })
+      .catch((erro) => {
+        console.error('Erro ao carregar frequência:', erro);
+        this.erroFrequencia.set('Não foi possível carregar o histórico de frequência deste assistido.');
+      })
+      .finally(() => this.carregandoFrequencia.set(false));
+  }
+
+  /**
+   * "Ver alunos" de uma turma do histórico — em vez de abrir mais uma modal
+   * só com nomes, aplica o filtro por turma na própria listagem (já estamos
+   * na tela de Assistidos) e fecha a ficha do assistido atual, deixando a
+   * navegação óbvia: a lista por trás já aparece filtrada.
+   */
+  verAlunosDaTurmaHistorico(vinculo: VinculoTurmaAssistidoResponseDTO): void {
+    this.fecharModalVisualizarAssistido();
+    this.filtroTurma.set(vinculo.turmaId);
+    this.abaAtiva.set('todos');
+    this.pagina.set(0);
+    this.carregarAssistidos();
   }
 
   /** "Ver aulas" de uma turma do histórico — reaproveita <app-aulas-turma-modal>, com abertura de aula liberada (só coordenador chega aqui). */

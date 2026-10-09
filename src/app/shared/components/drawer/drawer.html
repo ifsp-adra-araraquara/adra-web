@@ -1,0 +1,32 @@
+@if (open()) {
+  <div class="drawer-overlay open" role="presentation" (click)="onBackdropClick()">
+    <div
+      class="drawer"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="titleId"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="drawer-head">
+        <ng-content select="[drawer-icon]"></ng-content>
+        <div class="drawer-title">
+          <h2 [id]="titleId">{{ title() }}</h2>
+          @if (subtitle()) {
+            <p class="drawer-subtitle">{{ subtitle() }}</p>
+          }
+        </div>
+        <button type="button" class="drawer-close" (click)="close()" aria-label="Fechar">✕</button>
+      </div>
+
+      <div class="drawer-body">
+        <ng-content></ng-content>
+      </div>
+
+      @if (footerTemplate(); as footer) {
+        <div class="drawer-foot">
+          <ng-container [ngTemplateOutlet]="footer"></ng-container>
+        </div>
+      }
+    </div>
+  </div>
+}

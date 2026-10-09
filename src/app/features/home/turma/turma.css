@@ -122,3 +122,64 @@ textarea {
 
   font-size: 13px;
 }
+
+/* =========================
+   DRAWER "ABRIR TURMA"
+   Painel lateral que substitui os ~7 ícones soltos por linha na tabela —
+   ver app-drawer (shared/components/drawer).
+   ========================= */
+
+.drawer-ocupacao-cabecalho {
+  margin-bottom: 20px;
+}
+
+.drawer-secao-titulo {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray-400);
+  font-weight: 600;
+  margin: 18px 0 8px;
+}
+.drawer-secao-titulo:first-child {
+  margin-top: 0;
+}
+
+.drawer-acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.drawer-acao {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: var(--radius-sm, 8px);
+  background: transparent;
+  color: var(--gray-800);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+.drawer-acao:hover {
+  background: var(--gray-50);
+}
+.drawer-acao svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--gray-400);
+}
+.drawer-acao.perigo {
+  color: var(--coral-600);
+}
+.drawer-acao.perigo svg {
+  color: currentColor;
+}

@@ -11,33 +11,62 @@
   }
 
   @if (!carregando()) {
+    <div class="toolbar">
+      <app-input
+        label="Buscar por nome, CPF ou telefone"
+        [hideLabel]="true"
+        placeholder="Buscar por nome, CPF ou telefone…"
+        [ngModel]="termoBusca()"
+        (ngModelChange)="onBuscaChange($event)"
+      />
+
+      <app-select
+        [ngModel]="filtroContato()"
+        (ngModelChange)="onFiltroContatoChange($event)"
+        [options]="filtroContatoOptions"
+      />
+    </div>
+
     <div class="card">
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>CPF</th>
-              <th>Telefone</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (responsavel of responsaveis(); track responsavel.responsavelId) {
+      @if (responsaveisFiltrados().length === 0) {
+        <div class="muted" style="padding: 20px; text-align: center">
+          @if (temFiltrosAtivos()) {
+            <p>Nenhum responsável encontrado para os filtros aplicados.</p>
+            <app-button variant="secondary" size="sm" (click)="limparFiltros()">
+              Limpar filtros
+            </app-button>
+          } @else {
+            <p>Nenhum responsável cadastrado.</p>
+          }
+        </div>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
               <tr>
-                <td class="cell-name">{{ responsavel.nomeCompleto }}</td>
-                <td>{{ responsavel.cpf }}</td>
-                <td>{{ responsavel.telefone || '-' }}</td>
-                <td>
-                  <div class="t-actions">
-                    <button type="button" (click)="abrirEdicao(responsavel)">Editar</button>
-                  </div>
-                </td>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>Telefone</th>
+                <th></th>
               </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              @for (responsavel of responsaveisFiltrados(); track responsavel.responsavelId) {
+                <tr>
+                  <td class="cell-name">{{ responsavel.nomeCompleto }}</td>
+                  <td>{{ responsavel.cpf }}</td>
+                  <td>{{ responsavel.telefone || '-' }}</td>
+                  <td>
+                    <div class="t-actions">
+                      <button type="button" (click)="abrirEdicao(responsavel)">Editar</button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
     </div>
   }
 

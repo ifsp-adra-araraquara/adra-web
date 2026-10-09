@@ -4,10 +4,15 @@
   margin-bottom: 12px;
 }
 
+.acoes-cabecalho { display: flex; gap: 8px; flex-wrap: wrap; }
+
 .feedback { margin: 0 0 12px; color: var(--gray-600); font-size: 13px; }
 .feedback.error { color: var(--coral-600); }
 
-.pres-counts { display: flex; gap: 12px; }
+.pres-counts {
+  display: flex; gap: 12px;
+  position: sticky; top: -1px; z-index: 2; background: #fff; padding-top: 4px; margin-top: -4px;
+}
 .pc { flex: 1; padding: 10px 12px; border: 1px solid var(--gray-100); border-radius: 8px; text-align: center; }
 .pc b { display: block; font-size: 20px; line-height: 1.2; }
 .pc span { font-size: 11px; color: var(--gray-600); text-transform: uppercase; letter-spacing: .03em; }
@@ -51,6 +56,57 @@
   gap: 8px;
   flex-wrap: wrap;
 }
+
+.aluno-avatar {
+  flex: none;
+  width: 28px; height: 28px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--gray-200);
+  color: var(--gray-700, #374151);
+  font-size: 11px;
+  font-weight: 700;
+}
+.aluno-avatar.presente { background: var(--green-400); color: #fff; }
+.aluno-avatar.falta { background: var(--coral-600); color: #fff; }
+.aluno-avatar.justificada { background: var(--amber-600); color: #fff; }
+
+/* Seletor de presença como pill coesa — escopado, não mexe em `.presenca-btn` global (usado também em aula-completa.html). */
+.presenca-botoes-pill {
+  gap: 0;
+  padding: 3px;
+  background: var(--gray-50);
+  border-radius: var(--radius-sm);
+}
+.presenca-botoes-pill .presenca-btn {
+  border: none;
+  border-radius: calc(var(--radius-sm) - 3px);
+  background: transparent;
+}
+.presenca-botoes-pill .presenca-btn.ativo {
+  box-shadow: var(--shadow-sm);
+}
+.alerta-faltas {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--coral-50);
+  color: var(--coral-600);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.alerta-faltas svg { width: 12px; height: 12px; flex: none; }
+
+/* Faixa de dias — reaproveita a paleta verde/coral/âmbar já usada no avatar/mini-badge. Mais recente à esquerda. */
+.faixa-dias { display: inline-flex; align-items: center; gap: 3px; }
+.faixa-dia { width: 7px; height: 7px; border-radius: 50%; background: var(--gray-200); flex: none; }
+.faixa-dia.presente { background: var(--green-400); }
+.faixa-dia.falta { background: var(--coral-600); }
+.faixa-dia.justificada { background: var(--amber-600); }
+
 .rastreabilidade-gatilho-placeholder {
   display: inline-flex;
   align-items: center;

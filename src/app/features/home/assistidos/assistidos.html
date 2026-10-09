@@ -22,6 +22,18 @@
     </app-button>
   </div>
 
+  @if (turmaFiltroAtual(); as turmaCtx) {
+    <div class="notice notice-info" style="align-items: center; justify-content: space-between" role="status">
+      <span>
+        Mostrando alunos da turma <strong>{{ turmaCtx.nomeTurma }}</strong>
+        <button type="button" class="link-voltar" (click)="voltarParaTurmas()">← Voltar para Turmas</button>
+      </span>
+      <app-button variant="secondary" size="sm" (click)="removerFiltroTurma()">
+        Remover filtro
+      </app-button>
+    </div>
+  }
+
   <div class="tabs">
     <button class="tab" [class.active]="abaAtiva() === 'todos'" (click)="trocarAbaStatus('todos')">
       Todos <span class="count">{{ totalElementos() }}</span>
@@ -743,20 +755,56 @@
       }
     }
 
-    <!-- ==================== ABA: CHAMADAS ==================== -->
+    <!-- ==================== ABA: CHAMADAS (frequência) ==================== -->
     @if (abaVerAssistido() === 'cham') {
       <p class="form-sec-title">Frequência</p>
 
-      <!--
-        Ainda não há endpoint de chamadas/frequência por assistido.
-        Placeholder no mesmo padrão da aba "Em acompanhamento" da listagem.
-      -->
-      <div class="card card-pad">
-        <p class="muted">
-          Exibição de frequência e histórico de chamadas depende de um endpoint que ainda não
-          existe — aba placeholder por enquanto.
-        </p>
-      </div>
+      @if (carregandoFrequencia()) {
+        <div class="card card-pad"><p class="muted">Carregando...</p></div>
+      } @else if (erroFrequencia()) {
+        <div class="notice notice-error">{{ erroFrequencia() }}</div>
+      } @else if (frequenciaAssistido().length === 0) {
+        <div class="card card-pad">
+          <p class="muted">Nenhuma aula registrada para este assistido ainda.</p>
+        </div>
+      } @else {
+        <div class="freq-resumo">
+          <div class="freq-resumo-item">
+            <b>{{ resumoFrequencia().total }}</b>
+            <span>Aulas no histórico</span>
+          </div>
+          <div class="freq-resumo-item">
+            <b>{{ resumoFrequencia().percentual }}%</b>
+            <span>Presença</span>
+          </div>
+          @if (resumoFrequencia().faltasConsecutivas > 0) {
+            <div class="freq-resumo-item alerta">
+              <b>{{ resumoFrequencia().faltasConsecutivas }}</b>
+              <span>Faltas seguidas</span>
+            </div>
+          }
+        </div>
+
+        @for (grupo of frequenciaAgrupada(); track grupo.rotulo) {
+          <p class="freq-mes-titulo">{{ grupo.rotulo }}</p>
+          <ul class="freq-lista">
+            @for (item of grupo.itens; track item.dataAula + item.nomeTurma) {
+              <li class="freq-item">
+                <span
+                  class="freq-dot"
+                  aria-hidden="true"
+                  [class.presente]="item.statusPresenca === StatusPresenca.PRESENTE"
+                  [class.falta]="item.statusPresenca === StatusPresenca.FALTA"
+                  [class.justificada]="item.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+                ></span>
+                <span class="freq-data">{{ item.dataAula | date: 'dd/MM/yyyy' }}</span>
+                <span class="freq-turma">{{ item.nomeTurma }}</span>
+                <app-badge [status]="item.statusPresenca" />
+              </li>
+            }
+          </ul>
+        }
+      }
     }
 
     <!-- ==================== ABA: TURMAS (histórico turma_aluno, só coordenador) ==================== -->
@@ -798,7 +846,7 @@
                   <app-badge [status]="vinculo.status" />
                 </td>
                 <td class="acoes-cell">
-                  <app-button variant="secondary" size="sm" (click)="abrirAlunosHistoricoTurma(vinculo)">
+                  <app-button variant="secondary" size="sm" (click)="verAlunosDaTurmaHistorico(vinculo)">
                     Ver alunos
                   </app-button>
                   <app-button variant="secondary" size="sm" (click)="abrirAulasHistoricoTurma(vinculo)">
@@ -846,26 +894,6 @@
         Fechar
       </app-button>
     </ng-template>
-  </app-modal>
-}
-
-<!-- MODAL: ALUNOS DA TURMA (histórico de turmas do assistido, aba "Turmas") -->
-@if (mostrarAlunosHistoricoTurma()) {
-  <app-modal
-    [open]="true"
-    title="Alunos de {{ turmaHistoricoAlunosSelecionada()?.nomeTurma ?? '' }}"
-    size="sm"
-    (closed)="fecharAlunosHistoricoTurma()"
-  >
-    <div class="turmas-alunos-grid">
-      @for (aluno of alunosHistoricoTurma(); track aluno.assistidoId) {
-      <article class="turmas-aluno-card">
-        <span class="turmas-aluno-nome">{{ aluno.nomeCompleto }}</span>
-      </article>
-      } @empty {
-      <p class="empty">Nenhum aluno ativo encontrado.</p>
-      }
-    </div>
   </app-modal>
 }
 
