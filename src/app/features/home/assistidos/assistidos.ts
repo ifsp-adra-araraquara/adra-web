@@ -1,8 +1,9 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
@@ -28,9 +29,11 @@ import { VinculoFamiliarComResponsavelRequestDTO } from '../../../shared/models/
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Input } from '../../../shared/components/input/input';
 import { Button } from '../../../shared/components/button/button';
+import { cpfValido, telefoneValido } from '../../../shared/validators/cpf.validator';
 import { Modal } from '../../../shared/components/modal/modal';
 import { Badge } from '../../../shared/components/badge/badge';
 import { AulasTurmaModal } from '../aulas-turma-modal/aulas-turma-modal';
+import { mensagemErro } from '../../../shared/utils/erro-http.util';
 
 interface ResponsavelPendente extends ResponsavelRequestDTO {
   parentesco: string;
@@ -51,6 +54,7 @@ export class Assistidos implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly chamadaService = inject(ChamadaService);
 
   StatusGeral = StatusGeral;
@@ -162,16 +166,14 @@ export class Assistidos implements OnInit {
   novoResponsavel: ResponsavelPendente = this.responsavelVazio();
 
   ngOnInit(): void {
-    const turmaIdParam = this.route.snapshot.queryParamMap.get('turmaId');
-    if (turmaIdParam) {
-      const id = Number(turmaIdParam);
-      if (Number.isInteger(id) && id > 0) {
-        this.filtroTurma.set(id);
-      }
-    }
-
     this.carregarTurmas();
-    this.carregarAssistidos();
+
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      const id = Number(params.get('turmaId'));
+      this.filtroTurma.set(Number.isInteger(id) && id > 0 ? id : '');
+      this.pagina.set(0);
+      this.carregarAssistidos();
+    });
   }
 
   carregarTurmas(): void {
@@ -197,9 +199,16 @@ export class Assistidos implements OnInit {
 
   onFiltroTurmaChange(valor: any): void {
     const num = valor === '' || valor === null ? '' : Number(valor);
-    this.filtroTurma.set(num);
-    this.pagina.set(0);
-    this.carregarAssistidos();
+    if (num === this.filtroTurma()) {
+      this.pagina.set(0);
+      this.carregarAssistidos();
+      return;
+    }
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { turmaId: num || null },
+      queryParamsHandling: 'merge',
+    });
   }
 
   /**
@@ -231,10 +240,8 @@ export class Assistidos implements OnInit {
 
   limparFiltros(): void {
     this.termoBusca.set('');
-    this.filtroTurma.set('');
     this.abaAtiva.set('todos');
-    this.pagina.set(0);
-    this.carregarAssistidos();
+    this.onFiltroTurmaChange('');
   }
 
   paginaAnterior(): void {
@@ -422,6 +429,11 @@ export class Assistidos implements OnInit {
       return;
     }
 
+    if (this.formEdicaoAssistido.cpf && !cpfValido(this.formEdicaoAssistido.cpf)) {
+      this.erroSalvarEdicao.set('CPF do assistido inválido.');
+      return;
+    }
+
     this.salvandoEdicao.set(true);
     this.erroSalvarEdicao.set(null);
 
@@ -444,7 +456,7 @@ export class Assistidos implements OnInit {
     } catch (erro: any) {
       console.error('Erro ao atualizar assistido:', erro);
       this.erroSalvarEdicao.set(
-        erro?.error?.message ?? erro?.message ?? 'Não foi possível salvar as alterações.',
+        mensagemErro(erro, 'Não foi possível salvar as alterações.'),
       );
       this.salvandoEdicao.set(false);
     }
@@ -493,6 +505,10 @@ export class Assistidos implements OnInit {
       return 'Preencha nome completo e data de nascimento.';
     }
 
+    if (this.novoAssistido.cpf && !cpfValido(this.novoAssistido.cpf)) {
+      return 'CPF do assistido inválido.';
+    }
+
     if (!this.novoAssistido.turmaId) {
       return 'Selecione uma turma ativa para o assistido.';
     }
@@ -524,9 +540,12 @@ export class Assistidos implements OnInit {
    * ============================================================
    */
   adicionarResponsavelPendente(): void {
-    if (!this.novoResponsavel.nomeCompleto.trim()) {
+    const erroValidacao = this.validarResponsavel(this.novoResponsavel);
+    if (erroValidacao) {
+      this.erroResponsavel.set(erroValidacao);
       return;
     }
+    this.erroResponsavel.set(null);
 
     const ehPrimeiro = this.responsaveisPendentes().length === 0;
 
@@ -538,6 +557,19 @@ export class Assistidos implements OnInit {
     this.responsaveisPendentes.update((lista) => [...lista, responsavel]);
 
     this.novoResponsavel = this.responsavelVazio();
+  }
+
+  private validarResponsavel(responsavel: { nomeCompleto: string; cpf?: string; telefone?: string }): string | null {
+    if (!responsavel.nomeCompleto.trim()) {
+      return 'Informe o nome do responsável.';
+    }
+    if (!cpfValido(responsavel.cpf ?? '')) {
+      return 'Informe um CPF válido para o responsável.';
+    }
+    if (!telefoneValido(responsavel.telefone ?? '')) {
+      return 'Telefone do responsável deve ter DDD + número (10 ou 11 dígitos).';
+    }
+    return null;
   }
 
   removerResponsavelPendente(index: number): void {
@@ -627,7 +659,7 @@ export class Assistidos implements OnInit {
       }
 
       this.erroSalvar.set(
-        erro?.error?.message ?? erro?.message ?? 'Não foi possível salvar. Verifique os dados e tente novamente.',
+        mensagemErro(erro, 'Não foi possível salvar. Verifique os dados e tente novamente.'),
       );
       this.salvando.set(false);
     }
@@ -847,10 +879,8 @@ export class Assistidos implements OnInit {
    */
   verAlunosDaTurmaHistorico(vinculo: VinculoTurmaAssistidoResponseDTO): void {
     this.fecharModalVisualizarAssistido();
-    this.filtroTurma.set(vinculo.turmaId);
     this.abaAtiva.set('todos');
-    this.pagina.set(0);
-    this.carregarAssistidos();
+    this.onFiltroTurmaChange(vinculo.turmaId);
   }
 
   /** "Ver aulas" de uma turma do histórico — reaproveita <app-aulas-turma-modal>, com abertura de aula liberada (só coordenador chega aqui). */
@@ -923,8 +953,9 @@ export class Assistidos implements OnInit {
       return;
     }
 
-    if (!this.novoResponsavel.nomeCompleto.trim()) {
-      this.erroResponsavel.set('Informe o nome do responsável.');
+    const erroValidacao = this.validarResponsavel(this.novoResponsavel);
+    if (erroValidacao) {
+      this.erroResponsavel.set(erroValidacao);
       return;
     }
 
@@ -957,8 +988,9 @@ export class Assistidos implements OnInit {
       return;
     }
 
-    if (!this.novoResponsavelVinculado.nomeCompleto.trim()) {
-      this.erroResponsavelVinculado.set('Informe o nome do responsável.');
+    const erroValidacao = this.validarResponsavel(this.novoResponsavelVinculado);
+    if (erroValidacao) {
+      this.erroResponsavelVinculado.set(erroValidacao);
       return;
     }
 
@@ -996,7 +1028,7 @@ export class Assistidos implements OnInit {
       this.carregarResponsaveis(assistido.assistidoId);
     } catch (erro) {
       console.error('Erro ao vincular responsável:', erro);
-      this.erroResponsavelVinculado.set('Não foi possível salvar o responsável.');
+      this.erroResponsavelVinculado.set(mensagemErro(erro as HttpErrorResponse, 'Não foi possível salvar o responsável.'));
       this.salvandoResponsavelVinculado.set(false);
     }
   }

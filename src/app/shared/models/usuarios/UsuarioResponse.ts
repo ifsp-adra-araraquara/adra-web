@@ -6,7 +6,6 @@ export interface UsuarioResponse {
   nomeCompleto: string;
   email: string;
   nivelPermissao: Role;
-  especialidade: null;
   cargoFuncao: string | null;
   telefone: string | null;
   ativo: boolean;

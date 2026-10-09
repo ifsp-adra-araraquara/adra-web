@@ -260,7 +260,7 @@
 
   @if (abaAtivaForm() === 'turma') {
     @if (erroSalvar()) {
-      <div class="notice-error">{{ erroSalvar() }}</div>
+      <div class="notice notice-error" role="alert">{{ erroSalvar() }}</div>
     }
 
     <app-input
@@ -341,7 +341,7 @@
     </div>
 
     @if (erroAulasTurma()) {
-      <div class="notice-error">{{ erroAulasTurma() }}</div>
+      <div class="notice notice-error" role="alert">{{ erroAulasTurma() }}</div>
     }
 
     <div class="form-row">
@@ -673,7 +673,7 @@
   </div>
 
   @if (erroSalvarAulas()) {
-    <div class="notice-error">{{ erroSalvarAulas() }}</div>
+    <div class="notice notice-error" role="alert">{{ erroSalvarAulas() }}</div>
   }
 
   <app-input label="Turma ID" [ngModel]="formCriarAulas.turmaId" [disabled]="true" />
@@ -870,7 +870,7 @@
   </div>
 
   @if (erroSalvarNovaAula()) {
-    <div class="notice-error">{{ erroSalvarNovaAula() }}</div>
+    <div class="notice notice-error" role="alert">{{ erroSalvarNovaAula() }}</div>
   }
 
   <div class="form-row">
@@ -1012,7 +1012,7 @@
   </p>
 
   @if (erroVincularAlunos()) {
-    <div class="notice-error">{{ erroVincularAlunos() }}</div>
+    <div class="notice notice-error" role="alert">{{ erroVincularAlunos() }}</div>
   }
 
   <app-input

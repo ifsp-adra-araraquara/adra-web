@@ -25,6 +25,7 @@ import { Input } from '../../../shared/components/input/input';
 import { Button } from '../../../shared/components/button/button';
 import { Modal } from '../../../shared/components/modal/modal';
 import { CalendarioAulas } from '../calendario-aulas/calendario-aulas';
+import { mensagemErro } from '../../../shared/utils/erro-http.util';
 
 type AbaOficineiro = 'turmas' | 'aulas' | 'calendario' | 'materiais' | 'comunicados';
 
@@ -492,8 +493,7 @@ export class Oficineiro implements OnInit {
     } catch (erro: any) {
       console.error('Erro ao criar aulas:', erro);
       this.erroCriarAulas.set(
-        erro?.error?.message ??
-          'Não foi possível criar as aulas. Verifique os dados e tente novamente.',
+        mensagemErro(erro, 'Não foi possível criar as aulas. Verifique os dados e tente novamente.'),
       );
       this.salvandoCriarAulas.set(false);
     }

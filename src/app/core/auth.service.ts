@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router } from '@angular/router';
 import { Observable, firstValueFrom, from, throwError } from 'rxjs';
-import { switchMap, tap, catchError } from 'rxjs/operators';
+import { switchMap, tap, catchError, filter, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AppModule } from '../shared/enum/module.enum';
 import { DashboardType } from '../shared/enum/dashboard-type.enum';
@@ -18,7 +19,6 @@ export interface LoginResponse {
 
 const CHAVE_TOKEN = 'adra.token';
 const USER_KEY = 'usuario_logado';
-const MODULE_KEY = 'modulo_atual';
 
 // Rotas publicas de autenticacao: nao devem reagir a INITIAL_SESSION/TOKEN_REFRESHED
 // restaurando uma sessao antiga (ex: admin testando o link de convite/reset no
@@ -31,15 +31,27 @@ export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
 
-  currentModule = signal<AppModule | null>(null);
+  private url = toSignal(
+    this.router.events.pipe(
+      filter((evento): evento is NavigationEnd => evento instanceof NavigationEnd),
+      map((evento) => evento.urlAfterRedirects),
+    ),
+    { initialValue: this.router.url },
+  );
+
+  currentModule = computed<AppModule | null>(() => {
+    const arvore = this.router.parseUrl(this.url());
+    const segmento = arvore.root.children['primary']?.segments[0]?.path;
+    if (segmento === 'oficineiro') return (arvore.queryParams['aba'] ?? AppModule.TURMAS) as AppModule;
+    if (segmento === 'aulas') return AppModule.TURMAS;
+    return (segmento ?? null) as AppModule | null;
+  });
   private usuarioLogado = signal<UsuarioResponse | null>(null);
 
   private dashTypeMap: Record<Role, DashboardType | null> = {
     [Role.ADMIN]: null,
     [Role.COORD]: DashboardType.COORDENADOR,
     [Role.SOCIO]: DashboardType.SOCIOPEDAGOGICO,
-    [Role.PROFS]: DashboardType.PROFISSIONAL_SAUDE,
-    [Role.FINANCEIRO]: DashboardType.FINANCEIRO,
     [Role.OFICINEIRO]: null,
   };
 
@@ -69,14 +81,6 @@ export class AuthService {
       try {
         const user: UsuarioResponse = JSON.parse(storedUser);
         this.usuarioLogado.set(user);
-
-        const storedModule = localStorage.getItem(MODULE_KEY);
-        if (storedModule && this.moduloExisteNaLista(storedModule, user.modulos)) {
-          this.currentModule.set(storedModule as AppModule);
-        } else {
-          const padrao = user.modulos.find(m => m.padrao)?.codigo ?? user.modulos[0]?.codigo ?? null;
-          if (padrao) this.currentModule.set(padrao.toLowerCase() as AppModule);
-        }
       } catch {
         localStorage.removeItem(USER_KEY);
       }
@@ -175,11 +179,6 @@ export class AuthService {
       ?? resposta.usuario.modulos[0]?.codigo
       ?? null;
 
-    if (padrao) {
-      this.currentModule.set(padrao.toLowerCase() as AppModule);
-      localStorage.setItem(MODULE_KEY, padrao.toLowerCase());
-    }
-
     if (!navegarParaModuloPadrao || !padrao) {
       return;
     }
@@ -193,9 +192,6 @@ export class AuthService {
   }
 
   setModule(module: AppModule): void {
-    this.currentModule.set(module);
-    localStorage.setItem(MODULE_KEY, module);
-    
     if (this.currentProfile() === Role.OFICINEIRO) {
       this.router.navigate(['/oficineiro'], { queryParams: { aba: module } });
       return;
@@ -208,13 +204,7 @@ export class AuthService {
     supabase.auth.signOut();
     localStorage.removeItem(CHAVE_TOKEN);
     localStorage.removeItem(USER_KEY);
-    localStorage.removeItem(MODULE_KEY);
     this.usuarioLogado.set(null);
-    this.currentModule.set(null);
     this.router.navigate(['login']);
-  }
-
-  private moduloExisteNaLista(codigo: string, modulos: ModuloDTO[]): boolean {
-    return modulos.some(m => m.codigo.toLowerCase() === codigo.toLowerCase());
   }
 }

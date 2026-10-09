@@ -1,10 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input as InputDecorator, OnChanges, Output, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input as InputDecorator, OnChanges, Output, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ResponsavelService } from '../../../../core/responsavel.service';
 import { AlertaCpfDuplicadoDTO } from '../../../../shared/models/responsavel/AlertaCpfDuplicadoDTO';
 import { ResponsavelResponseDTO } from '../../../../shared/models/responsavel/ResponsavelResponseDTO';
 import { cpfValidator } from '../../../../shared/validators/cpf.validator';
+import { errosPorCampo } from '../../../../shared/utils/erro-http.util';
 import { Input } from '../../../../shared/components/input/input';
 import { Button } from '../../../../shared/components/button/button';
 
@@ -51,31 +52,30 @@ export class ResponsavelForm implements OnChanges {
     observacoes: [''],
   });
 
-  protected erroCpfBusca = computed(() =>
-    this.cpfBusca.touched && this.cpfBusca.invalid ? 'CPF inválido.' : null,
-  );
+  protected erroCpfBusca = () =>
+    this.cpfBusca.touched && this.cpfBusca.invalid ? 'CPF inválido.' : null;
 
-  protected erroNome = computed(() => this.errosPorCampo()['nomeCompleto'] ?? null);
-  protected erroDataNascimento = computed(() => this.errosPorCampo()['dataNascimento'] ?? null);
+  protected erroNome = () => this.errosPorCampo()['nomeCompleto'] ?? null;
+  protected erroDataNascimento = () => this.errosPorCampo()['dataNascimento'] ?? null;
 
-  protected erroCpfForm = computed(() => {
+  protected erroCpfForm = (): string | null => {
     if (this.form.controls.cpf.touched && this.form.controls.cpf.invalid) return 'CPF inválido.';
     return this.errosPorCampo()['cpf'] ?? null;
-  });
+  };
 
-  protected erroTelefone = computed(() => {
+  protected erroTelefone = (): string | null => {
     if (this.form.controls.telefone.touched && this.form.controls.telefone.invalid) {
       return 'Telefone deve ter DDD + número (10 ou 11 dígitos).';
     }
     return this.errosPorCampo()['telefone'] ?? null;
-  });
+  };
 
-  protected erroEmail = computed(() => {
+  protected erroEmail = (): string | null => {
     if (this.form.controls.email.touched && this.form.controls.email.invalid) {
       return 'Informe um e-mail válido.';
     }
     return this.errosPorCampo()['email'] ?? null;
-  });
+  };
 
   /** Usado no [max] do input de data, para impedir escolher data futura no seletor do navegador. */
   get dataMaxima(): string {
@@ -203,13 +203,8 @@ export class ResponsavelForm implements OnChanges {
       return;
     }
 
-    const detalhes: string[] = resposta.error?.detalhes ?? [];
-    if (detalhes.length) {
-      const porCampo: Record<string, string> = {};
-      for (const detalhe of detalhes) {
-        const [campo, ...resto] = detalhe.split(':');
-        porCampo[campo.trim()] = resto.join(':').trim();
-      }
+    const porCampo = errosPorCampo(resposta);
+    if (Object.keys(porCampo).length) {
       this.errosPorCampo.set(porCampo);
       return;
     }

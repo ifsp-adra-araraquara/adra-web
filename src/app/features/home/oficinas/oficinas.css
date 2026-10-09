@@ -118,14 +118,6 @@ textarea {
   line-height: 1.5;
 }
 
-.notice-error {
-  background: #fef2f2;
-
-  border: 1px solid #fecaca;
-
-  color: #b91c1c;
-}
-
 @media (min-width: 720px) {
   .page {
     padding: 20px;

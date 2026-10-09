@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import { of } from 'rxjs';
 
 import { Assistidos } from './assistidos';
 
@@ -13,7 +14,7 @@ describe('Assistidos', () => {
       providers: [
         {
           provide: ActivatedRoute,
-          useValue: { snapshot: { queryParamMap: convertToParamMap({}) } },
+          useValue: { queryParamMap: of(convertToParamMap({})) },
         },
       ],
     }).compileComponents();

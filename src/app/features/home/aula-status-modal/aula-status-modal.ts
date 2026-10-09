@@ -9,6 +9,7 @@ import { Modal } from '../../../shared/components/modal/modal';
 import { Badge } from '../../../shared/components/badge/badge';
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Button } from '../../../shared/components/button/button';
+import { mensagemErro } from '../../../shared/utils/erro-http.util';
 
 const OPCOES_STATUS_AULA: SelectOption<StatusAula>[] = Object.values(StatusAula).map((status) => ({
   value: status,
@@ -53,7 +54,7 @@ export class AulaStatusModal {
       },
       error: (err: HttpErrorResponse) => {
         this.salvando.set(false);
-        this.erro.set(err.error?.message ?? 'Não foi possível salvar o status. Tente novamente.');
+        this.erro.set(mensagemErro(err, 'Não foi possível salvar o status. Tente novamente.'));
       },
     });
   }

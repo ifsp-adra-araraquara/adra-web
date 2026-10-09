@@ -13,7 +13,7 @@
       <h1 style="margin: 0">Assistidos</h1>
       <p class="page-intro" style="margin: 4px 0 0">
         Cadastro e acompanhamento dos assistidos. A visibilidade dos dados respeita o perfil de
-        acesso — o Financeiro/Administrativo visualiza apenas leitura.
+        acesso.
       </p>
     </div>
 
@@ -220,11 +220,11 @@
   </div>
 
   @if (erroSalvar()) {
-          <div class="notice notice-error">{{ erroSalvar() }}</div>
+          <div class="notice notice-error" role="alert">{{ erroSalvar() }}</div>
         }
 
         @if (alertaDuplicidade()) {
-          <div class="notice notice-warning">
+          <div class="notice notice-amber">
             Atenção: já existe um assistido com o mesmo nome e data de nascimento. Confirme para continuar.
           </div>
 
@@ -351,7 +351,7 @@
         }
 
         @if (erroResponsavel()) {
-          <div class="notice notice-error">{{ erroResponsavel() }}</div>
+          <div class="notice notice-error" role="alert">{{ erroResponsavel() }}</div>
         }
 
         <div class="form-row">
@@ -573,7 +573,7 @@
       @if (carregandoResponsaveis()) {
         <div class="card card-pad"><p class="muted">Carregando responsáveis...</p></div>
       } @else if (erroResponsaveis()) {
-        <div class="notice notice-error">{{ erroResponsaveis() }}</div>
+        <div class="notice notice-error" role="alert">{{ erroResponsaveis() }}</div>
       } @else if (responsaveisDoAssistido().length === 0) {
         <div class="card card-pad">
           @if (!mostrarFormNovoResponsavelVinculado()) {
@@ -584,7 +584,7 @@
             </app-button>
           } @else {
             @if (erroResponsavelVinculado()) {
-              <div class="notice notice-error mb-s">{{ erroResponsavelVinculado() }}</div>
+              <div class="notice notice-error mb-s" role="alert">{{ erroResponsavelVinculado() }}</div>
             }
 
             <div class="form-row">
@@ -762,7 +762,7 @@
       @if (carregandoFrequencia()) {
         <div class="card card-pad"><p class="muted">Carregando...</p></div>
       } @else if (erroFrequencia()) {
-        <div class="notice notice-error">{{ erroFrequencia() }}</div>
+        <div class="notice notice-error" role="alert">{{ erroFrequencia() }}</div>
       } @else if (frequenciaAssistido().length === 0) {
         <div class="card card-pad">
           <p class="muted">Nenhuma aula registrada para este assistido ainda.</p>
@@ -814,7 +814,7 @@
       @if (carregandoHistoricoTurmas()) {
         <div class="card card-pad"><p class="muted">Carregando turmas...</p></div>
       } @else if (erroHistoricoTurmas()) {
-        <div class="notice notice-error">{{ erroHistoricoTurmas() }}</div>
+        <div class="notice notice-error" role="alert">{{ erroHistoricoTurmas() }}</div>
       } @else if (historicoTurmasAssistido().length === 0) {
         <div class="card card-pad">
           <p class="muted">Este assistido nunca foi vinculado a uma turma.</p>
@@ -987,7 +987,7 @@
     </div>
 
     @if (erroSalvarEdicao()) {
-      <div class="notice notice-error">{{ erroSalvarEdicao() }}</div>
+      <div class="notice notice-error" role="alert">{{ erroSalvarEdicao() }}</div>
     }
 
     <p class="form-sec-title">Dados pessoais</p>
