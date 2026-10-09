@@ -14,6 +14,121 @@
   margin-left: 8px;
 }
 
+/* ============================================================
+   LISTAGEM — celular (cartões) → iPad (cartões 2 col) → tabela compacta → tabela completa
+   ============================================================ */
+
+/* Cabeçalho: título + botão na mesma linha; descrição embaixo, na largura toda */
+.cabecalho {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px 16px;
+  margin-bottom: 18px;
+}
+.cabecalho-titulo { margin: 0; }
+.cabecalho-acao { grid-column: 2; grid-row: 1; }
+.cabecalho-intro {
+  grid-column: 1 / -1;
+  max-width: 72ch;
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--gray-600);
+}
+
+/* Abas roláveis no celular em vez de quebrar em duas linhas */
+.tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: none; white-space: nowrap; }
+
+.acomp-legenda {
+  display: flex; align-items: center; gap: 8px; margin: -6px 0 14px;
+  font-size: 13px; color: var(--amber-600);
+}
+
+.filtros { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.filtros > * { width: auto; min-width: 0; }
+.filtros-busca { grid-column: 1 / -1; }
+.filtros-select:last-child:nth-child(2) { grid-column: 1 / -1; }
+.filtros .select { min-width: 0; }
+
+.lista-estado { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 32px 16px; text-align: center; }
+.lista-estado p { margin: 0; }
+
+.lista-tabela { display: none; }
+.lista-tabela td { vertical-align: middle; }
+.lista-tabela .cell-name, .lista-tabela .cell-sub { display: block; }
+.lista-tabela .cell-sub { margin-top: 2px; }
+.col-larga { display: none; }
+.col-acoes { width: 1%; text-align: right; }
+.nowrap { white-space: nowrap; }
+.cpf { color: var(--gray-600); font-variant-numeric: tabular-nums; letter-spacing: .2px; }
+.lista-tabela .freq { min-width: 140px; }
+
+.tel { color: inherit; text-decoration: none; font-variant-numeric: tabular-nums; }
+.tel:hover { color: var(--color-brand); text-decoration: underline; }
+
+.faltas-seguidas { display: block; margin-top: 3px; font-size: 11.5px; font-weight: 600; color: var(--coral-600); }
+
+/* Cartões */
+.lista-cartoes { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.assistido-cartao {
+  display: flex; flex-direction: column; gap: 10px; padding: 14px 16px;
+  background: #fff; border: 1px solid var(--gray-100); border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+.cartao-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.cartao-identidade { min-width: 0; }
+.cartao-identidade .cell-name { display: block; font-size: 15px; overflow-wrap: anywhere; }
+.cartao-identidade .cell-sub { display: block; margin-top: 2px; }
+.assistido-cartao app-badge { align-self: flex-start; }
+.cartao-dados { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; margin: 0; padding-top: 10px; border-top: 1px solid var(--gray-100); }
+.cartao-dados dt { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; color: var(--gray-400); }
+.cartao-dados dd { margin: 2px 0 0; font-size: 13.5px; color: var(--gray-800); overflow-wrap: anywhere; }
+.cartao-frequencia { grid-column: 1 / -1; }
+.tel--toque {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: -10px 0;
+  color: var(--color-adra-green-600); font-weight: 600;
+}
+
+.paginacao {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-top: 14px; padding: 12px 0;
+}
+.pagina-info { font-size: 13px; color: var(--gray-600); text-align: center; }
+.pagina-total { display: block; font-size: 12px; color: var(--gray-400); }
+
+@media (max-width: 380px) {
+  .pag-rotulo { display: none; }
+  .cartao-dados { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* iPad na vertical: cartões em 2 colunas */
+@media (min-width: 560px) {
+  .lista-cartoes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 720px) {
+  .filtros { display: flex; }
+  .filtros-busca { flex: 1; }
+  .filtros-select { width: 220px; flex: none; }
+}
+
+/* iPad na horizontal e notebook: tabela compacta (idade/CPF sob o nome, telefone sob o responsável) */
+@media (min-width: 1024px) {
+  .lista-tabela { display: block; }
+  .lista-cartoes { display: none; }
+  .paginacao { padding: 12px 16px; margin-top: 0; }
+  .pagina-total { display: inline; }
+}
+
+/* Desktop largo: colunas separadas, como no layout de referência */
+@media (min-width: 1440px) {
+  .col-larga { display: table-cell; }
+  .lista-tabela .so-compacta { display: none; }
+}
+
 /* ===== ABA FREQUÊNCIA ===== */
 .freq-resumo { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
 .freq-resumo-item {

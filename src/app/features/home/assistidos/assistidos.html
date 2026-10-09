@@ -1,26 +1,15 @@
 <section class="page" id="page-assistidos">
-  <div
-    class="page-header"
-    style="
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 8px;
-    "
-  >
-    <div>
-      <h1 style="margin: 0">Assistidos</h1>
-      <p class="page-intro" style="margin: 4px 0 0">
-        Cadastro e acompanhamento dos assistidos. A visibilidade dos dados respeita o perfil de
-        acesso — o Financeiro/Administrativo visualiza apenas leitura.
-      </p>
-    </div>
+  <header class="page-header cabecalho">
+    <h1 class="cabecalho-titulo">Assistidos</h1>
 
-    <app-button size="sm" style="flex-shrink: 0" (click)="abrirModalNovoAssistido()">
+    <app-button size="sm" class="cabecalho-acao" (click)="abrirModalNovoAssistido()">
       <app-icon name="plus" [size]="16" /> Novo assistido
     </app-button>
-  </div>
+
+    <p class="page-intro cabecalho-intro">
+      Cadastro e acompanhamento dos assistidos.
+    </p>
+  </header>
 
   @if (turmaFiltroAtual(); as turmaCtx) {
     <div class="notice notice-info" style="align-items: center; justify-content: space-between" role="status">
@@ -35,165 +24,241 @@
   }
 
   <div class="tabs">
-    <button class="tab" [class.active]="abaAtiva() === 'todos'" (click)="trocarAbaStatus('todos')">
-      Todos <span class="count">{{ totalElementos() }}</span>
+    <button type="button" class="tab" [class.active]="abaAtiva() === 'todos'" [attr.aria-pressed]="abaAtiva() === 'todos'" (click)="trocarAbaStatus('todos')">
+      Todos @if (contagem(); as c) { <span class="count">{{ c.todos }}</span> }
     </button>
-
-    <button class="tab" [class.active]="abaAtiva() === 'ativos'" (click)="trocarAbaStatus('ativos')">
-      Ativos
+    <button type="button" class="tab" [class.active]="abaAtiva() === 'ativos'" [attr.aria-pressed]="abaAtiva() === 'ativos'" (click)="trocarAbaStatus('ativos')">
+      Ativos @if (contagem(); as c) { <span class="count">{{ c.ativos }}</span> }
     </button>
-
-    <button class="tab" [class.active]="abaAtiva() === 'inativos'" (click)="trocarAbaStatus('inativos')">
-      Inativos
+    <button type="button" class="tab" [class.active]="abaAtiva() === 'acomp'" [attr.aria-pressed]="abaAtiva() === 'acomp'" (click)="trocarAbaStatus('acomp')">
+      Em acompanhamento @if (contagem(); as c) { <span class="count">{{ c.emAcompanhamento }}</span> }
     </button>
-
-    <button class="tab" [class.active]="abaAtiva() === 'acomp'" (click)="trocarAbaStatus('acomp')">
-      Em acompanhamento
+    <button type="button" class="tab" [class.active]="abaAtiva() === 'inativos'" [attr.aria-pressed]="abaAtiva() === 'inativos'" (click)="trocarAbaStatus('inativos')">
+      Inativos @if (contagem(); as c) { <span class="count">{{ c.inativos }}</span> }
     </button>
-  </div>
-
-  <div class="toolbar">
-    <app-input
-      label="Buscar por nome"
-      [hideLabel]="true"
-      placeholder="Buscar por nome…"
-      [ngModel]="termoBusca()"
-      (ngModelChange)="onBuscaChange($event)"
-    />
-
-    <app-select
-      [ngModel]="filtroTurma()"
-      (ngModelChange)="onFiltroTurmaChange($event)"
-      [options]="filtroTurmaOptions()"
-    />
   </div>
 
   @if (abaAtiva() === 'acomp') {
-    <div class="card card-pad">
-      <p class="muted">
-        Exibindo assistidos em acompanhamento clínico/sociopedagógico — depende de um endpoint que
-        ainda não existe, então essa aba está um placeholder por enquanto.
-      </p>
-    </div>
-  } @else {
-    <div class="card">
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>Idade</th>
-              <th>CPF</th>
-              <th>Turma</th>
-              <th>Status</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
+    <p class="acomp-legenda">
+      <app-icon name="alert-circle" [size]="16" />
+      Assistidos ativos com frequência abaixo de 75% ou com 3 ou mais faltas seguidas.
+    </p>
+  }
 
-          <tbody>
-            @if (carregando()) {
+  <div class="toolbar filtros">
+    <div class="filtros-busca">
+      <app-input
+        label="Buscar por nome ou CPF"
+        [hideLabel]="true"
+        placeholder="Buscar por nome ou CPF…"
+        [ngModel]="termoBusca()"
+        (ngModelChange)="onBuscaChange($event)"
+      />
+    </div>
+
+    @if (oficinas().length) {
+      <div class="filtros-select">
+        <label class="sr-only" for="filtro-oficina">Filtrar por oficina</label>
+        <app-select
+          id="filtro-oficina"
+          [ngModel]="filtroOficina()"
+          (ngModelChange)="onFiltroOficinaChange($event)"
+          [options]="filtroOficinaOptions()"
+        />
+      </div>
+    }
+
+    @if (turmas().length) {
+      <div class="filtros-select">
+        <label class="sr-only" for="filtro-turma">Filtrar por turma</label>
+        <app-select
+          id="filtro-turma"
+          [ngModel]="filtroTurma()"
+          (ngModelChange)="onFiltroTurmaChange($event)"
+          [options]="filtroTurmaOptions()"
+        />
+      </div>
+    }
+  </div>
+
+  <div class="lista-assistidos" [attr.aria-busy]="carregando()">
+    @if (carregando()) {
+      <div class="card lista-estado"><p class="muted">Carregando assistidos…</p></div>
+    } @else if (assistidos().length === 0) {
+      <div class="card lista-estado">
+        @if (temFiltrosAtivos()) {
+          <p class="muted">Nenhum assistido encontrado para os filtros aplicados.</p>
+          <app-button variant="secondary" size="sm" (click)="limparFiltros()">Limpar filtros</app-button>
+        } @else {
+          <p class="muted">Nenhum assistido cadastrado.</p>
+        }
+      </div>
+    } @else {
+      <!-- Desktop / iPad na horizontal: tabela (compacta ou completa conforme a largura disponível) -->
+      <div class="card lista-tabela">
+        <div class="table-wrap">
+          <table>
+            <thead>
               <tr>
-                <td colspan="6" class="muted" style="text-align: center; padding: 24px;">Carregando assistidos…</td>
+                <th>Nome</th>
+                <th class="col-larga">Idade</th>
+                <th class="col-larga">CPF</th>
+                <th>Responsável</th>
+                <th class="col-larga">Contato</th>
+                <th>Turma</th>
+                <th>Frequência</th>
+                <th>Status</th>
+                <th class="col-acoes">Ações</th>
               </tr>
-            } @else if (assistidos().length === 0) {
-              <tr>
-                <td colspan="6" style="text-align: center; padding: 32px 16px;">
-                  @if (temFiltrosAtivos()) {
-                    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                      <p class="muted" style="margin: 0;">Nenhum assistido encontrado para os filtros aplicados.</p>
-                      <app-button variant="secondary" size="sm" (click)="limparFiltros()">Limpar filtros</app-button>
-                    </div>
-                  } @else {
-                    <p class="muted" style="margin: 0;">Nenhum assistido cadastrado.</p>
-                  }
-                </td>
-              </tr>
-            } @else {
+            </thead>
+            <tbody>
               @for (assistido of assistidos(); track assistido.assistidoId) {
                 <tr>
-                  <td class="cell-name">{{ assistido.nomeCompleto }}</td>
-                  <td>{{ calcularIdade(assistido.dataNascimento) }} anos</td>
-                  <td>{{ assistido.cpf || '—' }}</td>
-                  <td>{{ assistido.nomeTurma || 'Sem turma' }}</td>
-
                   <td>
-                    <app-badge [status]="assistido.status" />
+                    <span class="cell-name">{{ assistido.nomeCompleto }}</span>
+                    <span class="cell-sub so-compacta">
+                      {{ calcularIdade(assistido.dataNascimento) }} anos · {{ cpfMascarado(assistido.cpf) }}
+                    </span>
                   </td>
-
+                  <td class="col-larga nowrap">{{ calcularIdade(assistido.dataNascimento) }} anos</td>
+                  <td class="col-larga nowrap cpf">{{ cpfMascarado(assistido.cpf) }}</td>
                   <td>
-                    <div class="t-actions">
-                      <!-- Editar (ação de editar por linha) -->
-                      <button
-                        type="button"
-                        aria-label="Editar assistido"
-                        appTooltip="Editar assistido"
-                        (click)="abrirModalEditarAssistido(assistido)"
-                      >
-                        <app-icon name="edit" />
-                      </button>
-
-                      <!-- Visualizar -->
-                      <button
-                        type="button"
-                        aria-label="Visualizar assistido"
-                        appTooltip="Visualizar assistido"
-                        (click)="abrirModalVisualizarAssistido(assistido)"
-                      >
-                        <app-icon name="eye" />
-                      </button>
-
-                      <!-- Alterar status -->
-                      <button
-                        type="button"
-                        [class.btn-icon--danger]="assistido.status === StatusGeral.ATIVO"
-                        [attr.aria-label]="assistido.status === StatusGeral.ATIVO ? 'Inativar assistido' : 'Reativar assistido'"
-                        [appTooltip]="assistido.status === StatusGeral.ATIVO ? 'Inativar assistido' : 'Reativar assistido'"
-                        (click)="
-                          alterarStatus(
-                            assistido,
-                            assistido.status === StatusGeral.ATIVO
-                              ? StatusGeral.INATIVO
-                              : StatusGeral.ATIVO
-                          )
-                        "
-                      >
-                        <app-icon [name]="assistido.status === StatusGeral.ATIVO ? 'power' : 'rotate-ccw'" />
-                      </button>
-                    </div>
+                    @if (assistido.responsavelNome) {
+                      <span>{{ assistido.responsavelNome }}</span>
+                      <span class="cell-sub so-compacta">{{ telefoneFormatado(assistido.responsavelTelefone) || 'Sem telefone' }}</span>
+                    } @else {
+                      <span class="muted">Não informado</span>
+                    }
+                  </td>
+                  <td class="col-larga nowrap">
+                    @if (assistido.responsavelTelefone) {
+                      <a class="tel" [href]="telefoneLink(assistido.responsavelTelefone)">{{ telefoneFormatado(assistido.responsavelTelefone) }}</a>
+                    } @else {
+                      <span class="muted">—</span>
+                    }
+                  </td>
+                  <td>{{ assistido.nomeTurma || 'Sem turma' }}</td>
+                  <td>
+                    <ng-container *ngTemplateOutlet="frequencia; context: { $implicit: assistido }" />
+                  </td>
+                  <td>
+                    <ng-container *ngTemplateOutlet="status; context: { $implicit: assistido }" />
+                  </td>
+                  <td class="col-acoes">
+                    <app-action-menu
+                      [label]="'Ações de ' + assistido.nomeCompleto"
+                      [itens]="acoesAssistido(assistido)"
+                      (selecionado)="executarAcao($event, assistido)"
+                    />
                   </td>
                 </tr>
               }
-            }
-          </tbody>
-        </table>
-
-        @if (totalPaginas() > 1) {
-          <div class="paginacao" role="navigation" aria-label="Paginação" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-top: 1px solid var(--border-color, #e5e7eb);">
-            <app-button
-              variant="secondary"
-              size="sm"
-              [disabled]="!temAnterior()"
-              (click)="paginaAnterior()"
-              aria-label="Página anterior"
-            ><app-icon name="chevron-left" [size]="16" /> Anterior</app-button>
-
-            <span class="pagina-info" style="font-size: 13px; color: var(--muted-color, #6b7280);">
-              Página {{ pagina() + 1 }} de {{ totalPaginas() }}
-              <span class="pagina-total">({{ totalElementos() }} assistidos)</span>
-            </span>
-
-            <app-button
-              variant="secondary"
-              size="sm"
-              [disabled]="!temProxima()"
-              (click)="proximaPagina()"
-              aria-label="Próxima página"
-            >Próxima <app-icon name="chevron-right" [size]="16" /></app-button>
-          </div>
-        }
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
-  }
+
+      <!-- Celular / iPad na vertical: cartões -->
+      <ul class="lista-cartoes" role="list">
+        @for (assistido of assistidos(); track assistido.assistidoId) {
+          <li class="assistido-cartao">
+            <div class="cartao-topo">
+              <div class="cartao-identidade">
+                <span class="cell-name">{{ assistido.nomeCompleto }}</span>
+                <span class="cell-sub">{{ calcularIdade(assistido.dataNascimento) }} anos · {{ cpfMascarado(assistido.cpf) }}</span>
+              </div>
+              <app-action-menu
+                [label]="'Ações de ' + assistido.nomeCompleto"
+                [itens]="acoesAssistido(assistido)"
+                (selecionado)="executarAcao($event, assistido)"
+              />
+            </div>
+
+            <ng-container *ngTemplateOutlet="status; context: { $implicit: assistido }" />
+
+            <dl class="cartao-dados">
+              <div>
+                <dt>Responsável</dt>
+                <dd>
+                  @if (assistido.responsavelNome) {
+                    {{ assistido.responsavelNome }}
+                    @if (assistido.responsavelParentesco) { <span class="muted">({{ assistido.responsavelParentesco }})</span> }
+                  } @else {
+                    <span class="muted">Não informado</span>
+                  }
+                </dd>
+              </div>
+              <div>
+                <dt>Contato</dt>
+                <dd>
+                  @if (assistido.responsavelTelefone) {
+                    <a class="tel tel--toque" [href]="telefoneLink(assistido.responsavelTelefone)">
+                      <app-icon name="phone" [size]="15" />
+                      {{ telefoneFormatado(assistido.responsavelTelefone) }}
+                    </a>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </dd>
+              </div>
+              <div>
+                <dt>Turma</dt>
+                <dd>{{ assistido.nomeTurma || 'Sem turma' }}</dd>
+              </div>
+              <div class="cartao-frequencia">
+                <dt>Frequência</dt>
+                <dd><ng-container *ngTemplateOutlet="frequencia; context: { $implicit: assistido }" /></dd>
+              </div>
+            </dl>
+          </li>
+        }
+      </ul>
+    }
+
+    @if (totalPaginas() > 1) {
+      <nav class="paginacao" aria-label="Paginação">
+        <app-button variant="secondary" size="sm" [disabled]="!temAnterior()" (click)="paginaAnterior()" aria-label="Página anterior">
+          <app-icon name="chevron-left" [size]="16" /> <span class="pag-rotulo">Anterior</span>
+        </app-button>
+
+        <span class="pagina-info">
+          Página {{ pagina() + 1 }} de {{ totalPaginas() }}
+          <span class="pagina-total">({{ totalElementos() }} assistidos)</span>
+        </span>
+
+        <app-button variant="secondary" size="sm" [disabled]="!temProxima()" (click)="proximaPagina()" aria-label="Próxima página">
+          <span class="pag-rotulo">Próxima</span> <app-icon name="chevron-right" [size]="16" />
+        </app-button>
+      </nav>
+    }
+  </div>
+
+  <ng-template #frequencia let-a>
+    @if (a.frequenciaPercentual != null) {
+      <div
+        class="freq"
+        [class]="classeFrequencia(a.frequenciaPercentual)"
+        role="img"
+        [attr.aria-label]="'Frequência de ' + a.frequenciaPercentual + '% em ' + a.totalAulas + ' aulas'"
+      >
+        <div class="track"><div class="fill" [style.width.%]="a.frequenciaPercentual"></div></div>
+        <span class="pct">{{ a.frequenciaPercentual }}%</span>
+      </div>
+      @if (a.faltasConsecutivas >= 3) {
+        <span class="faltas-seguidas">{{ a.faltasConsecutivas }} faltas seguidas</span>
+      }
+    } @else {
+      <span class="muted">Sem aulas</span>
+    }
+  </ng-template>
+
+  <ng-template #status let-a>
+    @if (a.emAcompanhamento) {
+      <app-badge variant="amber" label="Em acompanhamento" />
+    } @else {
+      <app-badge [status]="a.status" />
+    }
+  </ng-template>
 </section>
 
 <!-- ============================================================
