@@ -167,19 +167,39 @@ textarea {
   text-align: left;
   cursor: pointer;
   width: 100%;
+  transition: background .15s, color .15s;
 }
 .drawer-acao:hover {
-  background: var(--gray-50);
+  background: var(--color-brand-soft);
+  color: var(--color-adra-green-600);
 }
-.drawer-acao svg {
-  width: 18px;
-  height: 18px;
-  flex: none;
-  color: var(--gray-400);
+.drawer-acao:active {
+  background: var(--color-adra-green-100);
+}
+.drawer-acao app-icon {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm, 8px);
+  background: var(--color-brand-soft);
+  color: var(--color-brand);
+  transition: background .15s;
+}
+.drawer-acao:hover app-icon {
+  background: #fff;
 }
 .drawer-acao.perigo {
   color: var(--coral-600);
 }
-.drawer-acao.perigo svg {
+.drawer-acao.perigo app-icon {
+  background: var(--coral-50);
   color: currentColor;
+}
+.drawer-acao.perigo:hover {
+  background: var(--coral-50);
+  color: var(--coral-600);
+}
+.drawer-acao.perigo:hover app-icon {
+  background: #fff;
 }

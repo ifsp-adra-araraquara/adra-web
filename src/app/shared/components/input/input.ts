@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, forwardRef, input, signal
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { formatarCpf, somenteDigitos } from '../../validators/cpf.validator';
 import { formatarTelefone } from '../../utils/mascara.util';
+import { Icon } from '../icon/icon';
 
 export type InputType = 'text' | 'number' | 'password' | 'email' | 'date';
 export type InputMask = 'none' | 'cpf' | 'telefone';
@@ -10,6 +11,7 @@ let nextInputId = 0;
 
 @Component({
   selector: 'app-input',
+  imports: [Icon],
   templateUrl: './input.html',
   styleUrl: './input.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

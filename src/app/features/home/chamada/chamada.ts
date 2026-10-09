@@ -16,6 +16,7 @@ import { BadgeVariant } from '../../../shared/utils/badge-status.util';
 import { Badge } from '../../../shared/components/badge/badge';
 import { Input } from '../../../shared/components/input/input';
 import { Button } from '../../../shared/components/button/button';
+import { Icon } from '../../../shared/components/icon/icon';
 
 /**
  * Tela "Chamada" do sociopedagogico (também acessível ao coordenador):
@@ -35,7 +36,7 @@ import { Button } from '../../../shared/components/button/button';
 @Component({
   selector: 'app-chamada',
   standalone: true,
-  imports: [FormsModule, AulaModal, Badge, Input, Button],
+  imports: [Icon, FormsModule, AulaModal, Badge, Input, Button],
   templateUrl: './chamada.html',
   styleUrl: './chamada.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

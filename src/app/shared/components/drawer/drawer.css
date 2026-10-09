@@ -45,19 +45,6 @@
 .drawer-title { flex: 1; min-width: 0; }
 .drawer-title h2 { font-size: 17px; margin: 0; }
 .drawer-subtitle { margin: 2px 0 0; color: var(--gray-400); font-size: 13px; }
-.drawer-close {
-  width: 44px;
-  height: 44px;
-  flex: none;
-  border-radius: 8px;
-  border: none;
-  background: var(--gray-50);
-  color: var(--gray-600);
-  display: grid;
-  place-items: center;
-  transition: 0.14s;
-}
-.drawer-close:hover { background: var(--gray-100); color: var(--gray-800); }
 .drawer-body { flex: 1; padding: 16px; }
 .drawer-foot {
   position: sticky;

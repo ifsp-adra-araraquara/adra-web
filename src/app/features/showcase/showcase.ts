@@ -10,6 +10,8 @@ import { cpfValidator } from '../../shared/validators/cpf.validator';
 import { StatusAula } from '../../shared/enum/StatusAula';
 import { SituacaoAula } from '../../shared/enum/SituacaoAula';
 import { StatusPresenca } from '../../shared/enum/StatusPresenca';
+import { Icon } from '../../shared/components/icon/icon';
+import { TooltipDirective } from '../../shared/components/tooltip/tooltip';
 
 interface OficinaExemplo {
   oficinaId: number;
@@ -71,7 +73,7 @@ function gerarOficinasExemplo(): OficinaExemplo[] {
 @Component({
   selector: 'app-showcase',
   standalone: true,
-  imports: [Badge, Modal, Table, Input, Button, ReactiveFormsModule],
+  imports: [TooltipDirective, Icon, Badge, Modal, Table, Input, Button, ReactiveFormsModule],
   templateUrl: './showcase.html',
   styleUrl: './showcase.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

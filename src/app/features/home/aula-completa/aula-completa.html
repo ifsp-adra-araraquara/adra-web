@@ -6,7 +6,7 @@
   } @else if (aula(); as aulaAtual) {
   <header class="page-header">
     <button type="button" class="btn-voltar" (click)="voltar()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+      <app-icon name="chevron-left" />
       Voltar
     </button>
     <p class="eyebrow">Aula completa</p>
@@ -71,10 +71,7 @@
                 />
               } @placeholder {
                 <span class="rastreabilidade-gatilho-placeholder" title="Ver detalhes de autoria">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icone-relogio" aria-hidden="true">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
-                  </svg>
+                  <app-icon name="clock" class="icone-relogio" />
                   <span class="gatilho-texto">Rastreabilidade</span>
                 </span>
               }
@@ -91,7 +88,7 @@
             [disabled]="!podeEditarChamada() || mostrarAvisoChamadaFeita() || mostrarAvisoForaDoDia()"
             (click)="marcarPresenca(aluno, StatusPresenca.PRESENTE)"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            <app-icon name="check" />
             Presente
           </button>
           <button
@@ -102,7 +99,7 @@
             [disabled]="!podeEditarChamada() || mostrarAvisoChamadaFeita() || mostrarAvisoForaDoDia()"
             (click)="marcarPresenca(aluno, StatusPresenca.FALTA)"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <app-icon name="x" />
             Falta
           </button>
           <button
@@ -113,7 +110,7 @@
             [disabled]="!podeEditarChamada() || mostrarAvisoChamadaFeita() || mostrarAvisoForaDoDia()"
             (click)="marcarPresenca(aluno, StatusPresenca.FALTA_JUSTIFICADA)"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+            <app-icon name="alert-circle" />
             Justificada
           </button>
         </div>

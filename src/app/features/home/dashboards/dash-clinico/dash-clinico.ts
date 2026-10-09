@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { StatCard } from '../../../../shared/components/stat-card/stat-card';
+import { Icon } from '../../../../shared/components/icon/icon';
 
 @Component({
   selector: 'app-dash-clinico',
   standalone: true,
-  imports: [StatCard],
+  imports: [Icon, StatCard],
   templateUrl: './dash-clinico.html'
 })
 export class DashClinico {

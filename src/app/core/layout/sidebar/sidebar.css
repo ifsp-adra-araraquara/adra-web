@@ -72,7 +72,7 @@
 .nav-item.active { background: var(--color-brand); color: #fff; }
 .nav-item-label { overflow: hidden; text-overflow: ellipsis; }
 .nav-item-icon { width: 18px; height: 18px; flex: none; display: flex; align-items: center; justify-content: center; }
-.nav-item-icon svg { width: 100%; height: 100%; }
+.nav-item-icon svg { width: 18px; height: 18px; }
 
 .sidebar-user {
   border-top: 1px solid var(--color-adra-green-800); padding: 12px 14px;

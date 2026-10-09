@@ -28,17 +28,6 @@
 .showcase-badge-list li { display: flex; align-items: center; gap: 12px; }
 .showcase-badge-desc { font-size: 13px; color: var(--gray-600); }
 
-.t-actions-btn {
-  border: 1px solid var(--gray-200);
-  background: #fff;
-  border-radius: 7px;
-  padding: 6px 12px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--gray-600);
-  transition: .14s;
-}
-.t-actions-btn:hover { border-color: var(--color-adra-green-400); color: var(--color-adra-green-400); background: var(--color-adra-green-50); }
 
 code {
   background: var(--gray-100);

@@ -11,9 +11,10 @@ import { AulaStatusChamadaResponseDTO } from '../../../shared/models/aula/AulaSt
 import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO';
 import { Table, TableColumn } from '../../../shared/components/table/table';
 import { Badge } from '../../../shared/components/badge/badge';
-import { Button } from '../../../shared/components/button/button';
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { hojeISO } from '../../../shared/utils/aula.util';
+import { Icon } from '../../../shared/components/icon/icon';
+import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 
 /**
  * US-71: painel do coordenador com o status de lançamento da chamada de
@@ -25,7 +26,7 @@ import { hojeISO } from '../../../shared/utils/aula.util';
  */
 @Component({
   selector: 'app-status-chamada',
-  imports: [FormsModule, Table, Badge, Button, Select],
+  imports: [TooltipDirective, Icon, FormsModule, Table, Badge, Select],
   templateUrl: './status-chamada.html',
   styleUrl: './status-chamada.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Icon } from '../icon/icon';
 
 function formatarDataHora(valor: string | null | undefined): string {
   if (!valor) return '';
@@ -20,6 +21,7 @@ function formatarDataHora(valor: string | null | undefined): string {
 @Component({
   selector: 'app-rastreabilidade-tooltip',
   standalone: true,
+  imports: [Icon],
   templateUrl: './rastreabilidade-tooltip.html',
   styleUrl: './rastreabilidade-tooltip.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

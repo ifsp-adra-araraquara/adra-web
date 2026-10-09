@@ -236,12 +236,37 @@ tbody tr { transition: background .12s; }
 .cell-name { font-weight: 600; color: var(--gray-800); }
 .cell-sub { font-size: 12px; color: var(--gray-400); }
 .t-actions { display: flex; gap: 6px; }
-.t-actions button {
-  min-width: 44px; min-height: 44px; border: 1px solid var(--gray-200); background: #fff; border-radius: 7px; padding: 6px 8px;
-  color: var(--gray-600); display: grid; place-items: center; transition: .14s;
+/* ===== BOTÕES DE ÍCONE — padrão único (ações de tabela, paginação, fechar) =====
+   Sempre com <app-icon> + aria-label (+ appTooltip quando não houver texto visível).
+   Alvo de toque de 44px. Variantes: --primary (ação pendente), --danger (inativar), --warning, --ghost (fechar). */
+.btn-icon, .t-actions button {
+  display: inline-grid; place-items: center; flex: none;
+  width: 44px; height: 44px; padding: 0;
+  border: 1px solid var(--gray-200); border-radius: var(--radius-sm);
+  background: #fff; color: var(--gray-600);
+  transition: background .15s, border-color .15s, color .15s, transform .05s;
 }
-.t-actions button:hover { border-color: var(--color-adra-green-400); color: var(--color-adra-green-400); background: var(--color-adra-green-50); }
-.t-actions button svg { width: 15px; height: 15px; }
+.btn-icon svg, .t-actions button svg { width: 18px; height: 18px; }
+.btn-icon:hover:not(:disabled), .t-actions button:hover:not(:disabled) {
+  border-color: var(--color-brand); color: var(--color-brand); background: var(--color-brand-soft);
+}
+.btn-icon:active:not(:disabled), .t-actions button:active:not(:disabled) {
+  color: var(--color-brand-hover); background: var(--color-adra-green-100); transform: translateY(1px);
+}
+.btn-icon:disabled, .t-actions button:disabled { opacity: .45; cursor: not-allowed; }
+.btn-icon--danger:hover:not(:disabled), .t-actions button.btn-icon--danger:hover:not(:disabled) {
+  border-color: var(--coral-400); color: var(--coral-600); background: var(--coral-50);
+}
+.btn-icon--danger:active:not(:disabled), .t-actions button.btn-icon--danger:active:not(:disabled) { background: var(--coral-50); color: var(--coral-600); }
+.btn-icon--primary, .t-actions button.btn-icon--primary { border-color: var(--color-brand); background: var(--color-brand); color: #fff; }
+.btn-icon--primary:hover:not(:disabled), .t-actions button.btn-icon--primary:hover:not(:disabled) { border-color: var(--color-brand-hover); background: var(--color-brand-hover); color: #fff; }
+.btn-icon--primary:active:not(:disabled), .t-actions button.btn-icon--primary:active:not(:disabled) { border-color: var(--color-brand-active); background: var(--color-brand-active); color: #fff; }
+.btn-icon--warning { color: var(--amber-600); }
+.btn-icon--warning:hover:not(:disabled) { border-color: var(--amber-400); color: var(--amber-600); background: var(--amber-50); }
+.btn-icon--warning:active:not(:disabled) { background: var(--amber-50); color: var(--amber-600); }
+.btn-icon--ghost { border-color: transparent; background: var(--gray-50); }
+.btn-icon--ghost:hover:not(:disabled) { border-color: transparent; background: var(--gray-100); color: var(--gray-800); }
+.btn-icon--ghost:active:not(:disabled) { background: var(--gray-200); color: var(--gray-800); }
 
 /* ===== BADGE ===== */
 .badge {
@@ -410,8 +435,6 @@ tbody tr { transition: background .12s; }
 .modal-title { flex: 1; min-width: 0; }
 .modal-head h2 { font-size: 17px; }
 .modal-head .mh-ico { width: 36px; height: 36px; border-radius: 10px; flex: none; display: grid; place-items: center; }
-.modal-close { width: 44px; height: 44px; flex: none; border-radius: 8px; border: none; background: var(--gray-50); color: var(--gray-600); display: grid; place-items: center; transition: .14s; }
-.modal-close:hover { background: var(--gray-100); color: var(--gray-800); }
 .modal-body { flex: 1; padding: 16px; }
 .modal-foot {
   position: sticky; bottom: 0; background: #fff;

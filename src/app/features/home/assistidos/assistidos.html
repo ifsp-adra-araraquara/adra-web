@@ -18,7 +18,7 @@
     </div>
 
     <app-button size="sm" style="flex-shrink: 0" (click)="abrirModalNovoAssistido()">
-      + Novo assistido
+      <app-icon name="plus" [size]="16" /> Novo assistido
     </app-button>
   </div>
 
@@ -26,7 +26,7 @@
     <div class="notice notice-info" style="align-items: center; justify-content: space-between" role="status">
       <span>
         Mostrando alunos da turma <strong>{{ turmaCtx.nomeTurma }}</strong>
-        <button type="button" class="link-voltar" (click)="voltarParaTurmas()">← Voltar para Turmas</button>
+        <button type="button" class="link-voltar" (click)="voltarParaTurmas()"><app-icon name="chevron-left" [size]="16" /> Voltar para Turmas</button>
       </span>
       <app-button variant="secondary" size="sm" (click)="removerFiltroTurma()">
         Remover filtro
@@ -125,31 +125,29 @@
                       <!-- Editar (ação de editar por linha) -->
                       <button
                         type="button"
-                        title="Editar assistido"
+                        aria-label="Editar assistido"
+                        appTooltip="Editar assistido"
                         (click)="abrirModalEditarAssistido(assistido)"
                       >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                          <path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
+                        <app-icon name="edit" />
                       </button>
 
                       <!-- Visualizar -->
                       <button
                         type="button"
-                        title="Visualizar assistido"
+                        aria-label="Visualizar assistido"
+                        appTooltip="Visualizar assistido"
                         (click)="abrirModalVisualizarAssistido(assistido)"
                       >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" />
-                          <circle cx="12" cy="12" r="3" />
-                        </svg>
+                        <app-icon name="eye" />
                       </button>
 
                       <!-- Alterar status -->
                       <button
                         type="button"
-                        title="Encerrar/reativar"
+                        [class.btn-icon--danger]="assistido.status === StatusGeral.ATIVO"
+                        [attr.aria-label]="assistido.status === StatusGeral.ATIVO ? 'Inativar assistido' : 'Reativar assistido'"
+                        [appTooltip]="assistido.status === StatusGeral.ATIVO ? 'Inativar assistido' : 'Reativar assistido'"
                         (click)="
                           alterarStatus(
                             assistido,
@@ -159,10 +157,7 @@
                           )
                         "
                       >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M12 2v10" />
-                          <path d="M18.4 6.6a9 9 0 1 1-12.8 0" />
-                        </svg>
+                        <app-icon [name]="assistido.status === StatusGeral.ATIVO ? 'power' : 'rotate-ccw'" />
                       </button>
                     </div>
                   </td>
@@ -180,7 +175,7 @@
               [disabled]="!temAnterior()"
               (click)="paginaAnterior()"
               aria-label="Página anterior"
-            >&#8592; Anterior</app-button>
+            ><app-icon name="chevron-left" [size]="16" /> Anterior</app-button>
 
             <span class="pagina-info" style="font-size: 13px; color: var(--muted-color, #6b7280);">
               Página {{ pagina() + 1 }} de {{ totalPaginas() }}
@@ -193,7 +188,7 @@
               [disabled]="!temProxima()"
               (click)="proximaPagina()"
               aria-label="Próxima página"
-            >Próxima &#8594;</app-button>
+            >Próxima <app-icon name="chevron-right" [size]="16" /></app-button>
           </div>
         }
       </div>
@@ -212,11 +207,7 @@
   (closed)="fecharModalNovoAssistido()"
 >
   <div modal-icon class="mh-ico ico-green">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M19 8v6M22 11h-6" />
-    </svg>
+    <app-icon name="user-plus" />
   </div>
 
   @if (erroSalvar()) {
@@ -281,7 +272,6 @@
 
         <app-input
           label="Necessidades específicas"
-          placeholder="Ex.: TEA, TDAH, mobilidade reduzida…"
           [ngModel]="novoAssistido.necessidadesEspecificas"
           (ngModelChange)="atualizarCampoAssistido('necessidadesEspecificas', $event)"
         />
@@ -426,7 +416,7 @@
         </label>
 
         <app-button size="sm" class="mt-s" [loading]="salvandoResponsavel()" (click)="salvarResponsavel()">
-          💾 Salvar responsável
+          Salvar responsável
         </app-button>
 
   <ng-template #footer>
@@ -449,10 +439,7 @@
     (closed)="fecharModalVisualizarAssistido()"
   >
     <div modal-icon class="mh-ico ico-green">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
+      <app-icon name="user" />
     </div>
 
     <p class="cell-sub">
@@ -580,7 +567,7 @@
             <p class="muted mb-s">Nenhum responsável cadastrado para este assistido.</p>
 
             <app-button size="sm" (click)="abrirFormNovoResponsavelVinculado()">
-              + Cadastrar responsável
+              <app-icon name="plus" [size]="16" /> Cadastrar responsável
             </app-button>
           } @else {
             @if (erroResponsavelVinculado()) {
@@ -828,7 +815,7 @@
                 <th>Data de entrada</th>
                 <th>Data de saída</th>
                 <th>Vínculo</th>
-                <th></th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -845,13 +832,15 @@
                 <td>
                   <app-badge [status]="vinculo.status" />
                 </td>
-                <td class="acoes-cell">
-                  <app-button variant="secondary" size="sm" (click)="verAlunosDaTurmaHistorico(vinculo)">
-                    Ver alunos
-                  </app-button>
-                  <app-button variant="secondary" size="sm" (click)="abrirAulasHistoricoTurma(vinculo)">
-                    Ver aulas
-                  </app-button>
+                <td>
+                  <div class="t-actions">
+                    <button type="button" aria-label="Ver alunos da turma" appTooltip="Ver alunos" (click)="verAlunosDaTurmaHistorico(vinculo)">
+                      <app-icon name="eye" />
+                    </button>
+                    <button type="button" aria-label="Ver aulas da turma" appTooltip="Ver aulas" (click)="abrirAulasHistoricoTurma(vinculo)">
+                      <app-icon name="list" />
+                    </button>
+                  </div>
                 </td>
               </tr>
               }
@@ -878,10 +867,7 @@
       <p class="form-sec-title">Prontuários</p>
 
       <div class="notice notice-lock">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="11" width="18" height="11" rx="2" />
-          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-        </svg>
+        <app-icon name="lock" />
         <span>
           Prontuários visíveis conforme o perfil de acesso. Conteúdo de relato e motivo
           criptografado — depende de endpoint próprio que ainda não existe.
@@ -914,23 +900,14 @@
     (closed)="mostrarModalStatus.set(false)"
   >
     <div modal-icon class="mh-ico" [class]="novoStatusDesejado() === StatusGeral.INATIVO ? 'ico-coral' : 'ico-green'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        @if (novoStatusDesejado() === StatusGeral.INATIVO) {
-          <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-        } @else {
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-          <polyline points="22 4 12 14.01 9 11.01"/>
-        }
-      </svg>
+      <app-icon [name]="novoStatusDesejado() === StatusGeral.INATIVO ? 'power' : 'rotate-ccw'" />
     </div>
 
     <p class="cell-sub">Assistido: <strong>{{ assistidoSelecionadoStatus()?.nomeCompleto }}</strong></p>
 
     @if (novoStatusDesejado() === StatusGeral.INATIVO) {
       <div class="notice notice-amber">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
-        </svg>
+        <app-icon name="alert-circle" />
         <div>
           <b>Impactos de inativar este assistido:</b>
           <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px;">
@@ -942,9 +919,7 @@
       </div>
     } @else {
       <div class="notice notice-info">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
-        </svg>
+        <app-icon name="alert-circle" />
         <div>
           <b>Impactos de reativar este assistido:</b>
           <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px;">
@@ -980,10 +955,7 @@
     (closed)="fecharModalEditar()"
   >
     <div modal-icon class="mh-ico ico-green">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-        <path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-      </svg>
+      <app-icon name="edit" />
     </div>
 
     @if (erroSalvarEdicao()) {

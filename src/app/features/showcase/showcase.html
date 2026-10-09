@@ -121,11 +121,12 @@
         <ng-template #rowActions let-oficina>
           <button
             type="button"
-            class="t-actions-btn"
-            [title]="oficina.ativo ? 'Inativar' : 'Reativar'"
+            [class.btn-icon--danger]="oficina.ativo"
+            [attr.aria-label]="oficina.ativo ? 'Inativar oficina' : 'Reativar oficina'"
+            [appTooltip]="oficina.ativo ? 'Inativar oficina' : 'Reativar oficina'"
             (click)="abrirConfirmacaoInativacao(oficina)"
           >
-            {{ oficina.ativo ? 'Inativar' : 'Reativar' }}
+            <app-icon [name]="oficina.ativo ? 'power' : 'rotate-ccw'" />
           </button>
         </ng-template>
       </app-table>

@@ -80,8 +80,6 @@ tbody tr:hover { background: #fafbfc; }
 .feedback { color: var(--gray-600); }
 .feedback.error { color: var(--coral-600); }
 .student { margin: 0; padding: 12px 20px; border-bottom: 1px solid var(--gray-100); }
-.acoes-cell { white-space: nowrap; }
-.acoes-cell > * + * { margin-left: 8px; }
 
 .dialog-body > label,
 .form-row > label {

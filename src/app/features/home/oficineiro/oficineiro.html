@@ -31,7 +31,7 @@
     <div class="panel-header"><h2 id="turmas-titulo">Minhas turmas</h2><span class="subtle">Somente leitura</span></div>
     <div class="table-wrap" role="region" tabindex="0" aria-label="Turmas">
       <table>
-        <thead><tr><th>Turma</th><th>Oficina</th><th>Turno</th><th>Ocupação</th><th></th></tr></thead>
+        <thead><tr><th>Turma</th><th>Oficina</th><th>Turno</th><th>Ocupação</th><th>Ações</th></tr></thead>
         <tbody>
         @for (turma of turmas(); track turma.turmaId) {
         <tr>
@@ -49,9 +49,15 @@
               <span class="pct">{{ turma.quantidadeAlunos }}/{{ turma.capacidade }}</span>
             </div>
           </td>
-          <td class="acoes-cell">
-            <app-button variant="secondary" size="sm" (click)="abrirTurma(turma)">Ver alunos</app-button>
-            <app-button variant="secondary" size="sm" (click)="abrirAulasDaTurma(turma)">Ver aulas</app-button>
+          <td>
+            <div class="t-actions">
+              <button type="button" aria-label="Ver alunos da turma" appTooltip="Ver alunos" (click)="abrirTurma(turma)">
+                <app-icon name="eye" />
+              </button>
+              <button type="button" aria-label="Ver aulas da turma" appTooltip="Ver aulas" (click)="abrirAulasDaTurma(turma)">
+                <app-icon name="list" />
+              </button>
+            </div>
           </td>
         </tr>
         } @empty { <tr><td colspan="5" class="empty">Nenhuma turma vinculada ao seu usuário.</td></tr> }
@@ -130,7 +136,7 @@
   }
   @case ('materiais') {
   <section class="panel" aria-labelledby="materiais-titulo">
-    <div class="panel-header"><div><h2 id="materiais-titulo">Materiais didáticos</h2><span class="subtle">Filtrados pelas suas turmas</span></div><app-button size="sm" (click)="mostrarUploadMaterial.set(true)">Novo material</app-button></div>
+    <div class="panel-header"><div><h2 id="materiais-titulo">Materiais didáticos</h2><span class="subtle">Filtrados pelas suas turmas</span></div><app-button size="sm" (click)="mostrarUploadMaterial.set(true)"><app-icon name="plus" [size]="16" /> Novo material</app-button></div>
     <div class="material-grid">
       @for (material of materiais(); track material.materialId) {
       <article class="material-card"><div class="material-icon">{{ material.tipo }}</div><h3>{{ material.titulo }}</h3><p>{{ material.nomeTurma || material.nomeOficina || 'Sem vínculo informado' }}</p><a class="secondary-button" [href]="material.url" target="_blank" rel="noopener">Abrir</a></article>

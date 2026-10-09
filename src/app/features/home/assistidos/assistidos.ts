@@ -31,6 +31,8 @@ import { Button } from '../../../shared/components/button/button';
 import { Modal } from '../../../shared/components/modal/modal';
 import { Badge } from '../../../shared/components/badge/badge';
 import { AulasTurmaModal } from '../aulas-turma-modal/aulas-turma-modal';
+import { Icon } from '../../../shared/components/icon/icon';
+import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 
 interface ResponsavelPendente extends ResponsavelRequestDTO {
   parentesco: string;
@@ -42,7 +44,7 @@ interface ResponsavelPendente extends ResponsavelRequestDTO {
 @Component({
   selector: 'app-assistidos',
   standalone: true,
-  imports: [CommonModule, FormsModule, Select, Input, Button, Modal, Badge, AulasTurmaModal],
+  imports: [TooltipDirective, Icon, CommonModule, FormsModule, Select, Input, Button, Modal, Badge, AulasTurmaModal],
   templateUrl: './assistidos.html',
   styleUrl: './assistidos.css',
 })

@@ -15,11 +15,13 @@ import { Modal } from '../../../shared/components/modal/modal';
 import { Table, TableColumn } from '../../../shared/components/table/table';
 import { Input } from '../../../shared/components/input/input';
 import { Button } from '../../../shared/components/button/button';
+import { Icon } from '../../../shared/components/icon/icon';
+import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 
 @Component({
   selector: 'app-oficinas',
   standalone: true,
-  imports: [CommonModule, FormsModule, Select, Modal, Table, Input, Button],
+  imports: [TooltipDirective, Icon, CommonModule, FormsModule, Select, Modal, Table, Input, Button],
   templateUrl: './oficinas.html',
   styleUrl: './oficinas.css',
 })

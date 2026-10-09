@@ -10,6 +10,7 @@ import {
   output,
 } from '@angular/core';
 import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
+import { Icon } from '../icon/icon';
 
 /**
  * Modal padronizado — abre/fecha por um signal (`[(open)]`), fecha ao clicar fora
@@ -29,7 +30,7 @@ let nextId = 0;
 
 @Component({
   selector: 'app-modal',
-  imports: [NgTemplateOutlet],
+  imports: [Icon, NgTemplateOutlet],
   templateUrl: './modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {

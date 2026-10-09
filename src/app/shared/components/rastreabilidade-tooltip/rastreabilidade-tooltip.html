@@ -1,17 +1,12 @@
 <div class="rastreabilidade-container" tabindex="0" role="region" [attr.aria-label]="textoAcessivel()">
   <span class="gatilho-icone" title="Ver detalhes de autoria e alterações">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icone-relogio" aria-hidden="true">
-      <circle cx="12" cy="12" r="10"/>
-      <polyline points="12 6 12 12 16 14"/>
-    </svg>
+    <app-icon name="clock" class="icone-relogio" />
     <span class="gatilho-texto">Rastreabilidade</span>
   </span>
 
   <div class="tooltip-conteudo" role="tooltip">
     <div class="tooltip-header">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="header-icon" aria-hidden="true">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-      </svg>
+      <app-icon name="shield" class="header-icon" />
       <span>Rastreabilidade</span>
     </div>
 

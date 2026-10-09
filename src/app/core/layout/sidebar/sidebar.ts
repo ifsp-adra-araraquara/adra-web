@@ -6,6 +6,7 @@ import { Role } from '../../../shared/enum/role.enum';
 import { Router } from '@angular/router';
 import { BrandLogo } from '../../../shared/components/brand-logo/brand-logo';
 import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
+import { Icon, IconName } from '../../../shared/components/icon/icon';
 
 /**
  * Módulos que ainda não têm rota/componente funcional implementado — ficam
@@ -28,7 +29,7 @@ const MODULOS_OCULTOS = new Set([
 
 @Component({
   selector: 'app-sidebar',
-  imports: [CommonModule, BrandLogo, TooltipDirective],
+  imports: [Icon, CommonModule, BrandLogo, TooltipDirective],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -61,7 +62,7 @@ export class Sidebar {
   private ordemSecoes = ['Principal', 'Gestão', 'Especializado', 'Pedagógico', 'Financeiro', 'Conta'];
 
   /** Chave do ícone (ver @switch em sidebar.html) exibido para cada módulo. */
-  private iconesPorModulo: Record<string, string> = {
+  private iconesPorModulo: Record<string, IconName> = {
     DASHBOARD: 'calendar',
     ASSISTIDOS: 'users',
     RESPONSAVEIS: 'user-check',
@@ -74,7 +75,7 @@ export class Sidebar {
     USUARIOS: 'shield',
   };
 
-  iconeModulo(codigo: AppModule): string {
+  iconeModulo(codigo: AppModule): IconName {
     return this.iconesPorModulo[codigo.toUpperCase()] ?? 'circle';
   }
 

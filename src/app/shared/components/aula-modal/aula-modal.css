@@ -143,21 +143,6 @@
 .mini-badge.falta { background: var(--coral-50); color: var(--coral-600); }
 .mini-badge.justificada { background: var(--amber-50); color: var(--amber-600); }
 
-.icon-button {
-  flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--gray-200);
-  border-radius: 7px;
-  background: #fff;
-  color: var(--amber-600);
-  cursor: pointer;
-  transition: .14s;
-}
-.icon-button svg { width: 16px; height: 16px; }
-.icon-button:hover { background: var(--amber-50); border-color: var(--amber-400); }
 
 .empty { padding: 20px; text-align: center; color: var(--gray-600); font-size: 13px; }
 

@@ -145,11 +145,7 @@
               }
               @if (faltasConsecutivasDe(aluno) >= limiarFaltasConsecutivas) {
                 <span class="alerta-faltas" role="status">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
-                    <line x1="12" y1="9" x2="12" y2="13"/>
-                    <line x1="12" y1="17" x2="12.01" y2="17"/>
-                  </svg>
+                  <app-icon name="alert-triangle" />
                   {{ faltasConsecutivasDe(aluno) }} faltas seguidas
                 </span>
               }
@@ -163,10 +159,7 @@
                   />
                 } @placeholder {
                   <span class="rastreabilidade-gatilho-placeholder" title="Ver detalhes de autoria">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icone-relogio" aria-hidden="true">
-                      <circle cx="12" cy="12" r="10"/>
-                      <polyline points="12 6 12 12 16 14"/>
-                    </svg>
+                    <app-icon name="clock" class="icone-relogio" />
                     <span class="gatilho-texto">Rastreabilidade</span>
                   </span>
                 }
@@ -231,11 +224,7 @@
                 }
                 @if (faltasConsecutivasDe(aluno) >= limiarFaltasConsecutivas) {
                   <span class="alerta-faltas" role="status">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
-                      <line x1="12" y1="9" x2="12" y2="13"/>
-                      <line x1="12" y1="17" x2="12.01" y2="17"/>
-                    </svg>
+                    <app-icon name="alert-triangle" />
                     {{ faltasConsecutivasDe(aluno) }} faltas seguidas
                   </span>
                 }
@@ -249,10 +238,7 @@
                     />
                   } @placeholder {
                     <span class="rastreabilidade-gatilho-placeholder" title="Ver detalhes de autoria">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icone-relogio" aria-hidden="true">
-                        <circle cx="12" cy="12" r="10"/>
-                        <polyline points="12 6 12 12 16 14"/>
-                      </svg>
+                      <app-icon name="clock" class="icone-relogio" />
                       <span class="gatilho-texto">Rastreabilidade</span>
                     </span>
                   }
@@ -266,7 +252,7 @@
                   [attr.aria-pressed]="aluno.statusPresenca === StatusPresenca.PRESENTE"
                   (click)="marcarPresenca(aluno, StatusPresenca.PRESENTE)"
                 >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  <app-icon name="check" />
                   Presente
                 </button>
                 <button
@@ -276,7 +262,7 @@
                   [attr.aria-pressed]="aluno.statusPresenca === StatusPresenca.FALTA"
                   (click)="marcarPresenca(aluno, StatusPresenca.FALTA)"
                 >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  <app-icon name="x" />
                   Falta
                 </button>
                 <button
@@ -286,7 +272,7 @@
                   [attr.aria-pressed]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
                   (click)="marcarPresenca(aluno, StatusPresenca.FALTA_JUSTIFICADA)"
                 >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                  <app-icon name="alert-circle" />
                   Justificada
                 </button>
               </div>
@@ -349,11 +335,7 @@
               }
               @if (faltasConsecutivasDe(aluno) >= limiarFaltasConsecutivas) {
                 <span class="alerta-faltas" role="status">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
-                    <line x1="12" y1="9" x2="12" y2="13"/>
-                    <line x1="12" y1="17" x2="12.01" y2="17"/>
-                  </svg>
+                  <app-icon name="alert-triangle" />
                   {{ faltasConsecutivasDe(aluno) }} faltas seguidas
                 </span>
               }
@@ -367,10 +349,7 @@
                   />
                 } @placeholder {
                   <span class="rastreabilidade-gatilho-placeholder" title="Ver detalhes de autoria">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icone-relogio" aria-hidden="true">
-                      <circle cx="12" cy="12" r="10"/>
-                      <polyline points="12 6 12 12 16 14"/>
-                    </svg>
+                    <app-icon name="clock" class="icone-relogio" />
                     <span class="gatilho-texto">Rastreabilidade</span>
                   </span>
                 }
@@ -396,16 +375,12 @@
               @if (ehOficineiroOuCoordenador()) {
               <button
                 type="button"
-                class="icon-button"
-                title="Registrar ocorrência"
+                class="btn-icon btn-icon--warning"
+                appTooltip="Registrar ocorrência"
                 aria-label="Registrar ocorrência"
                 (click)="registrarOcorrencia(aluno)"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
-                  <line x1="12" y1="9" x2="12" y2="13"/>
-                  <line x1="12" y1="17" x2="12.01" y2="17"/>
-                </svg>
+                <app-icon name="alert-triangle" />
               </button>
               }
             </div>
