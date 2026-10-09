@@ -16,7 +16,7 @@
 .pc { flex: 1; padding: 10px 12px; border: 1px solid var(--gray-100); border-radius: 8px; text-align: center; }
 .pc b { display: block; font-size: 20px; line-height: 1.2; }
 .pc span { font-size: 11px; color: var(--gray-600); text-transform: uppercase; letter-spacing: .03em; }
-.pc-p b { color: var(--green-600); }
+.pc-p b { color: var(--color-adra-green-600); }
 .pc-f b { color: var(--coral-600); }
 .pc-fj b { color: var(--amber-600); }
 
@@ -67,7 +67,7 @@
   font-size: 11px;
   font-weight: 700;
 }
-.aluno-avatar.presente { background: var(--green-400); color: #fff; }
+.aluno-avatar.presente { background: var(--color-adra-green-400); color: #fff; }
 .aluno-avatar.falta { background: var(--coral-600); color: #fff; }
 .aluno-avatar.justificada { background: var(--amber-600); color: #fff; }
 
@@ -103,7 +103,7 @@
 /* Faixa de dias — reaproveita a paleta verde/coral/âmbar já usada no avatar/mini-badge. Mais recente à esquerda. */
 .faixa-dias { display: inline-flex; align-items: center; gap: 3px; }
 .faixa-dia { width: 7px; height: 7px; border-radius: 50%; background: var(--gray-200); flex: none; }
-.faixa-dia.presente { background: var(--green-400); }
+.faixa-dia.presente { background: var(--color-adra-green-400); }
 .faixa-dia.falta { background: var(--coral-600); }
 .faixa-dia.justificada { background: var(--amber-600); }
 
@@ -139,7 +139,7 @@
   font-weight: 700;
   white-space: nowrap;
 }
-.mini-badge.presente { background: var(--green-50); color: var(--green-600); }
+.mini-badge.presente { background: var(--color-adra-green-50); color: var(--color-adra-green-600); }
 .mini-badge.falta { background: var(--coral-50); color: var(--coral-600); }
 .mini-badge.justificada { background: var(--amber-50); color: var(--amber-600); }
 
@@ -185,6 +185,6 @@
 }
 
 .campo-input:focus {
-  border-color: var(--green-400);
-  box-shadow: 0 0 0 2px rgba(52, 168, 108, 0.15);
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 2px var(--color-brand-soft);
 }

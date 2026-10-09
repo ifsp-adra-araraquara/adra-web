@@ -1,61 +1,36 @@
-<div class="login-screen">
-    <div class="login-shell">
+<app-auth-shell titulo="Recuperação de acesso" descricao="Redefina sua senha com segurança, sem depender do administrador do sistema.">
+  <form class="login-form" (ngSubmit)="solicitar()">
+    @if (!enviado()) {
+    <h1 class="login-sub">Esqueceu sua senha?</h1>
+    <p class="login-desc">
+        Informe seu e-mail institucional. Se ele estiver cadastrado, você vai
+        receber um link para criar uma nova senha.
+    </p>
 
-        <aside class="brand-panel" aria-hidden="true">
-            <div class="brand-panel-glow"></div>
-            <div class="brand-panel-grid"></div>
+    <app-input
+        label="E-mail institucional"
+        type="email"
+        name="email"
+        placeholder="coordenador@adra.org.br"
+        autocomplete="username"
+        [(ngModel)]="email"
+    />
 
-            <div class="brand-panel-content">
-                <app-brand-logo variant="white" [size]="56" class="brand-logo" />
-                <h1 class="brand-title">Recuperação de acesso</h1>
-                <p class="brand-tagline">Sem depender do Administrador para redefinir sua senha · ADRA Araraquara</p>
-            </div>
+    @if (erro()) {
+    <p class="login-erro" role="alert">{{ erro() }}</p>
+    }
 
-            <div class="brand-panel-footer">
-                <span class="brand-status-dot"></span>
-                Ambiente seguro · conexão criptografada
-            </div>
-        </aside>
+    <app-button type="submit" size="lg" [block]="true" [loading]="carregando()">
+        {{ carregando() ? 'Enviando...' : 'Enviar link de recuperação' }}
+    </app-button>
+    } @else {
+    <h1 class="login-sub">Verifique seu e-mail</h1>
+    <p class="login-desc">
+        Se <strong>{{ email }}</strong> estiver cadastrado, você vai receber
+        um link para redefinir sua senha em instantes. Confira também a caixa de spam.
+    </p>
+    }
 
-        <form class="login-card" (ngSubmit)="solicitar()">
-            <div class="login-brand">
-                <app-brand-logo variant="green" [size]="32" />
-                <div class="login-logo-text serif">ADRA</div>
-            </div>
-
-            @if (!enviado()) {
-            <p class="login-sub">Esqueceu sua senha?</p>
-            <p class="login-desc">
-                Informe seu e-mail institucional. Se ele estiver cadastrado, você vai
-                receber um link para criar uma nova senha.
-            </p>
-
-            <app-input
-                label="E-mail institucional"
-                type="email"
-                name="email"
-                placeholder="coordenador@adra.org.br"
-                autocomplete="username"
-                [(ngModel)]="email"
-            />
-
-            @if (erro()) {
-            <p class="login-erro" role="alert">{{ erro() }}</p>
-            }
-
-            <app-button type="submit" size="lg" [block]="true" [loading]="carregando()">
-                {{ carregando() ? 'Enviando...' : 'Enviar link de recuperação' }}
-            </app-button>
-            } @else {
-            <p class="login-sub">Verifique seu e-mail</p>
-            <p class="login-desc">
-                Se <strong>{{ email }}</strong> estiver cadastrado, você vai receber
-                um link para redefinir sua senha em instantes. Confira também a caixa de spam.
-            </p>
-            }
-
-            <p class="login-foot"><a routerLink="/login">Voltar ao login</a></p>
-        </form>
-
-    </div>
-</div>
+    <p class="login-foot"><a routerLink="/login">Voltar ao login</a></p>
+  </form>
+</app-auth-shell>

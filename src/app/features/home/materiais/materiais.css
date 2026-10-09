@@ -12,7 +12,7 @@
 
 .eyebrow {
   margin: 0 0 6px;
-  color: var(--green-400);
+  color: var(--color-adra-green-400);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -57,8 +57,8 @@ h2 {
 }
 
 .tab.active {
-  border-bottom-color: var(--green-400);
-  color: var(--green-600);
+  border-bottom-color: var(--color-adra-green-400);
+  color: var(--color-adra-green-600);
   font-weight: 700;
 }
 
@@ -86,8 +86,8 @@ h2 {
   margin-bottom: 16px;
   place-items: center;
   border-radius: 10px;
-  background: var(--green-50);
-  color: var(--green-600);
+  background: var(--color-adra-green-50);
+  color: var(--color-adra-green-600);
   font-size: 12px;
   font-weight: 700;
 }
@@ -115,7 +115,7 @@ h2 {
 }
 
 .status {
-  color: var(--green-600);
+  color: var(--color-adra-green-600);
   font-size: 12px;
   font-weight: 700;
 }

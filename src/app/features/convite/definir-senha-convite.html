@@ -1,73 +1,48 @@
-<div class="login-screen">
-    <div class="login-shell">
+<app-auth-shell titulo="Bem-vindo(a)" descricao="Crie sua senha para acessar o Sistema de Gestão da ADRA Araraquara.">
+  <form class="login-form" (ngSubmit)="definir()">
+    @if (linkValido() === null) {
+    <p class="login-desc">Verificando convite...</p>
+    } @else if (linkValido() === false) {
+    <h1 class="login-sub">Convite inválido ou expirado</h1>
+    <p class="login-desc">Esse link de convite não é mais válido. Peça a um Administrador para enviar um novo.
+    </p>
+    <a routerLink="/login" class="btn btn-block">Voltar ao login</a>
+    } @else if (concluido()) {
+    <h1 class="login-sub">Senha criada!</h1>
+    <p class="login-desc">Redirecionando para o login...</p>
+    } @else {
+    <h1 class="login-sub">Crie sua senha</h1>
+    <p class="login-desc">Mínimo de 8 caracteres, com ao menos uma letra e um número.</p>
 
-        <aside class="brand-panel" aria-hidden="true">
-            <div class="brand-panel-glow"></div>
-            <div class="brand-panel-grid"></div>
-
-            <div class="brand-panel-content">
-                <app-brand-logo variant="white" [size]="56" class="brand-logo" />
-                <h1 class="brand-title">Bem-vindo</h1>
-                <p class="brand-tagline">Crie sua senha para acessar o sistema · ADRA Araraquara</p>
-            </div>
-
-            <div class="brand-panel-footer">
-                <span class="brand-status-dot"></span>
-                Ambiente seguro · conexão criptografada
-            </div>
-        </aside>
-
-        <form class="login-card" (ngSubmit)="definir()">
-            <div class="login-brand">
-                <app-brand-logo variant="green" [size]="32" />
-                <div class="login-logo-text serif">ADRA</div>
-            </div>
-
-            @if (linkValido() === null) {
-            <p class="login-desc">Verificando convite...</p>
-            } @else if (linkValido() === false) {
-            <p class="login-sub">Convite inválido ou expirado</p>
-            <p class="login-desc">Esse link de convite não é mais válido. Peça a um Administrador para enviar um novo.
-            </p>
-            <a routerLink="/login" class="btn btn-block">Voltar ao login</a>
-            } @else if (concluido()) {
-            <p class="login-sub">Senha criada!</p>
-            <p class="login-desc">Redirecionando para o login...</p>
-            } @else {
-            <p class="login-sub">Crie sua senha</p>
-            <p class="login-desc">Mínimo de 8 caracteres, com ao menos uma letra e um número.</p>
-
-            <div>
-                <app-input
-                    label="Senha"
-                    type="password"
-                    name="novaSenha"
-                    placeholder="••••••••"
-                    autocomplete="new-password"
-                    [(ngModel)]="novaSenha"
-                />
-                <app-senha-forca [senha]="novaSenha" />
-            </div>
-
-            <app-input
-                label="Confirmar senha"
-                type="password"
-                name="confirmarSenha"
-                placeholder="••••••••"
-                autocomplete="new-password"
-                [(ngModel)]="confirmarSenha"
-                [errorMessage]="confirmarSenha.length > 0 && confirmarSenha !== novaSenha ? 'As senhas não coincidem.' : null"
-            />
-
-            @if (erro()) {
-            <p class="login-erro" role="alert">{{ erro() }}</p>
-            }
-
-            <app-button type="submit" size="lg" [block]="true" [loading]="carregando()">
-                {{ carregando() ? 'Salvando...' : 'Criar senha e entrar' }}
-            </app-button>
-            }
-        </form>
-
+    <div>
+        <app-input
+            label="Senha"
+            type="password"
+            name="novaSenha"
+            placeholder="••••••••"
+            autocomplete="new-password"
+            [(ngModel)]="novaSenha"
+        />
+        <app-senha-forca [senha]="novaSenha" />
     </div>
-</div>
+
+    <app-input
+        label="Confirmar senha"
+        type="password"
+        name="confirmarSenha"
+        placeholder="••••••••"
+        autocomplete="new-password"
+        [(ngModel)]="confirmarSenha"
+        [errorMessage]="confirmarSenha.length > 0 && confirmarSenha !== novaSenha ? 'As senhas não coincidem.' : null"
+    />
+
+    @if (erro()) {
+    <p class="login-erro" role="alert">{{ erro() }}</p>
+    }
+
+    <app-button type="submit" size="lg" [block]="true" [loading]="carregando()">
+        {{ carregando() ? 'Salvando...' : 'Criar senha e entrar' }}
+    </app-button>
+    }
+  </form>
+</app-auth-shell>

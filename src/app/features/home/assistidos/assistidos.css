@@ -27,7 +27,7 @@
 .freq-lista { list-style: none; margin: 0 0 4px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .freq-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid var(--gray-100); border-radius: 8px; }
 .freq-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--gray-300, #d1d5db); }
-.freq-dot.presente { background: var(--green-400); }
+.freq-dot.presente { background: var(--color-adra-green-400); }
 .freq-dot.falta { background: var(--coral-600); }
 .freq-dot.justificada { background: var(--amber-600); }
 .freq-data { font-size: 12.5px; color: var(--gray-600); flex: none; }

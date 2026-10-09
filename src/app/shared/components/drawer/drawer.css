@@ -3,7 +3,7 @@
   inset: 0;
   z-index: 200;
   display: none;
-  background: rgba(0, 42, 31, 0.5);
+  background: var(--color-brand-overlay);
 }
 .drawer-overlay.open {
   display: flex;

@@ -85,7 +85,7 @@ export class OnboardingService {
       // Visual próprio (ver "ONBOARDING TOUR" em styles.css) em vez do
       // azul/branco genérico padrão da lib — mesma paleta do resto do app.
       popoverClass: 'adra-tour-popover',
-      overlayColor: '#002A1F', // --green-900
+      overlayColor: 'var(--color-adra-green-900)', // aplicado via style.fill pela lib
       overlayOpacity: 0.5, // mesma opacidade do .modal-overlay
       onDestroyed: () => this.marcarComoVisto(),
       steps: [

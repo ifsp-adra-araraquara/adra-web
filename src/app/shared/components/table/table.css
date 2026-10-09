@@ -45,5 +45,5 @@
   color: var(--gray-600);
   transition: .14s;
 }
-.page-btn:hover:not(:disabled) { border-color: var(--green-400); color: var(--green-400); background: var(--green-50); }
+.page-btn:hover:not(:disabled) { border-color: var(--color-adra-green-400); color: var(--color-adra-green-400); background: var(--color-adra-green-50); }
 .page-btn:disabled { opacity: .4; cursor: not-allowed; }

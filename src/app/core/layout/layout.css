@@ -22,7 +22,7 @@
 .help-btn:hover { background: var(--gray-100); color: var(--gray-800); }
 .help-btn svg { width: 20px; height: 20px; }
 
-.backdrop { position: fixed; inset: 0; z-index: 45; background: rgba(0,42,31,.5); }
+.backdrop { position: fixed; inset: 0; z-index: 45; background: var(--color-brand-overlay); }
 
 .content { padding: 16px; max-width: 100%; }
 

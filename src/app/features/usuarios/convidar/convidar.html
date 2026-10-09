@@ -1,79 +1,54 @@
-<div class="login-screen login-screen--inline">
-    <div class="login-shell">
+<app-auth-shell titulo="Convidar usuário" descricao="Conceda acesso ao Sistema de Gestão com o nível de permissão adequado." [inline]="true">
+  <form class="login-form" (ngSubmit)="convidar()">
+    @if (!enviado()) {
+    <h1 class="login-sub">Novo usuário</h1>
+    <p class="login-desc">
+        Informe o e-mail institucional e o nível de permissão. A pessoa vai
+        receber um convite por e-mail para criar a própria senha.
+    </p>
+    <app-input
+        label="Nome completo"
+        name="nomeCompleto"
+        placeholder="Nome do novo usuário"
+        autocomplete="off"
+        [(ngModel)]="nomeCompleto"
+    />
 
-        <aside class="brand-panel" aria-hidden="true">
-            <div class="brand-panel-glow"></div>
-            <div class="brand-panel-grid"></div>
+    <app-input
+        label="E-mail institucional"
+        type="email"
+        name="email"
+        placeholder="nome@adra.org.br"
+        autocomplete="off"
+        [(ngModel)]="email"
+    />
 
-            <div class="brand-panel-content">
-                <app-brand-logo variant="white" [size]="56" class="brand-logo" />
-                <h1 class="brand-title">Convidar usuário</h1>
-                <p class="brand-tagline">Conceda acesso ao Sistema de Gestão · ADRA Araraquara</p>
-            </div>
-
-            <div class="brand-panel-footer">
-                <span class="brand-status-dot"></span>
-                Ambiente seguro · conexão criptografada
-            </div>
-        </aside>
-
-        <form class="login-card" (ngSubmit)="convidar()">
-            <div class="login-brand">
-                <app-brand-logo variant="green" [size]="32" />
-                <div class="login-logo-text serif">ADRA</div>
-            </div>
-
-            @if (!enviado()) {
-            <p class="login-sub">Novo usuário</p>
-            <p class="login-desc">
-                Informe o e-mail institucional e o nível de permissão. A pessoa vai
-                receber um convite por e-mail para criar a própria senha.
-            </p>
-            <app-input
-                label="Nome completo"
-                name="nomeCompleto"
-                placeholder="Nome do novo usuário"
-                autocomplete="off"
-                [(ngModel)]="nomeCompleto"
-            />
-
-            <app-input
-                label="E-mail institucional"
-                type="email"
-                name="email"
-                placeholder="nome@adra.org.br"
-                autocomplete="off"
-                [(ngModel)]="email"
-            />
-
-            <div class="field">
-                <label for="conv-nivel">Nível de permissão</label>
-                <app-select
-                    id="conv-nivel"
-                    name="nivelPermissaoId"
-                    [(ngModel)]="nivelPermissaoId"
-                    [placeholder]="'Selecione...'"
-                    [options]="nivelPermissaoOptions"
-                />
-            </div>
-
-            @if (erro()) {
-            <p class="login-erro" role="alert">{{ erro() }}</p>
-            }
-
-            <app-button type="submit" size="lg" [block]="true" [loading]="carregando()">
-                {{ carregando() ? 'Enviando...' : 'Enviar convite' }}
-            </app-button>
-            } @else {
-            <p class="login-sub">Convite enviado!</p>
-            <p class="login-desc">
-                <strong>{{ email }}</strong> vai receber um e-mail com instruções para
-                criar a senha e acessar o sistema.
-            </p>
-            }
-
-            <p class="login-foot"><a routerLink="/usuarios">Voltar para usuários</a></p>
-        </form>
-
+    <div class="field">
+        <label for="conv-nivel">Nível de permissão</label>
+        <app-select
+            id="conv-nivel"
+            name="nivelPermissaoId"
+            [(ngModel)]="nivelPermissaoId"
+            [placeholder]="'Selecione...'"
+            [options]="nivelPermissaoOptions"
+        />
     </div>
-</div>
+
+    @if (erro()) {
+    <p class="login-erro" role="alert">{{ erro() }}</p>
+    }
+
+    <app-button type="submit" size="lg" [block]="true" [loading]="carregando()">
+        {{ carregando() ? 'Enviando...' : 'Enviar convite' }}
+    </app-button>
+    } @else {
+    <h1 class="login-sub">Convite enviado!</h1>
+    <p class="login-desc">
+        <strong>{{ email }}</strong> vai receber um e-mail com instruções para
+        criar a senha e acessar o sistema.
+    </p>
+    }
+
+    <p class="login-foot"><a routerLink="/usuarios">Voltar para usuários</a></p>
+  </form>
+</app-auth-shell>

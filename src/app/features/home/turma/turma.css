@@ -81,8 +81,8 @@ textarea {
 }
 
 .tab-btn.active {
-  color: #16a34a;
-  border-bottom-color: #16a34a;
+  color: var(--color-adra-green-600);
+  border-bottom-color: var(--color-brand);
 }
 
 .tab-alert {

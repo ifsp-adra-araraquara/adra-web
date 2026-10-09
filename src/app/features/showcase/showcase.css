@@ -38,7 +38,7 @@
   color: var(--gray-600);
   transition: .14s;
 }
-.t-actions-btn:hover { border-color: var(--green-400); color: var(--green-400); background: var(--green-50); }
+.t-actions-btn:hover { border-color: var(--color-adra-green-400); color: var(--color-adra-green-400); background: var(--color-adra-green-50); }
 
 code {
   background: var(--gray-100);
