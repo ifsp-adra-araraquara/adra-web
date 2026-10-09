@@ -9,7 +9,6 @@ export interface UsuarioResponseDTO {
   nomeCompleto: string;
   email: string;
   nivelPermissao: string; // NomeNivelPermissao serializado
-  especialidade: string | null;
   cargoFuncao: string | null;
   telefone: string | null;
   ativo: boolean;

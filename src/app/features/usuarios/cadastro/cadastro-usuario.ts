@@ -1,15 +1,14 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UsuarioService } from '../../../core/usuario.service';
 import { Role } from '../../../shared/enum/role.enum';
-import { ROLE_LABELS } from '../../../shared/enum/role-labels';
+import { PERFIL_OPTIONS, ROLE_LABELS } from '../../../shared/enum/role-labels';
 import { cpfValidator } from '../../../shared/validators/cpf.validator';
+import { errosPorCampo } from '../../../shared/utils/erro-http.util';
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Input } from '../../../shared/components/input/input';
 import { Button } from '../../../shared/components/button/button';
-
-const PERFIS_DO_MVP = [Role.ADMIN, Role.COORD, Role.SOCIO];
 
 @Component({
   selector: 'app-cadastro-usuario',
@@ -22,13 +21,9 @@ export class CadastroUsuario {
   private usuarioService = inject(UsuarioService);
   private fb = inject(FormBuilder);
 
-  perfis = PERFIS_DO_MVP;
   labels = ROLE_LABELS;
 
-  perfilOptions: SelectOption<Role>[] = PERFIS_DO_MVP.map(p => ({
-    value: p,
-    label: ROLE_LABELS[p]
-  }));
+  perfilOptions: SelectOption<Role>[] = PERFIL_OPTIONS;
 
   salvando = signal(false);
   sucesso = signal<string | null>(null);
@@ -44,10 +39,10 @@ export class CadastroUsuario {
     telefone: ['', Validators.pattern(/^$|^\d{10,11}$/)]
   });
 
-  protected erroNome = computed(() => this.erroDoCampo('nomeCompleto', 'Informe o nome completo.'));
-  protected erroEmail = computed(() => this.erroDoCampo('email', 'Informe um e-mail válido.'));
-  protected erroCpf = computed(() => this.erroDoCampo('cpf', 'Informe um CPF válido.'));
-  protected erroTelefone = computed(() => this.erroDoCampo('telefone', 'DDD + número, 10 ou 11 dígitos.'));
+  protected erroNome = () => this.erroDoCampo('nomeCompleto', 'Informe o nome completo.');
+  protected erroEmail = () => this.erroDoCampo('email', 'Informe um e-mail válido.');
+  protected erroCpf = () => this.erroDoCampo('cpf', 'Informe um CPF válido.');
+  protected erroTelefone = () => this.erroDoCampo('telefone', 'DDD + número, 10 ou 11 dígitos.');
 
   cadastrar(): void {
     if (this.form.invalid) {
@@ -82,14 +77,9 @@ export class CadastroUsuario {
   }
 
   private tratarErro(resposta: HttpErrorResponse): void {
-    const detalhes: string[] = resposta.error?.detalhes ?? [];
+    const porCampo = errosPorCampo(resposta);
 
-    if (detalhes.length) {
-      const porCampo: Record<string, string> = {};
-      for (const detalhe of detalhes) {
-        const [campo, ...resto] = detalhe.split(':');
-        porCampo[campo.trim()] = resto.join(':').trim();
-      }
+    if (Object.keys(porCampo).length) {
       this.errosPorCampo.set(porCampo);
       return;
     }

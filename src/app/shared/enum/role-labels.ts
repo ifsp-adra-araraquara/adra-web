@@ -5,7 +5,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   [Role.ADMIN]:      'Administrador',
   [Role.COORD]:      'Coordenador',
   [Role.SOCIO]:      'Sociopedagógico',
-  [Role.PROFS]:      'Profissional de Saúde',
-  [Role.FINANCEIRO]: 'Financeiro/Administrativo',
   [Role.OFICINEIRO]: 'Oficineiro',
 };
+
+export const PERFIL_OPTIONS = Object.values(Role).map(value => ({ value, label: ROLE_LABELS[value] }));

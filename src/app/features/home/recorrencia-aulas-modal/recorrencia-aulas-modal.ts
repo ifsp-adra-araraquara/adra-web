@@ -8,6 +8,7 @@ import { Modal } from '../../../shared/components/modal/modal';
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Input } from '../../../shared/components/input/input';
 import { Button } from '../../../shared/components/button/button';
+import { mensagemErro } from '../../../shared/utils/erro-http.util';
 
 const OPCOES_DIA_SEMANA: { value: DiaDaSemana; label: string }[] = [
   { value: 'MONDAY', label: 'Segunda' },
@@ -112,7 +113,7 @@ export class RecorrenciaAulasModal {
       },
       error: (err: HttpErrorResponse) => {
         this.gerando.set(false);
-        this.erro.set(err.error?.message ?? 'Não foi possível gerar as aulas. Tente novamente.');
+        this.erro.set(mensagemErro(err, 'Não foi possível gerar as aulas. Tente novamente.'));
       },
     });
   }

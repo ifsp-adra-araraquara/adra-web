@@ -7,26 +7,31 @@ export function cpfValidator(): ValidatorFn {
     if (!cpf) {
       return { required: true };
     }
-    if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) {
-      return { cpfInvalido: true };
-    }
-
-    const digitoVerificador = (tamanho: number): number => {
-      let soma = 0;
-      let peso = tamanho + 1;
-      for (let i = 0; i < tamanho; i++) {
-        soma += Number(cpf[i]) * peso--;
-      }
-      const resto = soma % 11;
-      return resto < 2 ? 0 : 11 - resto;
-    };
-
-    const valido =
-      digitoVerificador(9) === Number(cpf[9]) &&
-      digitoVerificador(10) === Number(cpf[10]);
-
-    return valido ? null : { cpfInvalido: true };
+    return cpfValido(cpf) ? null : { cpfInvalido: true };
   };
+}
+
+export function cpfValido(valor: string): boolean {
+  const cpf = valor.replace(/\D/g, '');
+  if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) {
+    return false;
+  }
+
+  const digitoVerificador = (tamanho: number): number => {
+    let soma = 0;
+    let peso = tamanho + 1;
+    for (let i = 0; i < tamanho; i++) {
+      soma += Number(cpf[i]) * peso--;
+    }
+    const resto = soma % 11;
+    return resto < 2 ? 0 : 11 - resto;
+  };
+
+  return digitoVerificador(9) === Number(cpf[9]) && digitoVerificador(10) === Number(cpf[10]);
+}
+
+export function telefoneValido(valor: string): boolean {
+  return /^$|^\d{10,11}$/.test(valor.replace(/\D/g, ''));
 }
 
 export function formatarCpf(valor: string): string {
