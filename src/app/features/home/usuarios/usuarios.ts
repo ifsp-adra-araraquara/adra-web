@@ -6,7 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
 
 import { Role } from '../../../shared/enum/role.enum';
-import { ROLE_LABELS } from '../../../shared/enum/role-labels';
+import { PERFIL_OPTIONS, ROLE_LABELS } from '../../../shared/enum/role-labels';
 
 import { PaginaResponse } from '../../../shared/models/PaginaResponse';
 import { UsuarioRequest } from '../../../shared/models/usuarios/UsuarioRequest';
@@ -46,9 +46,7 @@ export class Usuarios implements OnInit {
 
   perfilFiltroOptions: SelectOption<Role | ''>[] = [
     { value: '', label: 'Todos os perfis' },
-    { value: Role.ADMIN, label: 'Administrador' },
-    { value: Role.COORD, label: 'Coordenador' },
-    { value: Role.SOCIO, label: 'Sociopedagógico' }
+    ...PERFIL_OPTIONS
   ];
 
   statusFiltroOptions: SelectOption<'ativo' | 'inativo' | ''>[] = [
@@ -57,20 +55,7 @@ export class Usuarios implements OnInit {
     { value: 'inativo', label: 'Inativo' }
   ];
 
-  perfilEdicaoOptions: SelectOption<Role>[] = [
-    { value: Role.ADMIN, label: 'Administrador' },
-    { value: Role.COORD, label: 'Coordenador' },
-    { value: Role.SOCIO, label: 'Sociopedagógico' },
-    { value: Role.PROFS, label: 'Profissional de Saúde' },
-    { value: Role.FINANCEIRO, label: 'Financeiro/Administrativo' },
-    { value: Role.OFICINEIRO, label: 'Oficineiro' }
-  ];
-
-  especialidadeOptions: SelectOption<string>[] = [
-    { value: 'NEUROLOGIA', label: 'Neurologia' },
-    { value: 'PSICOPEDAGOGIA', label: 'Psicopedagogia' },
-    { value: 'PSICOLOGIA', label: 'Psicologia' }
-  ];
+  perfilEdicaoOptions: SelectOption<Role>[] = PERFIL_OPTIONS;
   
   carregando = signal(false);
   salvando = signal(false);
@@ -104,7 +89,6 @@ export class Usuarios implements OnInit {
     nomeCompleto: '',
     email: '',
     nivelPermissao: Role.COORD,
-    especialidade: null,
     cargoFuncao: '',
     telefone: '',
   };
@@ -205,7 +189,6 @@ export class Usuarios implements OnInit {
       nomeCompleto: usuario.nomeCompleto,
       email: usuario.email,
       nivelPermissao: usuario.nivelPermissao,
-      especialidade: usuario.especialidade,
       cargoFuncao: usuario.cargoFuncao ?? '',
       telefone: usuario.telefone ?? '',
     };
@@ -313,10 +296,6 @@ export class Usuarios implements OnInit {
         return 'green';
       case Role.SOCIO:
         return 'teal';
-      case Role.PROFS:
-        return 'blue';
-      case Role.FINANCEIRO:
-        return 'amber';
       case Role.OFICINEIRO:
         return 'coral';
       default:

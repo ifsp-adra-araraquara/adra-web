@@ -17,6 +17,7 @@ import { Input } from '../../../shared/components/input/input';
 import { Button } from '../../../shared/components/button/button';
 import { Icon } from '../../../shared/components/icon/icon';
 import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
+import { mensagemErro } from '../../../shared/utils/erro-http.util';
 
 @Component({
   selector: 'app-oficinas',
@@ -237,7 +238,7 @@ export class Oficinas implements OnInit {
     } catch (erro: any) {
       console.error('Erro ao salvar oficina:', erro);
       this.erroSalvar.set(
-        erro?.error?.message ?? 'Não foi possível salvar a oficina. Verifique os dados e tente novamente.',
+        mensagemErro(erro, 'Não foi possível salvar a oficina. Verifique os dados e tente novamente.'),
       );
       this.salvando.set(false);
     }
@@ -302,7 +303,7 @@ export class Oficinas implements OnInit {
     } catch (erro: any) {
       console.error('Erro ao inativar oficina:', erro);
       this.erroInativar.set(
-        erro?.error?.message ?? 'Não foi possível inativar a oficina. Tente novamente.'
+        mensagemErro(erro, 'Não foi possível inativar a oficina. Tente novamente.')
       );
       this.inativando.set(false);
     }
@@ -349,7 +350,7 @@ export class Oficinas implements OnInit {
     } catch (erro: any) {
       console.error('Erro ao reativar oficina:', erro);
       this.erroReativar.set(
-        erro?.error?.message ?? 'Não foi possível reativar a oficina. Tente novamente.'
+        mensagemErro(erro, 'Não foi possível reativar a oficina. Tente novamente.')
       );
       this.reativando.set(false);
     }

@@ -92,7 +92,7 @@
   </div>
 
   @if (erroSalvar()) {
-    <div class="notice notice-error">{{ erroSalvar() }}</div>
+    <div class="notice notice-error" role="alert">{{ erroSalvar() }}</div>
   }
 
   <app-input
@@ -141,7 +141,7 @@
   </div>
 
   @if (erroInativar()) {
-    <div class="notice notice-error">{{ erroInativar() }}</div>
+    <div class="notice notice-error" role="alert">{{ erroInativar() }}</div>
   } @else {
     <p>
       Tem certeza que deseja <strong>inativar</strong> a oficina
@@ -175,7 +175,7 @@
   </div>
 
   @if (erroReativar()) {
-    <div class="notice notice-error">{{ erroReativar() }}</div>
+    <div class="notice notice-error" role="alert">{{ erroReativar() }}</div>
   } @else {
     <p>
       Tem certeza que deseja <strong>reativar</strong> a oficina

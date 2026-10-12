@@ -34,6 +34,7 @@ import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 import { AulasTurmaModal } from '../aulas-turma-modal/aulas-turma-modal';
 import { AuthService } from '../../../core/auth.service';
 import { Icon } from '../../../shared/components/icon/icon';
+import { mensagemErro } from '../../../shared/utils/erro-http.util';
 
 @Component({
   selector: 'app-turmas',
@@ -526,7 +527,7 @@ export class Turmas implements OnInit {
       console.error('Erro ao salvar turma:', erro);
       this.abaAtivaForm.set('turma');
       this.erroSalvar.set(
-        erro?.error?.message ?? 'Não foi possível salvar a turma. Verifique os dados e tente novamente.',
+        mensagemErro(erro, 'Não foi possível salvar a turma. Verifique os dados e tente novamente.'),
       );
       this.salvando.set(false);
     }
@@ -656,7 +657,7 @@ export class Turmas implements OnInit {
     } catch (erro: any) {
       console.error('Erro ao criar aulas:', erro);
       this.erroSalvarAulas.set(
-        erro?.error?.message ?? 'Não foi possível criar as aulas. Verifique os dados e tente novamente.',
+        mensagemErro(erro, 'Não foi possível criar as aulas. Verifique os dados e tente novamente.'),
       );
       this.salvandoAulas.set(false);
     }
@@ -770,7 +771,7 @@ export class Turmas implements OnInit {
     } catch (erro: any) {
       console.error('Erro ao cadastrar aula avulsa:', erro);
       this.erroSalvarNovaAula.set(
-        erro?.error?.message ?? 'Não foi possível cadastrar a aula. Verifique os dados e tente novamente.',
+        mensagemErro(erro, 'Não foi possível cadastrar a aula. Verifique os dados e tente novamente.'),
       );
       this.salvandoNovaAula.set(false);
     }
@@ -874,7 +875,7 @@ export class Turmas implements OnInit {
     } catch (erro: any) {
       console.error('Erro ao vincular alunos à turma:', erro);
       this.erroVincularAlunos.set(
-        erro?.error?.message ?? 'Não foi possível vincular os assistidos selecionados. Tente novamente.',
+        mensagemErro(erro, 'Não foi possível vincular os assistidos selecionados. Tente novamente.'),
       );
       this.vinculandoAlunos.set(false);
     }
