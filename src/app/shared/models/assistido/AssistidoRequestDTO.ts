@@ -9,5 +9,4 @@ export interface AssistidoRequestDTO {
   observacoes?: string;
   turmaId?: number | null;
   responsaveis?: VinculoFamiliarComResponsavelRequestDTO[];
-  confirmarApesarDeDuplicidade: boolean;
 }

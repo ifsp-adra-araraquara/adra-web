@@ -52,6 +52,12 @@ export const routes: Routes = [
         canActivate: [roleGuard]
       },
       {
+        path: 'assistidos/lote',
+        loadComponent: () => import('./features/home/assistidos/lote/assistidos-lote').then((m) => m.AssistidosLote),
+        data: { roles: [Role.COORD, Role.SOCIO] },
+        canActivate: [roleGuard]
+      },
+      {
         path: 'assistidos', 
         component: Assistidos,
         data: {  roles: [Role.COORD, Role.SOCIO]  },
