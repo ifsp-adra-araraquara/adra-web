@@ -20,6 +20,7 @@ import { AssistidoStatusRequestDTO } from '../../../shared/models/assistido/Assi
 import { AssistidoContagemDTO } from '../../../shared/models/assistido/AssistidoContagemDTO';
 import { OficinaResponseDTO } from '../../../shared/models/oficina/OficinaResponseDTO';
 import { formatarTelefone } from '../../../shared/utils/mascara.util';
+import { cliqueEmElementoInterativo } from '../../../shared/utils/clique.util';
 import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO';
 import { VinculoTurmaAssistidoResponseDTO } from '../../../shared/models/turma/VinculoTurmaAssistidoResponseDTO';
 import { FrequenciaAulaDTO } from '../../../shared/models/presenca/FrequenciaAulaDTO';
@@ -28,6 +29,9 @@ import { ChamadaService } from '../../../core/chamada.service';
 
 import { ResponsavelRequestDTO } from '../../../shared/models/responsavel/ResponsavelRequestDTO';
 import { VinculoFamiliarComResponsavelRequestDTO } from '../../../shared/models/vinculoFamiliar/VinculoFamiliarComResponsavelRequestDTO';
+import { VinculoFamiliarRequestDTO } from '../../../shared/models/vinculoFamiliar/VinculoFamiliarRequestDTO';
+import { VinculoFamiliarResponseDTO } from '../../../shared/models/vinculoFamiliar/VinculoFamiliarResponseDTO';
+import { ResponsavelResponseDTO } from '../../../shared/models/responsavel/ResponsavelResponseDTO';
 
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Input } from '../../../shared/components/input/input';
@@ -104,9 +108,9 @@ export class Assistidos implements OnInit {
   assistidoSelecionadoStatus = signal<AssistidoResponseDTO | null>(null);
   novoStatusDesejado = signal<StatusGeral>(StatusGeral.INATIVO);
 
-  abaVerAssistido = signal<'dados' | 'fam' | 'cham' | 'turmas' | 'disc' | 'prn'>('dados');
+  abaVerAssistido = signal<'dados' | 'fam' | 'cham' | 'turmas'>('dados');
 
-  trocarAbaVerAssistido(aba: 'dados' | 'fam' | 'cham' | 'turmas' | 'disc' | 'prn') {
+  trocarAbaVerAssistido(aba: 'dados' | 'fam' | 'cham' | 'turmas') {
     this.abaVerAssistido.set(aba);
 
     // Carrega o histórico de turmas só na primeira vez que a aba é aberta.
@@ -118,6 +122,11 @@ export class Assistidos implements OnInit {
       this.carregarFrequencia(this.assistidoSelecionado()!.assistidoId);
     }
   }
+
+  responsavelEmEdicao = signal<VinculoFamiliarResponseDTO | null>(null);
+  formEdicaoResponsavel: ResponsavelPendente = this.responsavelVazio();
+  salvandoEdicaoResponsavel = signal(false);
+  erroEdicaoResponsavel = signal<string | null>(null);
 
   mostrarFormNovoResponsavelVinculado = signal(false);
   salvandoResponsavelVinculado = signal(false);
@@ -172,6 +181,7 @@ export class Assistidos implements OnInit {
 
   /* Modal editar assistido */
   mostrarModalEditar = signal(false);
+  secaoEdicao = signal<'dados' | 'turma'>('dados');
   salvandoEdicao = signal(false);
   erroSalvarEdicao = signal<string | null>(null);
   assistidoEmEdicao = signal<AssistidoResponseDTO | null>(null);
@@ -416,12 +426,26 @@ export class Assistidos implements OnInit {
       this.abrirModalVisualizarAssistido(assistido);
     } else if (acao === 'editar') {
       this.abrirModalEditarAssistido(assistido);
+    } else if (acao === 'turma') {
+      this.abrirModalEditarAssistido(assistido, 'turma');
     } else if (acao === 'status') {
       this.alterarStatus(
         assistido,
         assistido.status === StatusGeral.ATIVO ? StatusGeral.INATIVO : StatusGeral.ATIVO,
       );
     }
+  }
+
+  abrirFichaPelaLinha(evento: MouseEvent, assistido: AssistidoResponseDTO): void {
+    if (!cliqueEmElementoInterativo(evento)) {
+      this.abrirModalVisualizarAssistido(assistido);
+    }
+  }
+
+  executarAcaoDaFicha(acao: string): void {
+    const assistido = this.assistidoSelecionado()!;
+    this.fecharModalVisualizarAssistido();
+    this.executarAcao(acao, assistido);
   }
 
   calcularIdade(dataNascimento: string): number {
@@ -496,7 +520,8 @@ export class Assistidos implements OnInit {
    * MODAL: EDITAR ASSISTIDO (Ação por linha)
    * ============================================================
    */
-  abrirModalEditarAssistido(assistido: AssistidoResponseDTO): void {
+  abrirModalEditarAssistido(assistido: AssistidoResponseDTO, secao: 'dados' | 'turma' = 'dados'): void {
+    this.secaoEdicao.set(secao);
     this.assistidoEmEdicao.set(assistido);
     this.formEdicaoAssistido = {
       nomeCompleto: assistido.nomeCompleto,
@@ -1141,6 +1166,92 @@ export class Assistidos implements OnInit {
       console.error('Erro ao vincular responsável:', erro);
       this.erroResponsavelVinculado.set(mensagemErro(erro as HttpErrorResponse, 'Não foi possível salvar o responsável.'));
       this.salvandoResponsavelVinculado.set(false);
+    }
+  }
+
+  editarChamada(item: FrequenciaAulaDTO): void {
+    this.router.navigate(['/chamada'], { queryParams: { data: item.dataAula, aulaId: item.aulaId } });
+  }
+
+  abrirEdicaoResponsavel(vinculo: VinculoFamiliarResponseDTO): void {
+    this.formEdicaoResponsavel = {
+      nomeCompleto: vinculo.nomeResponsavel,
+      cpf: vinculo.cpfResponsavel ?? '',
+      telefone: vinculo.telefoneResponsavel ?? '',
+      email: vinculo.emailResponsavel ?? '',
+      parentesco: vinculo.parentesco ?? '',
+      responsavelPrincipal: vinculo.responsavelPrincipal,
+      contatoEmergencia: vinculo.contatoEmergencia,
+      autorizadoRetirada: vinculo.autorizadoRetirada,
+    };
+    this.erroEdicaoResponsavel.set(null);
+    this.responsavelEmEdicao.set(vinculo);
+  }
+
+  fecharEdicaoResponsavel(): void {
+    this.responsavelEmEdicao.set(null);
+  }
+
+  atualizarCampoEdicaoResponsavel(campo: keyof ResponsavelPendente, valor: string | boolean): void {
+    this.formEdicaoResponsavel = { ...this.formEdicaoResponsavel, [campo]: valor };
+  }
+
+  async salvarEdicaoResponsavel(): Promise<void> {
+    const assistido = this.assistidoSelecionado();
+    const vinculo = this.responsavelEmEdicao();
+    if (!assistido || !vinculo || this.salvandoEdicaoResponsavel()) {
+      return;
+    }
+
+    const form = this.formEdicaoResponsavel;
+    const erroValidacao = this.validarResponsavel(form);
+    if (erroValidacao) {
+      this.erroEdicaoResponsavel.set(erroValidacao);
+      return;
+    }
+
+    this.salvandoEdicaoResponsavel.set(true);
+    this.erroEdicaoResponsavel.set(null);
+
+    const urlResponsavel = `${this.apiResponsaveis}/${vinculo.responsavelId}`;
+
+    try {
+      // o PUT substitui o cadastro inteiro: campos que este form não mostra vêm do registro atual
+      const atual = await firstValueFrom(this.http.get<ResponsavelResponseDTO>(urlResponsavel));
+
+      const responsavel: ResponsavelRequestDTO = {
+        nomeCompleto: form.nomeCompleto,
+        dataNascimento: atual.dataNascimento ?? undefined,
+        cpf: form.cpf,
+        telefone: form.telefone || undefined,
+        email: form.email || undefined,
+        endereco: atual.endereco ?? undefined,
+        observacoes: atual.observacoes ?? undefined,
+      };
+
+      const vinculoAtualizado: VinculoFamiliarRequestDTO = {
+        responsavelId: vinculo.responsavelId,
+        parentesco: form.parentesco || undefined,
+        responsavelPrincipal: form.responsavelPrincipal,
+        contatoEmergencia: form.contatoEmergencia,
+        autorizadoRetirada: form.autorizadoRetirada,
+        observacoes: vinculo.observacoes ?? undefined,
+      };
+
+      await firstValueFrom(this.http.put(urlResponsavel, responsavel));
+      await firstValueFrom(
+        this.http.put(
+          `${this.apiAssistidos}/${assistido.assistidoId}/responsaveis/${vinculo.responsavelId}`,
+          vinculoAtualizado,
+        ),
+      );
+
+      this.fecharEdicaoResponsavel();
+      this.carregarResponsaveis(assistido.assistidoId);
+    } catch (erro) {
+      this.erroEdicaoResponsavel.set(mensagemErro(erro as HttpErrorResponse, 'Não foi possível salvar o responsável.'));
+    } finally {
+      this.salvandoEdicaoResponsavel.set(false);
     }
   }
 }

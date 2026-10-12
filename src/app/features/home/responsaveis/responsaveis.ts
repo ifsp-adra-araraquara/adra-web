@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ResponsavelService } from '../../../core/responsavel.service';
 import { ResponsavelResponseDTO } from '../../../shared/models/responsavel/ResponsavelResponseDTO';
@@ -9,12 +10,13 @@ import { Input } from '../../../shared/components/input/input';
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Icon } from '../../../shared/components/icon/icon';
 import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
+import { cliqueEmElementoInterativo } from '../../../shared/utils/clique.util';
 
 type FiltroContato = 'todos' | 'sem-telefone' | 'sem-email';
 
 @Component({
   selector: 'app-responsaveis',
-  imports: [TooltipDirective, Icon, FormsModule, ResponsavelForm, Modal, Button, Input, Select],
+  imports: [DatePipe, TooltipDirective, Icon, FormsModule, ResponsavelForm, Modal, Button, Input, Select],
   templateUrl: './responsaveis.html',
   styleUrl: './responsaveis.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,6 +29,7 @@ export class Responsaveis implements OnInit {
 
   mostrarModal = signal(false);
   responsavelSelecionado = signal<ResponsavelResponseDTO | null>(null);
+  responsavelVisualizado = signal<ResponsavelResponseDTO | null>(null);
 
   /** Sem suporte a filtro/paginação no backend (GET /api/responsaveis é findAll() puro) — filtra em memória. */
   termoBusca = signal('');
@@ -105,6 +108,26 @@ export class Responsaveis implements OnInit {
   abrirEdicao(responsavel: ResponsavelResponseDTO): void {
     this.responsavelSelecionado.set(responsavel);
     this.mostrarModal.set(true);
+  }
+
+  abrirVisualizacao(responsavel: ResponsavelResponseDTO): void {
+    this.responsavelVisualizado.set(responsavel);
+  }
+
+  abrirVisualizacaoPelaLinha(evento: MouseEvent, responsavel: ResponsavelResponseDTO): void {
+    if (!cliqueEmElementoInterativo(evento)) {
+      this.abrirVisualizacao(responsavel);
+    }
+  }
+
+  fecharVisualizacao(): void {
+    this.responsavelVisualizado.set(null);
+  }
+
+  editarPelaVisualizacao(): void {
+    const responsavel = this.responsavelVisualizado()!;
+    this.fecharVisualizacao();
+    this.abrirEdicao(responsavel);
   }
 
   aoSalvar(): void {

@@ -113,7 +113,7 @@
             </thead>
             <tbody>
               @for (assistido of assistidos(); track assistido.assistidoId) {
-                <tr>
+                <tr class="linha-clicavel" (click)="abrirFichaPelaLinha($event, assistido)">
                   <td>
                     <span class="cell-name">{{ assistido.nomeCompleto }}</span>
                     <span class="cell-sub so-compacta">
@@ -161,7 +161,7 @@
       <!-- Celular / iPad na vertical: cartões -->
       <ul class="lista-cartoes" role="list">
         @for (assistido of assistidos(); track assistido.assistidoId) {
-          <li class="assistido-cartao">
+          <li class="assistido-cartao linha-clicavel" (click)="abrirFichaPelaLinha($event, assistido)">
             <div class="cartao-topo">
               <div class="cartao-identidade">
                 <span class="cell-name">{{ assistido.nomeCompleto }}</span>
@@ -544,25 +544,18 @@
         Turmas
       </button>
       }
-      <button
-        class="tab"
-        [class.active]="abaVerAssistido() === 'disc'"
-        (click)="trocarAbaVerAssistido('disc')"
-      >
-        Disciplinar
-      </button>
-      <button
-        class="tab"
-        [class.active]="abaVerAssistido() === 'prn'"
-        (click)="trocarAbaVerAssistido('prn')"
-      >
-        Prontuários
-      </button>
     </div>
 
     <!-- ==================== ABA: DADOS PESSOAIS ==================== -->
     @if (abaVerAssistido() === 'dados') {
-      <p class="form-sec-title">Dados pessoais</p>
+      <p class="form-sec-title">
+        Dados pessoais
+        @if (ehCoordenador()) {
+          <app-button size="sm" variant="secondary" class="sec-acao" (click)="executarAcaoDaFicha('editar')">
+            <app-icon name="edit" [size]="16" /> Editar
+          </app-button>
+        }
+      </p>
 
       <div class="form-row">
         <div class="field">
@@ -758,7 +751,7 @@
                 </div>
 
                 <div
-                  style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end"
+                  style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end"
                 >
                   @if (responsavel.responsavelPrincipal) {
                     <app-badge variant="blue" label="Principal" />
@@ -768,6 +761,17 @@
                   }
                   @if (responsavel.autorizadoRetirada) {
                     <app-badge variant="amber" label="Pode retirar" />
+                  }
+                  @if (ehCoordenador()) {
+                    <button
+                      type="button"
+                      class="btn-icon"
+                      [attr.aria-label]="'Editar ' + responsavel.nomeResponsavel"
+                      appTooltip="Editar responsável"
+                      (click)="abrirEdicaoResponsavel(responsavel)"
+                    >
+                      <app-icon name="edit" />
+                    </button>
                   }
                 </div>
               </div>
@@ -852,6 +856,17 @@
                 <span class="freq-data">{{ item.dataAula | date: 'dd/MM/yyyy' }}</span>
                 <span class="freq-turma">{{ item.nomeTurma }}</span>
                 <app-badge [status]="item.statusPresenca" />
+                @if (ehCoordenador()) {
+                  <button
+                    type="button"
+                    class="btn-icon"
+                    [attr.aria-label]="'Editar chamada de ' + (item.dataAula | date: 'dd/MM/yyyy')"
+                    appTooltip="Editar chamada"
+                    (click)="editarChamada(item)"
+                  >
+                    <app-icon name="edit" />
+                  </button>
+                }
               </li>
             }
           </ul>
@@ -861,7 +876,12 @@
 
     <!-- ==================== ABA: TURMAS (histórico turma_aluno, só coordenador) ==================== -->
     @if (abaVerAssistido() === 'turmas' && ehCoordenador()) {
-      <p class="form-sec-title">Turmas</p>
+      <p class="form-sec-title">
+        Turmas
+        <app-button size="sm" variant="secondary" class="sec-acao" (click)="executarAcaoDaFicha('turma')">
+          <app-icon name="edit" [size]="16" /> Trocar turma
+        </app-button>
+      </p>
 
       @if (carregandoHistoricoTurmas()) {
         <div class="card card-pad"><p class="muted">Carregando turmas...</p></div>
@@ -915,35 +935,17 @@
       }
     }
 
-    <!-- ==================== ABA: DISCIPLINAR ==================== -->
-    @if (abaVerAssistido() === 'disc') {
-      <p class="form-sec-title">Registros disciplinares</p>
-
-      <div class="card card-pad">
-        <p class="muted">
-          Exibição de registros disciplinares depende de um endpoint que ainda não existe — aba
-          placeholder por enquanto.
-        </p>
-      </div>
-    }
-
-    <!-- ==================== ABA: PRONTUÁRIOS ==================== -->
-    @if (abaVerAssistido() === 'prn') {
-      <p class="form-sec-title">Prontuários</p>
-
-      <div class="notice notice-lock">
-        <app-icon name="lock" />
-        <span>
-          Prontuários visíveis conforme o perfil de acesso. Conteúdo de relato e motivo
-          criptografado — depende de endpoint próprio que ainda não existe.
-        </span>
-      </div>
-    }
-
     <ng-template #footer>
       <app-button variant="secondary" (click)="fecharModalVisualizarAssistido()">
         Fechar
       </app-button>
+      @if (ehCoordenador()) {
+        @if (assistidoSelecionado()!.status === StatusGeral.ATIVO) {
+          <app-button variant="danger" (click)="executarAcaoDaFicha('status')">Inativar</app-button>
+        } @else {
+          <app-button variant="secondary" (click)="executarAcaoDaFicha('status')">Reativar</app-button>
+        }
+      }
     </ng-template>
   </app-modal>
 }
@@ -956,6 +958,102 @@
   [permiteAbrirAula]="true"
   (fechar)="fecharAulasHistoricoTurma()">
 </app-aulas-turma-modal>
+
+<!-- MODAL: EDITAR RESPONSÁVEL (aba "Família" da ficha, abre por cima dela) -->
+@if (responsavelEmEdicao(); as vinculo) {
+  <app-modal
+    [open]="true"
+    title="Editar responsável"
+    [subtitle]="vinculo.nomeResponsavel"
+    (closed)="fecharEdicaoResponsavel()"
+  >
+    <div modal-icon class="mh-ico ico-green">
+      <app-icon name="edit" />
+    </div>
+
+    @if (erroEdicaoResponsavel()) {
+      <div class="notice notice-error" role="alert">{{ erroEdicaoResponsavel() }}</div>
+    }
+
+    <div class="form-row">
+      <app-input
+        label="Nome completo"
+        placeholder="Nome do responsável"
+        [ngModel]="formEdicaoResponsavel.nomeCompleto"
+        (ngModelChange)="atualizarCampoEdicaoResponsavel('nomeCompleto', $event)"
+      />
+
+      <div class="field">
+        <label>Parentesco</label>
+        <app-select
+          [ngModel]="formEdicaoResponsavel.parentesco"
+          (ngModelChange)="atualizarCampoEdicaoResponsavel('parentesco', $event)"
+          [options]="parentescoOptions"
+        />
+      </div>
+    </div>
+
+    <div class="form-row-3">
+      <app-input
+        label="CPF"
+        mask="cpf"
+        placeholder="000.000.000-00"
+        [ngModel]="formEdicaoResponsavel.cpf"
+        (ngModelChange)="atualizarCampoEdicaoResponsavel('cpf', $event)"
+      />
+
+      <app-input
+        label="Telefone"
+        mask="telefone"
+        placeholder="(16) 90000-0000"
+        [ngModel]="formEdicaoResponsavel.telefone"
+        (ngModelChange)="atualizarCampoEdicaoResponsavel('telefone', $event)"
+      />
+
+      <app-input
+        label="E-mail"
+        type="email"
+        placeholder="email@exemplo.com"
+        [ngModel]="formEdicaoResponsavel.email"
+        (ngModelChange)="atualizarCampoEdicaoResponsavel('email', $event)"
+      />
+    </div>
+
+    <label class="check">
+      <input
+        type="checkbox"
+        [ngModel]="formEdicaoResponsavel.autorizadoRetirada"
+        (ngModelChange)="atualizarCampoEdicaoResponsavel('autorizadoRetirada', $event)"
+      />
+      Autorizado a retirar o assistido
+    </label>
+
+    <label class="check">
+      <input
+        type="checkbox"
+        [ngModel]="formEdicaoResponsavel.contatoEmergencia"
+        (ngModelChange)="atualizarCampoEdicaoResponsavel('contatoEmergencia', $event)"
+      />
+      Contato de emergência
+    </label>
+
+    <label class="check">
+      <input
+        type="checkbox"
+        [ngModel]="formEdicaoResponsavel.responsavelPrincipal"
+        (ngModelChange)="atualizarCampoEdicaoResponsavel('responsavelPrincipal', $event)"
+      />
+      Responsável principal
+    </label>
+
+    <ng-template #footer>
+      <app-button variant="secondary" (click)="fecharEdicaoResponsavel()">Cancelar</app-button>
+      <app-button [loading]="salvandoEdicaoResponsavel()" (click)="salvarEdicaoResponsavel()">
+        Salvar alterações
+      </app-button>
+    </ng-template>
+  </app-modal>
+}
 
 <!-- MODAL: CONFIRMAR ALTERAÇÃO DE STATUS ASSISTIDO (INATIVAR / REATIVAR) -->
 @if (mostrarModalStatus()) {
@@ -1014,8 +1112,8 @@
 @if (mostrarModalEditar()) {
   <app-modal
     [open]="true"
-    title="Editar assistido"
-    subtitle="Atualize os dados cadastrais e o vínculo do assistido."
+    [title]="secaoEdicao() === 'turma' ? 'Trocar turma' : 'Editar assistido'"
+    [subtitle]="secaoEdicao() === 'turma' ? assistidoEmEdicao()!.nomeCompleto : 'Atualize os dados cadastrais e o vínculo do assistido.'"
     size="lg"
     (closed)="fecharModalEditar()"
   >
@@ -1027,31 +1125,7 @@
       <div class="notice notice-error" role="alert">{{ erroSalvarEdicao() }}</div>
     }
 
-    <p class="form-sec-title">Dados pessoais</p>
-
-    <app-input
-      label="Nome completo"
-      placeholder="Nome do assistido"
-      [ngModel]="formEdicaoAssistido.nomeCompleto"
-      (ngModelChange)="atualizarCampoEdicaoAssistido('nomeCompleto', $event)"
-    />
-
-    <div class="form-row-3">
-      <app-input
-        label="Data de nascimento"
-        type="date"
-        [ngModel]="formEdicaoAssistido.dataNascimento"
-        (ngModelChange)="atualizarCampoEdicaoAssistido('dataNascimento', $event)"
-      />
-
-      <app-input
-        label="CPF"
-        mask="cpf"
-        placeholder="000.000.000-00"
-        [ngModel]="formEdicaoAssistido.cpf"
-        (ngModelChange)="atualizarCampoEdicaoAssistido('cpf', $event)"
-      />
-
+    @if (secaoEdicao() === 'turma') {
       <div class="field">
         <label>Turma</label>
         <app-select
@@ -1060,24 +1134,59 @@
           [options]="turmaEdicaoOptions()"
         />
       </div>
-    </div>
+    } @else {
+      <p class="form-sec-title">Dados pessoais</p>
 
-    <app-input
-      label="Necessidades específicas"
-      placeholder="Ex.: TEA, TDAH, mobilidade reduzida…"
-      [ngModel]="formEdicaoAssistido.necessidadesEspecificas"
-      (ngModelChange)="atualizarCampoEdicaoAssistido('necessidadesEspecificas', $event)"
-    />
+      <app-input
+        label="Nome completo"
+        placeholder="Nome do assistido"
+        [ngModel]="formEdicaoAssistido.nomeCompleto"
+        (ngModelChange)="atualizarCampoEdicaoAssistido('nomeCompleto', $event)"
+      />
 
-    <div class="field">
-      <label>Observações gerais</label>
-      <textarea
-        placeholder="Informações relevantes para o acompanhamento"
-        [ngModel]="formEdicaoAssistido.observacoes"
-        (ngModelChange)="atualizarCampoEdicaoAssistido('observacoes', $event)"
-      >
-      </textarea>
-    </div>
+      <div class="form-row-3">
+        <app-input
+          label="Data de nascimento"
+          type="date"
+          [ngModel]="formEdicaoAssistido.dataNascimento"
+          (ngModelChange)="atualizarCampoEdicaoAssistido('dataNascimento', $event)"
+        />
+
+        <app-input
+          label="CPF"
+          mask="cpf"
+          placeholder="000.000.000-00"
+          [ngModel]="formEdicaoAssistido.cpf"
+          (ngModelChange)="atualizarCampoEdicaoAssistido('cpf', $event)"
+        />
+
+        <div class="field">
+          <label>Turma</label>
+          <app-select
+            [ngModel]="formEdicaoAssistido.turmaId"
+            (ngModelChange)="atualizarCampoEdicaoAssistido('turmaId', $event)"
+            [options]="turmaEdicaoOptions()"
+          />
+        </div>
+      </div>
+
+      <app-input
+        label="Necessidades específicas"
+        placeholder="Ex.: TEA, TDAH, mobilidade reduzida…"
+        [ngModel]="formEdicaoAssistido.necessidadesEspecificas"
+        (ngModelChange)="atualizarCampoEdicaoAssistido('necessidadesEspecificas', $event)"
+      />
+
+      <div class="field">
+        <label>Observações gerais</label>
+        <textarea
+          placeholder="Informações relevantes para o acompanhamento"
+          [ngModel]="formEdicaoAssistido.observacoes"
+          (ngModelChange)="atualizarCampoEdicaoAssistido('observacoes', $event)"
+        >
+        </textarea>
+      </div>
+    }
 
     <ng-template #footer>
       <app-button variant="secondary" (click)="fecharModalEditar()">Cancelar</app-button>

@@ -170,9 +170,9 @@ export class Turmas implements OnInit {
    */
   turmaDrawerAberta = signal<TurmaResponseDTO | null>(null);
 
-  abrirDrawerTurma(turma: TurmaResponseDTO): void {
+  readonly abrirDrawerTurma = (turma: TurmaResponseDTO): void => {
     this.turmaDrawerAberta.set(turma);
-  }
+  };
 
   fecharDrawerTurma(): void {
     this.turmaDrawerAberta.set(null);

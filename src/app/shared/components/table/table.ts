@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, TemplateRef, computed, contentChild
 import { NgTemplateOutlet } from '@angular/common';
 import { Badge } from '../badge/badge';
 import { Icon } from '../icon/icon';
+import { cliqueEmElementoInterativo } from '../../utils/clique.util';
 
 export type TableSortDirection = 'asc' | 'desc';
 
@@ -66,6 +67,8 @@ export class Table<T = unknown> {
   totalItems = input<number | null>(null);
   /** Acessor opcional para `track` no `@for` das linhas; por padrão usa o índice. */
   trackBy = input<((row: T, index: number) => unknown) | null>(null);
+  /** Ação ao clicar na linha (fora de botões/links), ex.: abrir a visualização do registro. */
+  rowClick = input<((row: T) => void) | null>(null);
 
   pageChange = output<number>();
   sortChange = output<TableSortState>();
@@ -139,6 +142,13 @@ export class Table<T = unknown> {
   protected trackRow(index: number, row: T): unknown {
     const fn = this.trackBy();
     return fn ? fn(row, index) : index;
+  }
+
+  protected onRowClick(event: MouseEvent, row: T): void {
+    const fn = this.rowClick();
+    if (fn && !cliqueEmElementoInterativo(event)) {
+      fn(row);
+    }
   }
 
   protected onHeaderClick(column: TableColumn<T>): void {
