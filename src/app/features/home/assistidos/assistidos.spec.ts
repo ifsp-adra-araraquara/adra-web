@@ -1,8 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { of } from 'rxjs';
 
 import { Assistidos } from './assistidos';
+import { environment } from '../../../../environments/environment';
+import { AssistidoResponseDTO } from '../../../shared/models/assistido/AssistidoResponseDTO';
+import { VinculoFamiliarResponseDTO } from '../../../shared/models/vinculoFamiliar/VinculoFamiliarResponseDTO';
 
 describe('Assistidos', () => {
   let component: Assistidos;
@@ -12,6 +16,7 @@ describe('Assistidos', () => {
     await TestBed.configureTestingModule({
       imports: [Assistidos],
       providers: [
+        provideHttpClientTesting(),
         {
           provide: ActivatedRoute,
           useValue: { queryParamMap: of(convertToParamMap({})) },
@@ -26,5 +31,55 @@ describe('Assistidos', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('ao editar responsável pela ficha, preserva os dados fora do form e salva o vínculo', async () => {
+    const httpMock = TestBed.inject(HttpTestingController);
+    const api = environment.apiUrl;
+    const vinculo: VinculoFamiliarResponseDTO = {
+      assistidoId: 7,
+      responsavelId: 3,
+      nomeResponsavel: 'Maria Souza',
+      cpfResponsavel: '10433218100',
+      telefoneResponsavel: '16999990001',
+      emailResponsavel: 'maria@email.com',
+      parentesco: 'Mãe',
+      responsavelPrincipal: true,
+      contatoEmergencia: true,
+      autorizadoRetirada: true,
+      observacoes: 'Busca às sextas',
+      criadoEm: '2026-01-01T00:00:00',
+    };
+    component.assistidoSelecionado.set({ assistidoId: 7 } as AssistidoResponseDTO);
+    component.abrirEdicaoResponsavel(vinculo);
+    component.atualizarCampoEdicaoResponsavel('telefone', '16988887777');
+
+    const salvando = component.salvarEdicaoResponsavel();
+
+    httpMock.expectOne(`${api}/api/responsaveis/3`).flush({
+      responsavelId: 3,
+      nomeCompleto: 'Maria Souza',
+      dataNascimento: '1985-04-10',
+      cpf: '10433218100',
+      telefone: '16999990001',
+      email: 'maria@email.com',
+      endereco: 'Rua A, 10',
+      observacoes: null,
+    });
+    await Promise.resolve();
+    const putResponsavel = httpMock.expectOne({ method: 'PUT', url: `${api}/api/responsaveis/3` });
+    expect(putResponsavel.request.body).toMatchObject({
+      telefone: '16988887777',
+      dataNascimento: '1985-04-10',
+      endereco: 'Rua A, 10',
+    });
+    putResponsavel.flush({});
+    await Promise.resolve();
+    const putVinculo = httpMock.expectOne({ method: 'PUT', url: `${api}/api/assistidos/7/responsaveis/3` });
+    expect(putVinculo.request.body).toMatchObject({ responsavelId: 3, parentesco: 'Mãe', observacoes: 'Busca às sextas' });
+    putVinculo.flush({});
+    await salvando;
+
+    expect(component.responsavelEmEdicao()).toBeNull();
   });
 });

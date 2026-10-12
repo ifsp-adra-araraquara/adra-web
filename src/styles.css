@@ -141,6 +141,7 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
 .form-sec-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .6px; color: var(--color-adra-green-600); margin: 22px 0 12px; display: flex; align-items: center; gap: 8px; }
 .form-sec-title::after { content:''; flex: 1; height: 1px; background: var(--gray-100); }
 .form-sec-title:first-child { margin-top: 0; }
+.form-sec-title .sec-acao { order: 1; }
 
 /* ===== BOTÕES ===== */
 .btn {
