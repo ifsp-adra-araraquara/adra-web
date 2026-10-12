@@ -70,6 +70,7 @@
         [columns]="colunasTurmas"
         [data]="turmas()"
         [trackBy]="trackByTurmaId"
+        [rowClick]="abrirDrawerTurma"
       >
         <ng-template #cell let-turma let-column="column">
           @if (column.key === 'ocupacao') {

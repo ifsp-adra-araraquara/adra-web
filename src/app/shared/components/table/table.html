@@ -31,7 +31,7 @@
 
     <tbody>
       @for (row of pagedData(); track trackRow($index, row)) {
-        <tr>
+        <tr [class.linha-clicavel]="rowClick()" (click)="onRowClick($event, row)">
           @for (column of columns(); track column.key) {
             <td [style.text-align]="column.align ?? 'left'">
               @if (column.type === 'badge') {
