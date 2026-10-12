@@ -1,7 +1,7 @@
 <section class="status-chamada-page" aria-labelledby="status-chamada-titulo">
   <header class="page-header">
     <button type="button" class="btn-voltar" (click)="voltar()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+      <app-icon name="chevron-left" />
       Voltar
     </button>
     <p class="eyebrow">Pedagógico</p>
@@ -48,13 +48,15 @@
 
     <app-table label="Status das chamadas por aula" [columns]="colunas" [data]="aulas()" [trackBy]="trackAula" [pageSize]="15">
       <ng-template #rowActions let-aula>
-        <app-button
-          size="sm"
-          [variant]="aula.statusChamada === StatusChamada.PENDENTE ? 'primary' : 'secondary'"
+        <button
+          type="button"
+          [class.btn-icon--primary]="aula.statusChamada === StatusChamada.PENDENTE"
+          [attr.aria-label]="aula.statusChamada === StatusChamada.PENDENTE ? 'Lançar chamada' : 'Ver chamada'"
+          [appTooltip]="aula.statusChamada === StatusChamada.PENDENTE ? 'Lançar chamada' : 'Ver chamada'"
           (click)="abrirChamada(aula)"
         >
-          {{ aula.statusChamada === StatusChamada.PENDENTE ? 'Lançar chamada' : 'Ver chamada' }}
-        </app-button>
+          <app-icon [name]="aula.statusChamada === StatusChamada.PENDENTE ? 'check-square' : 'eye'" />
+        </button>
       </ng-template>
     </app-table>
   </section>

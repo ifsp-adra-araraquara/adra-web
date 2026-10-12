@@ -7,7 +7,7 @@ import { UsuarioService } from '../../../core/usuario.service';
 import { Role } from '../../../shared/enum/role.enum';
 import { PERFIL_OPTIONS } from '../../../shared/enum/role-labels';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
-import { BrandLogo } from '../../../shared/components/brand-logo/brand-logo';
+import { AuthShell } from '../../../shared/components/auth-shell/auth-shell';
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Input } from '../../../shared/components/input/input';
 import { Button } from '../../../shared/components/button/button';
@@ -15,7 +15,7 @@ import { Button } from '../../../shared/components/button/button';
 @Component({
   selector: 'app-convidar',
   standalone: true,
-  imports: [FormsModule, RouterLink, BrandLogo, Select, Input, Button],
+  imports: [FormsModule, RouterLink, AuthShell, Select, Input, Button],
   templateUrl: './convidar.html'
 })
 export class Convidar {

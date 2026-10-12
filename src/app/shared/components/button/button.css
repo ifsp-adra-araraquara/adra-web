@@ -16,17 +16,18 @@
   line-height: 1;
   border: 1.5px solid transparent;
   border-radius: var(--radius-sm, 8px);
-  background: var(--green-400, #007b5f);
+  background: var(--color-brand);
   color: #fff;
   cursor: pointer;
   transition: background 0.15s, transform 0.05s, opacity 0.15s;
 }
 
 .app-button:hover:not(:disabled) {
-  background: var(--green-600, #005a45);
+  background: var(--color-brand-hover);
 }
 
 .app-button:active:not(:disabled) {
+  background: var(--color-brand-active);
   transform: translateY(1px);
 }
 
@@ -43,7 +44,7 @@
 
 .app-button--secondary:hover:not(:disabled) {
   background: var(--gray-50, #f8f7f4);
-  border-color: var(--green-200, #4db89a);
+  border-color: var(--color-adra-green-200);
 }
 
 .app-button--danger {

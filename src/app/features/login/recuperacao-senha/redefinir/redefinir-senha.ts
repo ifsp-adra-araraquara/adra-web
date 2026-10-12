@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/auth.service';
-import { BrandLogo } from '../../../../shared/components/brand-logo/brand-logo';
+import { AuthShell } from '../../../../shared/components/auth-shell/auth-shell';
 import { SenhaForca } from '../../../../shared/components/senha-forca/senha-forca';
 import { Input } from '../../../../shared/components/input/input';
 import { Button } from '../../../../shared/components/button/button';
@@ -12,7 +12,7 @@ import { supabase } from '../../../../core/supabase.client';
 @Component({
   selector: 'app-redefinir-senha',
   standalone: true,
-  imports: [FormsModule, RouterLink, BrandLogo, SenhaForca, Input, Button],
+  imports: [FormsModule, RouterLink, AuthShell, SenhaForca, Input, Button],
   templateUrl: './redefinir-senha.html'
 })
 export class RedefinirSenha implements OnInit {

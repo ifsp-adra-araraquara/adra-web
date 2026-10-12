@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { Button } from '../../../shared/components/button/button';
+import { Icon } from '../../../shared/components/icon/icon';
 
 interface Material {
   titulo: string;
@@ -20,7 +21,7 @@ interface PlanoAula {
 
 @Component({
   selector: 'app-materiais',
-  imports: [Button],
+  imports: [Icon, Button],
   templateUrl: './materiais.html',
   styleUrl: './materiais.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

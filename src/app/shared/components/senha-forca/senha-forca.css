@@ -47,7 +47,7 @@
 }
 
 .senha-forca-criterios li.atendido {
-    color: var(--green-400, #007b5f);
+    color: var(--color-adra-green-400);
 }
 
 .senha-forca-icone {

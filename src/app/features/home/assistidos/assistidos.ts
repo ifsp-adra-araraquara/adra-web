@@ -17,6 +17,9 @@ import { StatusPresenca } from '../../../shared/enum/StatusPresenca';
 import { AssistidoRequestDTO } from '../../../shared/models/assistido/AssistidoRequestDTO';
 import { AssistidoResponseDTO } from '../../../shared/models/assistido/AssistidoResponseDTO';
 import { AssistidoStatusRequestDTO } from '../../../shared/models/assistido/AssistidoStatusRequestDTO';
+import { AssistidoContagemDTO } from '../../../shared/models/assistido/AssistidoContagemDTO';
+import { OficinaResponseDTO } from '../../../shared/models/oficina/OficinaResponseDTO';
+import { formatarTelefone } from '../../../shared/utils/mascara.util';
 import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO';
 import { VinculoTurmaAssistidoResponseDTO } from '../../../shared/models/turma/VinculoTurmaAssistidoResponseDTO';
 import { FrequenciaAulaDTO } from '../../../shared/models/presenca/FrequenciaAulaDTO';
@@ -33,6 +36,9 @@ import { cpfValido, telefoneValido } from '../../../shared/validators/cpf.valida
 import { Modal } from '../../../shared/components/modal/modal';
 import { Badge } from '../../../shared/components/badge/badge';
 import { AulasTurmaModal } from '../aulas-turma-modal/aulas-turma-modal';
+import { Icon } from '../../../shared/components/icon/icon';
+import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
+import { ActionMenu, ActionMenuItem } from '../../../shared/components/action-menu/action-menu';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
 
 interface ResponsavelPendente extends ResponsavelRequestDTO {
@@ -45,7 +51,7 @@ interface ResponsavelPendente extends ResponsavelRequestDTO {
 @Component({
   selector: 'app-assistidos',
   standalone: true,
-  imports: [CommonModule, FormsModule, Select, Input, Button, Modal, Badge, AulasTurmaModal],
+  imports: [ActionMenu, TooltipDirective, Icon, CommonModule, FormsModule, Select, Input, Button, Modal, Badge, AulasTurmaModal],
   templateUrl: './assistidos.html',
   styleUrl: './assistidos.css',
 })
@@ -62,6 +68,7 @@ export class Assistidos implements OnInit {
   private readonly apiAssistidos = `${environment.apiUrl}/api/assistidos`;
   private readonly apiResponsaveis = `${environment.apiUrl}/api/responsaveis`;
   private readonly apiTurmas = `${environment.apiUrl}/api/turmas`;
+  private readonly apiOficinas = `${environment.apiUrl}/api/oficinas`;
 
   /** Aba "Turmas" do modal do assistido (histórico + ver alunos/aulas) é só pro coordenador. */
   readonly ehCoordenador = computed(() => this.auth.currentProfile() === Role.COORD);
@@ -80,13 +87,17 @@ export class Assistidos implements OnInit {
   /* Busca e Filtros */
   termoBusca = signal('');
   filtroTurma = signal<number | ''>('');
+  filtroOficina = signal<number | ''>('');
   turmas = signal<TurmaResponseDTO[]>([]);
+  oficinas = signal<OficinaResponseDTO[]>([]);
   abaAtiva = signal<'todos' | 'ativos' | 'inativos' | 'acomp'>('todos');
+  /** Totais das abas — recarregado quando muda busca/turma/oficina (não ao trocar de aba). */
+  contagem = signal<AssistidoContagemDTO | null>(null);
 
   private searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
   temFiltrosAtivos = computed(() => {
-    return !!this.termoBusca().trim() || this.filtroTurma() !== '' || (this.abaAtiva() !== 'todos' && this.abaAtiva() !== 'acomp');
+    return !!this.termoBusca().trim() || this.filtroTurma() !== '' || this.filtroOficina() !== '' || this.abaAtiva() !== 'todos';
   });
 
   mostrarModalStatus = signal(false);
@@ -123,9 +134,19 @@ export class Assistidos implements OnInit {
   assistidoIdCriado = signal<number | null>(null);
   turmasAtivas = computed(() => this.turmas().filter((turma) => turma.ativo));
 
-  filtroTurmaOptions = computed<SelectOption<number | ''>[]>(() => [
-    { value: '', label: 'Todas as turmas' },
-    ...this.turmas().map((turma) => ({ value: turma.turmaId, label: turma.nomeTurma })),
+  /** Turmas do filtro restritas à oficina escolhida (quando houver). */
+  filtroTurmaOptions = computed<SelectOption<number | ''>[]>(() => {
+    const oficinaId = this.filtroOficina();
+    const turmas = oficinaId === '' ? this.turmas() : this.turmas().filter((t) => t.oficinaId === oficinaId);
+    return [
+      { value: '', label: 'Todas as turmas' },
+      ...turmas.map((turma) => ({ value: turma.turmaId, label: turma.nomeTurma })),
+    ];
+  });
+
+  filtroOficinaOptions = computed<SelectOption<number | ''>[]>(() => [
+    { value: '', label: 'Todas as oficinas' },
+    ...this.oficinas().map((oficina) => ({ value: oficina.oficinaId, label: oficina.nomeOficina })),
   ]);
 
   turmaNovoAssistidoOptions = computed<SelectOption<number | null>[]>(() => [
@@ -167,13 +188,49 @@ export class Assistidos implements OnInit {
 
   ngOnInit(): void {
     this.carregarTurmas();
+    this.carregarOficinas();
 
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const id = Number(params.get('turmaId'));
       this.filtroTurma.set(Number.isInteger(id) && id > 0 ? id : '');
-      this.pagina.set(0);
-      this.carregarAssistidos();
+      this.recarregarRecorte();
     });
+  }
+
+  /** Só Coordenação/Sociopedagógico listam oficinas — para os demais perfis o filtro some. */
+  carregarOficinas(): void {
+    this.http.get<OficinaResponseDTO[]>(this.apiOficinas).subscribe({
+      next: (lista) => this.oficinas.set(lista),
+      error: () => this.oficinas.set([]),
+    });
+  }
+
+  /** Parâmetros de recorte comuns à listagem e à contagem das abas. */
+  private paramsRecorte(): HttpParams {
+    let params = new HttpParams();
+    const busca = this.termoBusca().trim();
+    if (busca) params = params.set('busca', busca);
+    const turmaId = this.filtroTurma();
+    if (turmaId !== '') params = params.set('turmaId', turmaId.toString());
+    const oficinaId = this.filtroOficina();
+    if (oficinaId !== '') params = params.set('oficinaId', oficinaId.toString());
+    return params;
+  }
+
+  carregarContagem(): void {
+    this.http
+      .get<AssistidoContagemDTO>(`${this.apiAssistidos}/contagem`, { params: this.paramsRecorte() })
+      .subscribe({
+        next: (c) => this.contagem.set(c),
+        error: () => this.contagem.set(null),
+      });
+  }
+
+  /** Recarrega lista (da 1ª página) e totais das abas após mudar busca/turma/oficina. */
+  private recarregarRecorte(): void {
+    this.pagina.set(0);
+    this.carregarAssistidos();
+    this.carregarContagem();
   }
 
   carregarTurmas(): void {
@@ -191,17 +248,13 @@ export class Assistidos implements OnInit {
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
     }
-    this.searchTimeout = setTimeout(() => {
-      this.pagina.set(0);
-      this.carregarAssistidos();
-    }, 350);
+    this.searchTimeout = setTimeout(() => this.recarregarRecorte(), 350);
   }
 
   onFiltroTurmaChange(valor: any): void {
     const num = valor === '' || valor === null ? '' : Number(valor);
     if (num === this.filtroTurma()) {
-      this.pagina.set(0);
-      this.carregarAssistidos();
+      this.recarregarRecorte();
       return;
     }
     this.router.navigate([], {
@@ -209,6 +262,18 @@ export class Assistidos implements OnInit {
       queryParams: { turmaId: num || null },
       queryParamsHandling: 'merge',
     });
+  }
+
+  onFiltroOficinaChange(valor: any): void {
+    const oficinaId = valor === '' || valor === null ? '' : Number(valor);
+    this.filtroOficina.set(oficinaId);
+    // turma escolhida que não pertence à nova oficina deixa de fazer sentido
+    const turma = this.turmas().find((t) => t.turmaId === this.filtroTurma());
+    if (oficinaId !== '' && turma && turma.oficinaId !== oficinaId) {
+      this.onFiltroTurmaChange('');
+      return;
+    }
+    this.recarregarRecorte();
   }
 
   /**
@@ -232,14 +297,13 @@ export class Assistidos implements OnInit {
 
   trocarAbaStatus(aba: 'todos' | 'ativos' | 'inativos' | 'acomp'): void {
     this.abaAtiva.set(aba);
-    if (aba !== 'acomp') {
-      this.pagina.set(0);
-      this.carregarAssistidos();
-    }
+    this.pagina.set(0);
+    this.carregarAssistidos();
   }
 
   limparFiltros(): void {
     this.termoBusca.set('');
+    this.filtroOficina.set('');
     this.abaAtiva.set('todos');
     this.onFiltroTurmaChange('');
   }
@@ -283,25 +347,17 @@ export class Assistidos implements OnInit {
   carregarAssistidos(): void {
     this.carregando.set(true);
 
-    let params = new HttpParams()
+    let params = this.paramsRecorte()
       .set('pagina', this.pagina().toString())
       .set('tamanho', this.tamanho.toString());
-
-    const busca = this.termoBusca().trim();
-    if (busca) {
-      params = params.set('busca', busca);
-    }
-
-    const turmaId = this.filtroTurma();
-    if (turmaId !== '') {
-      params = params.set('turmaId', turmaId.toString());
-    }
 
     const aba = this.abaAtiva();
     if (aba === 'ativos') {
       params = params.set('status', StatusGeral.ATIVO);
     } else if (aba === 'inativos') {
       params = params.set('status', StatusGeral.INATIVO);
+    } else if (aba === 'acomp') {
+      params = params.set('emAcompanhamento', 'true');
     }
 
     this.http.get<PaginaResponse<AssistidoResponseDTO>>(this.apiAssistidos, { params }).subscribe({
@@ -316,6 +372,56 @@ export class Assistidos implements OnInit {
         this.carregando.set(false);
       },
     });
+  }
+
+  /* ============================================================
+   * APRESENTAÇÃO DA LISTAGEM
+   * ============================================================ */
+
+  /** CPF parcialmente oculto na listagem (LGPD); completo só na ficha. */
+  cpfMascarado(cpf: string | null): string {
+    const d = (cpf ?? '').replace(/\D/g, '');
+    return d.length === 11 ? `***.***.${d.slice(6, 9)}-**` : '—';
+  }
+
+  telefoneFormatado(telefone: string | null | undefined): string {
+    return telefone ? formatarTelefone(telefone) : '';
+  }
+
+  telefoneLink(telefone: string | null | undefined): string {
+    return 'tel:+55' + (telefone ?? '').replace(/\D/g, '');
+  }
+
+  /** Mesmas faixas de cor da barra de frequência do restante do sistema. */
+  classeFrequencia(percentual: number | null | undefined): string {
+    if (percentual == null) return '';
+    if (percentual >= 75) return 'f-good';
+    if (percentual >= 65) return 'f-mid';
+    return 'f-low';
+  }
+
+  acoesAssistido(assistido: AssistidoResponseDTO): ActionMenuItem[] {
+    const ativo = assistido.status === StatusGeral.ATIVO;
+    return [
+      { id: 'ver', label: 'Ver ficha', icon: 'eye' },
+      { id: 'editar', label: 'Editar', icon: 'edit' },
+      ativo
+        ? { id: 'status', label: 'Inativar', icon: 'power', danger: true }
+        : { id: 'status', label: 'Reativar', icon: 'rotate-ccw' },
+    ];
+  }
+
+  executarAcao(acao: string, assistido: AssistidoResponseDTO): void {
+    if (acao === 'ver') {
+      this.abrirModalVisualizarAssistido(assistido);
+    } else if (acao === 'editar') {
+      this.abrirModalEditarAssistido(assistido);
+    } else if (acao === 'status') {
+      this.alterarStatus(
+        assistido,
+        assistido.status === StatusGeral.ATIVO ? StatusGeral.INATIVO : StatusGeral.ATIVO,
+      );
+    }
   }
 
   calcularIdade(dataNascimento: string): number {
@@ -453,6 +559,7 @@ export class Assistidos implements OnInit {
       this.salvandoEdicao.set(false);
       this.fecharModalEditar();
       this.carregarAssistidos();
+      this.carregarContagem();
     } catch (erro: any) {
       console.error('Erro ao atualizar assistido:', erro);
       this.erroSalvarEdicao.set(
@@ -641,6 +748,7 @@ export class Assistidos implements OnInit {
       this.salvando.set(false);
       this.fecharModalNovoAssistido();
       this.carregarAssistidos();
+      this.carregarContagem();
     } catch (erro: any) {
       console.error('Erro ao salvar assistido:', erro);
 
@@ -691,7 +799,10 @@ export class Assistidos implements OnInit {
     this.http
       .patch<AssistidoResponseDTO>(`${this.apiAssistidos}/${assistido.assistidoId}/status`, dto)
       .subscribe({
-        next: () => this.carregarAssistidos(),
+        next: () => {
+          this.carregarAssistidos();
+          this.carregarContagem();
+        },
         error: (erro) => console.error('Erro ao alterar status:', erro),
       });
   }

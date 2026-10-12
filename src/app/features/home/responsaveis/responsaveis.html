@@ -2,7 +2,7 @@
   <div class="card-head" style="border: none; padding: 0 0 18px;">
     <h1>Responsáveis</h1>
     <div class="right">
-      <app-button (click)="abrirNovo()">Novo responsável</app-button>
+      <app-button size="sm" (click)="abrirNovo()"><app-icon name="plus" [size]="16" /> Novo responsável</app-button>
     </div>
   </div>
 
@@ -47,7 +47,7 @@
                 <th>Nome</th>
                 <th>CPF</th>
                 <th>Telefone</th>
-                <th></th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -58,7 +58,9 @@
                   <td>{{ responsavel.telefone || '-' }}</td>
                   <td>
                     <div class="t-actions">
-                      <button type="button" (click)="abrirEdicao(responsavel)">Editar</button>
+                      <button type="button" aria-label="Editar responsável" appTooltip="Editar responsável" (click)="abrirEdicao(responsavel)">
+                        <app-icon name="edit" />
+                      </button>
                     </div>
                   </td>
                 </tr>

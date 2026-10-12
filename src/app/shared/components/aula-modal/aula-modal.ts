@@ -43,6 +43,8 @@ import { Input as AppInput } from '../input/input';
 import { Button as AppButton } from '../button/button';
 import { Modal } from '../modal/modal';
 import { RastreabilidadeTooltip } from '../rastreabilidade-tooltip/rastreabilidade-tooltip';
+import { Icon } from '../icon/icon';
+import { TooltipDirective } from '../tooltip/tooltip';
 
 interface FormDefinirCampos {
   titulo: string;
@@ -77,7 +79,7 @@ interface FormDefinirCampos {
  */
 @Component({
   selector: 'app-aula-modal',
-  imports: [FormsModule, Badge, AppInput, AppButton, Modal, RastreabilidadeTooltip],
+  imports: [TooltipDirective, Icon, FormsModule, Badge, AppInput, AppButton, Modal, RastreabilidadeTooltip],
   templateUrl: './aula-modal.html',
   styleUrl: './aula-modal.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

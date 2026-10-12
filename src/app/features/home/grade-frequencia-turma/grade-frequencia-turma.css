@@ -1,7 +1,7 @@
 :host { display: block; width: 100%; }
 .grade-page { width: 100%; max-width: 100%; }
 .page-header { margin-bottom: 20px; }
-.eyebrow { margin: 0 0 6px; color: var(--green-400); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.eyebrow { margin: 0 0 6px; color: var(--color-adra-green-400); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 h1, p { margin-top: 0; }
 h1 { margin-bottom: 8px; font-size: 22px; }
 .page-intro { color: var(--gray-600); }
@@ -25,7 +25,7 @@ tbody tr:last-child td { border-bottom: none; }
 th.col-aluno { background: #f7f7f9; }
 
 .grade-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--gray-200); }
-.grade-dot.presente { background: var(--green-400); }
+.grade-dot.presente { background: var(--color-adra-green-400); }
 .grade-dot.falta { background: var(--coral-600); }
 .grade-dot.justificada { background: var(--amber-600); }
 

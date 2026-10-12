@@ -17,7 +17,7 @@
     </div>
 
     <app-button size="sm" style="flex-shrink: 0" (click)="abrirModalNovaOficina()">
-      + Nova oficina
+      <app-icon name="plus" [size]="16" /> Nova oficina
     </app-button>
   </div>
 
@@ -55,30 +55,22 @@
       >
         <ng-template #rowActions let-oficina>
           @if (oficina.ativo) {
-            <button type="button" title="Editar" (click)="abrirModalEdicao(oficina)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
+            <button type="button" aria-label="Editar oficina" appTooltip="Editar oficina" (click)="abrirModalEdicao(oficina)">
+              <app-icon name="edit" />
             </button>
 
-            <button type="button" title="Inativar" (click)="abrirConfirmacaoInativacao(oficina)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="8" y1="12" x2="16" y2="12" />
-              </svg>
+            <button type="button" class="btn-icon--danger" aria-label="Inativar oficina" appTooltip="Inativar oficina" (click)="abrirConfirmacaoInativacao(oficina)">
+              <app-icon name="power" />
             </button>
           } @else {
             <button
               type="button"
-              title="Reativar"
+              aria-label="Reativar oficina"
+              appTooltip="Reativar oficina"
               [disabled]="reativando()"
               (click)="abrirConfirmacaoReativacao(oficina)"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 8 12 12 14 14" />
-              </svg>
+              <app-icon name="rotate-ccw" />
             </button>
           }
         </ng-template>
@@ -96,17 +88,7 @@
   (closed)="fecharModalForm()"
 >
   <div modal-icon class="mh-ico" [class.ico-green]="!modoEdicao()" [class.ico-blue]="modoEdicao()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      @if (!modoEdicao()) {
-        <!-- Ícone de nova oficina -->
-        <path d="M12 20h9" />
-        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-      } @else {
-        <!-- Ícone de edição -->
-        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-      }
-    </svg>
+    <app-icon [name]="modoEdicao() ? 'edit' : 'layers'" />
   </div>
 
   @if (erroSalvar()) {
@@ -155,11 +137,7 @@
   (closed)="fecharConfirmacaoInativacao()"
 >
   <div modal-icon class="mh-ico ico-red">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="12" r="10" />
-      <line x1="12" y1="8" x2="12" y2="12" />
-      <line x1="12" y1="16" x2="12.01" y2="16" />
-    </svg>
+    <app-icon name="power" />
   </div>
 
   @if (erroInativar()) {
@@ -193,10 +171,7 @@
   (closed)="fecharConfirmacaoReativacao()"
 >
   <div modal-icon class="mh-ico ico-green">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 8 12 12 14 14" />
-    </svg>
+    <app-icon name="rotate-ccw" />
   </div>
 
   @if (erroReativar()) {

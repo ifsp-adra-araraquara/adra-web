@@ -66,20 +66,20 @@
   <div class="table-pagination">
     <button
       type="button"
-      class="page-btn"
+      class="btn-icon"
       [disabled]="currentPage() === 1"
       (click)="goToPage(currentPage() - 1)"
       aria-label="Página anterior"
-    >‹</button>
+    ><app-icon name="chevron-left" /></button>
 
     <span class="page-info">Página {{ currentPage() }} de {{ totalPages() }}</span>
 
     <button
       type="button"
-      class="page-btn"
+      class="btn-icon"
       [disabled]="currentPage() === totalPages()"
       (click)="goToPage(currentPage() + 1)"
       aria-label="Próxima página"
-    >›</button>
+    ><app-icon name="chevron-right" /></button>
   </div>
 }

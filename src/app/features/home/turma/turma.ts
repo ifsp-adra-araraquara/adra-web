@@ -33,12 +33,13 @@ import { Button } from '../../../shared/components/button/button';
 import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 import { AulasTurmaModal } from '../aulas-turma-modal/aulas-turma-modal';
 import { AuthService } from '../../../core/auth.service';
+import { Icon } from '../../../shared/components/icon/icon';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
 
 @Component({
   selector: 'app-turmas',
   standalone: true,
-  imports: [
+  imports: [Icon, 
     CommonModule,
     FormsModule,
     Select,

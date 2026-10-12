@@ -75,7 +75,7 @@ export class CalendarioAulas implements OnInit {
 
   /** Mapa de variante do app-badge -> cores CSS var reais de styles.css (sem hex novo). */
   private readonly CORES_STATUS: Record<BadgeVariant, { bg: string; text: string }> = {
-    green: { bg: 'var(--green-50)', text: 'var(--green-600)' },
+    green: { bg: 'var(--color-adra-green-50)', text: 'var(--color-adra-green-600)' },
     teal: { bg: 'var(--teal-50)', text: 'var(--teal-600)' },
     blue: { bg: 'var(--blue-50)', text: 'var(--blue-600)' },
     amber: { bg: 'var(--amber-50)', text: 'var(--amber-600)' },

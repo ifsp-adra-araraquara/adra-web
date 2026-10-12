@@ -66,37 +66,6 @@
   color: #6b7280;
 }
 
-.t-actions {
-  display: flex;
-  gap: 4px;
-}
-
-.t-actions button {
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  border-radius: 6px;
-}
-
-.t-actions button:hover {
-  background: #f3f4f6;
-}
-
-.t-actions svg {
-  width: 17px;
-  height: 17px;
-}
-
-.t-actions button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .paginacao {
   display: flex;
   align-items: center;

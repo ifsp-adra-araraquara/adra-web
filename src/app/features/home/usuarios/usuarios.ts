@@ -22,10 +22,12 @@ import { Button } from '../../../shared/components/button/button';
 import { Modal } from '../../../shared/components/modal/modal';
 import { Badge } from '../../../shared/components/badge/badge';
 import { BadgeVariant } from '../../../shared/utils/badge-status.util';
+import { Icon } from '../../../shared/components/icon/icon';
+import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 
 @Component({
   selector: 'app-usuarios',
-  imports: [FormsModule, CadastroUsuario, DefinirSenha, Select, Input, Button, Modal, Badge],
+  imports: [TooltipDirective, Icon, FormsModule, CadastroUsuario, DefinirSenha, Select, Input, Button, Modal, Badge],
   templateUrl: './usuarios.html',
   styleUrl: './usuarios.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

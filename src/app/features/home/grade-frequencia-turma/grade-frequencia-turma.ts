@@ -5,6 +5,7 @@ import { ChamadaService } from '../../../core/chamada.service';
 import { StatusPresenca } from '../../../shared/enum/StatusPresenca';
 import { GradeAlunoDTO } from '../../../shared/models/presenca/GradeFrequenciaTurmaDTO';
 import { Badge } from '../../../shared/components/badge/badge';
+import { Icon } from '../../../shared/components/icon/icon';
 
 /**
  * "Ver grade da turma" — estilo planilha (dias x alunos), pra análise calma
@@ -14,7 +15,7 @@ import { Badge } from '../../../shared/components/badge/badge';
  */
 @Component({
   selector: 'app-grade-frequencia-turma',
-  imports: [DatePipe, Badge],
+  imports: [Icon, DatePipe, Badge],
   templateUrl: './grade-frequencia-turma.html',
   styleUrl: './grade-frequencia-turma.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

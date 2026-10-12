@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, TemplateRef, computed, contentChild, input, output, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { Badge } from '../badge/badge';
+import { Icon } from '../icon/icon';
 
 export type TableSortDirection = 'asc' | 'desc';
 
@@ -46,7 +47,7 @@ export interface TableColumn<T = unknown> {
 @Component({
   selector: 'app-table',
   standalone: true,
-  imports: [NgTemplateOutlet, Badge],
+  imports: [NgTemplateOutlet, Badge, Icon],
   templateUrl: './table.html',
   styleUrl: './table.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

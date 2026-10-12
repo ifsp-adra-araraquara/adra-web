@@ -10,6 +10,7 @@ import {
   output,
 } from '@angular/core';
 import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
+import { Icon } from '../icon/icon';
 
 let nextId = 0;
 
@@ -27,7 +28,7 @@ let nextId = 0;
  */
 @Component({
   selector: 'app-drawer',
-  imports: [NgTemplateOutlet],
+  imports: [Icon, NgTemplateOutlet],
   templateUrl: './drawer.html',
   styleUrl: './drawer.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,32 +1,21 @@
 <section class="page" id="page-assistidos">
-  <div
-    class="page-header"
-    style="
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 8px;
-    "
-  >
-    <div>
-      <h1 style="margin: 0">Assistidos</h1>
-      <p class="page-intro" style="margin: 4px 0 0">
-        Cadastro e acompanhamento dos assistidos. A visibilidade dos dados respeita o perfil de
-        acesso.
-      </p>
-    </div>
+  <header class="page-header cabecalho">
+    <h1 class="cabecalho-titulo">Assistidos</h1>
 
-    <app-button size="sm" style="flex-shrink: 0" (click)="abrirModalNovoAssistido()">
-      + Novo assistido
+    <app-button size="sm" class="cabecalho-acao" (click)="abrirModalNovoAssistido()">
+      <app-icon name="plus" [size]="16" /> Novo assistido
     </app-button>
-  </div>
+
+    <p class="page-intro cabecalho-intro">
+      Cadastro e acompanhamento dos assistidos.
+    </p>
+  </header>
 
   @if (turmaFiltroAtual(); as turmaCtx) {
     <div class="notice notice-info" style="align-items: center; justify-content: space-between" role="status">
       <span>
         Mostrando alunos da turma <strong>{{ turmaCtx.nomeTurma }}</strong>
-        <button type="button" class="link-voltar" (click)="voltarParaTurmas()">← Voltar para Turmas</button>
+        <button type="button" class="link-voltar" (click)="voltarParaTurmas()"><app-icon name="chevron-left" [size]="16" /> Voltar para Turmas</button>
       </span>
       <app-button variant="secondary" size="sm" (click)="removerFiltroTurma()">
         Remover filtro
@@ -35,170 +24,241 @@
   }
 
   <div class="tabs">
-    <button class="tab" [class.active]="abaAtiva() === 'todos'" (click)="trocarAbaStatus('todos')">
-      Todos <span class="count">{{ totalElementos() }}</span>
+    <button type="button" class="tab" [class.active]="abaAtiva() === 'todos'" [attr.aria-pressed]="abaAtiva() === 'todos'" (click)="trocarAbaStatus('todos')">
+      Todos @if (contagem(); as c) { <span class="count">{{ c.todos }}</span> }
     </button>
-
-    <button class="tab" [class.active]="abaAtiva() === 'ativos'" (click)="trocarAbaStatus('ativos')">
-      Ativos
+    <button type="button" class="tab" [class.active]="abaAtiva() === 'ativos'" [attr.aria-pressed]="abaAtiva() === 'ativos'" (click)="trocarAbaStatus('ativos')">
+      Ativos @if (contagem(); as c) { <span class="count">{{ c.ativos }}</span> }
     </button>
-
-    <button class="tab" [class.active]="abaAtiva() === 'inativos'" (click)="trocarAbaStatus('inativos')">
-      Inativos
+    <button type="button" class="tab" [class.active]="abaAtiva() === 'acomp'" [attr.aria-pressed]="abaAtiva() === 'acomp'" (click)="trocarAbaStatus('acomp')">
+      Em acompanhamento @if (contagem(); as c) { <span class="count">{{ c.emAcompanhamento }}</span> }
     </button>
-
-    <button class="tab" [class.active]="abaAtiva() === 'acomp'" (click)="trocarAbaStatus('acomp')">
-      Em acompanhamento
+    <button type="button" class="tab" [class.active]="abaAtiva() === 'inativos'" [attr.aria-pressed]="abaAtiva() === 'inativos'" (click)="trocarAbaStatus('inativos')">
+      Inativos @if (contagem(); as c) { <span class="count">{{ c.inativos }}</span> }
     </button>
-  </div>
-
-  <div class="toolbar">
-    <app-input
-      label="Buscar por nome"
-      [hideLabel]="true"
-      placeholder="Buscar por nome…"
-      [ngModel]="termoBusca()"
-      (ngModelChange)="onBuscaChange($event)"
-    />
-
-    <app-select
-      [ngModel]="filtroTurma()"
-      (ngModelChange)="onFiltroTurmaChange($event)"
-      [options]="filtroTurmaOptions()"
-    />
   </div>
 
   @if (abaAtiva() === 'acomp') {
-    <div class="card card-pad">
-      <p class="muted">
-        Exibindo assistidos em acompanhamento clínico/sociopedagógico — depende de um endpoint que
-        ainda não existe, então essa aba está um placeholder por enquanto.
-      </p>
-    </div>
-  } @else {
-    <div class="card">
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>Idade</th>
-              <th>CPF</th>
-              <th>Turma</th>
-              <th>Status</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
+    <p class="acomp-legenda">
+      <app-icon name="alert-circle" [size]="16" />
+      Assistidos ativos com frequência abaixo de 75% ou com 3 ou mais faltas seguidas.
+    </p>
+  }
 
-          <tbody>
-            @if (carregando()) {
+  <div class="toolbar filtros">
+    <div class="filtros-busca">
+      <app-input
+        label="Buscar por nome ou CPF"
+        [hideLabel]="true"
+        placeholder="Buscar por nome ou CPF…"
+        [ngModel]="termoBusca()"
+        (ngModelChange)="onBuscaChange($event)"
+      />
+    </div>
+
+    @if (oficinas().length) {
+      <div class="filtros-select">
+        <label class="sr-only" for="filtro-oficina">Filtrar por oficina</label>
+        <app-select
+          id="filtro-oficina"
+          [ngModel]="filtroOficina()"
+          (ngModelChange)="onFiltroOficinaChange($event)"
+          [options]="filtroOficinaOptions()"
+        />
+      </div>
+    }
+
+    @if (turmas().length) {
+      <div class="filtros-select">
+        <label class="sr-only" for="filtro-turma">Filtrar por turma</label>
+        <app-select
+          id="filtro-turma"
+          [ngModel]="filtroTurma()"
+          (ngModelChange)="onFiltroTurmaChange($event)"
+          [options]="filtroTurmaOptions()"
+        />
+      </div>
+    }
+  </div>
+
+  <div class="lista-assistidos" [attr.aria-busy]="carregando()">
+    @if (carregando()) {
+      <div class="card lista-estado"><p class="muted">Carregando assistidos…</p></div>
+    } @else if (assistidos().length === 0) {
+      <div class="card lista-estado">
+        @if (temFiltrosAtivos()) {
+          <p class="muted">Nenhum assistido encontrado para os filtros aplicados.</p>
+          <app-button variant="secondary" size="sm" (click)="limparFiltros()">Limpar filtros</app-button>
+        } @else {
+          <p class="muted">Nenhum assistido cadastrado.</p>
+        }
+      </div>
+    } @else {
+      <!-- Desktop / iPad na horizontal: tabela (compacta ou completa conforme a largura disponível) -->
+      <div class="card lista-tabela">
+        <div class="table-wrap">
+          <table>
+            <thead>
               <tr>
-                <td colspan="6" class="muted" style="text-align: center; padding: 24px;">Carregando assistidos…</td>
+                <th>Nome</th>
+                <th class="col-larga">Idade</th>
+                <th class="col-larga">CPF</th>
+                <th>Responsável</th>
+                <th class="col-larga">Contato</th>
+                <th>Turma</th>
+                <th>Frequência</th>
+                <th>Status</th>
+                <th class="col-acoes">Ações</th>
               </tr>
-            } @else if (assistidos().length === 0) {
-              <tr>
-                <td colspan="6" style="text-align: center; padding: 32px 16px;">
-                  @if (temFiltrosAtivos()) {
-                    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                      <p class="muted" style="margin: 0;">Nenhum assistido encontrado para os filtros aplicados.</p>
-                      <app-button variant="secondary" size="sm" (click)="limparFiltros()">Limpar filtros</app-button>
-                    </div>
-                  } @else {
-                    <p class="muted" style="margin: 0;">Nenhum assistido cadastrado.</p>
-                  }
-                </td>
-              </tr>
-            } @else {
+            </thead>
+            <tbody>
               @for (assistido of assistidos(); track assistido.assistidoId) {
                 <tr>
-                  <td class="cell-name">{{ assistido.nomeCompleto }}</td>
-                  <td>{{ calcularIdade(assistido.dataNascimento) }} anos</td>
-                  <td>{{ assistido.cpf || '—' }}</td>
-                  <td>{{ assistido.nomeTurma || 'Sem turma' }}</td>
-
                   <td>
-                    <app-badge [status]="assistido.status" />
+                    <span class="cell-name">{{ assistido.nomeCompleto }}</span>
+                    <span class="cell-sub so-compacta">
+                      {{ calcularIdade(assistido.dataNascimento) }} anos · {{ cpfMascarado(assistido.cpf) }}
+                    </span>
                   </td>
-
+                  <td class="col-larga nowrap">{{ calcularIdade(assistido.dataNascimento) }} anos</td>
+                  <td class="col-larga nowrap cpf">{{ cpfMascarado(assistido.cpf) }}</td>
                   <td>
-                    <div class="t-actions">
-                      <!-- Editar (ação de editar por linha) -->
-                      <button
-                        type="button"
-                        title="Editar assistido"
-                        (click)="abrirModalEditarAssistido(assistido)"
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                          <path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
-                      </button>
-
-                      <!-- Visualizar -->
-                      <button
-                        type="button"
-                        title="Visualizar assistido"
-                        (click)="abrirModalVisualizarAssistido(assistido)"
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" />
-                          <circle cx="12" cy="12" r="3" />
-                        </svg>
-                      </button>
-
-                      <!-- Alterar status -->
-                      <button
-                        type="button"
-                        title="Encerrar/reativar"
-                        (click)="
-                          alterarStatus(
-                            assistido,
-                            assistido.status === StatusGeral.ATIVO
-                              ? StatusGeral.INATIVO
-                              : StatusGeral.ATIVO
-                          )
-                        "
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M12 2v10" />
-                          <path d="M18.4 6.6a9 9 0 1 1-12.8 0" />
-                        </svg>
-                      </button>
-                    </div>
+                    @if (assistido.responsavelNome) {
+                      <span>{{ assistido.responsavelNome }}</span>
+                      <span class="cell-sub so-compacta">{{ telefoneFormatado(assistido.responsavelTelefone) || 'Sem telefone' }}</span>
+                    } @else {
+                      <span class="muted">Não informado</span>
+                    }
+                  </td>
+                  <td class="col-larga nowrap">
+                    @if (assistido.responsavelTelefone) {
+                      <a class="tel" [href]="telefoneLink(assistido.responsavelTelefone)">{{ telefoneFormatado(assistido.responsavelTelefone) }}</a>
+                    } @else {
+                      <span class="muted">—</span>
+                    }
+                  </td>
+                  <td>{{ assistido.nomeTurma || 'Sem turma' }}</td>
+                  <td>
+                    <ng-container *ngTemplateOutlet="frequencia; context: { $implicit: assistido }" />
+                  </td>
+                  <td>
+                    <ng-container *ngTemplateOutlet="status; context: { $implicit: assistido }" />
+                  </td>
+                  <td class="col-acoes">
+                    <app-action-menu
+                      [label]="'Ações de ' + assistido.nomeCompleto"
+                      [itens]="acoesAssistido(assistido)"
+                      (selecionado)="executarAcao($event, assistido)"
+                    />
                   </td>
                 </tr>
               }
-            }
-          </tbody>
-        </table>
-
-        @if (totalPaginas() > 1) {
-          <div class="paginacao" role="navigation" aria-label="Paginação" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-top: 1px solid var(--border-color, #e5e7eb);">
-            <app-button
-              variant="secondary"
-              size="sm"
-              [disabled]="!temAnterior()"
-              (click)="paginaAnterior()"
-              aria-label="Página anterior"
-            >&#8592; Anterior</app-button>
-
-            <span class="pagina-info" style="font-size: 13px; color: var(--muted-color, #6b7280);">
-              Página {{ pagina() + 1 }} de {{ totalPaginas() }}
-              <span class="pagina-total">({{ totalElementos() }} assistidos)</span>
-            </span>
-
-            <app-button
-              variant="secondary"
-              size="sm"
-              [disabled]="!temProxima()"
-              (click)="proximaPagina()"
-              aria-label="Próxima página"
-            >Próxima &#8594;</app-button>
-          </div>
-        }
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
-  }
+
+      <!-- Celular / iPad na vertical: cartões -->
+      <ul class="lista-cartoes" role="list">
+        @for (assistido of assistidos(); track assistido.assistidoId) {
+          <li class="assistido-cartao">
+            <div class="cartao-topo">
+              <div class="cartao-identidade">
+                <span class="cell-name">{{ assistido.nomeCompleto }}</span>
+                <span class="cell-sub">{{ calcularIdade(assistido.dataNascimento) }} anos · {{ cpfMascarado(assistido.cpf) }}</span>
+              </div>
+              <app-action-menu
+                [label]="'Ações de ' + assistido.nomeCompleto"
+                [itens]="acoesAssistido(assistido)"
+                (selecionado)="executarAcao($event, assistido)"
+              />
+            </div>
+
+            <ng-container *ngTemplateOutlet="status; context: { $implicit: assistido }" />
+
+            <dl class="cartao-dados">
+              <div>
+                <dt>Responsável</dt>
+                <dd>
+                  @if (assistido.responsavelNome) {
+                    {{ assistido.responsavelNome }}
+                    @if (assistido.responsavelParentesco) { <span class="muted">({{ assistido.responsavelParentesco }})</span> }
+                  } @else {
+                    <span class="muted">Não informado</span>
+                  }
+                </dd>
+              </div>
+              <div>
+                <dt>Contato</dt>
+                <dd>
+                  @if (assistido.responsavelTelefone) {
+                    <a class="tel tel--toque" [href]="telefoneLink(assistido.responsavelTelefone)">
+                      <app-icon name="phone" [size]="15" />
+                      {{ telefoneFormatado(assistido.responsavelTelefone) }}
+                    </a>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </dd>
+              </div>
+              <div>
+                <dt>Turma</dt>
+                <dd>{{ assistido.nomeTurma || 'Sem turma' }}</dd>
+              </div>
+              <div class="cartao-frequencia">
+                <dt>Frequência</dt>
+                <dd><ng-container *ngTemplateOutlet="frequencia; context: { $implicit: assistido }" /></dd>
+              </div>
+            </dl>
+          </li>
+        }
+      </ul>
+    }
+
+    @if (totalPaginas() > 1) {
+      <nav class="paginacao" aria-label="Paginação">
+        <app-button variant="secondary" size="sm" [disabled]="!temAnterior()" (click)="paginaAnterior()" aria-label="Página anterior">
+          <app-icon name="chevron-left" [size]="16" /> <span class="pag-rotulo">Anterior</span>
+        </app-button>
+
+        <span class="pagina-info">
+          Página {{ pagina() + 1 }} de {{ totalPaginas() }}
+          <span class="pagina-total">({{ totalElementos() }} assistidos)</span>
+        </span>
+
+        <app-button variant="secondary" size="sm" [disabled]="!temProxima()" (click)="proximaPagina()" aria-label="Próxima página">
+          <span class="pag-rotulo">Próxima</span> <app-icon name="chevron-right" [size]="16" />
+        </app-button>
+      </nav>
+    }
+  </div>
+
+  <ng-template #frequencia let-a>
+    @if (a.frequenciaPercentual != null) {
+      <div
+        class="freq"
+        [class]="classeFrequencia(a.frequenciaPercentual)"
+        role="img"
+        [attr.aria-label]="'Frequência de ' + a.frequenciaPercentual + '% em ' + a.totalAulas + ' aulas'"
+      >
+        <div class="track"><div class="fill" [style.width.%]="a.frequenciaPercentual"></div></div>
+        <span class="pct">{{ a.frequenciaPercentual }}%</span>
+      </div>
+      @if (a.faltasConsecutivas >= 3) {
+        <span class="faltas-seguidas">{{ a.faltasConsecutivas }} faltas seguidas</span>
+      }
+    } @else {
+      <span class="muted">Sem aulas</span>
+    }
+  </ng-template>
+
+  <ng-template #status let-a>
+    @if (a.emAcompanhamento) {
+      <app-badge variant="amber" label="Em acompanhamento" />
+    } @else {
+      <app-badge [status]="a.status" />
+    }
+  </ng-template>
 </section>
 
 <!-- ============================================================
@@ -212,11 +272,7 @@
   (closed)="fecharModalNovoAssistido()"
 >
   <div modal-icon class="mh-ico ico-green">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M19 8v6M22 11h-6" />
-    </svg>
+    <app-icon name="user-plus" />
   </div>
 
   @if (erroSalvar()) {
@@ -281,7 +337,6 @@
 
         <app-input
           label="Necessidades específicas"
-          placeholder="Ex.: TEA, TDAH, mobilidade reduzida…"
           [ngModel]="novoAssistido.necessidadesEspecificas"
           (ngModelChange)="atualizarCampoAssistido('necessidadesEspecificas', $event)"
         />
@@ -426,7 +481,7 @@
         </label>
 
         <app-button size="sm" class="mt-s" [loading]="salvandoResponsavel()" (click)="salvarResponsavel()">
-          💾 Salvar responsável
+          Salvar responsável
         </app-button>
 
   <ng-template #footer>
@@ -449,10 +504,7 @@
     (closed)="fecharModalVisualizarAssistido()"
   >
     <div modal-icon class="mh-ico ico-green">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
+      <app-icon name="user" />
     </div>
 
     <p class="cell-sub">
@@ -580,7 +632,7 @@
             <p class="muted mb-s">Nenhum responsável cadastrado para este assistido.</p>
 
             <app-button size="sm" (click)="abrirFormNovoResponsavelVinculado()">
-              + Cadastrar responsável
+              <app-icon name="plus" [size]="16" /> Cadastrar responsável
             </app-button>
           } @else {
             @if (erroResponsavelVinculado()) {
@@ -828,7 +880,7 @@
                 <th>Data de entrada</th>
                 <th>Data de saída</th>
                 <th>Vínculo</th>
-                <th></th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -845,13 +897,15 @@
                 <td>
                   <app-badge [status]="vinculo.status" />
                 </td>
-                <td class="acoes-cell">
-                  <app-button variant="secondary" size="sm" (click)="verAlunosDaTurmaHistorico(vinculo)">
-                    Ver alunos
-                  </app-button>
-                  <app-button variant="secondary" size="sm" (click)="abrirAulasHistoricoTurma(vinculo)">
-                    Ver aulas
-                  </app-button>
+                <td>
+                  <div class="t-actions">
+                    <button type="button" aria-label="Ver alunos da turma" appTooltip="Ver alunos" (click)="verAlunosDaTurmaHistorico(vinculo)">
+                      <app-icon name="eye" />
+                    </button>
+                    <button type="button" aria-label="Ver aulas da turma" appTooltip="Ver aulas" (click)="abrirAulasHistoricoTurma(vinculo)">
+                      <app-icon name="list" />
+                    </button>
+                  </div>
                 </td>
               </tr>
               }
@@ -878,10 +932,7 @@
       <p class="form-sec-title">Prontuários</p>
 
       <div class="notice notice-lock">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="11" width="18" height="11" rx="2" />
-          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-        </svg>
+        <app-icon name="lock" />
         <span>
           Prontuários visíveis conforme o perfil de acesso. Conteúdo de relato e motivo
           criptografado — depende de endpoint próprio que ainda não existe.
@@ -914,23 +965,14 @@
     (closed)="mostrarModalStatus.set(false)"
   >
     <div modal-icon class="mh-ico" [class]="novoStatusDesejado() === StatusGeral.INATIVO ? 'ico-coral' : 'ico-green'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        @if (novoStatusDesejado() === StatusGeral.INATIVO) {
-          <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-        } @else {
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-          <polyline points="22 4 12 14.01 9 11.01"/>
-        }
-      </svg>
+      <app-icon [name]="novoStatusDesejado() === StatusGeral.INATIVO ? 'power' : 'rotate-ccw'" />
     </div>
 
     <p class="cell-sub">Assistido: <strong>{{ assistidoSelecionadoStatus()?.nomeCompleto }}</strong></p>
 
     @if (novoStatusDesejado() === StatusGeral.INATIVO) {
       <div class="notice notice-amber">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
-        </svg>
+        <app-icon name="alert-circle" />
         <div>
           <b>Impactos de inativar este assistido:</b>
           <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px;">
@@ -942,9 +984,7 @@
       </div>
     } @else {
       <div class="notice notice-info">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
-        </svg>
+        <app-icon name="alert-circle" />
         <div>
           <b>Impactos de reativar este assistido:</b>
           <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px;">
@@ -980,10 +1020,7 @@
     (closed)="fecharModalEditar()"
   >
     <div modal-icon class="mh-ico ico-green">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-        <path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-      </svg>
+      <app-icon name="edit" />
     </div>
 
     @if (erroSalvarEdicao()) {

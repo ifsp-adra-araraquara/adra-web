@@ -25,13 +25,15 @@ import { Input } from '../../../shared/components/input/input';
 import { Button } from '../../../shared/components/button/button';
 import { Modal } from '../../../shared/components/modal/modal';
 import { CalendarioAulas } from '../calendario-aulas/calendario-aulas';
+import { Icon } from '../../../shared/components/icon/icon';
+import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
 
 type AbaOficineiro = 'turmas' | 'aulas' | 'calendario' | 'materiais' | 'comunicados';
 
 @Component({
   selector: 'app-oficineiro',
-  imports: [FormsModule, AulasTurmaModal, AulaModal, Select, Badge, Input, Button, Modal, CalendarioAulas],
+  imports: [TooltipDirective, Icon, FormsModule, AulasTurmaModal, AulaModal, Select, Badge, Input, Button, Modal, CalendarioAulas],
   templateUrl: './oficineiro.html',
   styleUrl: './oficineiro.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

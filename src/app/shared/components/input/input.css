@@ -54,9 +54,9 @@
 
 .app-input-control-el:focus {
   outline: none;
-  border-color: var(--green-400, #007b5f);
+  border-color: var(--color-brand);
   background: #fff;
-  box-shadow: 0 0 0 3px var(--green-50, #e0f2ec);
+  box-shadow: 0 0 0 3px var(--color-brand-soft);
 }
 
 .app-input-control-el:disabled {
