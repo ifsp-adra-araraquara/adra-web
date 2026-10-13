@@ -280,10 +280,6 @@
     <app-icon name="user-plus" />
   </div>
 
-  @if (erroSalvar()) {
-          <div class="notice notice-error" role="alert">{{ erroSalvar() }}</div>
-        }
-
         @if (alertaDuplicidade()) {
           <div class="notice notice-amber">
             Já existe um assistido com o mesmo nome e data de nascimento. O cadastro só é aceito se os dois tiverem
@@ -465,6 +461,9 @@
         </app-button>
 
   <ng-template #footer>
+    @if (erroSalvar()) {
+      <div class="notice notice-error" role="alert">{{ erroSalvar() }}</div>
+    }
     <app-button variant="secondary" (click)="fecharModalNovoAssistido()">Cancelar</app-button>
     <app-button [loading]="salvando()" (click)="salvarAssistido()">
       {{ salvando() ? 'Salvando...' : 'Salvar assistido' }}
@@ -593,13 +592,20 @@
 
     <!-- ==================== ABA: FAMÍLIA ==================== -->
     @if (abaVerAssistido() === 'fam') {
-      <p class="form-sec-title">Responsáveis</p>
+      <p class="form-sec-title">
+        Responsáveis
+        @if (ehCoordenador() && responsaveisDoAssistido().length > 0 && !mostrarFormNovoResponsavelVinculado()) {
+          <app-button size="sm" variant="secondary" class="sec-acao" (click)="abrirFormNovoResponsavelVinculado()">
+            <app-icon name="plus" [size]="16" /> Adicionar
+          </app-button>
+        }
+      </p>
 
       @if (carregandoResponsaveis()) {
         <div class="card card-pad"><p class="muted">Carregando responsáveis...</p></div>
       } @else if (erroResponsaveis()) {
         <div class="notice notice-error" role="alert">{{ erroResponsaveis() }}</div>
-      } @else if (responsaveisDoAssistido().length === 0) {
+      } @else if (responsaveisDoAssistido().length === 0 || mostrarFormNovoResponsavelVinculado()) {
         <div class="card card-pad">
           @if (!mostrarFormNovoResponsavelVinculado()) {
             <p class="muted mb-s">Nenhum responsável cadastrado para este assistido.</p>
@@ -1101,10 +1107,6 @@
       <app-icon name="edit" />
     </div>
 
-    @if (erroSalvarEdicao()) {
-      <div class="notice notice-error" role="alert">{{ erroSalvarEdicao() }}</div>
-    }
-
     @if (secaoEdicao() === 'turma') {
       <div class="field">
         <label>Turma</label>
@@ -1169,6 +1171,9 @@
     }
 
     <ng-template #footer>
+      @if (erroSalvarEdicao()) {
+        <div class="notice notice-error" role="alert">{{ erroSalvarEdicao() }}</div>
+      }
       <app-button variant="secondary" (click)="fecharModalEditar()">Cancelar</app-button>
       <app-button [loading]="salvandoEdicao()" (click)="salvarEdicaoAssistido()">
         Salvar alterações

@@ -532,7 +532,8 @@ export class Assistidos implements OnInit {
       necessidadesEspecificas: assistido.necessidadesEspecificas ?? '',
       observacoes: assistido.observacoes ?? '',
       turmaId: assistido.turmaId ?? null,
-      responsaveis: [],
+      // Sem `responsaveis`: a API reconcilia os vínculos se a lista vier, mesmo vazia.
+      // Responsáveis se editam na aba "Família".
     };
     this.erroSalvarEdicao.set(null);
     this.mostrarModalEditar.set(true);
@@ -710,6 +711,16 @@ export class Assistidos implements OnInit {
       return;
     }
 
+    // Responsável preenchido sem clicar em "Salvar responsável" entra automaticamente.
+    if (this.novoResponsavel.nomeCompleto.trim()) {
+      const erroResponsavel = this.validarResponsavel(this.novoResponsavel);
+      if (erroResponsavel) {
+        this.erroSalvar.set(erroResponsavel);
+        return;
+      }
+      await this.salvarResponsavel();
+    }
+
     const erroValidacao = this.validarAssistidoAntesSalvar();
     if (erroValidacao) {
       this.erroSalvar.set(erroValidacao);
@@ -827,6 +838,8 @@ export class Assistidos implements OnInit {
     this.responsaveisDoAssistido.set([]);
 
     this.erroResponsaveis.set(null);
+
+    this.mostrarFormNovoResponsavelVinculado.set(false);
 
     this.historicoTurmasAssistido.set([]);
 
