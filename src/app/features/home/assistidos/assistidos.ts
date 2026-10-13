@@ -138,7 +138,6 @@ export class Assistidos implements OnInit {
   salvando = signal(false);
   erroSalvar = signal<string | null>(null);
   alertaDuplicidade = signal(false);
-  duplicadosEncontrados = signal<AssistidoResponseDTO[]>([]);
   novoAssistido: AssistidoRequestDTO = this.assistidoVazio();
   assistidoIdCriado = signal<number | null>(null);
   turmasAtivas = computed(() => this.turmas().filter((turma) => turma.ativo));
@@ -159,7 +158,7 @@ export class Assistidos implements OnInit {
   ]);
 
   turmaNovoAssistidoOptions = computed<SelectOption<number | null>[]>(() => [
-    { value: null, label: 'Selecione uma turma ativa' },
+    { value: null, label: 'Sem turma' },
     ...this.turmasAtivas().map((turma) => ({ value: turma.turmaId, label: turma.nomeTurma })),
   ]);
 
@@ -303,6 +302,10 @@ export class Assistidos implements OnInit {
 
   voltarParaTurmas(): void {
     this.router.navigate(['/turmas']);
+  }
+
+  abrirCadastroEmMassa(): void {
+    this.router.navigate(['/assistidos/lote']);
   }
 
   trocarAbaStatus(aba: 'todos' | 'ativos' | 'inativos' | 'acomp'): void {
@@ -479,7 +482,6 @@ export class Assistidos implements OnInit {
       observacoes: '',
       turmaId: null,
       responsaveis: [],
-      confirmarApesarDeDuplicidade: false,
     };
   }
 
@@ -507,7 +509,6 @@ export class Assistidos implements OnInit {
     this.erroSalvar.set(null);
     this.erroResponsavel.set(null);
     this.alertaDuplicidade.set(false);
-    this.duplicadosEncontrados.set([]);
     this.mostrarModalNovo.set(true);
   }
 
@@ -532,7 +533,6 @@ export class Assistidos implements OnInit {
       observacoes: assistido.observacoes ?? '',
       turmaId: assistido.turmaId ?? null,
       responsaveis: [],
-      confirmarApesarDeDuplicidade: false,
     };
     this.erroSalvarEdicao.set(null);
     this.mostrarModalEditar.set(true);
@@ -641,25 +641,13 @@ export class Assistidos implements OnInit {
       return 'CPF do assistido inválido.';
     }
 
-    if (!this.novoAssistido.turmaId) {
-      return 'Selecione uma turma ativa para o assistido.';
-    }
-
     const turmaSelecionada = this.turmas().find((turma) => turma.turmaId === Number(this.novoAssistido.turmaId));
-    if (!turmaSelecionada || !turmaSelecionada.ativo) {
+    if (this.novoAssistido.turmaId && !turmaSelecionada?.ativo) {
       return 'A turma selecionada deve estar ativa.';
     }
 
     if (this.responsaveisVinculados().length === 0 && this.responsaveisPendentes().length === 0) {
       return 'Informe pelo menos um responsável para o assistido.';
-    }
-
-    if (this.alertaDuplicidade() && !this.novoAssistido.confirmarApesarDeDuplicidade) {
-      return 'Há uma possível duplicidade de nome e data de nascimento. Confirme para continuar.';
-    }
-
-    if (this.novoAssistido.confirmarApesarDeDuplicidade && this.duplicadosEncontrados().length > 0) {
-      this.novoAssistido = { ...this.novoAssistido, confirmarApesarDeDuplicidade: true };
     }
 
     return null;
@@ -762,9 +750,8 @@ export class Assistidos implements OnInit {
 
     const payload: AssistidoRequestDTO = {
       ...this.novoAssistido,
-      turmaId: Number(this.novoAssistido.turmaId),
+      turmaId: this.novoAssistido.turmaId ? Number(this.novoAssistido.turmaId) : null,
       responsaveis: responsaveisPayload,
-      confirmarApesarDeDuplicidade: this.novoAssistido.confirmarApesarDeDuplicidade,
     };
 
     try {
@@ -776,20 +763,6 @@ export class Assistidos implements OnInit {
       this.carregarContagem();
     } catch (erro: any) {
       console.error('Erro ao salvar assistido:', erro);
-
-      const status = Number(erro?.status ?? 0);
-      const payloadErro = erro?.error ?? {};
-      const duplicados = Array.isArray(payloadErro.possiveisDuplicados)
-        ? payloadErro.possiveisDuplicados
-        : [];
-
-      if (status === 409 && duplicados.length > 0) {
-        this.alertaDuplicidade.set(true);
-        this.duplicadosEncontrados.set(duplicados);
-        this.erroSalvar.set(payloadErro.mensagem ?? 'Já existe um assistido com o mesmo nome e data de nascimento.');
-        this.salvando.set(false);
-        return;
-      }
 
       this.erroSalvar.set(
         mensagemErro(erro, 'Não foi possível salvar. Verifique os dados e tente novamente.'),

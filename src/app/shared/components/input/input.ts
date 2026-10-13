@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, forwardRef, input, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { formatarCpf, somenteDigitos } from '../../validators/cpf.validator';
-import { formatarTelefone } from '../../utils/mascara.util';
+import { formatarTelefone, telefoneNacional } from '../../utils/mascara.util';
 import { Icon } from '../icon/icon';
 
 export type InputType = 'text' | 'number' | 'password' | 'email' | 'date';
@@ -78,7 +78,7 @@ export class Input implements ControlValueAccessor {
   protected effectiveMaxLength = computed<number | null>(() => {
     if (this.maxLength() != null) return this.maxLength();
     if (this.mask() === 'cpf') return 14;
-    if (this.mask() === 'telefone') return 15;
+    if (this.mask() === 'telefone') return 19;
     return null;
   });
 
@@ -107,6 +107,14 @@ export class Input implements ControlValueAccessor {
 
   protected handleInput(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
+
+    if (this.mask() === 'telefone') {
+      const digitos = somenteDigitos(value);
+      const limitados = digitos.slice(0, digitos.startsWith('55') ? 13 : 11);
+      this.rawValue.set(limitados);
+      this.onChange(telefoneNacional(limitados));
+      return;
+    }
 
     if (this.mask() !== 'none') {
       const digitos = somenteDigitos(value).slice(0, 11);
