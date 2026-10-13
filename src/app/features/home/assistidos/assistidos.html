@@ -514,7 +514,7 @@
       >
         Chamadas
       </button>
-      @if (ehCoordenador()) {
+      @if (podeEditarCadastro()) {
       <button
         class="tab"
         [class.active]="abaVerAssistido() === 'turmas'"
@@ -529,7 +529,7 @@
     @if (abaVerAssistido() === 'dados') {
       <p class="form-sec-title">
         Dados pessoais
-        @if (ehCoordenador()) {
+        @if (podeEditarCadastro()) {
           <app-button size="sm" variant="secondary" class="sec-acao" (click)="executarAcaoDaFicha('editar')">
             <app-icon name="edit" [size]="16" /> Editar
           </app-button>
@@ -594,7 +594,7 @@
     @if (abaVerAssistido() === 'fam') {
       <p class="form-sec-title">
         Responsáveis
-        @if (ehCoordenador() && responsaveisDoAssistido().length > 0 && !mostrarFormNovoResponsavelVinculado()) {
+        @if (podeEditarCadastro() && responsaveisDoAssistido().length > 0 && !mostrarFormNovoResponsavelVinculado()) {
           <app-button size="sm" variant="secondary" class="sec-acao" (click)="abrirFormNovoResponsavelVinculado()">
             <app-icon name="plus" [size]="16" /> Adicionar
           </app-button>
@@ -748,7 +748,7 @@
                   @if (responsavel.autorizadoRetirada) {
                     <app-badge variant="amber" label="Pode retirar" />
                   }
-                  @if (ehCoordenador()) {
+                  @if (podeEditarCadastro()) {
                     <button
                       type="button"
                       class="btn-icon"
@@ -860,8 +860,8 @@
       }
     }
 
-    <!-- ==================== ABA: TURMAS (histórico turma_aluno, só coordenador) ==================== -->
-    @if (abaVerAssistido() === 'turmas' && ehCoordenador()) {
+    <!-- ==================== ABA: TURMAS (histórico turma_aluno) ==================== -->
+    @if (abaVerAssistido() === 'turmas' && podeEditarCadastro()) {
       <p class="form-sec-title">
         Turmas
         <app-button size="sm" variant="secondary" class="sec-acao" (click)="executarAcaoDaFicha('turma')">
@@ -925,7 +925,7 @@
       <app-button variant="secondary" (click)="fecharModalVisualizarAssistido()">
         Fechar
       </app-button>
-      @if (ehCoordenador()) {
+      @if (podeEditarCadastro()) {
         @if (assistidoSelecionado()!.status === StatusGeral.ATIVO) {
           <app-button variant="danger" (click)="executarAcaoDaFicha('status')">Inativar</app-button>
         } @else {

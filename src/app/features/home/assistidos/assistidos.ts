@@ -76,6 +76,10 @@ export class Assistidos implements OnInit {
 
   /** Aba "Turmas" do modal do assistido (histórico + ver alunos/aulas) é só pro coordenador. */
   readonly ehCoordenador = computed(() => this.auth.currentProfile() === Role.COORD);
+  readonly podeEditarCadastro = computed(() => {
+    const perfil = this.auth.currentProfile();
+    return perfil === Role.COORD || perfil === Role.SOCIO;
+  });
 
   /* Listagem e Paginação */
   assistidos = signal<AssistidoResponseDTO[]>([]);
@@ -114,7 +118,7 @@ export class Assistidos implements OnInit {
     this.abaVerAssistido.set(aba);
 
     // Carrega o histórico de turmas só na primeira vez que a aba é aberta.
-    if (aba === 'turmas' && this.ehCoordenador() && this.assistidoSelecionado()) {
+    if (aba === 'turmas' && this.podeEditarCadastro() && this.assistidoSelecionado()) {
       this.carregarHistoricoTurmas(this.assistidoSelecionado()!.assistidoId);
     }
 
