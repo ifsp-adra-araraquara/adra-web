@@ -1,63 +1,36 @@
-<div class="login-screen">
-  <div class="login-shell">
+<app-auth-shell titulo="Sistema de Gestão" descricao="Gestão integrada de oficinas, turmas, frequência e atendimento social da ADRA Araraquara.">
+  <form class="login-form" (ngSubmit)="entrar()">
+    <h1 class="login-sub">Acesse sua conta</h1>
+    <p class="login-desc">Informe seu e-mail e senha institucionais para entrar no painel de gestão.</p>
 
-    <!-- Painel de marca -->
-    <aside class="brand-panel" aria-hidden="true">
-      <div class="brand-panel-glow"></div>
-      <div class="brand-panel-grid"></div>
+    <app-input
+      label="E-mail institucional"
+      type="email"
+      name="email"
+      placeholder="coordenador@adra.org.br"
+      autocomplete="username"
+      [(ngModel)]="email"
+    />
 
-      <div class="brand-panel-content">
-        <app-brand-logo variant="white" [size]="56" class="brand-logo" />
-        <h1 class="brand-title" >Sistema de Gestão</h1>
-        <p class="brand-tagline">Plataforma integrada de atendimento social · ADRA Araraquara</p>
-      </div>
+    <app-input
+      label="Senha"
+      type="password"
+      name="senha"
+      placeholder="••••••••"
+      autocomplete="current-password"
+      [(ngModel)]="senha"
+    />
 
-      <div class="brand-panel-footer">
-        <span class="brand-status-dot"></span>
-        Ambiente seguro · conexão criptografada
-      </div>
-    </aside>
+    @if (erro()) {
+    <p class="login-erro" role="alert">{{ erro() }}</p>
+    }
 
-    <!-- Formulário -->
-    <form class="login-card" (ngSubmit)="entrar()">
-      <div class="login-brand">
-        <app-brand-logo variant="green" [size]="32" />
-        <div class="login-logo-text serif">ADRA</div>
-      </div>
-      <p class="login-sub">Acesso institucional</p>
+    <app-button type="submit" size="lg" [block]="true" [loading]="carregando()">
+      {{ carregando() ? 'Entrando...' : 'Entrar' }}
+    </app-button>
 
-      <app-input
-        label="E-mail institucional"
-        type="email"
-        name="email"
-        placeholder="coordenador@adra.org.br"
-        autocomplete="username"
-        [(ngModel)]="email"
-      />
-
-      <app-input
-        label="Senha"
-        type="password"
-        name="senha"
-        placeholder="••••••••"
-        autocomplete="current-password"
-        [(ngModel)]="senha"
-      />
-
-      @if (erro()) {
-      <p class="login-erro" role="alert">{{ erro() }}</p>
-      }
-
-      <app-button type="submit" size="lg" [block]="true" [loading]="carregando()">
-        {{ carregando() ? 'Entrando...' : 'Entrar' }}
-      </app-button>
-
-      <p class="login-foot" style="margin-top: 14px;">
-        <a routerLink="/esqueci-senha">Esqueceu sua senha?</a>
-      </p>
-
-      <p class="login-foot">Protótipo acadêmico — IFSP Campus Araraquara</p>
-    </form>
-
-  </div>
-</div>
+    <p class="login-foot" style="margin-top: 14px;">
+      <a routerLink="/esqueci-senha">Esqueceu sua senha?</a>
+    </p>
+  </form>
+</app-auth-shell>

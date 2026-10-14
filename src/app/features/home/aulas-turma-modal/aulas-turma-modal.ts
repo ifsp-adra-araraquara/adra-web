@@ -10,23 +10,28 @@ import {
   signal,
 } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { AulaComDetalhesResponseDTO } from '../../../shared/models/aula/AulaComDetalhesResponseDTO';
 import { AulaModal } from '../../../shared/components/aula-modal/aula-modal';
 import { calcularSituacaoAula, ehAulaDeHoje, podeAbrirAula } from '../../../shared/utils/aula.util';
+import { podeEditarChamada } from '../../../shared/utils/chamada.util';
 import { Badge } from '../../../shared/components/badge/badge';
+import { Modal } from '../../../shared/components/modal/modal';
+import { AuthService } from '../../../core/auth.service';
 
 @Component({
   selector: 'app-aulas-turma-modal',
-  standalone: true,
-  imports: [AulaModal, Badge],
+  imports: [AulaModal, Badge, Modal],
   templateUrl: './aulas-turma-modal.html',
   styleUrl: './aulas-turma-modal.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AulasTurmaModal implements OnChanges {
   private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
   private readonly api = environment.apiUrl;
 
   @Input({ required: true }) turmaId!: number;
@@ -65,8 +70,24 @@ export class AulasTurmaModal implements OnChanges {
     }
   }
 
+  /**
+   * Quem edita chamada (Coordenador/Sociopedagógico) navega pra `/chamada`
+   * em vez de abrir `<app-aula-modal>` aninhada aqui dentro — evita duas
+   * modais empilhadas e deixa a tela de chamada com a mesma cara em todo
+   * ponto de entrada. Oficineiro não tem rota `/chamada` liberada e só
+   * enxerga leitura mesmo, então continua com a modal aninhada de hoje.
+   */
   abrirAula(aula: AulaComDetalhesResponseDTO): void {
     if (!this.permiteAbrirAula || !this.podeAbrir(aula)) return;
+
+    if (podeEditarChamada(this.auth.currentProfile())) {
+      this.fecharModal();
+      this.router.navigate(['/chamada'], {
+        queryParams: { data: aula.dataAula, aulaId: aula.aulaId },
+      });
+      return;
+    }
+
     this.aulaAberta.set(aula);
   }
 

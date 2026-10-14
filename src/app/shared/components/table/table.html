@@ -1,4 +1,4 @@
-<div class="table-wrap">
+<div class="table-wrap" role="region" tabindex="0" [attr.aria-label]="label()">
   <table>
     <thead>
       <tr>
@@ -6,17 +6,20 @@
           <th
             [style.width]="column.width"
             [style.text-align]="column.align ?? 'left'"
-            [class.sortable]="column.sortable"
-            (click)="onHeaderClick(column)"
+            [attr.aria-sort]="ariaSort(column)"
           >
-            {{ column.header }}
             @if (column.sortable) {
-              <span
-                class="sort-icon"
-                [class.asc]="sortIndicator(column) === 'asc'"
-                [class.desc]="sortIndicator(column) === 'desc'"
-                aria-hidden="true"
-              >▲</span>
+              <button type="button" class="th-sort" (click)="onHeaderClick(column)">
+                {{ column.header }}
+                <span
+                  class="sort-icon"
+                  [class.asc]="sortIndicator(column) === 'asc'"
+                  [class.desc]="sortIndicator(column) === 'desc'"
+                  aria-hidden="true"
+                >▲</span>
+              </button>
+            } @else {
+              {{ column.header }}
             }
           </th>
         }
@@ -28,11 +31,13 @@
 
     <tbody>
       @for (row of pagedData(); track trackRow($index, row)) {
-        <tr>
+        <tr [class.linha-clicavel]="rowClick()" (click)="onRowClick($event, row)">
           @for (column of columns(); track column.key) {
             <td [style.text-align]="column.align ?? 'left'">
               @if (column.type === 'badge') {
                 <app-badge [status]="cellStatus(row, column)" />
+              } @else if (column.type === 'custom' && cellTemplate(); as cell) {
+                <ng-container [ngTemplateOutlet]="cell" [ngTemplateOutletContext]="{ $implicit: row, column: column }" />
               } @else {
                 {{ cellValue(row, column) }}
               }
@@ -61,20 +66,20 @@
   <div class="table-pagination">
     <button
       type="button"
-      class="page-btn"
+      class="btn-icon"
       [disabled]="currentPage() === 1"
       (click)="goToPage(currentPage() - 1)"
       aria-label="Página anterior"
-    >‹</button>
+    ><app-icon name="chevron-left" /></button>
 
     <span class="page-info">Página {{ currentPage() }} de {{ totalPages() }}</span>
 
     <button
       type="button"
-      class="page-btn"
+      class="btn-icon"
       [disabled]="currentPage() === totalPages()"
       (click)="goToPage(currentPage() + 1)"
       aria-label="Próxima página"
-    >›</button>
+    ><app-icon name="chevron-right" /></button>
   </div>
 }

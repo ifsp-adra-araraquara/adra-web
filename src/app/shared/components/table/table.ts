@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, TemplateRef, computed, contentChild, input, output, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { Badge } from '../badge/badge';
+import { Icon } from '../icon/icon';
+import { cliqueEmElementoInterativo } from '../../utils/clique.util';
 
 export type TableSortDirection = 'asc' | 'desc';
 
@@ -16,8 +18,13 @@ export interface TableColumn<T = unknown> {
   sortable?: boolean;
   align?: 'left' | 'center' | 'right';
   width?: string;
-  /** 'badge' renderiza o valor da célula com `app-badge`. Padrão: texto simples. */
-  type?: 'text' | 'badge';
+  /**
+   * 'badge' renderiza o valor da célula com `app-badge`. 'custom' projeta o
+   * `<ng-template #cell let-row let-column="column">` do pai (ver barra de
+   * ocupação em Turmas) — para células com markup que texto/badge não cobrem.
+   * Padrão: texto simples.
+   */
+  type?: 'text' | 'badge' | 'custom';
   /** Acessor customizado, para quando o valor a exibir não é `row[key]` diretamente. */
   value?: (row: T) => unknown;
 }
@@ -41,13 +48,14 @@ export interface TableColumn<T = unknown> {
 @Component({
   selector: 'app-table',
   standalone: true,
-  imports: [NgTemplateOutlet, Badge],
+  imports: [NgTemplateOutlet, Badge, Icon],
   templateUrl: './table.html',
   styleUrl: './table.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Table<T = unknown> {
   columns = input.required<TableColumn<T>[]>();
+  label = input('Tabela');
   data = input.required<T[]>();
 
   /** true = paginação/ordenação são feitas pelo pai (API); a tabela só exibe `data()`. */
@@ -59,12 +67,16 @@ export class Table<T = unknown> {
   totalItems = input<number | null>(null);
   /** Acessor opcional para `track` no `@for` das linhas; por padrão usa o índice. */
   trackBy = input<((row: T, index: number) => unknown) | null>(null);
+  /** Ação ao clicar na linha (fora de botões/links), ex.: abrir a visualização do registro. */
+  rowClick = input<((row: T) => void) | null>(null);
 
   pageChange = output<number>();
   sortChange = output<TableSortState>();
 
   /** Ações por linha — projetadas via `<ng-template #rowActions let-row>`. */
   rowActionsTemplate = contentChild<TemplateRef<unknown>>('rowActions');
+  /** Célula customizada (colunas `type: 'custom'`) — projetada via `<ng-template #cell let-row let-column="column">`. */
+  cellTemplate = contentChild<TemplateRef<unknown>>('cell');
 
   private readonly internalPage = signal(1);
   private readonly internalSort = signal<TableSortState | null>(null);
@@ -121,9 +133,22 @@ export class Table<T = unknown> {
     return sort?.key === column.key ? sort.direction : null;
   }
 
+  protected ariaSort(column: TableColumn<T>): 'ascending' | 'descending' | null {
+    const direction = this.sortIndicator(column);
+    if (!direction) return null;
+    return direction === 'asc' ? 'ascending' : 'descending';
+  }
+
   protected trackRow(index: number, row: T): unknown {
     const fn = this.trackBy();
     return fn ? fn(row, index) : index;
+  }
+
+  protected onRowClick(event: MouseEvent, row: T): void {
+    const fn = this.rowClick();
+    if (fn && !cliqueEmElementoInterativo(event)) {
+      fn(row);
+    }
   }
 
   protected onHeaderClick(column: TableColumn<T>): void {

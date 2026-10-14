@@ -2,7 +2,7 @@
   <div class="card-head" style="border: none; padding: 0 0 18px;">
     <h1>Responsáveis</h1>
     <div class="right">
-      <app-button (click)="abrirNovo()">Novo responsável</app-button>
+      <app-button size="sm" (click)="abrirNovo()"><app-icon name="plus" [size]="16" /> Novo responsável</app-button>
     </div>
   </div>
 
@@ -11,34 +11,123 @@
   }
 
   @if (!carregando()) {
-    <div class="card">
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>CPF</th>
-              <th>Telefone</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (responsavel of responsaveis(); track responsavel.responsavelId) {
-              <tr>
-                <td class="cell-name">{{ responsavel.nomeCompleto }}</td>
-                <td>{{ responsavel.cpf }}</td>
-                <td>{{ responsavel.telefone || '-' }}</td>
-                <td>
-                  <div class="t-actions">
-                    <button type="button" (click)="abrirEdicao(responsavel)">Editar</button>
-                  </div>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+    <div class="toolbar">
+      <app-input
+        label="Buscar por nome, CPF ou telefone"
+        [hideLabel]="true"
+        placeholder="Buscar por nome, CPF ou telefone…"
+        [ngModel]="termoBusca()"
+        (ngModelChange)="onBuscaChange($event)"
+      />
+
+      <app-select
+        [ngModel]="filtroContato()"
+        (ngModelChange)="onFiltroContatoChange($event)"
+        [options]="filtroContatoOptions"
+      />
     </div>
+
+    <div class="card">
+      @if (responsaveisFiltrados().length === 0) {
+        <div class="muted" style="padding: 20px; text-align: center">
+          @if (temFiltrosAtivos()) {
+            <p>Nenhum responsável encontrado para os filtros aplicados.</p>
+            <app-button variant="secondary" size="sm" (click)="limparFiltros()">
+              Limpar filtros
+            </app-button>
+          } @else {
+            <p>Nenhum responsável cadastrado.</p>
+          }
+        </div>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>Telefone</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (responsavel of responsaveisFiltrados(); track responsavel.responsavelId) {
+                <tr class="linha-clicavel" (click)="abrirVisualizacaoPelaLinha($event, responsavel)">
+                  <td class="cell-name">{{ responsavel.nomeCompleto }}</td>
+                  <td>{{ responsavel.cpf }}</td>
+                  <td>{{ responsavel.telefone || '-' }}</td>
+                  <td>
+                    <div class="t-actions">
+                      <button type="button" aria-label="Ver responsável" appTooltip="Ver responsável" (click)="abrirVisualizacao(responsavel)">
+                        <app-icon name="eye" />
+                      </button>
+                      <button type="button" aria-label="Editar responsável" appTooltip="Editar responsável" (click)="abrirEdicao(responsavel)">
+                        <app-icon name="edit" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+
+  @if (responsavelVisualizado(); as responsavel) {
+    <app-modal [open]="true" [title]="responsavel.nomeCompleto" (closed)="fecharVisualizacao()">
+      <div modal-icon class="mh-ico ico-green">
+        <app-icon name="user" />
+      </div>
+
+      <p class="form-sec-title">
+        Dados pessoais
+        <app-button size="sm" variant="secondary" class="sec-acao" (click)="editarPelaVisualizacao()">
+          <app-icon name="edit" [size]="16" /> Editar
+        </app-button>
+      </p>
+
+      <div class="form-row">
+        <div class="field">
+          <label>CPF</label>
+          <div class="input" style="background: var(--gray-50)">{{ responsavel.cpf }}</div>
+        </div>
+        <div class="field">
+          <label>Data de nascimento</label>
+          <div class="input" style="background: var(--gray-50)">
+            {{ responsavel.dataNascimento ? (responsavel.dataNascimento | date: 'dd/MM/yyyy') : 'Não informado' }}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="field">
+          <label>Telefone</label>
+          <div class="input" style="background: var(--gray-50)">{{ responsavel.telefone || 'Não informado' }}</div>
+        </div>
+        <div class="field">
+          <label>E-mail</label>
+          <div class="input" style="background: var(--gray-50)">{{ responsavel.email || 'Não informado' }}</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Endereço</label>
+        <div class="input" style="background: var(--gray-50)">{{ responsavel.endereco || 'Não informado' }}</div>
+      </div>
+
+      <div class="field">
+        <label>Observações</label>
+        <div class="input" style="background: var(--gray-50); min-height: 70px; white-space: pre-wrap">
+          {{ responsavel.observacoes || 'Nenhuma observação registrada.' }}
+        </div>
+      </div>
+
+      <ng-template #footer>
+        <app-button variant="secondary" (click)="fecharVisualizacao()">Fechar</app-button>
+      </ng-template>
+    </app-modal>
   }
 
   <app-modal

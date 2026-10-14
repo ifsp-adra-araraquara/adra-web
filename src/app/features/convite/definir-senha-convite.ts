@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { environment } from '../../../environments/environment';
-import { BrandLogo } from '../../shared/components/brand-logo/brand-logo';
+import { AuthShell } from '../../shared/components/auth-shell/auth-shell';
 import { SenhaForca } from '../../shared/components/senha-forca/senha-forca';
 import { Input } from '../../shared/components/input/input';
 import { Button } from '../../shared/components/button/button';
@@ -12,9 +12,8 @@ import { validarPoliticaSenha } from '../../shared/utils/senha-forca';
 @Component({
   selector: 'app-definir-senha-convite',
   standalone: true,
-  imports: [FormsModule, RouterLink, BrandLogo, SenhaForca, Input, Button],
-  templateUrl: './definir-senha-convite.html',
-  styleUrl: './definir-senha-convite.css'
+  imports: [FormsModule, RouterLink, AuthShell, SenhaForca, Input, Button],
+  templateUrl: './definir-senha-convite.html'
 })
 
 export class DefinirSenhaConvite implements OnInit {

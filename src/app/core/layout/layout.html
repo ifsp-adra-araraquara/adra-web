@@ -1,8 +1,34 @@
-<app-sidebar />
+<app-sidebar [(open)]="menuOpen" [(collapsed)]="sidebarCollapsed" />
 
-<div class="main">
+@if (menuOpen()) {
+  <div class="backdrop" (click)="menuOpen.set(false)"></div>
+}
+
+<div class="main" [class.sidebar-collapsed]="sidebarCollapsed()">
   <header class="topbar">
+    <button
+      #menuButton
+      type="button"
+      class="menu-btn"
+      aria-controls="app-sidebar"
+      [attr.aria-expanded]="menuOpen()"
+      aria-label="Abrir menu"
+      (click)="menuOpen.set(true)">
+      <app-icon name="menu" />
+    </button>
     <h1>Sistema de Gestão</h1>
+
+    @if (mostrarAjudaTour()) {
+      <button
+        type="button"
+        class="help-btn"
+        aria-label="Ver tutorial guiado"
+        appTooltip="Ver tutorial"
+        (click)="abrirTutorial()"
+      >
+        <app-icon name="help-circle" />
+      </button>
+    }
   </header>
 
   <main class="content">

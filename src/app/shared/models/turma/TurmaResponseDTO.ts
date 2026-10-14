@@ -10,4 +10,6 @@ export interface TurmaResponseDTO {
   observacoes?: string;
   oficinaId?: number | null;
   oficineiroResponsavelId?: number | null;
+  /** Só vem preenchido em GET /api/turmas (listagem) — contagem em lote feita no backend. */
+  quantidadeAlunos?: number | null;
 }

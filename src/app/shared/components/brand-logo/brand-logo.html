@@ -1,1 +1,9 @@
-<img [src]="src()" [style.height.px]="size()" alt="ADRA" class="brand-logo-img" />
+<img
+  [ngSrc]="src()"
+  [width]="dims().w"
+  [height]="dims().h"
+  [style.height.px]="size()"
+  style="width: auto"
+  alt="ADRA"
+  class="brand-logo-img"
+/>

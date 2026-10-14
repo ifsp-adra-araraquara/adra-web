@@ -1,0 +1,334 @@
+<section class="page" aria-labelledby="lote-titulo">
+  <nav class="lote-trilha" aria-label="Trilha de navegação">
+    <a routerLink="/assistidos">Assistidos</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">Cadastro em massa</span>
+  </nav>
+
+  <header class="lote-cabecalho">
+    <h1 id="lote-titulo">Cadastro em massa</h1>
+    <div class="lote-cabecalho-acoes">
+      <app-button variant="secondary" size="sm" (click)="baixarModelo()">
+        <app-icon name="download" [size]="16" /> Baixar modelo
+      </app-button>
+      <app-button variant="secondary" size="sm" (click)="seletorArquivo.click()">
+        <app-icon name="file-text" [size]="16" /> Importar CSV
+      </app-button>
+      <input #seletorArquivo type="file" accept=".csv,text/csv" hidden (change)="importarCsv($event)" />
+      <app-button variant="secondary" size="sm" [disabled]="linhas().length >= limite" (click)="adicionarLinha()">
+        <app-icon name="plus" [size]="16" /> Adicionar assistido
+      </app-button>
+    </div>
+    <p class="page-intro">
+      Baixe o modelo, preencha no Excel e importe o arquivo .csv, ou adicione os assistidos direto na grade.
+      Valide, corrija o que estiver marcado e cadastre. O 1º responsável de cada assistido é o principal.
+    </p>
+  </header>
+
+  @if (erro()) {
+    <div class="notice notice-error" role="alert">{{ erro() }}</div>
+  }
+  @if (aviso()) {
+    <div class="notice notice-info" role="status">{{ aviso() }}</div>
+  }
+
+  @if (linhas().length) {
+    <div class="grid g-stats lote-resumo">
+      <app-stat-card iconClass="ico-blue" label="Assistidos na importação" value="{{ linhas().length }}">
+        <app-icon icon name="users" />
+      </app-stat-card>
+      <app-stat-card iconClass="ico-red" label="Com erro" value="{{ comErro() }}">
+        <app-icon icon name="alert-circle" />
+      </app-stat-card>
+      <app-stat-card iconClass="ico-green" label="Prontos para cadastro" value="{{ prontas() }}">
+        <app-icon icon name="check" />
+      </app-stat-card>
+      <app-stat-card
+        iconClass="ico-teal"
+        label="Responsáveis"
+        value="{{ totalResponsaveis() }}"
+        trend="{{ responsaveisJaCadastrados() }} já cadastrado(s), serão vinculados"
+      >
+        <app-icon icon name="user-check" />
+      </app-stat-card>
+    </div>
+
+    @if (comErro()) {
+      <div class="notice notice-error lote-alerta" role="status">
+        <app-icon name="alert-circle" />
+        <p>
+          <b>{{ comErro() }} assistido(s) com erro.</b>
+          Corrija os campos marcados em vermelho, ou remova a linha, e clique em Validar. O cadastro é liberado quando
+          todos estiverem prontos.
+        </p>
+        @if (filtro() !== 'erro') {
+          <app-button variant="secondary" size="sm" (click)="filtro.set('erro')">Mostrar só com erro</app-button>
+        }
+      </div>
+    }
+
+    <div class="card">
+      <div class="card-head lote-card-head">
+        <div class="tabs lote-abas" role="group" aria-label="Filtrar assistidos">
+          <button type="button" class="tab" [class.active]="filtro() === 'todos'" [attr.aria-pressed]="filtro() === 'todos'" (click)="filtro.set('todos')">
+            Todos <span class="count">{{ linhas().length }}</span>
+          </button>
+          <button type="button" class="tab" [class.active]="filtro() === 'erro'" [attr.aria-pressed]="filtro() === 'erro'" (click)="filtro.set('erro')">
+            Com erro <span class="count">{{ comErro() }}</span>
+          </button>
+          <button type="button" class="tab" [class.active]="filtro() === 'prontas'" [attr.aria-pressed]="filtro() === 'prontas'" (click)="filtro.set('prontas')">
+            Prontos <span class="count">{{ prontas() }}</span>
+          </button>
+        </div>
+        <div class="right lote-expansao">
+          <button type="button" class="lote-link" (click)="expandirTodas(true)">Expandir tudo</button>
+          <button type="button" class="lote-link" (click)="expandirTodas(false)">Recolher tudo</button>
+        </div>
+      </div>
+
+      <div class="table-wrap" role="region" tabindex="0" aria-label="Assistidos do lote">
+        <table class="lote-tabela">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Assistido</th>
+              <th>Nascimento</th>
+              <th>CPF</th>
+              <th>Responsáveis</th>
+              <th>Status</th>
+              <th><span class="sr-only">Ações</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (linha of linhasVisiveis(); track linha) {
+              @let numero = linhas().indexOf(linha) + 1;
+              @let resultado = linha.resultado();
+              @let status = statusDaLinha(linha);
+              @let errosDaLinha = errosGerais(linha);
+              @let nomes = nomesResponsaveis(linha);
+              <tr class="lote-linha" [formGroup]="linha.form">
+                <td class="lote-col-numero">
+                  <button
+                    type="button"
+                    class="lote-expandir"
+                    [class.lote-expandir--aberto]="linha.expandida()"
+                    [attr.aria-expanded]="linha.expandida()"
+                    [attr.aria-label]="'Responsáveis da linha ' + numero"
+                    (click)="alternarExpansao(linha)"
+                  >
+                    <app-icon name="chevron-right" [size]="16" />
+                  </button>
+                  {{ numero }}
+                </td>
+                <td class="lote-col-nome">
+                  <app-input
+                    formControlName="nomeCompleto"
+                    [label]="'Nome do assistido da linha ' + numero"
+                    [hideLabel]="true"
+                    [errorMessage]="mensagemCampo(linha.form.controls.nomeCompleto)"
+                  />
+                </td>
+                <td class="lote-col-data">
+                  <app-input
+                    formControlName="dataNascimento"
+                    placeholder="dd/mm/aaaa"
+                    [maxLength]="10"
+                    [label]="'Nascimento da linha ' + numero"
+                    [hideLabel]="true"
+                    [errorMessage]="mensagemCampo(linha.form.controls.dataNascimento)"
+                  />
+                </td>
+                <td class="lote-col-cpf">
+                  <app-input
+                    formControlName="cpf"
+                    mask="cpf"
+                    placeholder="Opcional"
+                    [label]="'CPF do assistido da linha ' + numero"
+                    [hideLabel]="true"
+                    [errorMessage]="mensagemCampo(linha.form.controls.cpf)"
+                  />
+                </td>
+                <td class="lote-col-responsaveis">
+                  <span class="cell-name">{{ nomes[0] }}</span><span class="cell-sub"> (principal)</span>
+                  @if (nomes.length > 1) {
+                    <div class="cell-sub">+ {{ nomes.slice(1).join(', ') }}</div>
+                  }
+                </td>
+                <td><app-badge [variant]="status.variant" [label]="status.label" /></td>
+                <td>
+                  <button
+                    type="button"
+                    class="btn-icon btn-icon--danger"
+                    [attr.aria-label]="'Remover linha ' + numero + ' da importação'"
+                    (click)="removerLinha(linha)"
+                  >
+                    <app-icon name="x" />
+                  </button>
+                </td>
+              </tr>
+
+              @if (linha.expandida() || errosDaLinha.length) {
+                <tr class="lote-detalhe">
+                  <td></td>
+                  <td colspan="6">
+                    @if (errosDaLinha.length) {
+                      <div class="notice notice-error lote-alerta" role="alert">
+                        <app-icon name="alert-circle" />
+                        <ul class="lote-erros">
+                          @for (erroDaLinha of errosDaLinha; track $index) {
+                            <li>{{ erroDaLinha }}</li>
+                          }
+                        </ul>
+                        <app-button variant="secondary" size="sm" (click)="removerLinha(linha)">
+                          Remover da importação
+                        </app-button>
+                      </div>
+                    }
+
+                    @if (linha.expandida()) {
+                      @let responsaveis = linha.form.controls.responsaveis.controls;
+                      <div class="lote-responsaveis">
+                        <div class="lote-responsaveis-head">
+                          <span>
+                            <b>Responsáveis de {{ linha.form.controls.nomeCompleto.value || 'linha ' + numero }}</b>
+                            · {{ responsaveis.length }} responsável(is)
+                          </span>
+                          <button type="button" class="lote-link" (click)="adicionarResponsavel(linha)">
+                            + Adicionar responsável
+                          </button>
+                        </div>
+                        <div class="table-wrap">
+                          <table class="lote-tabela-responsaveis">
+                            <thead>
+                              <tr>
+                                <th>Papel</th>
+                                <th>Nome</th>
+                                <th>CPF</th>
+                                <th>Parentesco</th>
+                                <th>Telefone</th>
+                                <th>E-mail</th>
+                                <th>Emergência</th>
+                                <th>Retira</th>
+                                <th><span class="sr-only">Ações</span></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              @for (responsavel of responsaveis; track responsavel; let i = $index) {
+                                @let rotulo = 'responsável ' + (i + 1) + ' da linha ' + numero;
+                                @let existente = resultado?.responsaveisExistentes?.[responsavel.controls.cpf.value];
+                                <tr [formGroup]="responsavel">
+                                  <td class="lote-col-papel">
+                                    <app-badge
+                                      [plain]="true"
+                                      [variant]="i === 0 ? 'green' : 'gray'"
+                                      [label]="i === 0 ? 'Principal' : 'Responsável ' + (i + 1)"
+                                    />
+                                    @if (existente) {
+                                      <div class="lote-existente">Já cadastrado como {{ existente }}</div>
+                                    }
+                                  </td>
+                                  <td class="lote-col-nome">
+                                    <app-input
+                                      formControlName="nomeCompleto"
+                                      [label]="'Nome do ' + rotulo"
+                                      [hideLabel]="true"
+                                      [errorMessage]="mensagemCampo(responsavel.controls.nomeCompleto)"
+                                    />
+                                  </td>
+                                  <td class="lote-col-cpf">
+                                    <app-input
+                                      formControlName="cpf"
+                                      mask="cpf"
+                                      [label]="'CPF do ' + rotulo"
+                                      [hideLabel]="true"
+                                      [errorMessage]="mensagemCampo(responsavel.controls.cpf)"
+                                    />
+                                  </td>
+                                  <td class="lote-col-curta">
+                                    <app-input formControlName="parentesco" [label]="'Parentesco do ' + rotulo" [hideLabel]="true" />
+                                  </td>
+                                  <td class="lote-col-cpf">
+                                    <app-input
+                                      formControlName="telefone"
+                                      mask="telefone"
+                                      [label]="'Telefone do ' + rotulo"
+                                      [hideLabel]="true"
+                                      [errorMessage]="mensagemCampo(responsavel.controls.telefone)"
+                                    />
+                                  </td>
+                                  <td class="lote-col-nome">
+                                    <app-input
+                                      formControlName="email"
+                                      type="email"
+                                      [label]="'E-mail do ' + rotulo"
+                                      [hideLabel]="true"
+                                      [errorMessage]="mensagemCampo(responsavel.controls.email)"
+                                    />
+                                  </td>
+                                  <td class="lote-col-check">
+                                    <input type="checkbox" formControlName="contatoEmergencia" [attr.aria-label]="'Contato de emergência, ' + rotulo" />
+                                  </td>
+                                  <td class="lote-col-check">
+                                    <input type="checkbox" formControlName="autorizadoRetirada" [attr.aria-label]="'Autorizado a retirar, ' + rotulo" />
+                                  </td>
+                                  <td class="lote-col-acoes">
+                                    @if (i > 0) {
+                                      <button type="button" class="lote-link" (click)="tornarPrincipal(linha, i)">Tornar principal</button>
+                                    }
+                                    @if (responsaveis.length > 1) {
+                                      <button
+                                        type="button"
+                                        class="btn-icon btn-icon--ghost"
+                                        [attr.aria-label]="'Remover ' + rotulo"
+                                        (click)="removerResponsavel(linha, i)"
+                                      >
+                                        <app-icon name="x" [size]="16" />
+                                      </button>
+                                    }
+                                  </td>
+                                </tr>
+                              }
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    }
+                  </td>
+                </tr>
+              }
+            } @empty {
+              <tr>
+                <td colspan="7" class="muted">Nenhum assistido neste filtro.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="lote-rodape">
+      <div class="lote-progresso">
+        <span><b>{{ prontas() }} de {{ linhas().length }}</b> prontos para cadastro</span>
+        <progress [value]="prontas()" [max]="linhas().length" aria-label="Assistidos prontos para cadastro"></progress>
+      </div>
+      <div class="lote-rodape-acoes">
+        @if (!todasProntas()) {
+          <app-button variant="secondary" [disabled]="enviando()" (click)="baixarPendencias()">
+            Baixar pendências (.csv)
+          </app-button>
+        }
+        <app-button [variant]="todasProntas() ? 'secondary' : 'primary'" [loading]="enviando()" (click)="validar()">
+          Validar
+        </app-button>
+        <app-button [disabled]="!todasProntas()" [loading]="enviando()" (click)="cadastrar()">
+          Cadastrar {{ prontas() }} assistido(s)
+        </app-button>
+      </div>
+    </div>
+  } @else {
+    <div class="card card-pad muted">
+      Nenhum assistido na grade. Baixe o modelo, preencha no Excel e importe o arquivo, ou adicione os assistidos
+      um a um.
+    </div>
+  }
+</section>

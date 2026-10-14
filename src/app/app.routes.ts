@@ -57,6 +57,13 @@ export const routes: Routes = [
         canActivate: [roleGuard],
       },
       {
+        path: 'assistidos/lote',
+        loadComponent: () =>
+          import('./features/home/assistidos/lote/assistidos-lote').then((m) => m.AssistidosLote),
+        data: { roles: [Role.COORD, Role.SOCIO] },
+        canActivate: [roleGuard],
+      },
+      {
         path: 'acesso',
         loadComponent: () => import('./features/home/acesso/acesso').then((m) => m.Acesso),
         data: { roles: [Role.ADMIN] },
@@ -96,14 +103,30 @@ export const routes: Routes = [
         canActivate: [roleGuard],
       },
       {
+        // "Aulas" foi unificada em "Turmas" (Fase 2) — redirect preserva links/favoritos antigos.
         path: 'aulas',
-        loadComponent: () => import('./features/home/aulas/aulas').then((m) => m.Aulas),
-        data: { roles: [Role.COORD, Role.SOCIO] },
-        canActivate: [roleGuard],
+        redirectTo: 'turmas',
+        pathMatch: 'full',
       },
       {
         path: 'chamada',
         loadComponent: () => import('./features/home/chamada/chamada').then((m) => m.Chamada),
+        data: { roles: [Role.COORD, Role.SOCIO] },
+        canActivate: [roleGuard],
+      },
+      {
+        path: 'chamada/status',
+        loadComponent: () =>
+          import('./features/home/status-chamada/status-chamada').then((m) => m.StatusChamadaPainel),
+        data: { roles: [Role.COORD] },
+        canActivate: [roleGuard],
+      },
+      {
+        path: 'chamada/turma/:turmaId/grade',
+        loadComponent: () =>
+          import('./features/home/grade-frequencia-turma/grade-frequencia-turma').then(
+            (m) => m.GradeFrequenciaTurma,
+          ),
         data: { roles: [Role.COORD, Role.SOCIO] },
         canActivate: [roleGuard],
       },

@@ -1,57 +1,165 @@
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  display: flex;
+.link-voltar {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-}
-
-.modal {
-  width: 100%;
-  max-width: 760px;
-  max-height: 90vh;
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 22px 24px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.modal-head h3 {
-  margin: 0;
-  font-size: 19px;
-}
-
-.modal-head p {
-  margin: 5px 0 0;
-  color: #6b7280;
-  font-size: 13px;
-}
-
-.modal-close {
-  border: 0;
+  gap: 4px;
+  vertical-align: middle;
+  border: none;
   background: transparent;
-  font-size: 25px;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
   cursor: pointer;
-  color: #6b7280;
-  line-height: 1;
+  padding: 0;
+  margin-left: 8px;
 }
 
-.modal-body {
-  padding: 24px;
-  overflow-y: auto;
+/* ============================================================
+   LISTAGEM — celular (cartões) → iPad (cartões 2 col) → tabela compacta → tabela completa
+   ============================================================ */
+
+/* Cabeçalho: título + botão na mesma linha; descrição embaixo, na largura toda */
+.cabecalho {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px 16px;
+  margin-bottom: 18px;
+}
+.cabecalho-titulo { margin: 0; }
+.cabecalho-acao { grid-column: 2; grid-row: 1; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.cabecalho-intro {
+  grid-column: 1 / -1;
+  max-width: 72ch;
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--gray-600);
+}
+
+/* Abas roláveis no celular em vez de quebrar em duas linhas */
+.tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: none; white-space: nowrap; }
+
+.acomp-legenda {
+  display: flex; align-items: center; gap: 8px; margin: -6px 0 14px;
+  font-size: 13px; color: var(--amber-600);
+}
+
+.filtros { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.filtros > * { width: auto; min-width: 0; }
+.filtros-busca { grid-column: 1 / -1; }
+.filtros-select:last-child:nth-child(2) { grid-column: 1 / -1; }
+.filtros .select { min-width: 0; }
+
+.lista-estado { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 32px 16px; text-align: center; }
+.lista-estado p { margin: 0; }
+
+.lista-tabela { display: none; }
+.lista-tabela td { vertical-align: middle; }
+.lista-tabela .cell-name, .lista-tabela .cell-sub { display: block; }
+.lista-tabela .cell-sub { margin-top: 2px; }
+.col-larga { display: none; }
+.col-acoes { width: 1%; text-align: right; }
+.nowrap { white-space: nowrap; }
+.cpf { color: var(--gray-600); font-variant-numeric: tabular-nums; letter-spacing: .2px; }
+.lista-tabela .freq { min-width: 140px; }
+
+.tel { color: inherit; text-decoration: none; font-variant-numeric: tabular-nums; }
+.tel:hover { color: var(--color-brand); text-decoration: underline; }
+
+.faltas-seguidas { display: block; margin-top: 3px; font-size: 11.5px; font-weight: 600; color: var(--coral-600); }
+
+/* Cartões */
+.lista-cartoes { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.assistido-cartao {
+  display: flex; flex-direction: column; gap: 10px; padding: 14px 16px;
+  background: #fff; border: 1px solid var(--gray-100); border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+.cartao-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.cartao-identidade { min-width: 0; }
+.cartao-identidade .cell-name { display: block; font-size: 15px; overflow-wrap: anywhere; }
+.cartao-identidade .cell-sub { display: block; margin-top: 2px; }
+.assistido-cartao app-badge { align-self: flex-start; }
+.cartao-dados { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; margin: 0; padding-top: 10px; border-top: 1px solid var(--gray-100); }
+.cartao-dados dt { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; color: var(--gray-400); }
+.cartao-dados dd { margin: 2px 0 0; font-size: 13.5px; color: var(--gray-800); overflow-wrap: anywhere; }
+.cartao-frequencia { grid-column: 1 / -1; }
+.tel--toque {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: -10px 0;
+  color: var(--color-adra-green-600); font-weight: 600;
+}
+
+.paginacao {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-top: 14px; padding: 12px 0;
+}
+.pagina-info { font-size: 13px; color: var(--gray-600); text-align: center; }
+.pagina-total { display: block; font-size: 12px; color: var(--gray-400); }
+
+@media (max-width: 380px) {
+  .pag-rotulo { display: none; }
+  .cartao-dados { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* iPad na vertical: cartões em 2 colunas */
+@media (min-width: 560px) {
+  .lista-cartoes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 720px) {
+  .filtros { display: flex; }
+  .filtros-busca { flex: 1; }
+  .filtros-select { width: 220px; flex: none; }
+}
+
+/* iPad na horizontal e notebook: tabela compacta (idade/CPF sob o nome, telefone sob o responsável) */
+@media (min-width: 1024px) {
+  .lista-tabela { display: block; }
+  .lista-cartoes { display: none; }
+  .paginacao { padding: 12px 16px; margin-top: 0; }
+  .pagina-total { display: inline; }
+}
+
+/* Desktop largo: colunas separadas, como no layout de referência */
+@media (min-width: 1440px) {
+  .col-larga { display: table-cell; }
+  .lista-tabela .so-compacta { display: none; }
+}
+
+/* ===== ABA FREQUÊNCIA ===== */
+.freq-resumo { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+.freq-resumo-item {
+  flex: 1; min-width: 110px; padding: 12px 14px; border: 1px solid var(--gray-100);
+  border-radius: var(--radius); text-align: center;
+}
+.freq-resumo-item b { display: block; font-size: 20px; line-height: 1.2; color: var(--gray-800); }
+.freq-resumo-item span { font-size: 11px; color: var(--gray-600); text-transform: uppercase; letter-spacing: .03em; }
+.freq-resumo-item.alerta { border-color: var(--coral-400); background: var(--coral-50); }
+.freq-resumo-item.alerta b { color: var(--coral-600); }
+
+.freq-mes-titulo { font-size: 12px; font-weight: 700; color: var(--gray-600); margin: 18px 0 8px; text-transform: capitalize; }
+.freq-mes-titulo:first-of-type { margin-top: 0; }
+
+.freq-lista { list-style: none; margin: 0 0 4px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.freq-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid var(--gray-100); border-radius: 8px; }
+.freq-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--gray-300, #d1d5db); }
+.freq-dot.presente { background: var(--color-adra-green-400); }
+.freq-dot.falta { background: var(--coral-600); }
+.freq-dot.justificada { background: var(--amber-600); }
+.freq-data { font-size: 12.5px; color: var(--gray-600); flex: none; }
+.freq-turma { font-size: 13px; font-weight: 600; flex: 1; }
+
+.turmas-aluno-item {
+  margin: 0;
+  padding: 12px 20px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.turmas-aluno-item:last-child {
+  border-bottom: none;
 }
 
 .form-sec-title {
@@ -67,7 +175,6 @@
 
 .form-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 16px;
   margin-bottom: 16px;
 }
@@ -82,25 +189,6 @@
   font-size: 13px;
   font-weight: 600;
   color: #374151;
-}
-
-.input,
-.select {
-  width: 100%;
-  box-sizing: border-box;
-  min-height: 42px;
-  padding: 9px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 7px;
-  background: #fff;
-  font-size: 14px;
-  outline: none;
-}
-
-.input:focus,
-.select:focus {
-  border-color: #64748b;
-  box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.1);
 }
 
 .textarea {
@@ -122,14 +210,6 @@
   height: 15px;
 }
 
-.modal-foot {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 16px 24px;
-  border-top: 1px solid #e5e7eb;
-}
-
 .loading,
 .empty {
   text-align: center;
@@ -137,57 +217,3 @@
   color: #6b7280;
 }
 
-.t-actions {
-  display: flex;
-  gap: 4px;
-}
-
-.t-actions button {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  border-radius: 6px;
-}
-
-.t-actions button:hover {
-  background: #f3f4f6;
-}
-
-.t-actions svg {
-  width: 17px;
-  height: 17px;
-}
-
-.t-actions button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-@media (max-width: 650px) {
-
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-
-  .modal {
-    max-height: 95vh;
-  }
-
-  .modal-body {
-    padding: 18px;
-  }
-
-  .modal-head {
-    padding: 18px;
-  }
-
-  .modal-foot {
-    padding: 14px 18px;
-  }
-
-}

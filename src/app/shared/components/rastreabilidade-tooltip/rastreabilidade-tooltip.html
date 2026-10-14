@@ -1,0 +1,38 @@
+<div class="rastreabilidade-container" tabindex="0" role="region" [attr.aria-label]="textoAcessivel()">
+  <span class="gatilho-icone" title="Ver detalhes de autoria e alterações">
+    <app-icon name="clock" class="icone-relogio" />
+    <span class="gatilho-texto">Rastreabilidade</span>
+  </span>
+
+  <div class="tooltip-conteudo" role="tooltip">
+    <div class="tooltip-header">
+      <app-icon name="shield" class="header-icon" />
+      <span>Rastreabilidade</span>
+    </div>
+
+    @if (criadoPorNome()) {
+      <div class="tooltip-secao">
+        <div class="linha-autor">
+          <span class="rotulo">Lançado por:</span>
+          <span class="nome">{{ criadoPorNome() }}</span>
+        </div>
+        @if (criadoEmFormatado()) {
+          <div class="linha-data">{{ criadoEmFormatado() }}</div>
+        }
+      </div>
+    }
+
+    @if (houveAlteracao() && atualizadoPorNome()) {
+      <div class="tooltip-divisor"></div>
+      <div class="tooltip-secao alterado">
+        <div class="linha-autor">
+          <span class="rotulo">Atualizado por:</span>
+          <span class="nome">{{ atualizadoPorNome() }}</span>
+        </div>
+        @if (atualizadoEmFormatado()) {
+          <div class="linha-data">{{ atualizadoEmFormatado() }}</div>
+        }
+      </div>
+    }
+  </div>
+</div>

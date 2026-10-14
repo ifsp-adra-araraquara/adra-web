@@ -35,8 +35,8 @@ export function avaliarForcaSenha(senha: string): ResultadoForcaSenha {
     0: { nivel: 'fraca', label: 'Muito fraca', cor: '#E24B4A' },
     1: { nivel: 'fraca', label: 'Fraca', cor: '#E24B4A' },
     2: { nivel: 'media', label: 'Média', cor: '#BA7517' },
-    3: { nivel: 'forte', label: 'Forte', cor: '#007B5F' },
-    4: { nivel: 'muito-forte', label: 'Muito forte', cor: '#005A45' }
+    3: { nivel: 'forte', label: 'Forte', cor: 'var(--color-adra-green-400)' },
+    4: { nivel: 'muito-forte', label: 'Muito forte', cor: 'var(--color-adra-green-600)' }
   };
 
   return { score, ...mapa[score], criterios };

@@ -1,13 +1,22 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ResponsavelService } from '../../../core/responsavel.service';
 import { ResponsavelResponseDTO } from '../../../shared/models/responsavel/ResponsavelResponseDTO';
 import { ResponsavelForm } from './form/responsavel-form';
 import { Modal } from '../../../shared/components/modal/modal';
 import { Button } from '../../../shared/components/button/button';
+import { Input } from '../../../shared/components/input/input';
+import { Select, SelectOption } from '../../../shared/components/select/select';
+import { Icon } from '../../../shared/components/icon/icon';
+import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
+import { cliqueEmElementoInterativo } from '../../../shared/utils/clique.util';
+
+type FiltroContato = 'todos' | 'sem-telefone' | 'sem-email';
 
 @Component({
   selector: 'app-responsaveis',
-  imports: [ResponsavelForm, Modal, Button],
+  imports: [DatePipe, TooltipDirective, Icon, FormsModule, ResponsavelForm, Modal, Button, Input, Select],
   templateUrl: './responsaveis.html',
   styleUrl: './responsaveis.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -20,6 +29,54 @@ export class Responsaveis implements OnInit {
 
   mostrarModal = signal(false);
   responsavelSelecionado = signal<ResponsavelResponseDTO | null>(null);
+  responsavelVisualizado = signal<ResponsavelResponseDTO | null>(null);
+
+  /** Sem suporte a filtro/paginação no backend (GET /api/responsaveis é findAll() puro) — filtra em memória. */
+  termoBusca = signal('');
+  filtroContato = signal<FiltroContato>('todos');
+
+  readonly filtroContatoOptions: SelectOption<FiltroContato>[] = [
+    { value: 'todos', label: 'Todos os contatos' },
+    { value: 'sem-telefone', label: 'Sem telefone' },
+    { value: 'sem-email', label: 'Sem e-mail' },
+  ];
+
+  readonly responsaveisFiltrados = computed(() => {
+    const termo = this.termoBusca().trim().toLowerCase();
+    const filtro = this.filtroContato();
+
+    return this.responsaveis().filter((r) => {
+      const combinaTermo =
+        !termo ||
+        r.nomeCompleto.toLowerCase().includes(termo) ||
+        (r.cpf ?? '').includes(termo) ||
+        (r.telefone ?? '').includes(termo);
+
+      const combinaFiltro =
+        filtro === 'todos' ||
+        (filtro === 'sem-telefone' && !r.telefone) ||
+        (filtro === 'sem-email' && !r.email);
+
+      return combinaTermo && combinaFiltro;
+    });
+  });
+
+  readonly temFiltrosAtivos = computed(
+    () => !!this.termoBusca().trim() || this.filtroContato() !== 'todos',
+  );
+
+  onBuscaChange(valor: string): void {
+    this.termoBusca.set(valor);
+  }
+
+  onFiltroContatoChange(valor: FiltroContato): void {
+    this.filtroContato.set(valor);
+  }
+
+  limparFiltros(): void {
+    this.termoBusca.set('');
+    this.filtroContato.set('todos');
+  }
 
   ngOnInit(): void {
     this.carregar();
@@ -51,6 +108,26 @@ export class Responsaveis implements OnInit {
   abrirEdicao(responsavel: ResponsavelResponseDTO): void {
     this.responsavelSelecionado.set(responsavel);
     this.mostrarModal.set(true);
+  }
+
+  abrirVisualizacao(responsavel: ResponsavelResponseDTO): void {
+    this.responsavelVisualizado.set(responsavel);
+  }
+
+  abrirVisualizacaoPelaLinha(evento: MouseEvent, responsavel: ResponsavelResponseDTO): void {
+    if (!cliqueEmElementoInterativo(evento)) {
+      this.abrirVisualizacao(responsavel);
+    }
+  }
+
+  fecharVisualizacao(): void {
+    this.responsavelVisualizado.set(null);
+  }
+
+  editarPelaVisualizacao(): void {
+    const responsavel = this.responsavelVisualizado()!;
+    this.fecharVisualizacao();
+    this.abrirEdicao(responsavel);
   }
 
   aoSalvar(): void {

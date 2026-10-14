@@ -1,0 +1,63 @@
+<section class="status-chamada-page" aria-labelledby="status-chamada-titulo">
+  <header class="page-header">
+    <button type="button" class="btn-voltar" (click)="voltar()">
+      <app-icon name="chevron-left" />
+      Voltar
+    </button>
+    <p class="eyebrow">Pedagógico</p>
+    <h1 id="status-chamada-titulo">Status das chamadas</h1>
+    <p class="page-intro">
+      Aulas do período que já aconteceram e se a chamada foi lançada. Aulas canceladas, remarcadas ou futuras não entram na contagem.
+    </p>
+  </header>
+
+  <section class="panel">
+    <div class="panel-header">
+      <div class="filtros">
+        <div class="field">
+          <label for="filtro-turma">Turma</label>
+          <app-select
+            id="filtro-turma"
+            name="turmaIdFiltro"
+            [options]="turmasOpcoes()"
+            placeholder="Todas as turmas"
+            [(ngModel)]="turmaIdFiltro"
+          />
+        </div>
+        <div class="field">
+          <label for="filtro-inicio">De</label>
+          <input id="filtro-inicio" class="input" type="date" name="dataInicioFiltro" [(ngModel)]="dataInicioFiltro" />
+        </div>
+        <div class="field">
+          <label for="filtro-fim">Até</label>
+          <input id="filtro-fim" class="input" type="date" name="dataFimFiltro" [(ngModel)]="dataFimFiltro" />
+        </div>
+      </div>
+
+      <div class="resumo" role="status" aria-live="polite">
+        <app-badge [status]="StatusChamada.LANCADA" [label]="totalLancadas() + ' lançada(s)'" />
+        <app-badge [status]="StatusChamada.PENDENTE" [label]="totalPendentes() + ' pendente(s)'" />
+      </div>
+    </div>
+
+    @if (carregando()) {
+    <p class="feedback" role="status">Carregando...</p>
+    } @else if (erro()) {
+    <p class="feedback error" role="alert">{{ erro() }}</p>
+    }
+
+    <app-table label="Status das chamadas por aula" [columns]="colunas" [data]="aulas()" [trackBy]="trackAula" [pageSize]="15">
+      <ng-template #rowActions let-aula>
+        <button
+          type="button"
+          [class.btn-icon--primary]="aula.statusChamada === StatusChamada.PENDENTE"
+          [attr.aria-label]="aula.statusChamada === StatusChamada.PENDENTE ? 'Lançar chamada' : 'Ver chamada'"
+          [appTooltip]="aula.statusChamada === StatusChamada.PENDENTE ? 'Lançar chamada' : 'Ver chamada'"
+          (click)="abrirChamada(aula)"
+        >
+          <app-icon [name]="aula.statusChamada === StatusChamada.PENDENTE ? 'check-square' : 'eye'" />
+        </button>
+      </ng-template>
+    </app-table>
+  </section>
+</section>

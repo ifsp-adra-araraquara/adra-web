@@ -19,7 +19,7 @@
 
     @if (isCoordenador()) {
       <app-button size="sm" style="flex-shrink: 0" (click)="abrirModalNovaTurma()">
-        + Nova turma
+        <app-icon name="plus" [size]="16" /> Nova turma
       </app-button>
     }
   </div>
@@ -33,34 +33,29 @@
     </div>
   }
 
-  <div class="toolbar" style="justify-content: space-between; flex-wrap: nowrap">
-    <div style="display: flex; gap: 8px; flex: 1; flex-wrap: nowrap; min-width: 0">
-      <app-input
-        label="Buscar por nome da turma"
-        [hideLabel]="true"
-        placeholder="Buscar por nome da turma…"
-        style="flex: 1; min-width: 0"
-        [ngModel]="filtroNome"
-        (ngModelChange)="onFiltroNomeChange($event)"
-      />
+  <div class="toolbar">
+    <app-input
+      label="Buscar por nome da turma"
+      [hideLabel]="true"
+      placeholder="Buscar por nome da turma…"
+      [ngModel]="filtroNome"
+      (ngModelChange)="onFiltroNomeChange($event)"
+    />
 
-      <app-select
-        style="flex-shrink: 0; width: auto"
-        [ngModel]="filtroTurno"
-        (ngModelChange)="onFiltroTurnoChange($event)"
-        [options]="filtroTurnoOptions"
-      />
+    <app-select
+      [ngModel]="filtroTurno"
+      (ngModelChange)="onFiltroTurnoChange($event)"
+      [options]="filtroTurnoOptions"
+    />
 
-      <app-select
-        style="flex-shrink: 0; width: auto"
-        [ngModel]="filtroStatus"
-        (ngModelChange)="onFiltroStatusChange($event)"
-        [options]="filtroStatusOptions"
-      />
-    </div>
+    <app-select
+      [ngModel]="filtroStatus"
+      (ngModelChange)="onFiltroStatusChange($event)"
+      [options]="filtroStatusOptions"
+    />
   </div>
 
-  <div class="card">
+  <div class="card" data-tour="turmas-tabela">
     <div class="card-head">
       <h3>Turmas cadastradas</h3>
     </div>
@@ -71,54 +66,119 @@
       <p class="muted" style="padding: 20px; text-align: center">{{ erroListar() }}</p>
     } @else {
       <app-table
+        label="Turmas"
         [columns]="colunasTurmas"
         [data]="turmas()"
         [trackBy]="trackByTurmaId"
+        [rowClick]="abrirDrawerTurma"
       >
-        <ng-template #rowActions let-turma>
-          <button type="button" title="Criar várias aulas" (click)="abrirModalCriarAulas(turma)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-              <path d="M12 6v6" />
-              <path d="M9 9h6" />
-            </svg>
-          </button>
-
-          @if (isCoordenador()) {
-            <button type="button" title="Nova aula (avulsa)" (click)="abrirModalNovaAula(turma)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                <line x1="16" y1="2" x2="16" y2="6" />
-                <line x1="8" y1="2" x2="8" y2="6" />
-                <line x1="3" y1="10" x2="21" y2="10" />
-                <line x1="12" y1="14" x2="12" y2="18" />
-                <line x1="10" y1="16" x2="14" y2="16" />
-              </svg>
-            </button>
-
-            <button type="button" title="Editar turma" (click)="abrirModalEditarTurma(turma)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
-            </button>
+        <ng-template #cell let-turma let-column="column">
+          @if (column.key === 'ocupacao') {
+            <div
+              class="freq"
+              role="img"
+              [attr.aria-label]="(turma.quantidadeAlunos ?? 0) + ' de ' + turma.capacidade + ' vagas preenchidas (' + ocupacaoTurma(turma) + '%)'"
+              [class.f-good]="ocupacaoTurma(turma) < 70"
+              [class.f-mid]="ocupacaoTurma(turma) >= 70 && ocupacaoTurma(turma) < 90"
+              [class.f-low]="ocupacaoTurma(turma) >= 90"
+            >
+              <div class="track"><div class="fill" [style.width.%]="ocupacaoTurma(turma)"></div></div>
+              <span class="pct">{{ turma.quantidadeAlunos ?? 0 }}/{{ turma.capacidade }}</span>
+            </div>
           }
+        </ng-template>
 
+        <ng-template #rowActions let-turma>
           <button
             type="button"
-            [title]="turma.ativo ? 'Inativar turma' : 'Reativar turma'"
-            (click)="abrirModalStatus(turma)"
+            class="btn-abrir-turma"
+            aria-label="Abrir turma"
+            appTooltip="Abrir turma"
+            (click)="abrirDrawerTurma(turma)"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2v10" />
-              <path d="M18.4 6.6a9 9 0 1 1-12.8 0" />
-            </svg>
+            <app-icon name="chevron-right" />
           </button>
         </ng-template>
       </app-table>
     }
   </div>
+
+  <app-aulas-turma-modal
+    [turmaId]="turmaAulasSelecionada()?.turmaId ?? 0"
+    [nomeTurma]="turmaAulasSelecionada()?.nomeTurma ?? ''"
+    [aberto]="turmaAulasSelecionada() !== null"
+    [permiteAbrirAula]="ehSociopedagogico()"
+    (fechar)="fecharAulasDaTurma()">
+  </app-aulas-turma-modal>
+
+  <!-- ============================================================
+       DRAWER: ABRIR TURMA (ações agrupadas, uma única entrada por linha)
+       ============================================================ -->
+  @if (turmaDrawerAberta(); as turma) {
+    <app-drawer
+      [open]="true"
+      [title]="turma.nomeTurma"
+      [subtitle]="turma.turno + ' · ' + turma.faixaEtaria"
+      (closed)="fecharDrawerTurma()"
+    >
+      <div
+        class="freq drawer-ocupacao-cabecalho"
+        role="img"
+        [attr.aria-label]="(turma.quantidadeAlunos ?? 0) + ' de ' + turma.capacidade + ' vagas preenchidas (' + ocupacaoTurma(turma) + '%)'"
+        [class.f-good]="ocupacaoTurma(turma) < 70"
+        [class.f-mid]="ocupacaoTurma(turma) >= 70 && ocupacaoTurma(turma) < 90"
+        [class.f-low]="ocupacaoTurma(turma) >= 90"
+      >
+        <div class="track"><div class="fill" [style.width.%]="ocupacaoTurma(turma)"></div></div>
+        <span class="pct">{{ turma.quantidadeAlunos ?? 0 }}/{{ turma.capacidade }} vagas</span>
+      </div>
+
+      <p class="drawer-secao-titulo">Alunos e aulas</p>
+      <div class="drawer-acoes">
+        <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); verAlunos(turma)">
+          <app-icon name="eye" />
+          Ver alunos
+        </button>
+
+        <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); abrirAulasDaTurma(turma)">
+          <app-icon name="list" />
+          Ver aulas
+        </button>
+
+        <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); abrirModalVincularAlunos(turma)">
+          <app-icon name="user-plus" />
+          Vincular alunos
+        </button>
+
+        <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); abrirModalCriarAulas(turma)">
+          <app-icon name="book-plus" />
+          Criar várias aulas
+        </button>
+
+        @if (isCoordenador()) {
+          <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); abrirModalNovaAula(turma)">
+            <app-icon name="calendar-plus" />
+            Nova aula (avulsa)
+          </button>
+        }
+      </div>
+
+      @if (isCoordenador()) {
+        <p class="drawer-secao-titulo">Turma</p>
+        <div class="drawer-acoes">
+          <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); abrirModalEditarTurma(turma)">
+            <app-icon name="edit" />
+            Editar turma
+          </button>
+
+          <button type="button" class="drawer-acao perigo" (click)="fecharDrawerTurma(); abrirModalStatus(turma)">
+            <app-icon name="power" />
+            {{ turma.ativo ? 'Inativar turma' : 'Reativar turma' }}
+          </button>
+        </div>
+      }
+    </app-drawer>
+  }
 </section>
 
 <!-- ============================================================
@@ -133,10 +193,7 @@
   (closed)="fecharModalForm()"
 >
   <div modal-icon class="mh-ico ico-green">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-    </svg>
+    <app-icon name="book" />
   </div>
 
   <div class="tabs-turma" role="tablist">
@@ -166,7 +223,7 @@
 
   @if (abaAtivaForm() === 'turma') {
     @if (erroSalvar()) {
-      <div class="notice-error">{{ erroSalvar() }}</div>
+      <div class="notice notice-error" role="alert">{{ erroSalvar() }}</div>
     }
 
     <app-input
@@ -247,7 +304,7 @@
     </div>
 
     @if (erroAulasTurma()) {
-      <div class="notice-error">{{ erroAulasTurma() }}</div>
+      <div class="notice notice-error" role="alert">{{ erroAulasTurma() }}</div>
     }
 
     <div class="form-row">
@@ -464,11 +521,7 @@
   (closed)="cancelarCriarSemAulas()"
 >
   <div modal-icon class="mh-ico ico-coral">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path
-        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-      />
-    </svg>
+    <app-icon name="alert-triangle" />
   </div>
 
   <p>
@@ -499,16 +552,7 @@
   (closed)="fecharModalStatus()"
 >
   <div modal-icon class="mh-ico" [class]="turmaSelecionadaStatus()?.ativo ? 'ico-coral' : 'ico-green'">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      @if (turmaSelecionadaStatus()?.ativo) {
-        <path
-          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-        />
-      } @else {
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-        <polyline points="22 4 12 14.01 9 11.01" />
-      }
-    </svg>
+    <app-icon [name]="turmaSelecionadaStatus()?.ativo ? 'power' : 'rotate-ccw'" />
   </div>
 
   <p>
@@ -519,10 +563,7 @@
 
   @if (turmaSelecionadaStatus()?.ativo) {
     <div class="notice notice-amber mt-s">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10" />
-        <path d="M12 8v4m0 4h.01" />
-      </svg>
+      <app-icon name="alert-circle" />
       <div>
         <b>Impactos de inativar esta turma:</b>
         <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px">
@@ -533,10 +574,7 @@
     </div>
   } @else {
     <div class="notice notice-info mt-s">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10" />
-        <path d="M12 8v4m0 4h.01" />
-      </svg>
+      <app-icon name="alert-circle" />
       <div>
         <b>Impactos de reativar esta turma:</b>
         <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px">
@@ -570,16 +608,11 @@
   (closed)="fecharModalCriarAulas()"
 >
   <div modal-icon class="mh-ico ico-blue">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-      <path d="M12 6v6" />
-      <path d="M9 9h6" />
-    </svg>
+    <app-icon name="book-plus" />
   </div>
 
   @if (erroSalvarAulas()) {
-    <div class="notice-error">{{ erroSalvarAulas() }}</div>
+    <div class="notice notice-error" role="alert">{{ erroSalvarAulas() }}</div>
   }
 
   <app-input label="Turma ID" [ngModel]="formCriarAulas.turmaId" [disabled]="true" />
@@ -765,18 +798,11 @@
   (closed)="fecharModalNovaAula()"
 >
   <div modal-icon class="mh-ico ico-green">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-      <line x1="12" y1="14" x2="12" y2="18" />
-      <line x1="10" y1="16" x2="14" y2="16" />
-    </svg>
+    <app-icon name="calendar-plus" />
   </div>
 
   @if (erroSalvarNovaAula()) {
-    <div class="notice-error">{{ erroSalvarNovaAula() }}</div>
+    <div class="notice notice-error" role="alert">{{ erroSalvarNovaAula() }}</div>
   }
 
   <div class="form-row">
@@ -890,6 +916,71 @@
       (click)="salvarNovaAula()"
     >
       Salvar aula
+    </app-button>
+  </ng-template>
+</app-modal>
+
+<!-- ============================================================
+     MODAL: VINCULAR ALUNOS À TURMA
+     ============================================================ -->
+<app-modal
+  [(open)]="mostrarModalVincularAlunos"
+  [title]="'Vincular alunos — ' + (turmaVincularAlunos()?.nomeTurma ?? '')"
+  [size]="'lg'"
+  (closed)="fecharModalVincularAlunos()"
+>
+  <div modal-icon class="mh-ico ico-green">
+    <app-icon name="user-plus" />
+  </div>
+
+  <p class="page-intro" style="margin: 0 0 12px">
+    Selecione os assistidos ativos que devem ser vinculados a esta turma. Um assistido já
+    vinculado a outra turma é transferido — o vínculo anterior é encerrado automaticamente.
+  </p>
+
+  @if (erroVincularAlunos()) {
+    <div class="notice notice-error" role="alert">{{ erroVincularAlunos() }}</div>
+  }
+
+  <app-input
+    label="Buscar assistido"
+    [hideLabel]="true"
+    placeholder="Buscar por nome…"
+    style="margin-bottom: 10px"
+    [ngModel]="buscaCandidato()"
+    (ngModelChange)="buscaCandidato.set($event)"
+  />
+
+  @if (carregandoCandidatos()) {
+    <p class="muted" style="padding: 20px; text-align: center">Carregando…</p>
+  } @else {
+    <div class="lista-candidatos" style="max-height: 320px; overflow-y: auto; border: 1px solid var(--gray-100); border-radius: 10px">
+      @for (assistido of candidatosFiltrados(); track assistido.assistidoId) {
+        <label
+          style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--gray-100); cursor: pointer"
+        >
+          <input
+            type="checkbox"
+            [checked]="estaSelecionado(assistido.assistidoId)"
+            (change)="toggleSelecaoAssistido(assistido.assistidoId)"
+          />
+          <span style="flex: 1">{{ assistido.nomeCompleto }}</span>
+          @if (assistido.nomeTurma) {
+            <span class="muted" style="font-size: 12px">já em: {{ assistido.nomeTurma }}</span>
+          }
+        </label>
+      } @empty {
+        <p class="empty" style="padding: 20px">Nenhum assistido disponível para vincular.</p>
+      }
+    </div>
+  }
+
+  <ng-template #footer>
+    <app-button variant="secondary" [disabled]="vinculandoAlunos()" (click)="fecharModalVincularAlunos()">
+      Cancelar
+    </app-button>
+    <app-button [loading]="vinculandoAlunos()" (click)="confirmarVincularAlunos()">
+      Vincular selecionados
     </app-button>
   </ng-template>
 </app-modal>

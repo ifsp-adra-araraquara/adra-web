@@ -1,20 +1,16 @@
 @if (aula) {
-<div class="overlay" role="presentation" (click)="fecharModal()">
-  <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="aula-modal-titulo" (click)="$event.stopPropagation()">
-    <div class="panel-header">
-      <div>
-        <h2 id="aula-modal-titulo">{{ aula.nomeTurma || 'Aula' }}{{ aula.titulo ? ' — ' + aula.titulo : '' }}</h2>
-        <span class="subtle">
-          {{ aula.dataAula }}{{ aula.horarioInicio && aula.horarioFim ? ' · ' + aula.horarioInicio + ' - ' + aula.horarioFim : '' }}
-        </span>
+<app-modal
+  [open]="true"
+  [title]="(aula.nomeTurma || 'Aula') + (aula.titulo ? ' — ' + aula.titulo : '')"
+  [subtitle]="aula.dataAula + (aula.horarioInicio && aula.horarioFim ? ' · ' + aula.horarioInicio + ' - ' + aula.horarioFim : '')"
+  (closed)="fecharModal()"
+>
+    @if (!mostrarDefinirCampos()) {
+      <div modal-actions class="acoes-cabecalho">
+        <app-button variant="secondary" size="sm" (click)="verGradeTurma()">Ver grade da turma</app-button>
+        <app-button variant="secondary" size="sm" (click)="abrirAulaCompleta()">Ver aula completa</app-button>
       </div>
-      <div class="panel-header-acoes">
-        @if (!mostrarDefinirCampos()) {
-          <app-button variant="secondary" size="sm" (click)="abrirAulaCompleta()">Ver aula completa</app-button>
-        }
-        <button type="button" class="close-button" (click)="fecharModal()" aria-label="Fechar">X</button>
-      </div>
-    </div>
+    }
 
     @if (situacao(); as s) {
       <div class="badge-situacao-wrap"><app-badge [status]="s" /></div>
@@ -94,13 +90,6 @@
           [(ngModel)]="formDefinirCampos.observacoes"
         ></textarea>
       </div>
-
-      <div class="dialog-actions">
-        <app-button variant="secondary" (click)="fecharModal()">Cancelar</app-button>
-        <app-button [loading]="salvandoDefinirCampos()" (click)="salvarDefinirCampos()">
-          Salvar e continuar
-        </app-button>
-      </div>
     </div>
     } @else {
 
@@ -112,8 +101,92 @@
         <p class="feedback error" role="alert">{{ erro() }}</p>
         }
 
-        @if (mostrarFormularioChamada()) {
-        <!-- ================= SOCIOPEDAGÓGICO: chamada ================= -->
+        @if (mostrarAvisoForaDoDia()) {
+        <!-- ================= SOCIOPEDAGÓGICO: aula de outro dia, sem acesso à chamada (US-67) ================= -->
+        <p class="feedback" role="status">
+          A chamada só pode ser realizada no dia da aula ({{ aula.dataAula }}).
+        </p>
+        } @else if (mostrarAvisoChamadaFeita()) {
+        <!-- ================= SOCIOPEDAGÓGICO/COORDENADOR: chamada já feita, travada ================= -->
+        <div class="pres-counts">
+          <div class="pc pc-p"><b>{{ totalPresentes() }}</b><span>Presentes</span></div>
+          <div class="pc pc-f"><b>{{ totalFaltas() }}</b><span>Faltas</span></div>
+          <div class="pc pc-fj"><b>{{ totalFaltasJustificadas() }}</b><span>Faltas justificadas</span></div>
+        </div>
+
+        <div class="aviso-chamada-feita">
+          <span>Esta chamada já foi realizada. Quer alterar as presenças lançadas?</span>
+          <app-button variant="secondary" size="sm" (click)="desbloquearEdicao()">Alterar chamada</app-button>
+        </div>
+
+        <ul class="lista-alunos">
+          @for (aluno of alunos(); track aluno.assistidoId) {
+          <li class="linha-aluno">
+            <div class="nome-aluno-wrap">
+              <span
+                class="aluno-avatar"
+                aria-hidden="true"
+                [class.presente]="aluno.statusPresenca === StatusPresenca.PRESENTE"
+                [class.falta]="aluno.statusPresenca === StatusPresenca.FALTA"
+                [class.justificada]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+              >{{ iniciaisAluno(aluno.nomeCompleto) }}</span>
+              <span class="nome-aluno">{{ aluno.nomeCompleto }}</span>
+              @if (aluno.historicoRecente.length > 0) {
+                <span class="faixa-dias" aria-hidden="true">
+                  @for (dia of faixaHistoricoDe(aluno); track dia.dataAula) {
+                    <span
+                      class="faixa-dia"
+                      [class.presente]="dia.statusPresenca === StatusPresenca.PRESENTE"
+                      [class.falta]="dia.statusPresenca === StatusPresenca.FALTA"
+                      [class.justificada]="dia.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+                    ></span>
+                  }
+                </span>
+              }
+              @if (faltasConsecutivasDe(aluno) >= limiarFaltasConsecutivas) {
+                <span class="alerta-faltas" role="status">
+                  <app-icon name="alert-triangle" />
+                  {{ faltasConsecutivasDe(aluno) }} faltas seguidas
+                </span>
+              }
+              @if (aluno.criadoPorNome || aluno.atualizadoPorNome) {
+                @defer (on hover; prefetch on idle) {
+                  <app-rastreabilidade-tooltip
+                    [criadoPorNome]="aluno.criadoPorNome"
+                    [criadoEm]="aluno.criadoEm"
+                    [atualizadoPorNome]="aluno.atualizadoPorNome"
+                    [atualizadoEm]="aluno.atualizadoEm"
+                  />
+                } @placeholder {
+                  <span class="rastreabilidade-gatilho-placeholder" title="Ver detalhes de autoria">
+                    <app-icon name="clock" class="icone-relogio" />
+                    <span class="gatilho-texto">Rastreabilidade</span>
+                  </span>
+                }
+              }
+            </div>
+            @if (aluno.statusPresenca) {
+            <span
+              class="mini-badge"
+              [class.presente]="aluno.statusPresenca === StatusPresenca.PRESENTE"
+              [class.falta]="aluno.statusPresenca === StatusPresenca.FALTA"
+              [class.justificada]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+            >
+              @switch (aluno.statusPresenca) {
+                @case (StatusPresenca.PRESENTE) { Presente }
+                @case (StatusPresenca.FALTA) { Falta }
+                @case (StatusPresenca.FALTA_JUSTIFICADA) { Falta justificada }
+              }
+            </span>
+            }
+          </li>
+          } @empty {
+          <li class="empty">Nenhum aluno ativo nesta turma.</li>
+          }
+        </ul>
+
+        } @else if (mostrarFormularioChamada()) {
+        <!-- ================= SOCIOPEDAGÓGICO/COORDENADOR: chamada (lançar ou corrigir — US-67) ================= -->
         <div class="pres-counts">
           <div class="pc pc-p"><b>{{ totalPresentes() }}</b><span>Presentes</span></div>
           <div class="pc pc-f"><b>{{ totalFaltas() }}</b><span>Faltas</span></div>
@@ -126,57 +199,162 @@
 
         <ul class="lista-alunos">
           @for (aluno of alunos(); track aluno.assistidoId) {
-          <li class="linha-aluno">
-            <span class="nome-aluno">{{ aluno.nomeCompleto }}</span>
-            <div class="presenca-botoes">
-              <button
-                type="button"
-                class="presenca-btn presente"
-                [class.ativo]="aluno.statusPresenca === StatusPresenca.PRESENTE"
-                (click)="marcarPresenca(aluno, StatusPresenca.PRESENTE)"
-                title="Presente"
-                aria-label="Marcar presente"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              </button>
-              <button
-                type="button"
-                class="presenca-btn falta"
-                [class.ativo]="aluno.statusPresenca === StatusPresenca.FALTA"
-                (click)="marcarPresenca(aluno, StatusPresenca.FALTA)"
-                title="Falta"
-                aria-label="Marcar falta"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-              <button
-                type="button"
-                class="presenca-btn justificada"
-                [class.ativo]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
-                (click)="marcarPresenca(aluno, StatusPresenca.FALTA_JUSTIFICADA)"
-                title="Falta justificada"
-                aria-label="Marcar falta justificada"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
-              </button>
+          <li class="linha-aluno linha-aluno-chamada">
+            <div class="linha-aluno-topo">
+              <div class="nome-aluno-wrap">
+                <span
+                  class="aluno-avatar"
+                  aria-hidden="true"
+                  [class.presente]="aluno.statusPresenca === StatusPresenca.PRESENTE"
+                  [class.falta]="aluno.statusPresenca === StatusPresenca.FALTA"
+                  [class.justificada]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+                >{{ iniciaisAluno(aluno.nomeCompleto) }}</span>
+                <span class="nome-aluno">{{ aluno.nomeCompleto }}</span>
+                @if (aluno.historicoRecente.length > 0) {
+                  <span class="faixa-dias" aria-hidden="true">
+                    @for (dia of faixaHistoricoDe(aluno); track dia.dataAula) {
+                      <span
+                        class="faixa-dia"
+                        [class.presente]="dia.statusPresenca === StatusPresenca.PRESENTE"
+                        [class.falta]="dia.statusPresenca === StatusPresenca.FALTA"
+                        [class.justificada]="dia.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+                      ></span>
+                    }
+                  </span>
+                }
+                @if (faltasConsecutivasDe(aluno) >= limiarFaltasConsecutivas) {
+                  <span class="alerta-faltas" role="status">
+                    <app-icon name="alert-triangle" />
+                    {{ faltasConsecutivasDe(aluno) }} faltas seguidas
+                  </span>
+                }
+                @if (aluno.criadoPorNome || aluno.atualizadoPorNome) {
+                  @defer (on hover; prefetch on idle) {
+                    <app-rastreabilidade-tooltip
+                      [criadoPorNome]="aluno.criadoPorNome"
+                      [criadoEm]="aluno.criadoEm"
+                      [atualizadoPorNome]="aluno.atualizadoPorNome"
+                      [atualizadoEm]="aluno.atualizadoEm"
+                    />
+                  } @placeholder {
+                    <span class="rastreabilidade-gatilho-placeholder" title="Ver detalhes de autoria">
+                      <app-icon name="clock" class="icone-relogio" />
+                      <span class="gatilho-texto">Rastreabilidade</span>
+                    </span>
+                  }
+                }
+              </div>
+              <div class="presenca-botoes presenca-botoes-pill">
+                <button
+                  type="button"
+                  class="presenca-btn presente"
+                  [class.ativo]="aluno.statusPresenca === StatusPresenca.PRESENTE"
+                  [attr.aria-pressed]="aluno.statusPresenca === StatusPresenca.PRESENTE"
+                  (click)="marcarPresenca(aluno, StatusPresenca.PRESENTE)"
+                >
+                  <app-icon name="check" />
+                  Presente
+                </button>
+                <button
+                  type="button"
+                  class="presenca-btn falta"
+                  [class.ativo]="aluno.statusPresenca === StatusPresenca.FALTA"
+                  [attr.aria-pressed]="aluno.statusPresenca === StatusPresenca.FALTA"
+                  (click)="marcarPresenca(aluno, StatusPresenca.FALTA)"
+                >
+                  <app-icon name="x" />
+                  Falta
+                </button>
+                <button
+                  type="button"
+                  class="presenca-btn justificada"
+                  [class.ativo]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+                  [attr.aria-pressed]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+                  (click)="marcarPresenca(aluno, StatusPresenca.FALTA_JUSTIFICADA)"
+                >
+                  <app-icon name="alert-circle" />
+                  Justificada
+                </button>
+              </div>
             </div>
+
+            @if (aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA) {
+            <div class="falta-justificada-detalhe">
+              <select
+                class="select"
+                [ngModel]="aluno.motivoFalta"
+                (ngModelChange)="atualizarMotivoFalta(aluno, $event)"
+              >
+                <option [ngValue]="null" disabled>Motivo da falta…</option>
+                @for (opcao of motivoFaltaOptions; track opcao.value) {
+                <option [ngValue]="opcao.value">{{ opcao.label }}</option>
+                }
+              </select>
+
+              @if (aluno.motivoFalta === MotivoFalta.OUTRO) {
+              <textarea
+                placeholder="Descreva o motivo (obrigatório)"
+                rows="2"
+                [ngModel]="aluno.observacao"
+                (ngModelChange)="atualizarObservacaoFalta(aluno, $event)"
+              ></textarea>
+              }
+            </div>
+            }
           </li>
           } @empty {
           <li class="empty">Nenhum aluno ativo nesta turma.</li>
           }
         </ul>
 
-        <div class="dialog-actions">
-          <app-button variant="secondary" (click)="fecharModal()">Cancelar</app-button>
-          <app-button [loading]="salvando()" (click)="salvarChamada()">Salvar chamada</app-button>
-        </div>
-
         } @else {
-        <!-- ================= OFICINEIRO / COORDENADOR, ou aula já finalizada: somente leitura ================= -->
+        <!-- ================= OFICINEIRO: somente leitura ================= -->
         <ul class="lista-alunos">
           @for (aluno of alunos(); track aluno.assistidoId) {
           <li class="linha-aluno">
-            <span class="nome-aluno">{{ aluno.nomeCompleto }}</span>
+            <div class="nome-aluno-wrap">
+              <span
+                class="aluno-avatar"
+                aria-hidden="true"
+                [class.presente]="aluno.statusPresenca === StatusPresenca.PRESENTE"
+                [class.falta]="aluno.statusPresenca === StatusPresenca.FALTA"
+                [class.justificada]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+              >{{ iniciaisAluno(aluno.nomeCompleto) }}</span>
+              <span class="nome-aluno">{{ aluno.nomeCompleto }}</span>
+              @if (aluno.historicoRecente.length > 0) {
+                <span class="faixa-dias" aria-hidden="true">
+                  @for (dia of faixaHistoricoDe(aluno); track dia.dataAula) {
+                    <span
+                      class="faixa-dia"
+                      [class.presente]="dia.statusPresenca === StatusPresenca.PRESENTE"
+                      [class.falta]="dia.statusPresenca === StatusPresenca.FALTA"
+                      [class.justificada]="dia.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+                    ></span>
+                  }
+                </span>
+              }
+              @if (faltasConsecutivasDe(aluno) >= limiarFaltasConsecutivas) {
+                <span class="alerta-faltas" role="status">
+                  <app-icon name="alert-triangle" />
+                  {{ faltasConsecutivasDe(aluno) }} faltas seguidas
+                </span>
+              }
+              @if (aluno.criadoPorNome || aluno.atualizadoPorNome) {
+                @defer (on hover; prefetch on idle) {
+                  <app-rastreabilidade-tooltip
+                    [criadoPorNome]="aluno.criadoPorNome"
+                    [criadoEm]="aluno.criadoEm"
+                    [atualizadoPorNome]="aluno.atualizadoPorNome"
+                    [atualizadoEm]="aluno.atualizadoEm"
+                  />
+                } @placeholder {
+                  <span class="rastreabilidade-gatilho-placeholder" title="Ver detalhes de autoria">
+                    <app-icon name="clock" class="icone-relogio" />
+                    <span class="gatilho-texto">Rastreabilidade</span>
+                  </span>
+                }
+              }
+            </div>
 
             <div class="linha-aluno-acoes">
               @if (aluno.statusPresenca) {
@@ -197,16 +375,12 @@
               @if (ehOficineiroOuCoordenador()) {
               <button
                 type="button"
-                class="icon-button"
-                title="Registrar ocorrência"
+                class="btn-icon btn-icon--warning"
+                appTooltip="Registrar ocorrência"
                 aria-label="Registrar ocorrência"
                 (click)="registrarOcorrencia(aluno)"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
-                  <line x1="12" y1="9" x2="12" y2="13"/>
-                  <line x1="12" y1="17" x2="12.01" y2="17"/>
-                </svg>
+                <app-icon name="alert-triangle" />
               </button>
               }
             </div>
@@ -218,6 +392,16 @@
         }
       }
     }
-  </section>
-</div>
+
+    @if (mostrarDefinirCampos() || (mostrarFormularioChamada() && !carregando())) {
+      <ng-template #footer>
+        <app-button variant="secondary" (click)="fecharModal()">Cancelar</app-button>
+        @if (mostrarDefinirCampos()) {
+          <app-button [loading]="salvandoDefinirCampos()" (click)="salvarDefinirCampos()">Salvar e continuar</app-button>
+        } @else {
+          <app-button [loading]="salvando()" (click)="salvarChamada()">{{ textoBotaoSalvar() }}</app-button>
+        }
+      </ng-template>
+    }
+</app-modal>
 }

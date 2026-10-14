@@ -1,5 +1,6 @@
 import { SituacaoAula } from '../enum/SituacaoAula';
 import { StatusAula } from '../enum/StatusAula';
+import { StatusChamada } from '../enum/StatusChamada';
 import { StatusGeral } from '../enum/StatusGeral';
 import { StatusPresenca } from '../enum/StatusPresenca';
 
@@ -28,6 +29,10 @@ const BADGE_STATUS_MAP: Record<string, BadgeStatusInfo> = {
   [SituacaoAula.FINALIZADA]: { label: 'Finalizada', variant: 'green' },
   // SituacaoAula.CANCELADA e StatusAula.CANCELADA são o mesmo literal 'CANCELADA' —
   // já coberto pela entrada de StatusAula.CANCELADA acima.
+
+  [StatusChamada.LANCADA]: { label: 'Lançada', variant: 'green' },
+  // StatusChamada.PENDENTE e SituacaoAula.PENDENTE são o mesmo literal 'PENDENTE' —
+  // já coberto pela entrada de SituacaoAula.PENDENTE acima.
 };
 
 export function resolveBadgeStatus(

@@ -1,27 +1,40 @@
-<aside class="sidebar">
+<aside id="app-sidebar" class="sidebar" [class.open]="open()" [class.collapsed]="collapsed()">
   <div class="sidebar-head">
-    <div class="brand-mark" aria-hidden="true">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2 4 6v6c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V6l-8-4Z"/>
-        <path d="m9 12 2 2 4-4"/>
-      </svg>
+    <div class="brand">
+      <app-brand-logo variant="white" [size]="26" [markOnly]="true" aria-hidden="true" />
+      <div class="sidebar-logo">
+        ADRA
+        <small>Araraquara</small>
+      </div>
     </div>
-    <div class="sidebar-logo">
-      ADRA
-      <small>Araraquara</small>
-    </div>
+    <button
+      type="button"
+      class="collapse-btn"
+      aria-controls="app-sidebar"
+      [attr.aria-expanded]="!collapsed()"
+      [attr.aria-label]="collapsed() ? 'Expandir menu' : 'Recolher menu'"
+      (click)="collapsed.set(!collapsed())">
+      <app-icon name="chevron-left" class="chevron" [size]="16" />
+    </button>
   </div>
 
-  <nav class="nav">
+  <nav class="nav" data-tour="sidebar-nav">
     @for (grupo of navAgrupado(); track grupo.secao) {
       <div class="nav-section">{{ grupo.secao }}</div>
 
       @for (item of grupo.itens; track item.codigo) {
         <button
+          type="button"
           class="nav-item"
           [class.active]="auth.currentModule() === item.codigo"
+          [attr.aria-label]="item.nomeExibicao"
+          [attr.data-tour]="'nav-' + item.codigo"
+          [appTooltip]="collapsed() ? item.nomeExibicao : ''"
           (click)="selecionarModulo(item.codigo)">
-          {{ item.nomeExibicao }}
+          <span class="nav-item-icon" aria-hidden="true">
+            <app-icon [name]="iconeModulo(item.codigo)" />
+          </span>
+          <span class="nav-item-label">{{ item.nomeExibicao }}</span>
         </button>
       }
     }
@@ -33,8 +46,14 @@
       <b>{{ auth.currentUser()?.name }}</b>
       <span>{{ auth.currentUser()?.role }}</span>
     </div>
-    <button class="icon-btn" (click)="logout()" title="Sair">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+    <button
+      type="button"
+      class="icon-btn"
+      appTooltip="Sair"
+      (click)="logout()"
+      aria-label="Sair"
+    >
+      <app-icon name="log-out" />
     </button>
   </div>
 </aside>

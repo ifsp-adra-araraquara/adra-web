@@ -2,16 +2,15 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/auth.service';
-import { BrandLogo } from '../../../../shared/components/brand-logo/brand-logo';
+import { AuthShell } from '../../../../shared/components/auth-shell/auth-shell';
 import { Input } from '../../../../shared/components/input/input';
 import { Button } from '../../../../shared/components/button/button';
 
 @Component({
   selector: 'app-solicitar-senha',
   standalone: true,
-  imports: [FormsModule, RouterLink, BrandLogo, Input, Button],
-  templateUrl: './solicitar-senha.html',
-  styleUrl: './solicitar-senha.css'
+  imports: [FormsModule, RouterLink, AuthShell, Input, Button],
+  templateUrl: './solicitar-senha.html'
 })
 export class SolicitarSenha {
   private auth = inject(AuthService);

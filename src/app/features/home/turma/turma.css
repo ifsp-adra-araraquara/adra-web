@@ -9,8 +9,6 @@
 .form-row {
   display: grid;
 
-  grid-template-columns: 1fr 1fr;
-
   gap: 22px;
 
   margin-bottom: 20px;
@@ -31,43 +29,6 @@
   font-weight: 600;
 
   color: #374151;
-}
-
-.input,
-textarea {
-  width: 100%;
-
-  box-sizing: border-box;
-
-  min-height: 46px;
-
-  padding: 12px 14px;
-
-  border: 1px solid #d1d5db;
-
-  border-radius: 8px;
-
-  background: #fff;
-
-  font-size: 14px;
-
-  outline: none;
-}
-
-.input:focus,
-textarea:focus {
-  border-color: #64748b;
-
-  box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.1);
-}
-
-.input:disabled,
-textarea:disabled {
-  background: #f3f4f6;
-
-  color: #9ca3af;
-
-  cursor: not-allowed;
 }
 
 textarea {
@@ -120,8 +81,8 @@ textarea {
 }
 
 .tab-btn.active {
-  color: #16a34a;
-  border-bottom-color: #16a34a;
+  color: var(--color-adra-green-600);
+  border-bottom-color: var(--color-brand);
 }
 
 .tab-alert {
@@ -143,31 +104,82 @@ textarea {
 }
 
 /* =========================
-   ERRO
+   DRAWER "ABRIR TURMA"
+   Painel lateral que substitui os ~7 ícones soltos por linha na tabela —
+   ver app-drawer (shared/components/drawer).
    ========================= */
 
-.notice-error {
-  padding: 12px 14px;
-
-  margin-bottom: 16px;
-
-  border-radius: 7px;
-
-  background: #fef2f2;
-
-  border: 1px solid #fecaca;
-
-  color: #b91c1c;
-
-  font-size: 13px;
+.drawer-ocupacao-cabecalho {
+  margin-bottom: 20px;
 }
 
-/* =========================
-   RESPONSIVO
-   ========================= */
+.drawer-secao-titulo {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray-400);
+  font-weight: 600;
+  margin: 18px 0 8px;
+}
+.drawer-secao-titulo:first-child {
+  margin-top: 0;
+}
 
-@media (max-width: 650px) {
-  .form-row {
-    grid-template-columns: 1fr;
-  }
+.drawer-acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.drawer-acao {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: var(--radius-sm, 8px);
+  background: transparent;
+  color: var(--gray-800);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  transition: background .15s, color .15s;
+}
+.drawer-acao:hover {
+  background: var(--color-brand-soft);
+  color: var(--color-adra-green-600);
+}
+.drawer-acao:active {
+  background: var(--color-adra-green-100);
+}
+.drawer-acao app-icon {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm, 8px);
+  background: var(--color-brand-soft);
+  color: var(--color-brand);
+  transition: background .15s;
+}
+.drawer-acao:hover app-icon {
+  background: #fff;
+}
+.drawer-acao.perigo {
+  color: var(--coral-600);
+}
+.drawer-acao.perigo app-icon {
+  background: var(--coral-50);
+  color: currentColor;
+}
+.drawer-acao.perigo:hover {
+  background: var(--coral-50);
+  color: var(--coral-600);
+}
+.drawer-acao.perigo:hover app-icon {
+  background: #fff;
 }
