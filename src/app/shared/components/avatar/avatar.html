@@ -1,0 +1,7 @@
+@if (url(); as src) {
+  <img class="avatar" [src]="src" [alt]="'Foto de ' + nome()" loading="lazy" decoding="async" (error)="aoFalharImagem()" />
+} @else {
+  <span class="avatar avatar--iniciais" role="img" [attr.aria-label]="nome() ? 'Sem foto: ' + nome() : 'Sem foto'">
+    {{ iniciais() }}
+  </span>
+}

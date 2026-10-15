@@ -57,19 +57,19 @@
   flex-wrap: wrap;
 }
 
+/* Foto do aluno com anel na cor do status (sem foto: iniciais pintadas pelo status). */
 .aluno-avatar {
   flex: none;
-  width: 28px; height: 28px;
-  display: grid; place-items: center;
+  display: inline-flex;
   border-radius: 50%;
+  padding: 2px;
   background: var(--gray-200);
-  color: var(--gray-700, #374151);
-  font-size: 11px;
-  font-weight: 700;
+  --avatar-bg: var(--gray-200);
+  --avatar-fg: var(--gray-700, #374151);
 }
-.aluno-avatar.presente { background: var(--color-adra-green-400); color: #fff; }
-.aluno-avatar.falta { background: var(--coral-600); color: #fff; }
-.aluno-avatar.justificada { background: var(--amber-600); color: #fff; }
+.aluno-avatar.presente { background: var(--color-adra-green-400); --avatar-bg: var(--color-adra-green-400); --avatar-fg: #fff; }
+.aluno-avatar.falta { background: var(--coral-600); --avatar-bg: var(--coral-600); --avatar-fg: #fff; }
+.aluno-avatar.justificada { background: var(--amber-600); --avatar-bg: var(--amber-600); --avatar-fg: #fff; }
 
 /* Seletor de presença como pill coesa — escopado, não mexe em `.presenca-btn` global (usado também em aula-completa.html). */
 .presenca-botoes-pill {

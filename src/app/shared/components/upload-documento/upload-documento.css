@@ -1,0 +1,53 @@
+:host { display: block; }
+
+.upload-doc { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+
+.upload-doc__cabecalho { display: flex; flex-direction: column; gap: 2px; }
+.upload-doc__label { font-weight: 600; font-size: 13.5px; }
+.upload-doc__obrigatorio { color: var(--coral-600, #c0392b); margin-left: 2px; }
+.upload-doc__dica { font-size: 12.5px; color: var(--gray-600, #54585a); }
+
+.upload-doc__lista { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.upload-doc__item { position: relative; }
+
+.upload-doc__miniatura {
+  display: block;
+  width: 120px;
+  height: 84px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--gray-200, #d5d7d8);
+  background: var(--gray-50, #f4f5f5);
+}
+.upload-doc__miniatura--pdf {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gray-600, #54585a);
+}
+
+.upload-doc__remover {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--gray-800, #2c2f33);
+  color: #fff;
+  cursor: pointer;
+}
+.upload-doc__remover:focus-visible { outline: 2px solid var(--color-brand, #007b5f); outline-offset: 2px; }
+
+.upload-doc__input { display: none; }
+
+.upload-doc__ajuda:empty { display: none; }
+.upload-doc__ajuda { margin: 0; font-size: 12.5px; }
+.upload-doc__erro { color: var(--coral-600, #c0392b); font-weight: 600; }

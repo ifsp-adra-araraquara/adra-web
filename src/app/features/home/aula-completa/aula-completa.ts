@@ -27,6 +27,7 @@ import { AulaResponseDTO } from '../../../shared/models/aula/AulaResponseDTO';
 import { Button } from '../../../shared/components/button/button';
 import { RastreabilidadeTooltip } from '../../../shared/components/rastreabilidade-tooltip/rastreabilidade-tooltip';
 import { Icon } from '../../../shared/components/icon/icon';
+import { Avatar } from '../../../shared/components/avatar/avatar';
 
 type AbaAulaCompleta = 'alunos' | 'materiais';
 
@@ -44,7 +45,7 @@ type AbaAulaCompleta = 'alunos' | 'materiais';
 @Component({
   selector: 'app-aula-completa',
   standalone: true,
-  imports: [Icon, FormsModule, Button, RastreabilidadeTooltip],
+  imports: [Icon, FormsModule, Button, RastreabilidadeTooltip, Avatar],
   templateUrl: './aula-completa.html',
   styleUrl: './aula-completa.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -47,6 +47,17 @@ h1 { margin: 0 0 6px; font-size: 20px; }
   box-shadow: var(--shadow-sm);
 }
 
+.aluno-cabecalho { display: flex; align-items: center; gap: 10px; min-width: 0; }
+/* Foto com anel na cor do status de presença (sem foto: iniciais pintadas pelo status) */
+.aluno-foto {
+  flex: none; display: inline-flex; border-radius: 50%; padding: 2px;
+  background: var(--gray-200);
+  --avatar-bg: var(--gray-200); --avatar-fg: var(--gray-700, #374151);
+}
+.aluno-foto.presente { background: var(--color-adra-green-400); --avatar-bg: var(--color-adra-green-400); --avatar-fg: #fff; }
+.aluno-foto.falta { background: var(--coral-600); --avatar-bg: var(--coral-600); --avatar-fg: #fff; }
+.aluno-foto.justificada { background: var(--amber-600); --avatar-bg: var(--amber-600); --avatar-fg: #fff; }
+
 .aluno-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .aluno-nome { font-weight: 700; font-size: 14px; color: var(--gray-800, #1f2937); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .aluno-sub { font-size: 12px; color: var(--gray-600); }

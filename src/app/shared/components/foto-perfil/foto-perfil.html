@@ -1,0 +1,60 @@
+<div class="foto-perfil" [class.foto-perfil--invalida]="invalido() && !arquivo()">
+  <label class="foto-perfil__avatar" [for]="inputId" [attr.aria-busy]="processando()" aria-hidden="true">
+    @if (previewUrl(); as url) {
+      <img [src]="url" alt="Prévia da foto de perfil" />
+    } @else if (entidadeIdAtual(); as id) {
+      <app-avatar [entidadeId]="id" [nome]="nomeAtual()" [size]="88" />
+    } @else {
+      <app-icon name="camera" [size]="28" />
+    }
+    @if (processando()) {
+      <span class="foto-perfil__carregando" aria-hidden="true"></span>
+    }
+  </label>
+
+  <div class="foto-perfil__info">
+    <span class="foto-perfil__label">
+      {{ label() }}
+      @if (obrigatorio()) {
+        <span class="foto-perfil__obrigatorio" aria-hidden="true">*</span>
+      }
+    </span>
+
+    <div class="foto-perfil__acoes">
+      <!-- accept="image/*" sem capture: no celular o sistema oferece câmera OU galeria -->
+      <input
+        #seletor
+        class="foto-perfil__input"
+        type="file"
+        accept="image/*"
+        tabindex="-1"
+        aria-hidden="true"
+        [id]="inputId"
+        (change)="aoSelecionar($event)"
+      />
+      <app-button size="sm" [loading]="processando()" (click)="seletor.click()">
+        <app-icon name="camera" [size]="14" />
+        {{ arquivo() || entidadeIdAtual() ? 'Trocar foto' : 'Adicionar foto' }}
+      </app-button>
+
+      @if (arquivo()) {
+        <app-button variant="secondary" size="sm" (click)="remover()">
+          @if (entidadeIdAtual()) {
+            <app-icon name="rotate-ccw" [size]="14" /> Manter a atual
+          } @else {
+            <app-icon name="trash" [size]="14" /> Remover
+          }
+        </app-button>
+      }
+    </div>
+
+    <!-- Só erros: a compressão acontece em silêncio (o botão já mostra o carregando) -->
+    <p class="foto-perfil__ajuda" aria-live="polite">
+      @if (erro()) {
+        <span class="foto-perfil__erro" role="alert">{{ erro() }}</span>
+      } @else if (invalido() && !arquivo()) {
+        <span class="foto-perfil__erro">A foto de perfil é obrigatória.</span>
+      }
+    </p>
+  </div>
+</div>

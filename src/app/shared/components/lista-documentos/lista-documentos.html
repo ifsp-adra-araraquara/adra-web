@@ -1,0 +1,32 @@
+@if (carregando()) {
+  <p class="lista-doc__estado">Carregando documentos...</p>
+} @else if (erro()) {
+  <p class="lista-doc__estado lista-doc__estado--erro" role="alert">{{ erro() }}</p>
+} @else if (documentos().length === 0) {
+  <p class="lista-doc__estado">{{ vazio() }}</p>
+} @else {
+  <ul class="lista-doc" role="list">
+    @for (doc of documentos(); track doc.arquivo.arquivoId; let i = $index) {
+      <li>
+        <a
+          class="lista-doc__item"
+          [href]="doc.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          [attr.aria-label]="'Abrir ' + rotulo() + ' ' + (i + 1) + ' em nova aba'"
+          (click)="abrir($event, doc)"
+        >
+          @if (doc.ehImagem) {
+            <img class="lista-doc__miniatura" [src]="doc.url" [alt]="rotulo() + ' ' + (i + 1)" loading="lazy" />
+          } @else {
+            <span class="lista-doc__miniatura lista-doc__miniatura--pdf" aria-hidden="true">
+              <app-icon name="file-text" [size]="26" />
+              PDF
+            </span>
+          }
+          <span class="lista-doc__abrir"><app-icon name="eye" [size]="13" /> Abrir</span>
+        </a>
+      </li>
+    }
+  </ul>
+}

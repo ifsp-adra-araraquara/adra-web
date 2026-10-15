@@ -217,3 +217,12 @@
   color: #6b7280;
 }
 
+
+/* Foto de perfil no modal de novo assistido */
+.foto-novo { margin-bottom: 16px; }
+
+/* Avatar + nome (tabela, cartões e ficha) */
+.pessoa { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.pessoa-texto { min-width: 0; }
+.ficha-identidade { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.ficha-identidade .cell-sub { margin: 0; }

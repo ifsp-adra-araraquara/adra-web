@@ -129,7 +129,9 @@
                 [class.presente]="aluno.statusPresenca === StatusPresenca.PRESENTE"
                 [class.falta]="aluno.statusPresenca === StatusPresenca.FALTA"
                 [class.justificada]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
-              >{{ iniciaisAluno(aluno.nomeCompleto) }}</span>
+              >
+                <app-avatar [entidadeId]="aluno.assistidoId" [nome]="aluno.nomeCompleto" [size]="36" />
+              </span>
               <span class="nome-aluno">{{ aluno.nomeCompleto }}</span>
               @if (aluno.historicoRecente.length > 0) {
                 <span class="faixa-dias" aria-hidden="true">
@@ -208,7 +210,9 @@
                   [class.presente]="aluno.statusPresenca === StatusPresenca.PRESENTE"
                   [class.falta]="aluno.statusPresenca === StatusPresenca.FALTA"
                   [class.justificada]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
-                >{{ iniciaisAluno(aluno.nomeCompleto) }}</span>
+                >
+                  <app-avatar [entidadeId]="aluno.assistidoId" [nome]="aluno.nomeCompleto" [size]="36" />
+                </span>
                 <span class="nome-aluno">{{ aluno.nomeCompleto }}</span>
                 @if (aluno.historicoRecente.length > 0) {
                   <span class="faixa-dias" aria-hidden="true">
@@ -319,7 +323,9 @@
                 [class.presente]="aluno.statusPresenca === StatusPresenca.PRESENTE"
                 [class.falta]="aluno.statusPresenca === StatusPresenca.FALTA"
                 [class.justificada]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
-              >{{ iniciaisAluno(aluno.nomeCompleto) }}</span>
+              >
+                <app-avatar [entidadeId]="aluno.assistidoId" [nome]="aluno.nomeCompleto" [size]="36" />
+              </span>
               <span class="nome-aluno">{{ aluno.nomeCompleto }}</span>
               @if (aluno.historicoRecente.length > 0) {
                 <span class="faixa-dias" aria-hidden="true">
