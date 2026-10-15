@@ -58,6 +58,16 @@
     <div class="alunos-grid">
       @for (aluno of alunos(); track aluno.assistidoId) {
       <article class="aluno-card">
+        <div class="aluno-cabecalho">
+        <span
+          class="aluno-foto"
+          aria-hidden="true"
+          [class.presente]="aluno.statusPresenca === StatusPresenca.PRESENTE"
+          [class.falta]="aluno.statusPresenca === StatusPresenca.FALTA"
+          [class.justificada]="aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+        >
+          <app-avatar [entidadeId]="aluno.assistidoId" [nome]="aluno.nomeCompleto" [size]="44" />
+        </span>
         <div class="aluno-info">
           <span class="aluno-nome-wrap">
             <span class="aluno-nome">{{ aluno.nomeCompleto }}</span>
@@ -78,6 +88,7 @@
             }
           </span>
           <span class="aluno-sub">{{ aulaAtual.nomeTurma || '-' }}</span>
+        </div>
         </div>
         <div class="presenca-botoes">
           <button

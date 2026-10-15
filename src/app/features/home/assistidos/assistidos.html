@@ -120,10 +120,15 @@
               @for (assistido of assistidos(); track assistido.assistidoId) {
                 <tr class="linha-clicavel" (click)="abrirFichaPelaLinha($event, assistido)">
                   <td>
-                    <span class="cell-name">{{ assistido.nomeCompleto }}</span>
-                    <span class="cell-sub so-compacta">
-                      {{ calcularIdade(assistido.dataNascimento) }} anos · {{ cpfMascarado(assistido.cpf) }}
-                    </span>
+                    <div class="pessoa">
+                      <app-avatar [entidadeId]="assistido.assistidoId" [nome]="assistido.nomeCompleto" [size]="36" />
+                      <div class="pessoa-texto">
+                        <span class="cell-name">{{ assistido.nomeCompleto }}</span>
+                        <span class="cell-sub so-compacta">
+                          {{ calcularIdade(assistido.dataNascimento) }} anos · {{ cpfMascarado(assistido.cpf) }}
+                        </span>
+                      </div>
+                    </div>
                   </td>
                   <td class="col-larga nowrap">{{ calcularIdade(assistido.dataNascimento) }} anos</td>
                   <td class="col-larga nowrap cpf">{{ cpfMascarado(assistido.cpf) }}</td>
@@ -168,9 +173,12 @@
         @for (assistido of assistidos(); track assistido.assistidoId) {
           <li class="assistido-cartao linha-clicavel" (click)="abrirFichaPelaLinha($event, assistido)">
             <div class="cartao-topo">
-              <div class="cartao-identidade">
-                <span class="cell-name">{{ assistido.nomeCompleto }}</span>
-                <span class="cell-sub">{{ calcularIdade(assistido.dataNascimento) }} anos · {{ cpfMascarado(assistido.cpf) }}</span>
+              <div class="pessoa">
+                <app-avatar [entidadeId]="assistido.assistidoId" [nome]="assistido.nomeCompleto" [size]="44" />
+                <div class="cartao-identidade">
+                  <span class="cell-name">{{ assistido.nomeCompleto }}</span>
+                  <span class="cell-sub">{{ calcularIdade(assistido.dataNascimento) }} anos · {{ cpfMascarado(assistido.cpf) }}</span>
+                </div>
               </div>
               <app-action-menu
                 [label]="'Ações de ' + assistido.nomeCompleto"
@@ -288,6 +296,23 @@
         }
 
         <p class="form-sec-title">Dados pessoais</p>
+
+        <app-foto-perfil
+          class="foto-novo"
+          [(arquivo)]="fotoPerfilNovoAssistido"
+          [obrigatorio]="true"
+          [invalido]="tentouSalvarNovo()"
+        />
+
+        <app-upload-documento
+          class="foto-novo"
+          label="RG ou CPF"
+          dica="Uma foto do documento ou PDF."
+          [(arquivos)]="documentosIdentidadeNovo"
+          [maximo]="1"
+          [obrigatorio]="true"
+          [invalido]="tentouSalvarNovo()"
+        />
 
         <app-input
           label="Nome completo"
@@ -486,10 +511,17 @@
       <app-icon name="user" />
     </div>
 
-    <p class="cell-sub">
-      {{ calcularIdade(assistidoSelecionado()!.dataNascimento) }} anos ·
-      <app-badge [status]="assistidoSelecionado()!.status" />
-    </p>
+    <div class="ficha-identidade">
+      <app-avatar
+        [entidadeId]="assistidoSelecionado()!.assistidoId"
+        [nome]="assistidoSelecionado()!.nomeCompleto"
+        [size]="72"
+      />
+      <p class="cell-sub">
+        {{ calcularIdade(assistidoSelecionado()!.dataNascimento) }} anos ·
+        <app-badge [status]="assistidoSelecionado()!.status" />
+      </p>
+    </div>
 
     <!-- ABAS -->
     <div class="tabs">
@@ -588,6 +620,16 @@
           {{ assistidoSelecionado()!.observacoes || 'Nenhuma observação registrada.' }}
         </div>
       </div>
+
+      @if (podeVerDocumentos()) {
+        <p class="form-sec-title mt-s">RG ou CPF</p>
+        <app-lista-documentos
+          [entidadeId]="assistidoSelecionado()!.assistidoId"
+          [categoria]="CategoriaArquivo.DOCUMENTO_IDENTIDADE"
+          rotulo="RG ou CPF"
+          vazio="Nenhum documento enviado. Para adicionar, use Editar."
+        />
+      }
     }
 
     <!-- ==================== ABA: FAMÍLIA ==================== -->
@@ -1119,6 +1161,13 @@
     } @else {
       <p class="form-sec-title">Dados pessoais</p>
 
+      <app-foto-perfil
+        class="foto-novo"
+        [(arquivo)]="fotoPerfilEdicao"
+        [entidadeIdAtual]="assistidoEmEdicao()!.assistidoId"
+        [nomeAtual]="assistidoEmEdicao()!.nomeCompleto"
+      />
+
       <app-input
         label="Nome completo"
         placeholder="Nome do assistido"
@@ -1168,6 +1217,20 @@
         >
         </textarea>
       </div>
+
+      <p class="form-sec-title">RG ou CPF</p>
+      <app-lista-documentos
+        class="foto-novo"
+        [entidadeId]="assistidoEmEdicao()!.assistidoId"
+        [categoria]="CategoriaArquivo.DOCUMENTO_IDENTIDADE"
+        rotulo="RG ou CPF"
+      />
+      <app-upload-documento
+        label="Trocar documento"
+        dica="O novo arquivo substitui o atual ao salvar."
+        [(arquivos)]="documentosIdentidadeEdicao"
+        [maximo]="1"
+      />
     }
 
     <ng-template #footer>

@@ -44,6 +44,13 @@ import { Icon } from '../../../shared/components/icon/icon';
 import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 import { ActionMenu, ActionMenuItem } from '../../../shared/components/action-menu/action-menu';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
+import { FotoPerfil } from '../../../shared/components/foto-perfil/foto-perfil';
+import { Avatar } from '../../../shared/components/avatar/avatar';
+import { UploadDocumento } from '../../../shared/components/upload-documento/upload-documento';
+import { ListaDocumentos } from '../../../shared/components/lista-documentos/lista-documentos';
+import { ArquivoService } from '../../../core/arquivo.service';
+import { EntidadeArquivo } from '../../../shared/enum/EntidadeArquivo';
+import { CategoriaArquivo } from '../../../shared/enum/CategoriaArquivo';
 
 interface ResponsavelPendente extends ResponsavelRequestDTO {
   parentesco: string;
@@ -55,7 +62,7 @@ interface ResponsavelPendente extends ResponsavelRequestDTO {
 @Component({
   selector: 'app-assistidos',
   standalone: true,
-  imports: [ActionMenu, TooltipDirective, Icon, CommonModule, FormsModule, Select, Input, Button, Modal, Badge, AulasTurmaModal],
+  imports: [ActionMenu, TooltipDirective, Icon, CommonModule, FormsModule, Select, Input, Button, Modal, Badge, AulasTurmaModal, FotoPerfil, Avatar, UploadDocumento, ListaDocumentos],
   templateUrl: './assistidos.html',
   styleUrl: './assistidos.css',
 })
@@ -66,8 +73,10 @@ export class Assistidos implements OnInit {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly chamadaService = inject(ChamadaService);
+  private readonly arquivoService = inject(ArquivoService);
 
   StatusGeral = StatusGeral;
+  readonly CategoriaArquivo = CategoriaArquivo;
 
   private readonly apiAssistidos = `${environment.apiUrl}/api/assistidos`;
   private readonly apiResponsaveis = `${environment.apiUrl}/api/responsaveis`;
@@ -79,6 +88,11 @@ export class Assistidos implements OnInit {
   readonly podeEditarCadastro = computed(() => {
     const perfil = this.auth.currentProfile();
     return perfil === Role.COORD || perfil === Role.SOCIO;
+  });
+  /** Documentos pessoais (RG/CPF) — mesmos perfis que o back libera em /api/arquivos (sem oficineiro). */
+  readonly podeVerDocumentos = computed(() => {
+    const perfil = this.auth.currentProfile();
+    return perfil === Role.ADMIN || perfil === Role.COORD || perfil === Role.SOCIO;
   });
 
   /* Listagem e Paginação */
@@ -144,6 +158,15 @@ export class Assistidos implements OnInit {
   alertaDuplicidade = signal(false);
   novoAssistido: AssistidoRequestDTO = this.assistidoVazio();
   assistidoIdCriado = signal<number | null>(null);
+  /**
+   * Foto de perfil já comprimida no navegador (WebP, 512x512).
+   * Por enquanto só fica no front — o envio ao back entra junto com o módulo de arquivos.
+   */
+  fotoPerfilNovoAssistido = signal<File | null>(null);
+  /** Foto do RG ou CPF — obrigatória, 1 arquivo. */
+  documentosIdentidadeNovo = signal<File[]>([]);
+  /** Liga o destaque vermelho do campo de foto depois da 1ª tentativa de salvar sem ela. */
+  tentouSalvarNovo = signal(false);
   turmasAtivas = computed(() => this.turmas().filter((turma) => turma.ativo));
 
   /** Turmas do filtro restritas à oficina escolhida (quando houver). */
@@ -189,6 +212,10 @@ export class Assistidos implements OnInit {
   erroSalvarEdicao = signal<string | null>(null);
   assistidoEmEdicao = signal<AssistidoResponseDTO | null>(null);
   formEdicaoAssistido: AssistidoRequestDTO = this.assistidoVazio();
+  /** Nova foto escolhida na edição (null = mantém a atual). */
+  fotoPerfilEdicao = signal<File | null>(null);
+  /** Novo arquivo do RG/CPF na edição (vazio = mantém o atual). */
+  documentosIdentidadeEdicao = signal<File[]>([]);
 
   /* Responsáveis já salvos e vinculados */
   responsaveisVinculados = signal<ResponsavelPendente[]>([]);
@@ -513,6 +540,9 @@ export class Assistidos implements OnInit {
     this.erroSalvar.set(null);
     this.erroResponsavel.set(null);
     this.alertaDuplicidade.set(false);
+    this.fotoPerfilNovoAssistido.set(null);
+    this.documentosIdentidadeNovo.set([]);
+    this.tentouSalvarNovo.set(false);
     this.mostrarModalNovo.set(true);
   }
 
@@ -540,6 +570,8 @@ export class Assistidos implements OnInit {
       // Responsáveis se editam na aba "Família".
     };
     this.erroSalvarEdicao.set(null);
+    this.fotoPerfilEdicao.set(null);
+    this.documentosIdentidadeEdicao.set([]);
     this.mostrarModalEditar.set(true);
   }
 
@@ -547,6 +579,8 @@ export class Assistidos implements OnInit {
     this.mostrarModalEditar.set(false);
     this.assistidoEmEdicao.set(null);
     this.erroSalvarEdicao.set(null);
+    this.fotoPerfilEdicao.set(null);
+    this.documentosIdentidadeEdicao.set([]);
   }
 
   atualizarCampoEdicaoAssistido(campo: keyof AssistidoRequestDTO, valor: any): void {
@@ -586,6 +620,46 @@ export class Assistidos implements OnInit {
         ),
       );
 
+      const novaFoto = this.fotoPerfilEdicao();
+      if (novaFoto) {
+        try {
+          // O back substitui a foto anterior (FOTO_PERFIL é única por assistido).
+          await this.arquivoService.enviar(
+            EntidadeArquivo.ASSISTIDO,
+            assistido.assistidoId,
+            CategoriaArquivo.FOTO_PERFIL,
+            novaFoto,
+          );
+          this.arquivoService.invalidarFotoPerfil(EntidadeArquivo.ASSISTIDO, assistido.assistidoId);
+        } catch (erroFoto) {
+          // Dados já foram salvos; só a foto falhou — mantém o modal aberto para tentar de novo.
+          console.error('Erro ao enviar foto de perfil:', erroFoto);
+          this.erroSalvarEdicao.set(
+            'Dados salvos, mas a foto não pôde ser enviada: ' +
+              mensagemErro(erroFoto as HttpErrorResponse, 'tente novamente.'),
+          );
+          this.salvandoEdicao.set(false);
+          this.carregarAssistidos();
+          return;
+        }
+      }
+
+      const novosDocumentos = this.documentosIdentidadeEdicao();
+      if (novosDocumentos.length > 0) {
+        try {
+          await this.substituirDocumentosIdentidade(assistido.assistidoId, novosDocumentos);
+        } catch (erroDoc) {
+          console.error('Erro ao trocar RG/CPF:', erroDoc);
+          this.erroSalvarEdicao.set(
+            'Dados salvos, mas o RG/CPF não pôde ser trocado: ' +
+              mensagemErro(erroDoc as HttpErrorResponse, 'tente novamente.'),
+          );
+          this.salvandoEdicao.set(false);
+          this.carregarAssistidos();
+          return;
+        }
+      }
+
       this.salvandoEdicao.set(false);
       this.fecharModalEditar();
       this.carregarAssistidos();
@@ -596,6 +670,32 @@ export class Assistidos implements OnInit {
         mensagemErro(erro, 'Não foi possível salvar as alterações.'),
       );
       this.salvandoEdicao.set(false);
+    }
+  }
+
+  /**
+   * Troca o RG/CPF: envia os novos e só depois remove os antigos — se o envio
+   * falhar no meio, o assistido nunca fica sem documento.
+   */
+  private async substituirDocumentosIdentidade(assistidoId: number, novos: File[]): Promise<void> {
+    const antigos = await this.arquivoService.listar(
+      EntidadeArquivo.ASSISTIDO,
+      assistidoId,
+      CategoriaArquivo.DOCUMENTO_IDENTIDADE,
+    );
+    const enviados: number[] = [];
+    for (const documento of novos) {
+      const salvo = await this.arquivoService.enviar(
+        EntidadeArquivo.ASSISTIDO,
+        assistidoId,
+        CategoriaArquivo.DOCUMENTO_IDENTIDADE,
+        documento,
+      );
+      enviados.push(salvo.arquivoId);
+    }
+    // Arquivo idêntico a um antigo volta com o mesmo id (o back deduplica): esse não é removido.
+    for (const antigo of antigos.filter((a) => !enviados.includes(a.arquivoId))) {
+      await this.arquivoService.remover(antigo.arquivoId);
     }
   }
 
@@ -638,6 +738,14 @@ export class Assistidos implements OnInit {
   }
 
   private validarAssistidoAntesSalvar(): string | null {
+    if (!this.fotoPerfilNovoAssistido()) {
+      return 'Adicione uma foto de perfil do assistido.';
+    }
+
+    if (this.documentosIdentidadeNovo().length === 0) {
+      return 'Adicione a foto do RG ou CPF do assistido.';
+    }
+
     if (!this.novoAssistido.nomeCompleto.trim() || !this.novoAssistido.dataNascimento) {
       return 'Preencha nome completo e data de nascimento.';
     }
@@ -715,6 +823,8 @@ export class Assistidos implements OnInit {
       return;
     }
 
+    this.tentouSalvarNovo.set(true);
+
     // Responsável preenchido sem clicar em "Salvar responsável" entra automaticamente.
     if (this.novoResponsavel.nomeCompleto.trim()) {
       const erroResponsavel = this.validarResponsavel(this.novoResponsavel);
@@ -770,7 +880,17 @@ export class Assistidos implements OnInit {
     };
 
     try {
-      await firstValueFrom(this.http.post<AssistidoResponseDTO>(this.apiAssistidos, payload));
+      // multipart: 'dados' (JSON do assistido) + 'foto' + 'documentos' (já comprimidos no navegador).
+      // O back cria o assistido e salva os arquivos na mesma transação.
+      const formData = new FormData();
+      // 'dados' precisa ir como application/json para o @RequestPart do Spring desserializar
+      formData.append('dados', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+      formData.append('foto', this.fotoPerfilNovoAssistido()!);
+      // Mesmo nome de parte repetido = List<MultipartFile> no @RequestPart("documentos")
+      this.documentosIdentidadeNovo().forEach((documento) => formData.append('documentos', documento));
+
+      // Sem header Content-Type manual: o navegador monta o boundary do multipart sozinho.
+      await firstValueFrom(this.http.post<AssistidoResponseDTO>(this.apiAssistidos, formData));
 
       this.salvando.set(false);
       this.fecharModalNovoAssistido();
