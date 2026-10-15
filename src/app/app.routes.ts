@@ -22,11 +22,6 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'convite/:token',
-    loadComponent: () =>
-      import('./features/convite/definir-senha-convite').then((m) => m.DefinirSenhaConvite),
-  },
-  {
     path: 'acesso-negado',
     loadComponent: () =>
       import('./features/acesso-negado/acesso-negado').then((m) => m.AcessoNegado),

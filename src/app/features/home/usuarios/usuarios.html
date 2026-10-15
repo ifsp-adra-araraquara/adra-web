@@ -9,7 +9,6 @@
       <h3>Usuários</h3>
 
       <div class="right">
-        <app-button variant="secondary" size="sm" (click)="abrirModalSenha()">Definir senha</app-button>
         <app-button size="sm" (click)="abrirModalCadastro()"><app-icon name="plus" [size]="16" /> Novo usuário</app-button>
       </div>
     </div>
@@ -45,6 +44,13 @@
       </div>
     </div>
 
+    @if (avisoGeral()) {
+      <div class="notice notice-info" style="margin: 0 24px 16px 24px; display: flex; justify-content: space-between; align-items: center;" role="status">
+        <span>{{ avisoGeral() }}</span>
+        <button type="button" class="btn-icon btn-icon--ghost" aria-label="Fechar aviso" (click)="avisoGeral.set(null)"><app-icon name="x" /></button>
+      </div>
+    }
+
     @if (erroGeral()) {
       <div class="notice notice-amber" style="margin: 0 24px 16px 24px; display: flex; justify-content: space-between; align-items: center;" role="alert">
         <span>{{ erroGeral() }}</span>
@@ -79,13 +85,27 @@
                 </td>
 
                 <td>
-                  <app-badge [status]="usuario.ativo" />
+                  @if (isConvitePendente(usuario)) {
+                    <app-badge variant="amber" label="Convite pendente" />
+                  } @else {
+                    <app-badge [status]="usuario.ativo" />
+                  }
                 </td>
 
                 <td>
                   <div class="t-actions">
+                    @if (isConvitePendente(usuario)) {
+                      <button type="button" aria-label="Reenviar convite" appTooltip="Reenviar convite" (click)="reenviarConvite(usuario)">
+                        <app-icon name="mail" />
+                      </button>
+                    }
+
                     <button type="button" aria-label="Editar usuário" appTooltip="Editar usuário" (click)="abrirModalEditarUsuario(usuario)">
                       <app-icon name="edit" />
+                    </button>
+
+                    <button type="button" aria-label="Redefinir senha" appTooltip="Redefinir senha" (click)="abrirModalRedefinicao(usuario)">
+                      <app-icon name="lock" />
                     </button>
 
                     <button
@@ -149,10 +169,49 @@
   <app-cadastro-usuario />
 </app-modal>
 
-<!-- MODAL: DEFINIR SENHA (componente do Pedrão, aberto por cima) -->
-<app-modal [(open)]="mostrarModalSenha" title="Definir senha" (closed)="fecharModalSenha()">
-  <app-definir-senha />
-</app-modal>
+<!-- MODAL: REDEFINIR SENHA -->
+@if (usuarioRedefinicao(); as usuario) {
+  <app-modal [open]="true" title="Redefinir senha" [subtitle]="'Usuário: ' + usuario.nomeCompleto" (closed)="fecharModalRedefinicao()">
+    @if (redefinicao(); as resultado) {
+      @if (resultado.emailEnviado) {
+        <div class="notice notice-info" role="status">
+          <app-icon name="check" />
+          <div>E-mail enviado para {{ usuario.email }}. O mesmo link está abaixo.</div>
+        </div>
+      } @else {
+        <div class="notice notice-amber" role="alert">
+          <app-icon name="alert-circle" />
+          <div>O e-mail não saiu. Copie o link e envie para {{ usuario.email }} por outro canal.</div>
+        </div>
+      }
+
+      <app-input label="Link de redefinição" name="linkRedefinicao" [readonly]="true" [ngModel]="resultado.link" />
+    } @else {
+      <p>
+        Um e-mail com o link de redefinição será enviado para <strong>{{ usuario.email }}</strong>,
+        e o mesmo link fica disponível aqui para você copiar.
+      </p>
+      <p>Links gerados antes deixam de valer. O novo expira em 24 horas.</p>
+    }
+
+    @if (erroRedefinicao()) {
+      <div class="notice notice-amber" role="alert">
+        <app-icon name="alert-circle" />
+        <div>{{ erroRedefinicao() }}</div>
+      </div>
+    }
+
+    <ng-template #footer>
+      @if (redefinicao()) {
+        <app-button variant="secondary" type="button" (click)="fecharModalRedefinicao()">Fechar</app-button>
+        <app-button type="button" (click)="copiarLink()">{{ linkCopiado() ? 'Link copiado' : 'Copiar link' }}</app-button>
+      } @else {
+        <app-button variant="secondary" type="button" (click)="fecharModalRedefinicao()">Cancelar</app-button>
+        <app-button type="button" [loading]="gerandoRedefinicao()" (click)="gerarRedefinicao()">Enviar e gerar link</app-button>
+      }
+    </ng-template>
+  </app-modal>
+}
 
 <!-- MODAL: EDITAR USUÁRIO -->
 @if (mostrarModalEdicao()) {
