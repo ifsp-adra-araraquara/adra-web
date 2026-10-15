@@ -12,9 +12,9 @@ import { PaginaResponse } from '../../../shared/models/PaginaResponse';
 import { UsuarioRequest } from '../../../shared/models/usuarios/UsuarioRequest';
 import { UsuarioResponse } from '../../../shared/models/usuarios/UsuarioResponse';
 import { UsuarioStatusRequest } from '../../../shared/models/usuarios/UsuarioStatusRequest';
+import { RedefinicaoSenhaResponse } from '../../../shared/models/usuarios/RedefinicaoSenhaResponse';
 
 import { CadastroUsuario } from '../../usuarios/cadastro/cadastro-usuario';
-import { DefinirSenha } from '../../usuarios/senha/definir-senha';
 import { AuthService } from '../../../core/auth.service';
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Input } from '../../../shared/components/input/input';
@@ -27,7 +27,7 @@ import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 
 @Component({
   selector: 'app-usuarios',
-  imports: [TooltipDirective, Icon, FormsModule, CadastroUsuario, DefinirSenha, Select, Input, Button, Modal, Badge],
+  imports: [TooltipDirective, Icon, FormsModule, CadastroUsuario, Select, Input, Button, Modal, Badge],
   templateUrl: './usuarios.html',
   styleUrl: './usuarios.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,6 +38,7 @@ export class Usuarios implements OnInit {
 
   usuarioLogadoId = computed(() => this.authService.currentUserResponse()?.usuarioId ?? null);
   erroGeral = signal<string | null>(null);
+  avisoGeral = signal<string | null>(null);
 
   Role = Role;
   labels = ROLE_LABELS;
@@ -95,10 +96,16 @@ export class Usuarios implements OnInit {
 
   // Modais dos componentes do Pedrão, abertos por cima
   mostrarModalCadastro = signal(false);
-  mostrarModalSenha = signal(false);
   mostrarModalStatus = signal(false);
   usuarioSelecionadoStatus = signal<UsuarioResponse | null>(null);
   acaoStatus = signal<'inativar' | 'reativar'>('inativar');
+
+  // Modal de redefinição de senha
+  usuarioRedefinicao = signal<UsuarioResponse | null>(null);
+  redefinicao = signal<RedefinicaoSenhaResponse | null>(null);
+  gerandoRedefinicao = signal(false);
+  erroRedefinicao = signal<string | null>(null);
+  linkCopiado = signal(false);
 
   ngOnInit(): void {
     this.carregarUsuarios();
@@ -172,13 +179,65 @@ export class Usuarios implements OnInit {
     this.carregarUsuarios();
   }
 
-  /* ===== Modal de definir senha (componente do Pedrão) ===== */
-  abrirModalSenha(): void {
-    this.mostrarModalSenha.set(true);
+  /* ===== Convite ===== */
+  isConvitePendente(usuario: UsuarioResponse): boolean {
+    return usuario.ativo && !usuario.ultimoLogin;
   }
 
-  fecharModalSenha(): void {
-    this.mostrarModalSenha.set(false);
+  reenviarConvite(usuario: UsuarioResponse): void {
+    this.erroGeral.set(null);
+    this.avisoGeral.set(null);
+
+    this.http.post<void>(`${this.apiUrl}/${usuario.usuarioId}/convite`, null).subscribe({
+      next: () => this.avisoGeral.set(`Convite reenviado para ${usuario.email}.`),
+      error: (erro) => this.erroGeral.set(erro.error?.mensagem ?? 'Não foi possível reenviar o convite.'),
+    });
+  }
+
+  /* ===== Modal de redefinição de senha ===== */
+  abrirModalRedefinicao(usuario: UsuarioResponse): void {
+    this.usuarioRedefinicao.set(usuario);
+    this.redefinicao.set(null);
+    this.erroRedefinicao.set(null);
+    this.linkCopiado.set(false);
+  }
+
+  fecharModalRedefinicao(): void {
+    this.usuarioRedefinicao.set(null);
+  }
+
+  gerarRedefinicao(): void {
+    const usuario = this.usuarioRedefinicao();
+    if (!usuario || this.gerandoRedefinicao()) return;
+
+    this.erroRedefinicao.set(null);
+    this.gerandoRedefinicao.set(true);
+
+    this.http
+      .post<RedefinicaoSenhaResponse>(`${this.apiUrl}/${usuario.usuarioId}/redefinicao-senha`, null)
+      .subscribe({
+        next: (resposta) => {
+          this.redefinicao.set(resposta);
+          this.gerandoRedefinicao.set(false);
+          this.copiarLink();
+        },
+        error: (erro) => {
+          this.erroRedefinicao.set(erro.error?.mensagem ?? 'Não foi possível gerar o link de redefinição.');
+          this.gerandoRedefinicao.set(false);
+        },
+      });
+  }
+
+  async copiarLink(): Promise<void> {
+    const link = this.redefinicao()?.link;
+    if (!link) return;
+
+    try {
+      await navigator.clipboard.writeText(link);
+      this.linkCopiado.set(true);
+    } catch {
+      this.linkCopiado.set(false);
+    }
   }
 
   /* ===== Modal de edição ===== */
