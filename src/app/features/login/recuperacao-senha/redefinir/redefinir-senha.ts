@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/auth.service';
 import { AuthShell } from '../../../../shared/components/auth-shell/auth-shell';
 import { SenhaForca } from '../../../../shared/components/senha-forca/senha-forca';
@@ -18,6 +18,11 @@ import { supabase } from '../../../../core/supabase.client';
 export class RedefinirSenha implements OnInit {
   private auth = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  private tokenHash = this.route.snapshot.queryParamMap.get('token_hash');
+  private tipo: 'recovery' | 'invite' =
+    this.route.snapshot.queryParamMap.get('type') === 'invite' ? 'invite' : 'recovery';
 
   linkValido = signal<boolean | null>(null); // null = ainda verificando
   novaSenha = '';
@@ -27,6 +32,11 @@ export class RedefinirSenha implements OnInit {
   concluido = signal(false);
 
   async ngOnInit(): Promise<void> {
+    // So valida no envio: abrir a pagina (ex.: preview do WhatsApp) nao gasta o link.
+    if (this.tokenHash) {
+      this.linkValido.set(true);
+      return;
+    }
     const { data } = await supabase.auth.getSession();
     this.linkValido.set(!!data.session);
   }
@@ -46,6 +56,13 @@ export class RedefinirSenha implements OnInit {
 
     this.carregando.set(true);
     try {
+      if (this.tokenHash) {
+        if (!(await this.auth.validarLinkEmail(this.tokenHash, this.tipo))) {
+          this.linkValido.set(false);
+          return;
+        }
+        this.tokenHash = null;
+      }
       await this.auth.redefinirSenha(this.novaSenha);
       this.concluido.set(true);
       setTimeout(() => this.router.navigate(['/login']), 2500);
