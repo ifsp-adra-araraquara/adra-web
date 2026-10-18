@@ -31,6 +31,7 @@
   @switch (aba()) {
   @case ('alunos') {
   <section class="panel-alunos">
+    <app-aniversario-cards [alunos]="alunos()" [dataAula]="aula()?.dataAula" />
     @if (podeEditarChamada() && mostrarAvisoForaDoDia()) {
     <p class="feedback" role="status">
       A chamada só pode ser realizada no dia da aula ({{ aulaAtual.dataAula }}).
@@ -55,8 +56,13 @@
     }
     }
 
+    <div class="ordem-nome" role="group" aria-label="Ordem dos alunos">
+      <span>Ordem:</span>
+      <button type="button" [class.ativo]="ordemNome() === 'az'" [attr.aria-pressed]="ordemNome() === 'az'" (click)="ordemNome.set('az')">A–Z</button>
+      <button type="button" [class.ativo]="ordemNome() === 'za'" [attr.aria-pressed]="ordemNome() === 'za'" (click)="ordemNome.set('za')">Z–A</button>
+    </div>
     <div class="alunos-grid">
-      @for (aluno of alunos(); track aluno.assistidoId) {
+      @for (aluno of alunosOrdenados(); track aluno.assistidoId) {
       <article class="aluno-card">
         <div class="aluno-cabecalho">
         <span
@@ -71,6 +77,9 @@
         <div class="aluno-info">
           <span class="aluno-nome-wrap">
             <span class="aluno-nome">{{ aluno.nomeCompleto }}</span>
+            @if (aluno.podeIrEmboraSozinho) {
+              <app-badge variant="blue" label="Vai embora sozinho" [plain]="true" />
+            }
             @if (aluno.criadoPorNome || aluno.atualizadoPorNome) {
               @defer (on hover; prefetch on idle) {
                 <app-rastreabilidade-tooltip
@@ -88,6 +97,46 @@
             }
           </span>
           <span class="aluno-sub">{{ aulaAtual.nomeTurma || '-' }}</span>
+          @if (aluno.historicoRecente.length > 0 || aluno.aulasRealizadas) {
+            <span class="aluno-historico">
+              @if (aluno.historicoRecente.length > 0) {
+                <span class="faixa-dias" aria-label="Últimas aulas: verde presente, vermelho falta, amarelo justificada">
+                  @for (dia of faixaHistoricoDe(aluno); track dia.dataAula) {
+                    <span
+                      class="faixa-dia"
+                      [class.presente]="dia.statusPresenca === StatusPresenca.PRESENTE"
+                      [class.falta]="dia.statusPresenca === StatusPresenca.FALTA"
+                      [class.justificada]="dia.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
+                      [title]="(dia.dataAula | date: 'dd/MM') + ' · ' + (dia.statusPresenca === StatusPresenca.PRESENTE ? 'Presente' : dia.statusPresenca === StatusPresenca.FALTA ? 'Falta' : 'Justificada')"
+                    ></span>
+                  }
+                </span>
+              }
+              @if (aluno.aulasRealizadas) {
+                <span class="resumo-freq">
+                  <b [class.resumo-freq--baixa]="(aluno.frequenciaPercentual ?? 100) < 75">{{ aluno.frequenciaPercentual }}%</b>
+                  · {{ aluno.aulasRealizadas }}/{{ aluno.aulasPrevistas }} aulas
+                </span>
+              }
+            </span>
+          }
+          @if (justificadasConsecutivasDe(aluno) >= limiarJustificadasConsecutivas) {
+            <span class="alerta-faltas alerta-justificadas" role="status">
+              <app-icon name="alert-circle" />
+              {{ justificadasConsecutivasDe(aluno) }} justificadas seguidas
+            </span>
+          }
+          @if (aluno.autorizadosRetirada?.length) {
+            <span class="quem-busca"><b>Pode buscar:</b> {{ rotuloAutorizados(aluno.autorizadosRetirada) }}</span>
+          } @else if (!aluno.podeIrEmboraSozinho) {
+            <span class="quem-busca quem-busca--vazio">Ninguém autorizado a buscar — confira o cadastro</span>
+          }
+          @if (faltasConsecutivasDe(aluno) >= limiarFaltasConsecutivas) {
+            <span class="alerta-faltas" role="status">
+              <app-icon name="alert-triangle" />
+              {{ faltasConsecutivasDe(aluno) }} faltas seguidas
+            </span>
+          }
         </div>
         </div>
         <div class="presenca-botoes">

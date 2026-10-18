@@ -9,6 +9,8 @@ import { Turno } from '../../enum/Turno';
 export interface VinculoTurmaAssistidoResponseDTO {
   turmaId: number;
   nomeTurma: string;
+  /** Oficina (projeto) da turma. */
+  nomeOficina: string | null;
   turno: Turno;
   turmaAtiva: boolean;
   dataEntrada: string;

@@ -1,7 +1,7 @@
 import { Role } from '../enum/role.enum';
 import { MotivoFalta } from '../enum/MotivoFalta';
 import { StatusPresenca } from '../enum/StatusPresenca';
-import { PresencaHistoricoDTO, PresencaResponseDTO } from '../models/presenca/PresencaResponseDTO';
+import { AutorizadoRetiradaDTO, PresencaHistoricoDTO, PresencaResponseDTO } from '../models/presenca/PresencaResponseDTO';
 
 /**
  * Lógica de chamada compartilhada entre `AulaModal` (shared/components) e
@@ -15,6 +15,9 @@ import { PresencaHistoricoDTO, PresencaResponseDTO } from '../models/presenca/Pr
 export interface LinhaChamada {
   assistidoId: number;
   nomeCompleto: string;
+  /** Termo do assistido: pode sair sozinho ao fim da atividade (selo na lista de presença). */
+  podeIrEmboraSozinho?: boolean;
+  dataNascimento?: string | null;
   statusPresenca: StatusPresenca | null;
   // só usados quando statusPresenca = FALTA_JUSTIFICADA (CA-65.2)
   motivoFalta: MotivoFalta | null;
@@ -30,6 +33,12 @@ export interface LinhaChamada {
   // pronto do mesmo GET /api/chamadas/aula/{id} que já monta o roster, sem
   // request extra. Vazio em LinhaChamada que não vem desse endpoint.
   historicoRecente: PresencaHistoricoDTO[];
+  /** Resumo de frequência (só no roster de GET /api/chamadas/aula/{id}). */
+  frequenciaPercentual?: number | null;
+  aulasRealizadas?: number | null;
+  aulasPrevistas?: number | null;
+  /** Quem pode buscar o aluno (vazio = ninguém marcado como autorizado). */
+  autorizadosRetirada?: AutorizadoRetiradaDTO[];
 }
 
 /** A partir de quantas faltas seguidas o roster mostra o alerta de atenção. */
@@ -42,6 +51,8 @@ export function linhaChamadaDePresenca(p: PresencaResponseDTO): LinhaChamada {
   return {
     assistidoId: p.assistidoId,
     nomeCompleto: p.nomeCompleto,
+    podeIrEmboraSozinho: p.podeIrEmboraSozinho ?? false,
+    dataNascimento: p.dataNascimento ?? null,
     statusPresenca: p.statusPresenca,
     motivoFalta: p.motivoFalta,
     observacao: p.observacao ?? '',
@@ -52,6 +63,10 @@ export function linhaChamadaDePresenca(p: PresencaResponseDTO): LinhaChamada {
     criadoEm: p.criadoEm ?? null,
     atualizadoEm: p.atualizadoEm ?? null,
     historicoRecente: p.historicoRecente ?? [],
+    frequenciaPercentual: p.frequenciaPercentual ?? null,
+    aulasRealizadas: p.aulasRealizadas ?? null,
+    aulasPrevistas: p.aulasPrevistas ?? null,
+    autorizadosRetirada: p.autorizadosRetirada ?? [],
   };
 }
 
@@ -65,8 +80,37 @@ export function contarFaltasConsecutivas(historico: PresencaHistoricoDTO[]): num
   return consecutivas;
 }
 
-export function ordenarPorNome(alunos: LinhaChamada[]): LinhaChamada[] {
-  return [...alunos].sort((a, b) => a.nomeCompleto.localeCompare(b.nomeCompleto));
+export type OrdemNome = 'az' | 'za';
+
+/** Ordem alfabética (ignora acento e caixa). `za` inverte. */
+export function ordenarPorNome(alunos: LinhaChamada[], ordem: OrdemNome = 'az'): LinhaChamada[] {
+  const sentido = ordem === 'za' ? -1 : 1;
+  return [...alunos].sort(
+    (a, b) => sentido * a.nomeCompleto.localeCompare(b.nomeCompleto, 'pt-BR', { sensitivity: 'base' }),
+  );
+}
+
+/**
+ * A partir de quantas faltas JUSTIFICADAS seguidas o roster avisa — ausência
+ * longa (doença, viagem...) também pede acompanhamento, mesmo justificada.
+ */
+export const LIMIAR_JUSTIFICADAS_CONSECUTIVAS = 5;
+
+/** Faltas justificadas seguidas, da aula mais recente pra trás. */
+export function contarJustificadasConsecutivas(historico: PresencaHistoricoDTO[]): number {
+  let consecutivas = 0;
+  for (const dia of historico) {
+    if (dia.statusPresenca !== StatusPresenca.FALTA_JUSTIFICADA) break;
+    consecutivas++;
+  }
+  return consecutivas;
+}
+
+/** "Débora (mãe), Sueli (avó)" — quem pode buscar, para o cartão da chamada. */
+export function rotuloAutorizados(autorizados: AutorizadoRetiradaDTO[] | undefined): string {
+  return (autorizados ?? [])
+    .map((a) => (a.parentesco ? `${a.nome}(${a.parentesco.toLowerCase()})` : a.nome))
+    .join(', ');
 }
 
 export function marcarPresenca(
@@ -152,4 +196,25 @@ export function podeEditarChamada(perfil: Role | null): boolean {
  */
 export function podeCorrigirDataChamada(perfil: Role | null, aulaEhHoje: boolean): boolean {
   return perfil === Role.COORD || aulaEhHoje;
+}
+
+/**
+ * Alunos que fazem aniversário no dia da aula, com a idade que completam.
+ * Quem nasceu em 29/02 comemora em 28/02 nos anos não bissextos.
+ */
+export function aniversariantesDoDia(
+  alunos: LinhaChamada[],
+  dataAula: string | null | undefined,
+): { aluno: LinhaChamada; idade: number }[] {
+  if (!dataAula) return [];
+  const [ano, mes, dia] = dataAula.split('-').map(Number);
+  const bissexto = (a: number) => (a % 4 === 0 && a % 100 !== 0) || a % 400 === 0;
+  return alunos
+    .filter((aluno) => {
+      if (!aluno.dataNascimento) return false;
+      const [, m, d] = aluno.dataNascimento.split('-').map(Number);
+      if (m === mes && d === dia) return true;
+      return m === 2 && d === 29 && mes === 2 && dia === 28 && !bissexto(ano);
+    })
+    .map((aluno) => ({ aluno, idade: ano - Number(aluno.dataNascimento!.slice(0, 4)) }));
 }

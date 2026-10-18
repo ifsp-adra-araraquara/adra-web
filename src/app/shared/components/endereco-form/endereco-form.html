@@ -1,0 +1,38 @@
+<div class="endereco-rua">
+  <app-input
+    label="Rua"
+    placeholder="Rua, avenida…"
+    autocomplete="address-line1"
+    [maxLength]="180"
+    [disabled]="desabilitado()"
+    [ngModel]="valor().logradouro"
+    (ngModelChange)="atualizar('logradouro', $event)"
+  />
+  <app-input
+    label="Número"
+    placeholder="Nº"
+    [maxLength]="20"
+    [disabled]="desabilitado()"
+    [ngModel]="valor().numero"
+    (ngModelChange)="atualizar('numero', $event)"
+  />
+</div>
+
+<div class="form-row">
+  <app-input
+    label="Bairro"
+    placeholder="Bairro"
+    [maxLength]="120"
+    [disabled]="desabilitado()"
+    [ngModel]="valor().bairro"
+    (ngModelChange)="atualizar('bairro', $event)"
+  />
+  <app-input
+    label="Ponto de referência"
+    placeholder="Ex.: perto do mercado X"
+    [maxLength]="255"
+    [disabled]="desabilitado()"
+    [ngModel]="valor().pontoReferencia"
+    (ngModelChange)="atualizar('pontoReferencia', $event)"
+  />
+</div>

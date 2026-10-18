@@ -97,6 +97,8 @@
       <p class="feedback" role="status">Carregando alunos...</p>
       } @else {
 
+        <app-aniversario-cards [alunos]="alunos()" [dataAula]="aula?.dataAula" />
+
         @if (erro()) {
         <p class="feedback error" role="alert">{{ erro() }}</p>
         }
@@ -119,8 +121,13 @@
           <app-button variant="secondary" size="sm" (click)="desbloquearEdicao()">Alterar chamada</app-button>
         </div>
 
+        <div class="ordem-nome" role="group" aria-label="Ordem dos alunos">
+          <span>Ordem:</span>
+          <button type="button" [class.ativo]="ordemNome() === 'az'" [attr.aria-pressed]="ordemNome() === 'az'" (click)="ordemNome.set('az')">A–Z</button>
+          <button type="button" [class.ativo]="ordemNome() === 'za'" [attr.aria-pressed]="ordemNome() === 'za'" (click)="ordemNome.set('za')">Z–A</button>
+        </div>
         <ul class="lista-alunos">
-          @for (aluno of alunos(); track aluno.assistidoId) {
+          @for (aluno of alunosOrdenados(); track aluno.assistidoId) {
           <li class="linha-aluno">
             <div class="nome-aluno-wrap">
               <span
@@ -133,6 +140,9 @@
                 <app-avatar [entidadeId]="aluno.assistidoId" [nome]="aluno.nomeCompleto" [size]="36" />
               </span>
               <span class="nome-aluno">{{ aluno.nomeCompleto }}</span>
+              @if (aluno.podeIrEmboraSozinho) {
+                <app-badge variant="blue" label="Vai embora sozinho" [plain]="true" />
+              }
               @if (aluno.historicoRecente.length > 0) {
                 <span class="faixa-dias" aria-hidden="true">
                   @for (dia of faixaHistoricoDe(aluno); track dia.dataAula) {
@@ -144,6 +154,23 @@
                     ></span>
                   }
                 </span>
+              }
+              @if (aluno.aulasRealizadas) {
+                <span class="resumo-freq" [title]="'Presença em ' + aluno.frequenciaPercentual + '% das ' + aluno.aulasRealizadas + ' aulas realizadas (de ' + aluno.aulasPrevistas + ' previstas)'">
+                  <b [class.resumo-freq--baixa]="(aluno.frequenciaPercentual ?? 100) < 75">{{ aluno.frequenciaPercentual }}%</b>
+                  · {{ aluno.aulasRealizadas }}/{{ aluno.aulasPrevistas }} aulas
+                </span>
+              }
+              @if (justificadasConsecutivasDe(aluno) >= limiarJustificadasConsecutivas) {
+                <span class="alerta-faltas alerta-justificadas" role="status">
+                  <app-icon name="alert-circle" />
+                  {{ justificadasConsecutivasDe(aluno) }} justificadas seguidas
+                </span>
+              }
+              @if (aluno.autorizadosRetirada?.length) {
+                <span class="quem-busca"><b>Pode buscar:</b> {{ rotuloAutorizados(aluno.autorizadosRetirada) }}</span>
+              } @else if (!aluno.podeIrEmboraSozinho) {
+                <span class="quem-busca quem-busca--vazio">Ninguém autorizado a buscar — confira o cadastro</span>
               }
               @if (faltasConsecutivasDe(aluno) >= limiarFaltasConsecutivas) {
                 <span class="alerta-faltas" role="status">
@@ -199,8 +226,13 @@
           <app-button variant="secondary" size="sm" (click)="marcarTodosPresentes()">Marcar todos presentes</app-button>
         </div>
 
+        <div class="ordem-nome" role="group" aria-label="Ordem dos alunos">
+          <span>Ordem:</span>
+          <button type="button" [class.ativo]="ordemNome() === 'az'" [attr.aria-pressed]="ordemNome() === 'az'" (click)="ordemNome.set('az')">A–Z</button>
+          <button type="button" [class.ativo]="ordemNome() === 'za'" [attr.aria-pressed]="ordemNome() === 'za'" (click)="ordemNome.set('za')">Z–A</button>
+        </div>
         <ul class="lista-alunos">
-          @for (aluno of alunos(); track aluno.assistidoId) {
+          @for (aluno of alunosOrdenados(); track aluno.assistidoId) {
           <li class="linha-aluno linha-aluno-chamada">
             <div class="linha-aluno-topo">
               <div class="nome-aluno-wrap">
@@ -214,6 +246,9 @@
                   <app-avatar [entidadeId]="aluno.assistidoId" [nome]="aluno.nomeCompleto" [size]="36" />
                 </span>
                 <span class="nome-aluno">{{ aluno.nomeCompleto }}</span>
+              @if (aluno.podeIrEmboraSozinho) {
+                <app-badge variant="blue" label="Vai embora sozinho" [plain]="true" />
+              }
                 @if (aluno.historicoRecente.length > 0) {
                   <span class="faixa-dias" aria-hidden="true">
                     @for (dia of faixaHistoricoDe(aluno); track dia.dataAula) {
@@ -225,6 +260,23 @@
                       ></span>
                     }
                   </span>
+                }
+                @if (aluno.aulasRealizadas) {
+                  <span class="resumo-freq" [title]="'Presença em ' + aluno.frequenciaPercentual + '% das ' + aluno.aulasRealizadas + ' aulas realizadas (de ' + aluno.aulasPrevistas + ' previstas)'">
+                    <b [class.resumo-freq--baixa]="(aluno.frequenciaPercentual ?? 100) < 75">{{ aluno.frequenciaPercentual }}%</b>
+                    · {{ aluno.aulasRealizadas }}/{{ aluno.aulasPrevistas }} aulas
+                  </span>
+                }
+                @if (justificadasConsecutivasDe(aluno) >= limiarJustificadasConsecutivas) {
+                  <span class="alerta-faltas alerta-justificadas" role="status">
+                    <app-icon name="alert-circle" />
+                    {{ justificadasConsecutivasDe(aluno) }} justificadas seguidas
+                  </span>
+                }
+                @if (aluno.autorizadosRetirada?.length) {
+                  <span class="quem-busca"><b>Pode buscar:</b> {{ rotuloAutorizados(aluno.autorizadosRetirada) }}</span>
+                } @else if (!aluno.podeIrEmboraSozinho) {
+                  <span class="quem-busca quem-busca--vazio">Ninguém autorizado a buscar — confira o cadastro</span>
                 }
                 @if (faltasConsecutivasDe(aluno) >= limiarFaltasConsecutivas) {
                   <span class="alerta-faltas" role="status">
@@ -313,8 +365,13 @@
 
         } @else {
         <!-- ================= OFICINEIRO: somente leitura ================= -->
+        <div class="ordem-nome" role="group" aria-label="Ordem dos alunos">
+          <span>Ordem:</span>
+          <button type="button" [class.ativo]="ordemNome() === 'az'" [attr.aria-pressed]="ordemNome() === 'az'" (click)="ordemNome.set('az')">A–Z</button>
+          <button type="button" [class.ativo]="ordemNome() === 'za'" [attr.aria-pressed]="ordemNome() === 'za'" (click)="ordemNome.set('za')">Z–A</button>
+        </div>
         <ul class="lista-alunos">
-          @for (aluno of alunos(); track aluno.assistidoId) {
+          @for (aluno of alunosOrdenados(); track aluno.assistidoId) {
           <li class="linha-aluno">
             <div class="nome-aluno-wrap">
               <span
@@ -327,6 +384,9 @@
                 <app-avatar [entidadeId]="aluno.assistidoId" [nome]="aluno.nomeCompleto" [size]="36" />
               </span>
               <span class="nome-aluno">{{ aluno.nomeCompleto }}</span>
+              @if (aluno.podeIrEmboraSozinho) {
+                <app-badge variant="blue" label="Vai embora sozinho" [plain]="true" />
+              }
               @if (aluno.historicoRecente.length > 0) {
                 <span class="faixa-dias" aria-hidden="true">
                   @for (dia of faixaHistoricoDe(aluno); track dia.dataAula) {
@@ -338,6 +398,23 @@
                     ></span>
                   }
                 </span>
+              }
+              @if (aluno.aulasRealizadas) {
+                <span class="resumo-freq" [title]="'Presença em ' + aluno.frequenciaPercentual + '% das ' + aluno.aulasRealizadas + ' aulas realizadas (de ' + aluno.aulasPrevistas + ' previstas)'">
+                  <b [class.resumo-freq--baixa]="(aluno.frequenciaPercentual ?? 100) < 75">{{ aluno.frequenciaPercentual }}%</b>
+                  · {{ aluno.aulasRealizadas }}/{{ aluno.aulasPrevistas }} aulas
+                </span>
+              }
+              @if (justificadasConsecutivasDe(aluno) >= limiarJustificadasConsecutivas) {
+                <span class="alerta-faltas alerta-justificadas" role="status">
+                  <app-icon name="alert-circle" />
+                  {{ justificadasConsecutivasDe(aluno) }} justificadas seguidas
+                </span>
+              }
+              @if (aluno.autorizadosRetirada?.length) {
+                <span class="quem-busca"><b>Pode buscar:</b> {{ rotuloAutorizados(aluno.autorizadosRetirada) }}</span>
+              } @else if (!aluno.podeIrEmboraSozinho) {
+                <span class="quem-busca quem-busca--vazio">Ninguém autorizado a buscar — confira o cadastro</span>
               }
               @if (faltasConsecutivasDe(aluno) >= limiarFaltasConsecutivas) {
                 <span class="alerta-faltas" role="status">

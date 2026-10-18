@@ -188,3 +188,18 @@
 }
 .dia-aula-info { display: flex; flex-direction: column; gap: 2px; font-size: 13.5px; }
 .dia-aula-info strong { font-size: 12px; color: var(--color-adra-green-600); }
+/* ===== Dias sem aula (férias, feriado, ponto facultativo, evento/passeio) ===== */
+.cal-legend--sem-aula { margin-top: 6px; align-items: center; }
+.legend-titulo { font-size: 12px; font-weight: 600; color: var(--gray-600); }
+.legend-quadro { width: 12px; height: 12px; border-radius: 3px; border: 1px solid; flex: none; }
+
+/* Hachurado por cima da cor do fundo: o dia "salta" mesmo sem aulas */
+::ng-deep .fc .dia-sem-aula {
+  background-image: repeating-linear-gradient(135deg, transparent 0 6px, rgba(0, 0, 0, 0.04) 6px 12px);
+}
+::ng-deep .evt-sem-aula .evt-titulo { font-weight: 700; }
+
+.dia-sem-aula-aviso { margin-bottom: 12px; }
+
+.excecoes-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.excecoes-lista li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border: 1px solid var(--gray-100); border-radius: 8px; }

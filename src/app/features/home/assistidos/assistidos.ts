@@ -51,6 +51,21 @@ import { ListaDocumentos } from '../../../shared/components/lista-documentos/lis
 import { ArquivoService } from '../../../core/arquivo.service';
 import { EntidadeArquivo } from '../../../shared/enum/EntidadeArquivo';
 import { CategoriaArquivo } from '../../../shared/enum/CategoriaArquivo';
+import { SEXO_LABELS, Sexo } from '../../../shared/enum/Sexo';
+import { ESCOLARIDADE_LABELS, Escolaridade } from '../../../shared/enum/Escolaridade';
+import { ESTADO_CIVIL_LABELS, EstadoCivil } from '../../../shared/enum/EstadoCivil';
+import { EnderecoDTO } from '../../../shared/models/endereco/EnderecoDTO';
+import { enderecoParaForm, enderecoParaPayload, formatarEndereco } from '../../../shared/utils/endereco.util';
+import { formatarMoeda } from '../../../shared/utils/mascara.util';
+import { DadosComplementaresAssistidoForm } from './dados-complementares/dados-complementares-assistido';
+import { DadosComplementaresResponsavelForm } from '../responsaveis/dados-complementares/dados-complementares-responsavel';
+import { SocioeconomicoAssistidoForm } from './socioeconomico/socioeconomico-assistido';
+import { TermosAssistidoForm } from './termos/termos-assistido';
+import { ElegibilidadeDTO } from '../../../shared/models/assistido/ElegibilidadeDTO';
+import {
+  PROGRAMA_TRANSFERENCIA_LABELS,
+  ProgramaTransferencia,
+} from '../../../shared/enum/ProgramaTransferencia';
 
 interface ResponsavelPendente extends ResponsavelRequestDTO {
   parentesco: string;
@@ -62,7 +77,7 @@ interface ResponsavelPendente extends ResponsavelRequestDTO {
 @Component({
   selector: 'app-assistidos',
   standalone: true,
-  imports: [ActionMenu, TooltipDirective, Icon, CommonModule, FormsModule, Select, Input, Button, Modal, Badge, AulasTurmaModal, FotoPerfil, Avatar, UploadDocumento, ListaDocumentos],
+  imports: [ActionMenu, TooltipDirective, Icon, CommonModule, FormsModule, Select, Input, Button, Modal, Badge, AulasTurmaModal, FotoPerfil, Avatar, UploadDocumento, ListaDocumentos, DadosComplementaresAssistidoForm, DadosComplementaresResponsavelForm, SocioeconomicoAssistidoForm, TermosAssistidoForm],
   templateUrl: './assistidos.html',
   styleUrl: './assistidos.css',
 })
@@ -77,6 +92,8 @@ export class Assistidos implements OnInit {
 
   StatusGeral = StatusGeral;
   readonly CategoriaArquivo = CategoriaArquivo;
+  readonly formatarEndereco = formatarEndereco;
+  readonly formatarMoeda = formatarMoeda;
 
   private readonly apiAssistidos = `${environment.apiUrl}/api/assistidos`;
   private readonly apiResponsaveis = `${environment.apiUrl}/api/responsaveis`;
@@ -126,9 +143,9 @@ export class Assistidos implements OnInit {
   assistidoSelecionadoStatus = signal<AssistidoResponseDTO | null>(null);
   novoStatusDesejado = signal<StatusGeral>(StatusGeral.INATIVO);
 
-  abaVerAssistido = signal<'dados' | 'fam' | 'cham' | 'turmas'>('dados');
+  abaVerAssistido = signal<'dados' | 'fam' | 'perm' | 'cham' | 'turmas'>('dados');
 
-  trocarAbaVerAssistido(aba: 'dados' | 'fam' | 'cham' | 'turmas') {
+  trocarAbaVerAssistido(aba: 'dados' | 'fam' | 'perm' | 'cham' | 'turmas') {
     this.abaVerAssistido.set(aba);
 
     // Carrega o histórico de turmas só na primeira vez que a aba é aberta.
@@ -225,6 +242,10 @@ export class Assistidos implements OnInit {
   /* Sub-fluxo de responsáveis dentro do modal */
   responsaveisPendentes = signal<ResponsavelPendente[]>([]);
   novoResponsavel: ResponsavelPendente = this.responsavelVazio();
+  /** Form de responsável do cadastro: some depois de salvar e volta com "Adicionar outro responsável". */
+  mostrarFormResponsavelNovo = signal(true);
+  /** Índice em `responsaveisVinculados` sendo editado no form (null = incluindo um novo). */
+  indiceResponsavelEmEdicaoNovo = signal<number | null>(null);
 
   ngOnInit(): void {
     this.carregarTurmas();
@@ -234,6 +255,20 @@ export class Assistidos implements OnInit {
       const id = Number(params.get('turmaId'));
       this.filtroTurma.set(Number.isInteger(id) && id > 0 ? id : '');
       this.recarregarRecorte();
+      this.abrirFichaDaUrl(Number(params.get('assistidoId')));
+    });
+  }
+
+  /** Último ?assistidoId= já aberto — trocar filtros depois não reabre a ficha. */
+  private assistidoIdAbertoPelaUrl: number | null = null;
+
+  /** Veio de "Alunos da turma" (clique num aluno): abre a ficha dele direto. */
+  private abrirFichaDaUrl(assistidoId: number): void {
+    if (!Number.isInteger(assistidoId) || assistidoId <= 0 || assistidoId === this.assistidoIdAbertoPelaUrl) return;
+    this.assistidoIdAbertoPelaUrl = assistidoId;
+    this.http.get<AssistidoResponseDTO>(`${this.apiAssistidos}/${assistidoId}`).subscribe({
+      next: (assistido) => this.abrirModalVisualizarAssistido(assistido),
+      error: (erro) => console.error('Erro ao abrir a ficha do assistido:', erro),
     });
   }
 
@@ -512,6 +547,26 @@ export class Assistidos implements OnInit {
       necessidadesEspecificas: '',
       observacoes: '',
       turmaId: null,
+      sexo: null,
+      possuiProblemaSaude: null,
+      problemaSaude: '',
+      pcd: null,
+      deficiencia: '',
+      escolaNome: '',
+      escolaAnoSerie: '',
+      escolaTurno: null,
+      estudaContraturno: null,
+      endereco: enderecoParaForm(null),
+      rendaFamiliar: null,
+      recebeProgramaTransferencia: null,
+      programasTransferencia: [],
+      programaTransferenciaOutro: '',
+      nis: '',
+      aceiteLgpd: false,
+      autorizaUsoImagem: false,
+      autorizaEventosPasseios: false,
+      podeIrEmboraSozinho: false,
+      cienteFrequenciaObrigatoria: false,
       responsaveis: [],
     };
   }
@@ -523,8 +578,12 @@ export class Assistidos implements OnInit {
       cpf: '',
       telefone: '',
       email: '',
-      endereco: '',
+      endereco: enderecoParaForm(null),
       observacoes: '',
+      escolaridade: null,
+      estadoCivil: null,
+      profissao: '',
+      renda: null,
       parentesco: '',
       responsavelPrincipal: false, // default fixo, sem depender de signal
       contatoEmergencia: false,
@@ -532,11 +591,24 @@ export class Assistidos implements OnInit {
     };
   }
 
+  /** Limite de renda familiar do programa (tabela parametro_sistema); null = regra ainda não definida. */
+  limiteRendaFamiliar = signal<number | null>(null);
+
+  private carregarElegibilidade(): void {
+    this.http.get<ElegibilidadeDTO>(`${this.apiAssistidos}/elegibilidade`).subscribe({
+      next: (criterios) => this.limiteRendaFamiliar.set(criterios.rendaFamiliarLimite),
+      error: () => this.limiteRendaFamiliar.set(null),
+    });
+  }
+
   abrirModalNovoAssistido(): void {
+    this.carregarElegibilidade();
     this.novoAssistido = this.assistidoVazio();
     this.assistidoIdCriado.set(null);
     this.responsaveisVinculados.set([]);
     this.novoResponsavel = this.responsavelVazio();
+    this.mostrarFormResponsavelNovo.set(true);
+    this.indiceResponsavelEmEdicaoNovo.set(null);
     this.erroSalvar.set(null);
     this.erroResponsavel.set(null);
     this.alertaDuplicidade.set(false);
@@ -558,7 +630,16 @@ export class Assistidos implements OnInit {
   abrirModalEditarAssistido(assistido: AssistidoResponseDTO, secao: 'dados' | 'turma' = 'dados'): void {
     this.secaoEdicao.set(secao);
     this.assistidoEmEdicao.set(assistido);
-    this.formEdicaoAssistido = {
+    this.formEdicaoAssistido = this.formDoAssistido(assistido);
+    this.erroSalvarEdicao.set(null);
+    this.fotoPerfilEdicao.set(null);
+    this.documentosIdentidadeEdicao.set([]);
+    this.mostrarModalEditar.set(true);
+  }
+
+  /** Request completo (PUT substitui o cadastro inteiro) a partir do que a API devolveu. */
+  private formDoAssistido(assistido: AssistidoResponseDTO): AssistidoRequestDTO {
+    return {
       nomeCompleto: assistido.nomeCompleto,
       dataNascimento: assistido.dataNascimento,
       cpf: assistido.cpf ?? '',
@@ -566,13 +647,29 @@ export class Assistidos implements OnInit {
       necessidadesEspecificas: assistido.necessidadesEspecificas ?? '',
       observacoes: assistido.observacoes ?? '',
       turmaId: assistido.turmaId ?? null,
+      sexo: assistido.sexo ?? null,
+      possuiProblemaSaude: assistido.possuiProblemaSaude ?? null,
+      problemaSaude: assistido.problemaSaude ?? '',
+      pcd: assistido.pcd ?? null,
+      deficiencia: assistido.deficiencia ?? '',
+      escolaNome: assistido.escolaNome ?? '',
+      escolaAnoSerie: assistido.escolaAnoSerie ?? '',
+      escolaTurno: assistido.escolaTurno ?? null,
+      estudaContraturno: assistido.estudaContraturno ?? null,
+      endereco: enderecoParaForm(assistido.endereco),
+      rendaFamiliar: assistido.rendaFamiliar ?? null,
+      recebeProgramaTransferencia: assistido.recebeProgramaTransferencia ?? null,
+      programasTransferencia: [...(assistido.programasTransferencia ?? [])],
+      programaTransferenciaOutro: assistido.programaTransferenciaOutro ?? '',
+      nis: assistido.nis ?? '',
+      aceiteLgpd: assistido.aceiteLgpd ?? false,
+      autorizaUsoImagem: assistido.autorizaUsoImagem ?? false,
+      autorizaEventosPasseios: assistido.autorizaEventosPasseios ?? false,
+      podeIrEmboraSozinho: assistido.podeIrEmboraSozinho ?? false,
+      cienteFrequenciaObrigatoria: assistido.cienteFrequenciaObrigatoria ?? false,
       // Sem `responsaveis`: a API reconcilia os vínculos se a lista vier, mesmo vazia.
       // Responsáveis se editam na aba "Família".
     };
-    this.erroSalvarEdicao.set(null);
-    this.fotoPerfilEdicao.set(null);
-    this.documentosIdentidadeEdicao.set([]);
-    this.mostrarModalEditar.set(true);
   }
 
   fecharModalEditar(): void {
@@ -604,12 +701,18 @@ export class Assistidos implements OnInit {
       return;
     }
 
+    const erroComplementares = this.validarDadosComplementares(this.formEdicaoAssistido);
+    if (erroComplementares) {
+      this.erroSalvarEdicao.set(erroComplementares);
+      return;
+    }
+
     this.salvandoEdicao.set(true);
     this.erroSalvarEdicao.set(null);
 
     try {
       const payload: AssistidoRequestDTO = {
-        ...this.formEdicaoAssistido,
+        ...this.paraPayloadAssistido(this.formEdicaoAssistido),
         turmaId: this.formEdicaoAssistido.turmaId ? Number(this.formEdicaoAssistido.turmaId) : null,
       };
 
@@ -754,6 +857,22 @@ export class Assistidos implements OnInit {
       return 'CPF do assistido inválido.';
     }
 
+    const erroComplementares = this.validarDadosComplementares(this.novoAssistido);
+    if (erroComplementares) {
+      return erroComplementares;
+    }
+
+    // Regra de corte só na entrada (o back faz a mesma checagem).
+    const limite = this.limiteRendaFamiliar();
+    const renda = this.novoAssistido.rendaFamiliar;
+    if (limite != null && renda != null && renda > limite) {
+      return `Renda familiar acima do limite do programa (${formatarMoeda(limite)}). A família não pode ser cadastrada.`;
+    }
+
+    if (!this.novoAssistido.aceiteLgpd) {
+      return 'Marque o aceite do uso de dados (LGPD) para concluir o cadastro.';
+    }
+
     const turmaSelecionada = this.turmas().find((turma) => turma.turmaId === Number(this.novoAssistido.turmaId));
     if (this.novoAssistido.turmaId && !turmaSelecionada?.ativo) {
       return 'A turma selecionada deve estar ativa.';
@@ -764,6 +883,115 @@ export class Assistidos implements OnInit {
     }
 
     return null;
+  }
+
+  /** "Qual?" é obrigatório quando problema de saúde / PcD está marcado como Sim (mesma regra do back). */
+  private validarDadosComplementares(dados: AssistidoRequestDTO): string | null {
+    if (dados.possuiProblemaSaude && !dados.problemaSaude?.trim()) {
+      return 'Informe qual é o problema de saúde do assistido.';
+    }
+    if (dados.pcd && !dados.deficiencia?.trim()) {
+      return 'Informe qual é a deficiência do assistido.';
+    }
+    if (dados.recebeProgramaTransferencia) {
+      const programas = dados.programasTransferencia ?? [];
+      if (programas.length === 0) {
+        return 'Marque qual programa de transferência de renda a família recebe.';
+      }
+      if (programas.includes(ProgramaTransferencia.OUTRO) && !dados.programaTransferenciaOutro?.trim()) {
+        return 'Informe o nome do outro programa de transferência de renda.';
+      }
+    }
+    if (dados.nis && dados.nis.length !== 11) {
+      return 'NIS / CadÚnico deve ter 11 dígitos.';
+    }
+    return null;
+  }
+
+  /** Normaliza o form antes de enviar: endereço vazio vira null e descrições só vão com o indicador marcado. */
+  private paraPayloadAssistido(dados: AssistidoRequestDTO): AssistidoRequestDTO {
+    return {
+      ...dados,
+      problemaSaude: dados.possuiProblemaSaude ? dados.problemaSaude?.trim() || null : null,
+      deficiencia: dados.pcd ? dados.deficiencia?.trim() || null : null,
+      escolaNome: dados.escolaNome?.trim() || null,
+      escolaAnoSerie: dados.escolaAnoSerie?.trim() || null,
+      endereco: enderecoParaPayload(dados.endereco),
+      programasTransferencia: dados.recebeProgramaTransferencia ? (dados.programasTransferencia ?? []) : [],
+      programaTransferenciaOutro:
+        dados.recebeProgramaTransferencia && dados.programasTransferencia?.includes(ProgramaTransferencia.OUTRO)
+          ? dados.programaTransferenciaOutro?.trim() || null
+          : null,
+      nis: dados.nis?.replace(/\D/g, '') || null,
+    };
+  }
+
+  /** Soma da renda dos responsáveis já informados no cadastro — referência para a renda familiar. */
+  somaRendaResponsaveisNovo(): number | null {
+    const rendas = [...this.responsaveisVinculados(), ...this.responsaveisPendentes()]
+      .map((r) => r.renda)
+      .filter((renda): renda is number => renda != null);
+    return rendas.length ? rendas.reduce((total, renda) => total + renda, 0) : null;
+  }
+
+  rotuloProgramas(assistido: AssistidoResponseDTO): string {
+    if (assistido.recebeProgramaTransferencia == null) return 'Não informado';
+    if (!assistido.recebeProgramaTransferencia) return 'Não';
+    return (assistido.programasTransferencia ?? [])
+      .map((p) =>
+        p === ProgramaTransferencia.OUTRO && assistido.programaTransferenciaOutro
+          ? assistido.programaTransferenciaOutro
+          : PROGRAMA_TRANSFERENCIA_LABELS[p],
+      )
+      .join(', ');
+  }
+
+  /** Responsável preenchido no front -> payload "cadastrar e vincular". */
+  private paraVinculoComResponsavel(
+    responsavel: ResponsavelPendente,
+    responsavelPrincipal = responsavel.responsavelPrincipal,
+  ): VinculoFamiliarComResponsavelRequestDTO {
+    return {
+      nomeCompleto: responsavel.nomeCompleto,
+      dataNascimento: responsavel.dataNascimento || undefined,
+      cpf: responsavel.cpf || undefined,
+      telefone: responsavel.telefone || undefined,
+      email: responsavel.email || undefined,
+      endereco: enderecoParaPayload(responsavel.endereco),
+      observacoes: responsavel.observacoes || undefined,
+      escolaridade: responsavel.escolaridade ?? null,
+      estadoCivil: responsavel.estadoCivil ?? null,
+      profissao: responsavel.profissao?.trim() || null,
+      renda: responsavel.renda ?? null,
+      parentesco: responsavel.parentesco || undefined,
+      responsavelPrincipal,
+      contatoEmergencia: responsavel.contatoEmergencia,
+      autorizadoRetirada: responsavel.autorizadoRetirada,
+    };
+  }
+
+  /** Endereço do responsável principal já informado no cadastro — atalho "Mesmo do responsável". */
+  enderecoResponsavelPrincipalNovo(): EnderecoDTO | null {
+    const todos = [...this.responsaveisVinculados(), ...this.responsaveisPendentes()];
+    const principal = todos.find((r) => r.responsavelPrincipal) ?? todos[0];
+    return principal?.endereco ?? null;
+  }
+
+  /* Rótulos usados na ficha (visualização). */
+  rotuloSexo(sexo: Sexo | null | undefined): string {
+    return sexo ? SEXO_LABELS[sexo] : 'Não informado';
+  }
+
+  rotuloEscolaridade(escolaridade: Escolaridade | null | undefined): string {
+    return escolaridade ? ESCOLARIDADE_LABELS[escolaridade] : 'Não informado';
+  }
+
+  rotuloEstadoCivil(estadoCivil: EstadoCivil | null | undefined): string {
+    return estadoCivil ? ESTADO_CIVIL_LABELS[estadoCivil] : 'Não informado';
+  }
+
+  rotuloSimNao(valor: boolean | null | undefined): string {
+    return valor == null ? 'Não informado' : valor ? 'Sim' : 'Não';
   }
 
   /*
@@ -845,36 +1073,12 @@ export class Assistidos implements OnInit {
     this.erroSalvar.set(null);
 
     const responsaveisPayload: VinculoFamiliarComResponsavelRequestDTO[] = [
-      ...this.responsaveisVinculados().map((responsavel) => ({
-        nomeCompleto: responsavel.nomeCompleto,
-        dataNascimento: responsavel.dataNascimento || undefined,
-        cpf: responsavel.cpf || undefined,
-        telefone: responsavel.telefone || undefined,
-        email: responsavel.email || undefined,
-        endereco: responsavel.endereco || undefined,
-        observacoes: responsavel.observacoes || undefined,
-        parentesco: responsavel.parentesco || undefined,
-        responsavelPrincipal: responsavel.responsavelPrincipal,
-        contatoEmergencia: responsavel.contatoEmergencia,
-        autorizadoRetirada: responsavel.autorizadoRetirada,
-      })),
-      ...this.responsaveisPendentes().map((responsavel) => ({
-        nomeCompleto: responsavel.nomeCompleto,
-        dataNascimento: responsavel.dataNascimento || undefined,
-        cpf: responsavel.cpf || undefined,
-        telefone: responsavel.telefone || undefined,
-        email: responsavel.email || undefined,
-        endereco: responsavel.endereco || undefined,
-        observacoes: responsavel.observacoes || undefined,
-        parentesco: responsavel.parentesco || undefined,
-        responsavelPrincipal: responsavel.responsavelPrincipal,
-        contatoEmergencia: responsavel.contatoEmergencia,
-        autorizadoRetirada: responsavel.autorizadoRetirada,
-      })),
-    ];
+      ...this.responsaveisVinculados(),
+      ...this.responsaveisPendentes(),
+    ].map((responsavel) => this.paraVinculoComResponsavel(responsavel));
 
     const payload: AssistidoRequestDTO = {
-      ...this.novoAssistido,
+      ...this.paraPayloadAssistido(this.novoAssistido),
       turmaId: this.novoAssistido.turmaId ? Number(this.novoAssistido.turmaId) : null,
       responsaveis: responsaveisPayload,
     };
@@ -948,7 +1152,7 @@ export class Assistidos implements OnInit {
 
   assistidoSelecionado = signal<AssistidoResponseDTO | null>(null);
 
-  responsaveisDoAssistido = signal<any[]>([]);
+  responsaveisDoAssistido = signal<VinculoFamiliarResponseDTO[]>([]);
 
   carregandoResponsaveis = signal(false);
 
@@ -956,6 +1160,7 @@ export class Assistidos implements OnInit {
 
   abrirModalVisualizarAssistido(assistido: AssistidoResponseDTO): void {
     this.abaVerAssistido.set('dados'); // reset
+    this.editandoSocioeconomico.set(false);
 
     this.assistidoSelecionado.set(assistido);
 
@@ -982,7 +1187,65 @@ export class Assistidos implements OnInit {
     this.carregarResponsaveis(assistido.assistidoId);
   }
 
+  /* ---- Aba "Família": renda e programas (editável ali mesmo) ---- */
+  editandoSocioeconomico = signal(false);
+  salvandoSocioeconomico = signal(false);
+  erroSocioeconomico = signal<string | null>(null);
+  formSocioeconomico: AssistidoRequestDTO = this.assistidoVazio();
+
+  abrirEdicaoSocioeconomico(): void {
+    const assistido = this.assistidoSelecionado();
+    if (!assistido) return;
+    this.formSocioeconomico = this.formDoAssistido(assistido);
+    this.erroSocioeconomico.set(null);
+    this.editandoSocioeconomico.set(true);
+  }
+
+  cancelarEdicaoSocioeconomico(): void {
+    this.editandoSocioeconomico.set(false);
+    this.erroSocioeconomico.set(null);
+  }
+
+  async salvarSocioeconomico(): Promise<void> {
+    const assistido = this.assistidoSelecionado();
+    if (!assistido || this.salvandoSocioeconomico()) return;
+
+    const erro = this.validarDadosComplementares(this.formSocioeconomico);
+    if (erro) {
+      this.erroSocioeconomico.set(erro);
+      return;
+    }
+
+    this.salvandoSocioeconomico.set(true);
+    this.erroSocioeconomico.set(null);
+    try {
+      const atualizado = await firstValueFrom(
+        this.http.put<AssistidoResponseDTO>(
+          `${this.apiAssistidos}/${assistido.assistidoId}`,
+          this.paraPayloadAssistido(this.formSocioeconomico),
+        ),
+      );
+      this.assistidoSelecionado.set({ ...assistido, ...atualizado });
+      this.editandoSocioeconomico.set(false);
+      this.carregarAssistidos();
+    } catch (erroHttp) {
+      this.erroSocioeconomico.set(mensagemErro(erroHttp as HttpErrorResponse, 'Não foi possível salvar.'));
+    } finally {
+      this.salvandoSocioeconomico.set(false);
+    }
+  }
+
+  /** Aba "Permissões": termos assinados no cadastro. */
+  readonly termosFicha: { campo: 'aceiteLgpd' | 'autorizaUsoImagem' | 'autorizaEventosPasseios' | 'podeIrEmboraSozinho' | 'cienteFrequenciaObrigatoria'; titulo: string; descricao: string }[] = [
+    { campo: 'aceiteLgpd', titulo: 'Uso de dados (LGPD)', descricao: 'Coleta e guarda dos dados do assistido e da família para o atendimento.' },
+    { campo: 'autorizaUsoImagem', titulo: 'Cessão de imagem', descricao: 'Fotos e vídeos em materiais e redes sociais da ADRA.' },
+    { campo: 'autorizaEventosPasseios', titulo: 'Eventos, passeios e viagens', descricao: 'Participar de atividades fora da ADRA, com a equipe.' },
+    { campo: 'podeIrEmboraSozinho', titulo: 'Pode ir embora sozinho', descricao: 'Sair sozinho ao fim das atividades, sem um responsável.' },
+    { campo: 'cienteFrequenciaObrigatoria', titulo: 'Ciente da frequência obrigatória', descricao: 'A família sabe que a frequência é acompanhada pela equipe.' },
+  ];
+
   fecharModalVisualizarAssistido(): void {
+    this.editandoSocioeconomico.set(false);
     this.mostrarModalVisualizar.set(false);
 
     this.assistidoSelecionado.set(null);
@@ -1143,7 +1406,7 @@ export class Assistidos implements OnInit {
   carregarResponsaveis(assistidoId: number): void {
     this.carregandoResponsaveis.set(true);
 
-    this.http.get<any[]>(`${this.apiAssistidos}/${assistidoId}/responsaveis`).subscribe({
+    this.http.get<VinculoFamiliarResponseDTO[]>(`${this.apiAssistidos}/${assistidoId}/responsaveis`).subscribe({
       next: (responsaveis) => {
         this.responsaveisDoAssistido.set(responsaveis);
 
@@ -1160,7 +1423,7 @@ export class Assistidos implements OnInit {
     });
   }
 
-  calcularIdadeResponsavel(dataNascimento?: string): string {
+  calcularIdadeResponsavel(dataNascimento?: string | null): string {
     if (!dataNascimento) {
       return 'Não informado';
     }
@@ -1187,13 +1450,18 @@ export class Assistidos implements OnInit {
     }
 
     const assistidoCriado = await firstValueFrom(
-      this.http.post<AssistidoResponseDTO>(this.apiAssistidos, this.novoAssistido),
+      this.http.post<AssistidoResponseDTO>(this.apiAssistidos, this.paraPayloadAssistido(this.novoAssistido)),
     );
 
     this.assistidoIdCriado.set(assistidoCriado.assistidoId);
     return assistidoCriado.assistidoId;
   }
 
+  /**
+   * "Salvar responsável" do cadastro: só guarda na lista local (vai para o banco
+   * junto com o assistido, em "Salvar assistido"). Também conclui a edição de um
+   * responsável já listado.
+   */
   async salvarResponsavel(): Promise<void> {
     if (this.salvandoResponsavel()) {
       return;
@@ -1209,23 +1477,68 @@ export class Assistidos implements OnInit {
     this.erroResponsavel.set(null);
     this.erroSalvar.set(null);
 
-    const responsavelPrincipal =
-      this.novoResponsavel.responsavelPrincipal || this.responsaveisVinculados().length === 0;
+    const indice = this.indiceResponsavelEmEdicaoNovo();
+    const outros = this.responsaveisVinculados().filter((_, i) => i !== indice);
+    const responsavelPrincipal = this.novoResponsavel.responsavelPrincipal || !outros.some((r) => r.responsavelPrincipal);
+    const responsavel: ResponsavelPendente = { ...this.novoResponsavel, responsavelPrincipal };
 
-    if (this.novoResponsavel.responsavelPrincipal) {
-      this.responsaveisVinculados.update((lista) =>
-        lista.map((responsavel) => ({ ...responsavel, responsavelPrincipal: false })),
-      );
-    }
+    this.responsaveisVinculados.update((lista) => {
+      // só um principal: marcar este desmarca os demais
+      const ajustada = this.novoResponsavel.responsavelPrincipal
+        ? lista.map((r) => ({ ...r, responsavelPrincipal: false }))
+        : lista;
+      return indice === null
+        ? [...ajustada, responsavel]
+        : ajustada.map((r, i) => (i === indice ? responsavel : r));
+    });
 
-    const responsavel: ResponsavelPendente = {
-      ...this.novoResponsavel,
-      responsavelPrincipal,
-    };
-
-    this.responsaveisVinculados.update((lista) => [...lista, responsavel]);
     this.novoResponsavel = this.responsavelVazio();
+    this.indiceResponsavelEmEdicaoNovo.set(null);
+    this.mostrarFormResponsavelNovo.set(false);
     this.salvandoResponsavel.set(false);
+  }
+
+  abrirFormResponsavelNovo(): void {
+    this.novoResponsavel = this.responsavelVazio();
+    this.indiceResponsavelEmEdicaoNovo.set(null);
+    this.erroResponsavel.set(null);
+    this.mostrarFormResponsavelNovo.set(true);
+  }
+
+  editarResponsavelNovo(indice: number): void {
+    const responsavel = this.responsaveisVinculados()[indice];
+    if (!responsavel) return;
+    this.novoResponsavel = { ...responsavel, endereco: enderecoParaForm(responsavel.endereco) };
+    this.indiceResponsavelEmEdicaoNovo.set(indice);
+    this.erroResponsavel.set(null);
+    this.mostrarFormResponsavelNovo.set(true);
+  }
+
+  removerResponsavelNovo(indice: number): void {
+    const removido = this.responsaveisVinculados()[indice];
+    let lista = this.responsaveisVinculados().filter((_, i) => i !== indice);
+    // sempre sobra um principal
+    if (removido?.responsavelPrincipal && lista.length > 0 && !lista.some((r) => r.responsavelPrincipal)) {
+      lista = lista.map((r, i) => (i === 0 ? { ...r, responsavelPrincipal: true } : r));
+    }
+    this.responsaveisVinculados.set(lista);
+
+    const emEdicao = this.indiceResponsavelEmEdicaoNovo();
+    if (emEdicao === indice) {
+      this.abrirFormResponsavelNovo();
+    } else if (emEdicao !== null && emEdicao > indice) {
+      this.indiceResponsavelEmEdicaoNovo.set(emEdicao - 1);
+    }
+    if (lista.length === 0) {
+      this.mostrarFormResponsavelNovo.set(true);
+    }
+  }
+
+  cancelarFormResponsavelNovo(): void {
+    this.novoResponsavel = this.responsavelVazio();
+    this.indiceResponsavelEmEdicaoNovo.set(null);
+    this.erroResponsavel.set(null);
+    this.mostrarFormResponsavelNovo.set(false);
   }
 
   async salvarResponsavelVinculado(): Promise<void> {
@@ -1247,19 +1560,7 @@ export class Assistidos implements OnInit {
       this.novoResponsavelVinculado.responsavelPrincipal ||
       this.responsaveisDoAssistido().filter((r) => r.responsavelPrincipal).length === 0;
 
-    const dto: VinculoFamiliarComResponsavelRequestDTO = {
-      nomeCompleto: this.novoResponsavelVinculado.nomeCompleto,
-      dataNascimento: this.novoResponsavelVinculado.dataNascimento || undefined,
-      cpf: this.novoResponsavelVinculado.cpf || undefined,
-      telefone: this.novoResponsavelVinculado.telefone || undefined,
-      email: this.novoResponsavelVinculado.email || undefined,
-      endereco: this.novoResponsavelVinculado.endereco || undefined,
-      observacoes: this.novoResponsavelVinculado.observacoes || undefined,
-      parentesco: this.novoResponsavelVinculado.parentesco || undefined,
-      responsavelPrincipal,
-      contatoEmergencia: this.novoResponsavelVinculado.contatoEmergencia,
-      autorizadoRetirada: this.novoResponsavelVinculado.autorizadoRetirada,
-    };
+    const dto = this.paraVinculoComResponsavel(this.novoResponsavelVinculado, responsavelPrincipal);
 
     try {
       await firstValueFrom(
@@ -1286,9 +1587,15 @@ export class Assistidos implements OnInit {
   abrirEdicaoResponsavel(vinculo: VinculoFamiliarResponseDTO): void {
     this.formEdicaoResponsavel = {
       nomeCompleto: vinculo.nomeResponsavel,
+      dataNascimento: vinculo.dataNascimentoResponsavel ?? '',
       cpf: vinculo.cpfResponsavel ?? '',
       telefone: vinculo.telefoneResponsavel ?? '',
       email: vinculo.emailResponsavel ?? '',
+      endereco: enderecoParaForm(vinculo.enderecoResponsavel),
+      escolaridade: vinculo.escolaridadeResponsavel ?? null,
+      estadoCivil: vinculo.estadoCivilResponsavel ?? null,
+      profissao: vinculo.profissaoResponsavel ?? '',
+      renda: vinculo.rendaResponsavel ?? null,
       parentesco: vinculo.parentesco ?? '',
       responsavelPrincipal: vinculo.responsavelPrincipal,
       contatoEmergencia: vinculo.contatoEmergencia,
@@ -1331,12 +1638,16 @@ export class Assistidos implements OnInit {
 
       const responsavel: ResponsavelRequestDTO = {
         nomeCompleto: form.nomeCompleto,
-        dataNascimento: atual.dataNascimento ?? undefined,
+        dataNascimento: form.dataNascimento || undefined,
         cpf: form.cpf,
         telefone: form.telefone || undefined,
         email: form.email || undefined,
-        endereco: atual.endereco ?? undefined,
+        endereco: enderecoParaPayload(form.endereco),
         observacoes: atual.observacoes ?? undefined,
+        escolaridade: form.escolaridade ?? null,
+        estadoCivil: form.estadoCivil ?? null,
+        profissao: form.profissao?.trim() || null,
+        renda: form.renda ?? null,
       };
 
       const vinculoAtualizado: VinculoFamiliarRequestDTO = {

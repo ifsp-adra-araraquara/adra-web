@@ -1,0 +1,33 @@
+<div class="nav-data" role="group" [attr.aria-label]="label()">
+  <button
+    type="button"
+    class="nav-data__seta"
+    aria-label="Dia anterior"
+    title="Dia anterior"
+    [disabled]="!podeVoltar()"
+    (click)="mover(-1)"
+  >
+    <app-icon name="chevron-left" />
+  </button>
+
+  <input
+    class="input nav-data__campo"
+    type="date"
+    [attr.aria-label]="label()"
+    [attr.min]="min() || null"
+    [attr.max]="max() || null"
+    [value]="data()"
+    (change)="escolher($any($event.target).value)"
+  />
+
+  <button
+    type="button"
+    class="nav-data__seta"
+    aria-label="Próximo dia"
+    title="Próximo dia"
+    [disabled]="!podeAvancar()"
+    (click)="mover(1)"
+  >
+    <app-icon name="chevron-right" />
+  </button>
+</div>

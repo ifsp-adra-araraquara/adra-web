@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Location } from '@angular/common';
+import { DatePipe, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -21,6 +21,14 @@ import {
   podeCorrigirDataChamada,
   podeEditarChamada as podeEditarChamadaUtil,
   validarChamada,
+  contarFaltasConsecutivas,
+  LIMIAR_FALTAS_CONSECUTIVAS,
+  DIAS_FAIXA_HISTORICO,
+  OrdemNome,
+  ordenarPorNome,
+  LIMIAR_JUSTIFICADAS_CONSECUTIVAS,
+  contarJustificadasConsecutivas,
+  rotuloAutorizados,
 } from '../../../shared/utils/chamada.util';
 import { AulaComDetalhesResponseDTO } from '../../../shared/models/aula/AulaComDetalhesResponseDTO';
 import { AulaResponseDTO } from '../../../shared/models/aula/AulaResponseDTO';
@@ -28,6 +36,7 @@ import { Button } from '../../../shared/components/button/button';
 import { RastreabilidadeTooltip } from '../../../shared/components/rastreabilidade-tooltip/rastreabilidade-tooltip';
 import { Icon } from '../../../shared/components/icon/icon';
 import { Avatar } from '../../../shared/components/avatar/avatar';
+import { Badge } from '../../../shared/components/badge/badge';
 
 type AbaAulaCompleta = 'alunos' | 'materiais';
 
@@ -42,10 +51,12 @@ type AbaAulaCompleta = 'alunos' | 'materiais';
  * só Sociopedagógico conseguia salvar aqui — Coordenador (que também pode)
  * ficava travado por engano.
  */
+import { AniversarioCards } from '../../../shared/components/aniversario-cards/aniversario-cards';
+
 @Component({
   selector: 'app-aula-completa',
   standalone: true,
-  imports: [Icon, FormsModule, Button, RastreabilidadeTooltip, Avatar],
+  imports: [AniversarioCards, Icon, FormsModule, Button, RastreabilidadeTooltip, Avatar, Badge, DatePipe],
   templateUrl: './aula-completa.html',
   styleUrl: './aula-completa.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -69,7 +80,29 @@ export class AulaCompleta implements OnInit {
   readonly salvando = signal(false);
   readonly salvo = signal(false);
   readonly aula = signal<AulaComDetalhesResponseDTO | null>(null);
+  /* Histórico recente no roster (mesma faixa e alerta do modal de chamada). */
+  readonly limiarFaltasConsecutivas = LIMIAR_FALTAS_CONSECUTIVAS;
+
+  faltasConsecutivasDe(aluno: LinhaChamada): number {
+    return contarFaltasConsecutivas(aluno.historicoRecente);
+  }
+
+  /** Últimos dias, mais recente primeiro — bolinhas ao lado do nome. */
+  faixaHistoricoDe(aluno: LinhaChamada) {
+    return aluno.historicoRecente.slice(0, DIAS_FAIXA_HISTORICO);
+  }
+
   readonly alunos = signal<LinhaChamada[]>([]);
+
+  /* Ordem A–Z / Z–A, alerta de justificadas seguidas e quem pode buscar. */
+  readonly ordemNome = signal<OrdemNome>('az');
+  readonly alunosOrdenados = computed(() => ordenarPorNome(this.alunos(), this.ordemNome()));
+  readonly limiarJustificadasConsecutivas = LIMIAR_JUSTIFICADAS_CONSECUTIVAS;
+  readonly rotuloAutorizados = rotuloAutorizados;
+
+  justificadasConsecutivasDe(aluno: LinhaChamada): number {
+    return contarJustificadasConsecutivas(aluno.historicoRecente);
+  }
 
   private readonly perfil = computed(() => this.auth.currentProfile());
 

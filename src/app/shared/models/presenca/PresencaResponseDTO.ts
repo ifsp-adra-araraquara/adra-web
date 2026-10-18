@@ -7,6 +7,12 @@ export interface PresencaHistoricoDTO {
   statusPresenca: StatusPresenca;
 }
 
+export interface AutorizadoRetiradaDTO {
+  nome: string;
+  parentesco: string | null;
+  telefone: string | null;
+}
+
 export interface PresencaResponseDTO {
   // null quando o status é PRESENTE inferido (modelo esparso — nunca vira
   // linha no banco, ver PresencaResponseDTO.presente() no back).
@@ -14,6 +20,10 @@ export interface PresencaResponseDTO {
   aulaId: number;
   assistidoId: number;
   nomeCompleto: string;
+  /** Termo do assistido: pode sair sozinho ao fim da atividade. */
+  podeIrEmboraSozinho?: boolean;
+  /** 'YYYY-MM-DD' — para o card de aniversário na chamada. */
+  dataNascimento?: string | null;
   statusPresenca: StatusPresenca;
   motivoFalta: MotivoFalta | null;
   observacao: string | null;
@@ -28,4 +38,10 @@ export interface PresencaResponseDTO {
   // recente primeiro) do aluno na turma, pra faixa de dias no roster.
   // Vazio nos outros usos deste DTO.
   historicoRecente: PresencaHistoricoDTO[];
+  // Só em GET /api/chamadas/aula/{id}: % de presença, aulas realizadas e total previsto da turma.
+  frequenciaPercentual?: number | null;
+  aulasRealizadas?: number | null;
+  aulasPrevistas?: number | null;
+  /** Quem pode buscar o aluno (responsáveis "autorizado a retirar"), principal primeiro. */
+  autorizadosRetirada?: AutorizadoRetiradaDTO[];
 }

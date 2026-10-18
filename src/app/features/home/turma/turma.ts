@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -35,11 +35,14 @@ import { AulasTurmaModal } from '../aulas-turma-modal/aulas-turma-modal';
 import { AuthService } from '../../../core/auth.service';
 import { Icon } from '../../../shared/components/icon/icon';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
+import { AlunosTurmaModal } from './alunos-turma-modal/alunos-turma-modal';
+import { HistoricoOficineiros } from '../../../shared/components/historico-oficineiros/historico-oficineiros';
+import { OficineiroHistoricoDTO } from '../../../shared/models/historico/OficineiroHistoricoDTO';
 
 @Component({
   selector: 'app-turmas',
   standalone: true,
-  imports: [Icon, 
+  imports: [AlunosTurmaModal, HistoricoOficineiros, Icon, 
     CommonModule,
     FormsModule,
     Select,
@@ -139,10 +142,20 @@ export class Turmas implements OnInit {
     this.carregarTurmas();
     this.carregarOficinas();
 
-    if (this.isCoordenador()) {
+  }
+
+  /**
+   * O perfil do usuário pode chegar depois do ngOnInit (ex.: F5 direto na
+   * página) — por isso a lista de oficineiros carrega quando o perfil vira
+   * Coordenador, e não só no init (antes o select ficava vazio).
+   */
+  private oficineirosCarregados = false;
+  private readonly carregarOficineirosQuandoCoordenador = effect(() => {
+    if (this.isCoordenador() && !this.oficineirosCarregados) {
+      this.oficineirosCarregados = true;
       this.carregarOficineirosParaSelect();
     }
-  }
+  });
 
   /* ============================================================
    * VER ALUNOS / VER AULAS — absorvidos da extinta tela "Aulas"
@@ -150,8 +163,11 @@ export class Turmas implements OnInit {
   turmaAulasSelecionada = signal<TurmaResponseDTO | null>(null);
 
   /** Leva à ficha completa do assistido (cadastro, não só nome) já filtrada por essa turma. */
+  /** Turma cujo modal "Alunos da turma" está aberto (null = fechado). */
+  turmaAlunosModal = signal<TurmaResponseDTO | null>(null);
+
   verAlunos(turma: TurmaResponseDTO): void {
-    this.router.navigate(['/assistidos'], { queryParams: { turmaId: turma.turmaId } });
+    this.turmaAlunosModal.set(turma);
   }
 
   abrirAulasDaTurma(turma: TurmaResponseDTO): void {
@@ -169,8 +185,11 @@ export class Turmas implements OnInit {
    * overlays — mesma preocupação já registrada no plano pra modais aninhadas).
    */
   turmaDrawerAberta = signal<TurmaResponseDTO | null>(null);
+  /** O drawer mostra a lista de ações ou o histórico de oficineiros da turma. */
+  drawerVisao = signal<'acoes' | 'historico'>('acoes');
 
   readonly abrirDrawerTurma = (turma: TurmaResponseDTO): void => {
+    this.drawerVisao.set('acoes');
     this.turmaDrawerAberta.set(turma);
   };
 
@@ -246,6 +265,30 @@ export class Turmas implements OnInit {
     });
   }
 
+  /**
+   * O select só lista oficineiros ATIVOS. Se o atual da turma foi inativado,
+   * ele não aparece e o campo fica em branco — então busca o nome dele no
+   * histórico e inclui como opção "(inativo)", para dar pra ver e trocar.
+   */
+  private garantirOficineiroAtualNasOpcoes(turma: TurmaResponseDTO): void {
+    const atualId = turma.oficineiroResponsavelId;
+    if (atualId == null || this.oficineiroOptions().some((o) => o.value === atualId)) return;
+    this.http
+      .get<OficineiroHistoricoDTO[]>(`${this.apiTurmas}/${turma.turmaId}/oficineiros-historico`)
+      .subscribe({
+        next: (historico) => {
+          const atual = historico.find((h) => h.oficineiroId === atualId);
+          if (atual && !this.oficineiroOptions().some((o) => o.value === atualId)) {
+            this.oficineiroOptions.update((opcoes) => [
+              ...opcoes,
+              { value: atualId, label: `${atual.nomeOficineiro} (inativo)` },
+            ]);
+          }
+        },
+        error: () => {},
+      });
+  }
+
   private carregarOficineirosParaSelect(): void {
     this.http.get<UsuarioResponse[]>(`${this.apiUsuarios}/oficineiros`).subscribe({
       next: (lista) => {
@@ -296,6 +339,7 @@ export class Turmas implements OnInit {
   }
 
   abrirModalEditarTurma(turma: TurmaResponseDTO): void {
+    this.garantirOficineiroAtualNasOpcoes(turma);
     this.turmaEmEdicao.set(turma);
     this.formTurma = {
       nomeTurma: turma.nomeTurma,

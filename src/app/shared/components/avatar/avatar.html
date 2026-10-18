@@ -1,5 +1,21 @@
 @if (url(); as src) {
-  <img class="avatar" [src]="src" [alt]="'Foto de ' + nome()" loading="lazy" decoding="async" (error)="aoFalharImagem()" />
+  @if (ampliavel()) {
+    <button
+      type="button"
+      class="avatar-botao"
+      [attr.aria-label]="'Ampliar foto de ' + nome()"
+      title="Ver foto ampliada"
+      (click)="ampliada.set(true)"
+    >
+      <img class="avatar" [src]="src" [alt]="'Foto de ' + nome()" loading="lazy" decoding="async" (error)="aoFalharImagem()" />
+    </button>
+
+    <app-modal [(open)]="ampliada" [title]="nome() || 'Foto'" size="lg">
+      <img class="avatar-ampliada" [src]="src" [alt]="'Foto de ' + nome()" decoding="async" />
+    </app-modal>
+  } @else {
+    <img class="avatar" [src]="src" [alt]="'Foto de ' + nome()" loading="lazy" decoding="async" (error)="aoFalharImagem()" />
+  }
 } @else {
   <span class="avatar avatar--iniciais" role="img" [attr.aria-label]="nome() ? 'Sem foto: ' + nome() : 'Sem foto'">
     {{ iniciais() }}

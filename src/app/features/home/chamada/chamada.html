@@ -23,12 +23,10 @@
       </div>
       @if (ehCoordenador()) {
       <div class="filtros">
-        <app-input
-          type="date"
+        <app-navegador-data
           label="Filtrar por data"
-          [hideLabel]="true"
-          [ngModel]="dataSelecionada()"
-          (ngModelChange)="onDataChange($event)"
+          [data]="dataSelecionada()"
+          (dataChange)="onDataChange($event)"
         />
         <app-button
           variant="secondary"

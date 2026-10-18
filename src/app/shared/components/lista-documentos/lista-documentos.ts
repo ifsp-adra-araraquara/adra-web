@@ -4,6 +4,7 @@ import { CategoriaArquivo } from '../../enum/CategoriaArquivo';
 import { EntidadeArquivo } from '../../enum/EntidadeArquivo';
 import { ArquivoResponseDTO } from '../../models/arquivo/ArquivoResponseDTO';
 import { Icon } from '../icon/icon';
+import { Modal } from '../modal/modal';
 
 interface DocumentoExibido {
   arquivo: ArquivoResponseDTO;
@@ -13,15 +14,16 @@ interface DocumentoExibido {
 }
 
 /**
- * Mostra os arquivos de uma categoria (ex.: RG/CPF do assistido) como miniaturas;
- * tocar abre o arquivo em nova aba. URLs são temporárias e geradas na hora.
+ * Mostra os arquivos de uma categoria (ex.: RG/CPF do assistido) como miniaturas.
+ * Tocar numa imagem abre um modal com ela ampliada; PDF abre em nova aba.
+ * URLs são temporárias e geradas na hora.
  *
  * Uso:
  *   <app-lista-documentos [entidadeId]="id" [categoria]="CategoriaArquivo.DOCUMENTO_IDENTIDADE" />
  */
 @Component({
   selector: 'app-lista-documentos',
-  imports: [Icon],
+  imports: [Icon, Modal],
   templateUrl: './lista-documentos.html',
   styleUrl: './lista-documentos.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,6 +41,9 @@ export class ListaDocumentos {
   protected readonly carregando = signal(true);
   protected readonly erro = signal<string | null>(null);
   protected readonly documentos = signal<DocumentoExibido[]>([]);
+  /** Imagem aberta no modal de visualização (null = fechado). */
+  protected readonly ampliado = signal<{ url: string; titulo: string } | null>(null);
+  protected readonly modalAberto = signal(false);
 
   constructor() {
     effect((onCleanup) => {
@@ -58,7 +63,22 @@ export class ListaDocumentos {
     });
   }
 
-  /** URL expirada (tela aberta há muito tempo): gera outra antes de abrir. */
+  /** Imagem: abre o modal ampliado (renovando a URL se expirou). */
+  protected async ampliar(doc: DocumentoExibido, indice: number): Promise<void> {
+    try {
+      if (!doc.url || doc.expiraEm <= Date.now()) {
+        const { url, expiraEm } = await this.arquivoService.gerarUrl(doc.arquivo.arquivoId);
+        doc.url = url;
+        doc.expiraEm = new Date(expiraEm).getTime() - 30_000;
+      }
+      this.ampliado.set({ url: doc.url!, titulo: `${this.rotulo()} ${indice + 1}` });
+      this.modalAberto.set(true);
+    } catch {
+      this.erro.set('Não foi possível abrir o documento.');
+    }
+  }
+
+  /** PDF — URL expirada (tela aberta há muito tempo): gera outra antes de abrir. */
   protected async abrir(evento: MouseEvent, doc: DocumentoExibido): Promise<void> {
     if (doc.url && doc.expiraEm > Date.now()) return; // segue o link normal
     evento.preventDefault();

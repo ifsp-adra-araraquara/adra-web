@@ -34,6 +34,11 @@ import {
   podeCorrigirDataChamada,
   podeEditarChamada as podeEditarChamadaUtil,
   validarChamada,
+  OrdemNome,
+  ordenarPorNome,
+  LIMIAR_JUSTIFICADAS_CONSECUTIVAS,
+  contarJustificadasConsecutivas,
+  rotuloAutorizados,
 } from '../../utils/chamada.util';
 import { AulaComDetalhesResponseDTO } from '../../models/aula/AulaComDetalhesResponseDTO';
 import { AulaRequestDTO } from '../../models/aula/AulaRequestDTO';
@@ -78,9 +83,11 @@ interface FormDefinirCampos {
  * primeira coisa que aparece ao abrir é um formulário pedindo pra definir
  * pelo menos o título antes de continuar pro resto da modal.
  */
+import { AniversarioCards } from '../aniversario-cards/aniversario-cards';
+
 @Component({
   selector: 'app-aula-modal',
-  imports: [TooltipDirective, Icon, FormsModule, Badge, AppInput, AppButton, Modal, RastreabilidadeTooltip, Avatar],
+  imports: [AniversarioCards, TooltipDirective, Icon, FormsModule, Badge, AppInput, AppButton, Modal, RastreabilidadeTooltip, Avatar],
   templateUrl: './aula-modal.html',
   styleUrl: './aula-modal.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -105,6 +112,16 @@ export class AulaModal implements OnChanges {
   readonly erro = signal<string | null>(null);
   readonly salvando = signal(false);
   readonly alunos = signal<LinhaChamada[]>([]);
+
+  /* Ordem A–Z / Z–A, alerta de justificadas seguidas e quem pode buscar. */
+  readonly ordemNome = signal<OrdemNome>('az');
+  readonly alunosOrdenados = computed(() => ordenarPorNome(this.alunos(), this.ordemNome()));
+  readonly limiarJustificadasConsecutivas = LIMIAR_JUSTIFICADAS_CONSECUTIVAS;
+  readonly rotuloAutorizados = rotuloAutorizados;
+
+  justificadasConsecutivasDe(aluno: LinhaChamada): number {
+    return contarJustificadasConsecutivas(aluno.historicoRecente);
+  }
 
   private readonly perfil = computed(() => this.auth.currentProfile());
   readonly ehOficineiroOuCoordenador = computed(

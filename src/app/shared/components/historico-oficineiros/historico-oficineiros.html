@@ -1,0 +1,24 @@
+@if (carregando()) {
+  <p class="hist-estado">Carregando histórico...</p>
+} @else if (erro()) {
+  <p class="hist-estado hist-estado--erro" role="alert">Não foi possível carregar o histórico de oficineiros.</p>
+} @else if (historico().length === 0) {
+  <p class="hist-estado">Nenhum oficineiro registrado ainda.</p>
+} @else {
+  <ol class="hist">
+    @for (periodo of historico(); track $index) {
+      <li class="hist-item" [class.hist-item--atual]="!periodo.dataFim">
+        <div class="hist-nome">
+          {{ periodo.nomeOficineiro }}
+          @if (!periodo.dataFim) {
+            <app-badge variant="green" label="Atual" />
+          }
+        </div>
+        <div class="hist-periodo">
+          {{ periodo.dataInicio | date: 'dd/MM/yyyy' }} até
+          {{ periodo.dataFim ? (periodo.dataFim | date: 'dd/MM/yyyy') : 'hoje' }}
+        </div>
+      </li>
+    }
+  </ol>
+}

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { ArquivoService } from '../../../core/arquivo.service';
 import { EntidadeArquivo } from '../../enum/EntidadeArquivo';
+import { Modal } from '../modal/modal';
 
 const PARTICULAS = new Set(['de', 'da', 'do', 'das', 'dos', 'e']);
 
@@ -10,9 +11,12 @@ const PARTICULAS = new Set(['de', 'da', 'do', 'das', 'dos', 'e']);
  *
  * Uso:
  *   <app-avatar [entidadeId]="assistido.assistidoId" [nome]="assistido.nomeCompleto" [size]="40" />
+ *   Clicável para ver a foto em tamanho grande (ficha):
+ *   <app-avatar [entidadeId]="id" [nome]="nome" [size]="72" [ampliavel]="true" />
  */
 @Component({
   selector: 'app-avatar',
+  imports: [Modal],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './avatar.html',
   styleUrl: './avatar.css',
@@ -27,6 +31,10 @@ export class Avatar {
   nome = input('');
   entidadeTipo = input<EntidadeArquivo>(EntidadeArquivo.ASSISTIDO);
   size = input(40);
+  /** Clique na foto abre a imagem grande num modal (só quando há foto). */
+  ampliavel = input(false);
+
+  protected readonly ampliada = signal(false);
 
   protected readonly url = signal<string | null>(null);
   private tentouRecarregar = false;

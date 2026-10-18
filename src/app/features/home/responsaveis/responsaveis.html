@@ -97,6 +97,9 @@
           <label>Data de nascimento</label>
           <div class="input" style="background: var(--gray-50)">
             {{ responsavel.dataNascimento ? (responsavel.dataNascimento | date: 'dd/MM/yyyy') : 'Não informado' }}
+            @if (idade(responsavel.dataNascimento) != null) {
+              <span class="cell-sub">· {{ idade(responsavel.dataNascimento) }} anos</span>
+            }
           </div>
         </div>
       </div>
@@ -112,10 +115,45 @@
         </div>
       </div>
 
+      <div class="form-row">
+        <div class="field">
+          <label>Escolaridade</label>
+          <div class="input" style="background: var(--gray-50)">
+            {{ responsavel.escolaridade ? escolaridadeLabels[responsavel.escolaridade] : 'Não informado' }}
+          </div>
+        </div>
+        <div class="field">
+          <label>Estado civil</label>
+          <div class="input" style="background: var(--gray-50)">
+            {{ responsavel.estadoCivil ? estadoCivilLabels[responsavel.estadoCivil] : 'Não informado' }}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="field">
+          <label>Profissão</label>
+          <div class="input" style="background: var(--gray-50)">{{ responsavel.profissao || 'Não informado' }}</div>
+        </div>
+        <div class="field">
+          <label>Renda mensal</label>
+          <div class="input" style="background: var(--gray-50)">
+            {{ responsavel.renda != null ? formatarMoeda(responsavel.renda) : 'Não informado' }}
+          </div>
+        </div>
+      </div>
+
       <div class="field">
         <label>Endereço</label>
-        <div class="input" style="background: var(--gray-50)">{{ responsavel.endereco || 'Não informado' }}</div>
+        <div class="input" style="background: var(--gray-50)">{{ formatarEndereco(responsavel.endereco) || 'Não informado' }}</div>
       </div>
+
+      @if (responsavel.endereco?.pontoReferencia) {
+        <div class="field">
+          <label>Ponto de referência</label>
+          <div class="input" style="background: var(--gray-50)">{{ responsavel.endereco?.pontoReferencia }}</div>
+        </div>
+      }
 
       <div class="field">
         <label>Observações</label>
