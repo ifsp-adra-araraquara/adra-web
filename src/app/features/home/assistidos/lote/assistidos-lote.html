@@ -21,7 +21,8 @@
     </div>
     <p class="page-intro">
       Baixe o modelo, preencha no Excel e importe o arquivo .csv, ou adicione os assistidos direto na grade.
-      Valide, corrija o que estiver marcado e cadastre. O 1º responsável de cada assistido é o principal.
+      Em cada assistido, adicione o RG ou CPF e, se quiser, a foto. Valide, corrija o que estiver marcado e cadastre.
+      O 1º responsável de cada assistido é o principal.
     </p>
   </header>
 
@@ -113,7 +114,7 @@
                     class="lote-expandir"
                     [class.lote-expandir--aberto]="linha.expandida()"
                     [attr.aria-expanded]="linha.expandida()"
-                    [attr.aria-label]="'Responsáveis da linha ' + numero"
+                    [attr.aria-label]="'Detalhes da linha ' + numero"
                     (click)="alternarExpansao(linha)"
                   >
                     <app-icon name="chevron-right" [size]="16" />
@@ -160,6 +161,7 @@
                     type="button"
                     class="btn-icon btn-icon--danger"
                     [attr.aria-label]="'Remover linha ' + numero + ' da importação'"
+                    appTooltip="Remover da importação"
                     (click)="removerLinha(linha)"
                   >
                     <app-icon name="x" />
@@ -186,6 +188,18 @@
                     }
 
                     @if (linha.expandida()) {
+                      <div class="lote-anexos" role="group" [attr.aria-label]="'Documento e foto da linha ' + numero">
+                        <app-upload-documento
+                          label="RG ou CPF"
+                          dica="Uma foto do documento ou PDF."
+                          [arquivos]="linha.documentos()"
+                          (arquivosChange)="trocarDocumentos(linha, $event)"
+                          [obrigatorio]="true"
+                          [invalido]="!!resultado"
+                        />
+                        <app-foto-perfil [arquivo]="linha.foto()" (arquivoChange)="trocarFoto(linha, $event)" />
+                      </div>
+
                       @let responsaveis = linha.form.controls.responsaveis.controls;
                       <div class="lote-responsaveis">
                         <div class="lote-responsaveis-head">
@@ -280,6 +294,7 @@
                                         type="button"
                                         class="btn-icon btn-icon--ghost"
                                         [attr.aria-label]="'Remover ' + rotulo"
+                                        appTooltip="Remover responsável"
                                         (click)="removerResponsavel(linha, i)"
                                       >
                                         <app-icon name="x" [size]="16" />
@@ -310,6 +325,7 @@
       <div class="lote-progresso">
         <span><b>{{ prontas() }} de {{ linhas().length }}</b> prontos para cadastro</span>
         <progress [value]="prontas()" [max]="linhas().length" aria-label="Assistidos prontos para cadastro"></progress>
+        <span class="lote-status" role="status">{{ progresso() }}</span>
       </div>
       <div class="lote-rodape-acoes">
         @if (!todasProntas()) {

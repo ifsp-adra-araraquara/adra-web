@@ -1,9 +1,9 @@
 @if (carregando()) {
-  <p class="lista-doc__estado">Carregando documentos...</p>
+  <p class="lista-doc__estado" role="status">Carregando documentos…</p>
 } @else if (erro()) {
   <p class="lista-doc__estado lista-doc__estado--erro" role="alert">{{ erro() }}</p>
 } @else if (documentos().length === 0) {
-  <p class="lista-doc__estado">{{ vazio() }}</p>
+  <p class="lista-doc__estado" role="status">{{ vazio() }}</p>
 } @else {
   <ul class="lista-doc" role="list">
     @for (doc of documentos(); track doc.arquivo.arquivoId; let i = $index) {

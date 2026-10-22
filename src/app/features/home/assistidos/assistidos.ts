@@ -49,6 +49,8 @@ import { Avatar } from '../../../shared/components/avatar/avatar';
 import { UploadDocumento } from '../../../shared/components/upload-documento/upload-documento';
 import { ListaDocumentos } from '../../../shared/components/lista-documentos/lista-documentos';
 import { ArquivoService } from '../../../core/arquivo.service';
+import { AssistidoService } from '../../../core/assistido.service';
+import { MENSAGEM_SEM_DOCUMENTO } from './mensagens-cadastro';
 import { EntidadeArquivo } from '../../../shared/enum/EntidadeArquivo';
 import { CategoriaArquivo } from '../../../shared/enum/CategoriaArquivo';
 import { SEXO_LABELS, Sexo } from '../../../shared/enum/Sexo';
@@ -89,6 +91,7 @@ export class Assistidos implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly chamadaService = inject(ChamadaService);
   private readonly arquivoService = inject(ArquivoService);
+  private readonly assistidoService = inject(AssistidoService);
 
   StatusGeral = StatusGeral;
   readonly CategoriaArquivo = CategoriaArquivo;
@@ -174,15 +177,11 @@ export class Assistidos implements OnInit {
   erroSalvar = signal<string | null>(null);
   alertaDuplicidade = signal(false);
   novoAssistido: AssistidoRequestDTO = this.assistidoVazio();
-  assistidoIdCriado = signal<number | null>(null);
-  /**
-   * Foto de perfil já comprimida no navegador (WebP, 512x512).
-   * Por enquanto só fica no front — o envio ao back entra junto com o módulo de arquivos.
-   */
+  /** Foto de perfil já comprimida no navegador (WebP, 512x512). */
   fotoPerfilNovoAssistido = signal<File | null>(null);
   /** Foto do RG ou CPF — obrigatória, 1 arquivo. */
   documentosIdentidadeNovo = signal<File[]>([]);
-  /** Liga o destaque vermelho do campo de foto depois da 1ª tentativa de salvar sem ela. */
+  /** Liga o destaque vermelho do campo de documento depois da 1ª tentativa de salvar sem ele. */
   tentouSalvarNovo = signal(false);
   turmasAtivas = computed(() => this.turmas().filter((turma) => turma.ativo));
 
@@ -604,7 +603,6 @@ export class Assistidos implements OnInit {
   abrirModalNovoAssistido(): void {
     this.carregarElegibilidade();
     this.novoAssistido = this.assistidoVazio();
-    this.assistidoIdCriado.set(null);
     this.responsaveisVinculados.set([]);
     this.novoResponsavel = this.responsavelVazio();
     this.mostrarFormResponsavelNovo.set(true);
@@ -829,7 +827,7 @@ export class Assistidos implements OnInit {
       try {
         const resultado = await firstValueFrom(
           this.http.get<{ possivelDuplicidade: boolean }>(`${this.apiAssistidos}/verificar-duplicidade`, {
-            params: new HttpParams().set('nome', nome).set('dataNascimento', dataNascimento),
+            params: new HttpParams().set('nomeCompleto', nome).set('dataNascimento', dataNascimento),
           }),
         );
 
@@ -841,12 +839,8 @@ export class Assistidos implements OnInit {
   }
 
   private validarAssistidoAntesSalvar(): string | null {
-    if (!this.fotoPerfilNovoAssistido()) {
-      return 'Adicione uma foto de perfil do assistido.';
-    }
-
     if (this.documentosIdentidadeNovo().length === 0) {
-      return 'Adicione a foto do RG ou CPF do assistido.';
+      return MENSAGEM_SEM_DOCUMENTO;
     }
 
     if (!this.novoAssistido.nomeCompleto.trim() || !this.novoAssistido.dataNascimento) {
@@ -867,10 +861,6 @@ export class Assistidos implements OnInit {
     const renda = this.novoAssistido.rendaFamiliar;
     if (limite != null && renda != null && renda > limite) {
       return `Renda familiar acima do limite do programa (${formatarMoeda(limite)}). A família não pode ser cadastrada.`;
-    }
-
-    if (!this.novoAssistido.aceiteLgpd) {
-      return 'Marque o aceite do uso de dados (LGPD) para concluir o cadastro.';
     }
 
     const turmaSelecionada = this.turmas().find((turma) => turma.turmaId === Number(this.novoAssistido.turmaId));
@@ -1041,10 +1031,7 @@ export class Assistidos implements OnInit {
    * ============================================================
    * SALVAR
    * ============================================================
-   * 1) POST /api/assistidos
-   * 2) Para cada responsável pendente:
-   *    a) POST /api/responsaveis
-   *    b) POST /api/assistidos/{id}/responsaveis (vínculo)
+   * POST /api/assistidos (multipart) com responsáveis, foto e documentos.
    */
   async salvarAssistido(): Promise<void> {
     if (this.salvando()) {
@@ -1084,17 +1071,9 @@ export class Assistidos implements OnInit {
     };
 
     try {
-      // multipart: 'dados' (JSON do assistido) + 'foto' + 'documentos' (já comprimidos no navegador).
-      // O back cria o assistido e salva os arquivos na mesma transação.
-      const formData = new FormData();
-      // 'dados' precisa ir como application/json para o @RequestPart do Spring desserializar
-      formData.append('dados', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
-      formData.append('foto', this.fotoPerfilNovoAssistido()!);
-      // Mesmo nome de parte repetido = List<MultipartFile> no @RequestPart("documentos")
-      this.documentosIdentidadeNovo().forEach((documento) => formData.append('documentos', documento));
-
-      // Sem header Content-Type manual: o navegador monta o boundary do multipart sozinho.
-      await firstValueFrom(this.http.post<AssistidoResponseDTO>(this.apiAssistidos, formData));
+      await firstValueFrom(
+        this.assistidoService.cadastrar(payload, this.fotoPerfilNovoAssistido(), this.documentosIdentidadeNovo()),
+      );
 
       this.salvando.set(false);
       this.fecharModalNovoAssistido();
@@ -1429,32 +1408,6 @@ export class Assistidos implements OnInit {
     }
 
     return `${this.calcularIdade(dataNascimento)} anos`;
-  }
-
-  /**
-   * Garante que o assistido já foi persistido no backend.
-   * Se ainda não foi (usuário está adicionando o 1º responsável
-   * antes de clicar em "Salvar assistido"), cria o assistido agora
-   * e guarda o ID pra reaproveitar nos próximos responsáveis.
-   */
-  private async garantirAssistidoCriado(): Promise<number> {
-    const idJaCriado = this.assistidoIdCriado();
-    if (idJaCriado) {
-      return idJaCriado;
-    }
-
-    if (!this.novoAssistido.nomeCompleto.trim() || !this.novoAssistido.dataNascimento) {
-      throw new Error(
-        'Preencha nome completo e data de nascimento do assistido antes de adicionar um responsável.',
-      );
-    }
-
-    const assistidoCriado = await firstValueFrom(
-      this.http.post<AssistidoResponseDTO>(this.apiAssistidos, this.paraPayloadAssistido(this.novoAssistido)),
-    );
-
-    this.assistidoIdCriado.set(assistidoCriado.assistidoId);
-    return assistidoCriado.assistidoId;
   }
 
   /**
