@@ -24,7 +24,7 @@ const USER_KEY = 'usuario_logado';
 // restaurando uma sessao antiga (ex: admin testando o link de convite/reset no
 // mesmo navegador). Sem isso, o app "rouba" o usuario de volta pro dashboard
 // antes da pagina de redefinir/convite conseguir renderizar.
-const ROTAS_PUBLICAS_AUTH = ['/login', '/esqueci-senha', '/redefinir-senha', '/convite'];
+const ROTAS_PUBLICAS_AUTH = ['/login', '/esqueci-senha', '/redefinir-senha'];
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -91,7 +91,7 @@ export class AuthService {
       if (evento === 'PASSWORD_RECOVERY') return;
 
       // Nao interfere em paginas publicas de auth (login, esqueci-senha,
-      // redefinir-senha, convite/:token): mesmo que exista uma sessao antiga
+      // redefinir-senha): mesmo que exista uma sessao antiga
       // restaurada (ex: admin ja logado no mesmo navegador), essas telas
       // precisam renderizar normalmente sem ser "sequestradas" de volta pro
       // dashboard.
@@ -128,6 +128,11 @@ export class AuthService {
         'Nao foi possivel enviar o e-mail agora. Peca a um Administrador para redefinir sua senha.'
       );
     }
+  }
+
+  async validarLinkEmail(tokenHash: string, tipo: 'recovery' | 'invite'): Promise<boolean> {
+    const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: tipo });
+    return !error;
   }
 
   /**

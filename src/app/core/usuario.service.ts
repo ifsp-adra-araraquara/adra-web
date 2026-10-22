@@ -13,20 +13,11 @@ export interface NovoUsuario {
   telefone: string | null;
 }
 
-export interface DefinicaoDeSenha {
-  email: string;
-  novaSenha: string;
-}
-
 @Injectable({ providedIn: 'root' })
 export class UsuarioService {
   private http = inject(HttpClient);
 
   cadastrar(usuario: NovoUsuario): Observable<UsuarioResponse> {
     return this.http.post<UsuarioResponse>(`${environment.apiUrl}/api/usuarios`, usuario);
-  }
-
-  definirSenha(dados: DefinicaoDeSenha): Observable<void> {
-    return this.http.put<void>(`${environment.apiUrl}/api/usuarios/senha`, dados);
   }
 }
