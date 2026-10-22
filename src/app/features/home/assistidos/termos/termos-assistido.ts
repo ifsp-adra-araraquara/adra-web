@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
+import { ChangeDetectionStrategy, Component, model } from '@angular/core';
 import { AssistidoRequestDTO } from '../../../../shared/models/assistido/AssistidoRequestDTO';
 
 export type TermosAssistido = Pick<
@@ -10,12 +10,11 @@ interface Termo {
   campo: keyof TermosAssistido;
   titulo: string;
   descricao: string;
-  obrigatorio?: boolean;
 }
 
 /**
- * Termos e autorizações assinados pelo responsável, no fim do cadastro.
- * Uso: `<app-termos-assistido [(dados)]="form" [invalido]="tentouSalvar()" />`.
+ * Termos e autorizações do assistido, marcados pela equipe no fim do cadastro.
+ * Uso: `<app-termos-assistido [(dados)]="form" />`.
  */
 @Component({
   selector: 'app-termos-assistido',
@@ -26,40 +25,40 @@ interface Termo {
 })
 export class TermosAssistidoForm<T extends TermosAssistido> {
   dados = model.required<T>();
-  /** Destaca o aceite LGPD em vermelho depois de tentar salvar sem ele. */
-  invalido = input(false);
 
   protected readonly termos: Termo[] = [
     {
       campo: 'aceiteLgpd',
       titulo: 'Aceite do uso de dados (LGPD)',
       descricao:
-        'Autorizo a ADRA a coletar e guardar os dados pessoais do assistido e da família, inclusive de saúde, ' +
+        'O assistido autoriza a ADRA a coletar e guardar os dados pessoais dele e da família, inclusive de saúde, ' +
         'somente para o atendimento no SCFV, conforme a Lei 13.709/2018 (LGPD).',
-      obrigatorio: true,
     },
     {
       campo: 'autorizaUsoImagem',
       titulo: 'Cessão de imagem',
       descricao:
-        'Autorizo o uso de fotos e vídeos do assistido em materiais e redes sociais da ADRA, sem fins comerciais.',
+        'O assistido autoriza o uso de fotos e vídeos dele em materiais e redes sociais da ADRA, sem fins comerciais.',
     },
     {
       campo: 'autorizaEventosPasseios',
       titulo: 'Eventos, passeios e viagens',
-      descricao: 'Autorizo o assistido a participar de eventos, passeios e viagens organizados pela ADRA, com a equipe.',
+      descricao:
+        'O assistido está autorizado a participar de eventos, passeios e viagens organizados pela ADRA, com a equipe.',
     },
     {
       campo: 'podeIrEmboraSozinho',
       titulo: 'Pode ir embora sozinho',
       descricao:
-        'Autorizo o assistido a sair sozinho ao fim das atividades, sem um responsável. Aparece nas listas de presença.',
+        'O assistido está autorizado a sair sozinho ao fim das atividades, sem um responsável. ' +
+        'Aparece nas listas de presença.',
     },
     {
       campo: 'cienteFrequenciaObrigatoria',
       titulo: 'Frequência obrigatória',
       descricao:
-        'Estou ciente de que a frequência é obrigatória e que faltas sem justificativa são acompanhadas pela equipe.',
+        'O assistido está ciente de que a frequência é obrigatória e de que faltas sem justificativa são ' +
+        'acompanhadas pela equipe.',
     },
   ];
 

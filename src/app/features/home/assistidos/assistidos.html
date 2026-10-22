@@ -318,8 +318,6 @@
         <div class="midia-cadastro">
           <app-foto-perfil
             [(arquivo)]="fotoPerfilNovoAssistido"
-            [obrigatorio]="true"
-            [invalido]="tentouSalvarNovo()"
           />
 
           <app-upload-documento
@@ -567,7 +565,7 @@
         />
 
         <p class="form-sec-title">Termos e autorizações</p>
-        <app-termos-assistido [(dados)]="novoAssistido" [invalido]="tentouSalvarNovo()" />
+        <app-termos-assistido [(dados)]="novoAssistido" />
 
   <ng-template #footer>
     @if (erroSalvar()) {
