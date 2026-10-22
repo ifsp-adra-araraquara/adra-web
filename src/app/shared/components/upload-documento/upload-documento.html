@@ -4,6 +4,7 @@
       {{ label() }}
       @if (obrigatorio()) {
         <span class="upload-doc__obrigatorio" aria-hidden="true">*</span>
+        <span class="sr-only">(obrigatório)</span>
       }
     </span>
     @if (dica()) {
@@ -25,11 +26,12 @@
           }
           <button
             type="button"
-            class="upload-doc__remover"
+            class="btn-icon btn-icon--danger"
             [attr.aria-label]="'Remover ' + label() + ' ' + (i + 1)"
+            appTooltip="Remover"
             (click)="remover(i)"
           >
-            <app-icon name="x" [size]="14" />
+            <app-icon name="trash" />
           </button>
         </li>
       }

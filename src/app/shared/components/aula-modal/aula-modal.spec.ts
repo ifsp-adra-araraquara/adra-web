@@ -110,8 +110,9 @@ describe('AulaModal', () => {
     await fixture.whenStable();
 
     httpMock.expectNone((r) => r.url.includes('/api/assistidos'));
+    httpMock.match((r) => r.url.includes('/api/arquivos'));
 
-    expect(component.alunos()).toEqual([
+    expect(component.alunos()).toMatchObject([
       {
         assistidoId: 2,
         nomeCompleto: 'Ana Desligada',

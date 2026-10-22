@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, model, signal } from '@angular/core';
 import { Icon } from '../icon/icon';
 import { Button } from '../button/button';
+import { TooltipDirective } from '../tooltip/tooltip';
 import { comprimirImagem, formatarTamanho, ImagemInvalidaError } from '../../utils/compressao-imagem.util';
 
 /** Original maior que isso nem é processado. */
@@ -25,7 +26,7 @@ let nextId = 0;
 
 @Component({
   selector: 'app-upload-documento',
-  imports: [Icon, Button],
+  imports: [Icon, Button, TooltipDirective],
   templateUrl: './upload-documento.html',
   styleUrl: './upload-documento.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

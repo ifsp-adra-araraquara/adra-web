@@ -88,11 +88,11 @@ export class ArquivoService {
     if (pendente) return pendente;
 
     const busca = this.buscarFotoPerfil(entidadeTipo, entidadeId)
+      .catch((): EntradaCache => ({ url: null, expiraEm: Date.now() + VALIDADE_SEM_FOTO_MS })) // sem foto visível não é erro de tela
       .then((resultado) => {
         this.cache.set(chave, resultado);
         return resultado.url;
       })
-      .catch(() => null) // sem foto visível não é erro de tela
       .finally(() => this.emAndamento.delete(chave));
 
     this.emAndamento.set(chave, busca);
