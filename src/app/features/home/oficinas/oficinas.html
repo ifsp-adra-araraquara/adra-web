@@ -119,6 +119,11 @@
     />
   </div>
 
+  @if (modoEdicao() && oficinaSendoEditada(); as oficina) {
+    <p class="form-sec-title">Histórico de oficineiros</p>
+    <app-historico-oficineiros recurso="oficinas" [id]="oficina.oficinaId" />
+  }
+
   <ng-template #footer>
     <app-button variant="secondary" (click)="fecharModalForm()">Cancelar</app-button>
     <app-button [loading]="salvando()" (click)="salvarOficina()">

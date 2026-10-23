@@ -1,5 +1,10 @@
 @if (open()) {
-  <div class="modal-overlay open" role="presentation" (click)="onBackdropClick()">
+  <div
+    class="modal-overlay open"
+    role="presentation"
+    (mousedown)="onBackdropMouseDown($event)"
+    (click)="onBackdropClick($event)"
+  >
     <div
       class="modal"
       [class.modal-sm]="size() === 'sm'"

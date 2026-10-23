@@ -69,10 +69,31 @@
         <app-input label="E-mail" type="email" formControlName="email" [errorMessage]="erroEmail()" />
       </div>
 
-      <div class="field">
-        <label for="endereco">Endereço</label>
-        <textarea id="endereco" class="input" formControlName="endereco"></textarea>
+      <div class="form-row">
+        <div class="field">
+          <label for="escolaridade">Escolaridade</label>
+          <app-select id="escolaridade" formControlName="escolaridade" [options]="escolaridadeOptions" />
+        </div>
+        <div class="field">
+          <label for="estadoCivil">Estado civil</label>
+          <app-select id="estadoCivil" formControlName="estadoCivil" [options]="estadoCivilOptions" />
+        </div>
       </div>
+
+      <div class="form-row">
+        <app-input label="Profissão" formControlName="profissao" [maxLength]="120" />
+        <app-input
+          label="Renda mensal (R$)"
+          type="number"
+          min="0"
+          placeholder="0,00"
+          formControlName="renda"
+          [errorMessage]="erroRenda()"
+        />
+      </div>
+
+      <p class="form-sec-title">Endereço</p>
+      <app-endereco-form formControlName="endereco" />
 
       <div class="field">
         <label for="observacoes">Observações</label>

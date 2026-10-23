@@ -1,0 +1,12 @@
+/* Mobile-first: rua e número empilhados; a partir de 720px (mesmo breakpoint do .form-row), número fica estreito ao lado da rua. */
+.endereco-rua {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media (min-width: 720px) {
+  .endereco-rua {
+    grid-template-columns: 1fr 120px;
+  }
+}

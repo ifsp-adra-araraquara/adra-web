@@ -1,0 +1,58 @@
+<div class="form-row">
+  <app-input
+    label="Data de nascimento"
+    type="date"
+    [max]="hoje"
+    [ngModel]="dados().dataNascimento"
+    (ngModelChange)="atualizar('dataNascimento', $event)"
+  />
+
+  <div class="field">
+    <label>Idade</label>
+    <div class="input" style="background: var(--gray-50)">
+      {{ idade() != null ? idade() + ' anos' : '—' }}
+    </div>
+  </div>
+</div>
+
+<div class="form-row">
+  <div class="field">
+    <label>Escolaridade</label>
+    <app-select
+      [ngModel]="dados().escolaridade ?? null"
+      (ngModelChange)="atualizar('escolaridade', $event)"
+      [options]="escolaridadeOptions"
+    />
+  </div>
+
+  <div class="field">
+    <label>Estado civil</label>
+    <app-select
+      [ngModel]="dados().estadoCivil ?? null"
+      (ngModelChange)="atualizar('estadoCivil', $event)"
+      [options]="estadoCivilOptions"
+    />
+  </div>
+</div>
+
+<div class="form-row">
+  <app-input
+    label="Profissão"
+    placeholder="Ex.: diarista, pedreiro, do lar…"
+    [maxLength]="120"
+    [ngModel]="dados().profissao"
+    (ngModelChange)="atualizar('profissao', $event)"
+  />
+
+  <app-input
+    label="Renda mensal (R$)"
+    type="number"
+    min="0"
+    placeholder="0,00"
+    [ngModel]="dados().renda"
+    (ngModelChange)="atualizar('renda', $event)"
+  />
+</div>
+
+<p class="form-sec-title">Endereço do responsável</p>
+<app-endereco-form [ngModel]="dados().endereco" (ngModelChange)="atualizar('endereco', $event)" />

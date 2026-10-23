@@ -18,11 +18,12 @@ import { Button } from '../../../shared/components/button/button';
 import { Icon } from '../../../shared/components/icon/icon';
 import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
+import { HistoricoOficineiros } from '../../../shared/components/historico-oficineiros/historico-oficineiros';
 
 @Component({
   selector: 'app-oficinas',
   standalone: true,
-  imports: [TooltipDirective, Icon, CommonModule, FormsModule, Select, Modal, Table, Input, Button],
+  imports: [HistoricoOficineiros, TooltipDirective, Icon, CommonModule, FormsModule, Select, Modal, Table, Input, Button],
   templateUrl: './oficinas.html',
   styleUrl: './oficinas.css',
 })

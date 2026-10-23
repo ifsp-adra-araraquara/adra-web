@@ -1,0 +1,17 @@
+@for (item of visiveis(); track item.aluno.assistidoId) {
+  <div class="niver" role="status">
+    <app-avatar [entidadeId]="item.aluno.assistidoId" [nome]="item.aluno.nomeCompleto" [size]="40" />
+    <div class="niver-texto">
+      <b>🎂 Hoje é aniversário de {{ primeiroNome(item.aluno.nomeCompleto) }}!</b>
+      <span>{{ item.aluno.nomeCompleto }} está fazendo {{ item.idade }} anos.</span>
+    </div>
+    <button
+      type="button"
+      class="niver-fechar"
+      [attr.aria-label]="'Fechar aviso de aniversário de ' + item.aluno.nomeCompleto"
+      (click)="fechar(item.aluno.assistidoId)"
+    >
+      <app-icon name="x" [size]="16" />
+    </button>
+  </div>
+}

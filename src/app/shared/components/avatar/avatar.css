@@ -1,0 +1,47 @@
+:host {
+  display: inline-flex;
+  flex: none;
+  width: var(--avatar-size, 40px);
+  height: var(--avatar-size, 40px);
+}
+
+.avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--gray-100);
+}
+
+.avatar--iniciais {
+  display: grid;
+  place-items: center;
+  /* Sobrescrevível pelo pai (ex.: chamada pinta pelo status de presença) */
+  background: var(--avatar-bg, var(--color-adra-green-400));
+  color: var(--avatar-fg);
+  font-weight: 600;
+  font-size: calc(var(--avatar-size, 40px) * 0.38);
+  line-height: 1;
+  user-select: none;
+}
+
+.avatar-botao {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  cursor: zoom-in;
+}
+
+/* Foto grande no modal: ocupa a largura, sem passar da altura da tela. */
+.avatar-ampliada {
+  display: block;
+  width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  background: var(--gray-50);
+}

@@ -217,3 +217,76 @@
   color: #6b7280;
 }
 
+
+/* Foto de perfil no modal de novo assistido */
+.foto-novo { margin-bottom: 16px; }
+
+/* Avatar + nome (tabela, cartões e ficha) */
+.pessoa { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.pessoa-texto { min-width: 0; }
+.ficha-identidade { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.ficha-identidade .cell-sub { margin: 0; }
+
+/* Foto de perfil + RG/CPF: empilhados no celular, lado a lado a partir de 720px. */
+.midia-cadastro {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 720px) {
+  .midia-cadastro {
+    grid-template-columns: auto 1fr;
+    gap: 24px;
+  }
+}
+
+/* Responsáveis já informados no cadastro (ainda não gravados) */
+.resp-lista { display: flex; flex-direction: column; gap: 10px; margin-bottom: 8px; }
+.resp-card--editando { border-color: var(--color-adra-green-400); }
+.resp-card__topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.resp-card__acoes { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.resp-card__dados {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 14px;
+  margin: 0;
+  font-size: 13px;
+}
+.resp-card__dados dt { font-size: 11px; color: var(--gray-600); }
+.resp-card__dados dd { margin: 0; color: var(--gray-800); overflow-wrap: anywhere; }
+.resp-card__largo { grid-column: 1 / -1; }
+@media (min-width: 720px) {
+  .resp-card__dados { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.resp-form { margin-bottom: 8px; }
+.resp-form__titulo { font-weight: 600; margin: 0 0 12px; }
+.resp-form__acoes { display: flex; gap: 8px; margin-top: 12px; }
+
+/* Aba Permissões */
+.permissoes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.permissao {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--gray-100);
+  border-radius: 10px;
+}
+.permissao__icone {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--gray-50);
+  color: var(--gray-600);
+}
+.permissao--sim .permissao__icone { background: var(--color-adra-green-50); color: var(--color-adra-green-400); }
+.permissao__texto { flex: 1; min-width: 0; }
+.permissao__texto b { display: block; font-size: 14px; color: var(--gray-800); }
+.permissao__texto small { display: block; font-size: 12px; color: var(--gray-600); }

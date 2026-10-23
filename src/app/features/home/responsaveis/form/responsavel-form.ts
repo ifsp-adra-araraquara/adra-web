@@ -8,12 +8,20 @@ import { cpfValidator } from '../../../../shared/validators/cpf.validator';
 import { errosPorCampo } from '../../../../shared/utils/erro-http.util';
 import { Input } from '../../../../shared/components/input/input';
 import { Button } from '../../../../shared/components/button/button';
+import { Select } from '../../../../shared/components/select/select';
+import { EnderecoForm } from '../../../../shared/components/endereco-form/endereco-form';
+import { EnderecoDTO } from '../../../../shared/models/endereco/EnderecoDTO';
+import { ResponsavelRequestDTO } from '../../../../shared/models/responsavel/ResponsavelRequestDTO';
+import { Escolaridade } from '../../../../shared/enum/Escolaridade';
+import { EstadoCivil } from '../../../../shared/enum/EstadoCivil';
+import { enderecoParaForm, enderecoParaPayload } from '../../../../shared/utils/endereco.util';
+import { ESCOLARIDADE_OPTIONS, ESTADO_CIVIL_OPTIONS } from '../dados-complementares/dados-complementares-responsavel';
 
 type EtapaForm = 'buscaCpf' | 'formulario';
 
 @Component({
   selector: 'app-responsavel-form',
-  imports: [ReactiveFormsModule, Input, Button],
+  imports: [ReactiveFormsModule, Input, Button, Select, EnderecoForm],
   templateUrl: './responsavel-form.html',
   styleUrl: './responsavel-form.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -48,9 +56,21 @@ export class ResponsavelForm implements OnChanges {
     cpf: ['', [Validators.required, cpfValidator()]],
     telefone: ['', Validators.pattern(/^$|^\d{10,11}$/)],
     email: ['', Validators.email],
-    endereco: [''],
+    endereco: [enderecoParaForm(null) as EnderecoDTO],
     observacoes: [''],
+    escolaridade: [null as Escolaridade | null],
+    estadoCivil: [null as EstadoCivil | null],
+    profissao: ['', Validators.maxLength(120)],
+    renda: [null as number | null, Validators.min(0)],
   });
+
+  protected readonly escolaridadeOptions = ESCOLARIDADE_OPTIONS;
+  protected readonly estadoCivilOptions = ESTADO_CIVIL_OPTIONS;
+
+  protected erroRenda = (): string | null => {
+    if (this.form.controls.renda.touched && this.form.controls.renda.invalid) return 'A renda não pode ser negativa.';
+    return this.errosPorCampo()['renda'] ?? null;
+  };
 
   protected erroCpfBusca = () =>
     this.cpfBusca.touched && this.cpfBusca.invalid ? 'CPF inválido.' : null;
@@ -153,8 +173,12 @@ export class ResponsavelForm implements OnChanges {
       cpf: responsavel.cpf,
       telefone: responsavel.telefone ?? '',
       email: responsavel.email ?? '',
-      endereco: responsavel.endereco ?? '',
+      endereco: enderecoParaForm(responsavel.endereco),
       observacoes: responsavel.observacoes ?? '',
+      escolaridade: responsavel.escolaridade,
+      estadoCivil: responsavel.estadoCivil,
+      profissao: responsavel.profissao ?? '',
+      renda: responsavel.renda,
     });
     this.etapa.set('formulario');
   }
@@ -168,7 +192,12 @@ export class ResponsavelForm implements OnChanges {
     this.salvando.set(true);
     this.limparMensagens();
 
-    const dto = this.form.getRawValue();
+    const valores = this.form.getRawValue();
+    const dto: ResponsavelRequestDTO = {
+      ...valores,
+      endereco: enderecoParaPayload(valores.endereco),
+      profissao: valores.profissao.trim() || null,
+    };
     const id = this.responsavelIdEmEdicao();
 
     const operacao = this.modoEdicao() && id

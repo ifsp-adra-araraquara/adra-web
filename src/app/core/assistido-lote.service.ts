@@ -13,8 +13,4 @@ export class AssistidoLoteService {
   validar(itens: AssistidoLoteRequestDTO[]): Observable<ResultadoLinhaLoteDTO[]> {
     return this.http.post<ResultadoLinhaLoteDTO[]>(`${this.baseUrl}/validar`, itens);
   }
-
-  cadastrar(itens: AssistidoLoteRequestDTO[]): Observable<ResultadoLinhaLoteDTO[]> {
-    return this.http.post<ResultadoLinhaLoteDTO[]>(this.baseUrl, itens);
-  }
 }

@@ -61,6 +61,9 @@ export class Sidebar {
 
   private ordemSecoes = ['Principal', 'Gestão', 'Especializado', 'Pedagógico', 'Financeiro', 'Conta'];
 
+  /** Dentro de cada seção, os itens seguem a ordem de `secoesPorModulo`. */
+  private ordemModulos = Object.keys(this.secoesPorModulo);
+
   /** Chave do ícone (ver @switch em sidebar.html) exibido para cada módulo. */
   private iconesPorModulo: Record<string, IconName> = {
     DASHBOARD: 'calendar',
@@ -103,6 +106,7 @@ export class Sidebar {
     for (const secao of this.ordemSecoes) {
       const itensDaSecao = modulosDoUsuario
         .filter(m => this.secoesPorModulo[m.codigo] === secao)
+        .sort((a, b) => this.ordemModulos.indexOf(a.codigo) - this.ordemModulos.indexOf(b.codigo))
         .map(m => ({
           codigo: m.codigo.toLowerCase() as AppModule,
           nomeExibicao: this.rotulosOverride[m.codigo] ?? m.nomeExibicao,

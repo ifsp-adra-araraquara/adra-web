@@ -1,0 +1,60 @@
+<app-modal
+  [open]="turma() !== null"
+  [title]="'Alunos — ' + (turma()?.nomeTurma ?? '')"
+  [subtitle]="carregando() ? 'Carregando...' : alunos().length + (alunos().length === 1 ? ' aluno na turma' : ' alunos na turma')"
+  (closed)="fechar.emit()"
+>
+  <div modal-icon class="mh-ico ico-green">
+    <app-icon name="users" />
+  </div>
+
+  <div class="topo">
+    <label class="busca">
+      <app-icon name="search" [size]="16" />
+      <input
+        type="search"
+        placeholder="Buscar aluno pelo nome"
+        aria-label="Buscar aluno pelo nome"
+        [value]="busca()"
+        (input)="busca.set($any($event.target).value)"
+      />
+    </label>
+    <app-button variant="secondary" size="sm" (click)="verListaCompleta()">
+      <app-icon name="list" [size]="16" /> Ver lista completa
+    </app-button>
+  </div>
+
+  @if (carregando()) {
+    <p class="estado">Carregando alunos...</p>
+  } @else if (erro()) {
+    <p class="estado estado--erro" role="alert">Não foi possível carregar os alunos da turma.</p>
+  } @else if (filtrados().length === 0) {
+    <p class="estado">{{ busca() ? 'Nenhum aluno encontrado com esse nome.' : 'Nenhum aluno nesta turma.' }}</p>
+  } @else {
+    <ul class="lista" role="list">
+      @for (aluno of filtrados(); track aluno.assistidoId) {
+        <li>
+          <button type="button" class="aluno" (click)="abrirAluno(aluno)" [attr.aria-label]="'Abrir ficha de ' + aluno.nomeCompleto">
+            <app-avatar [entidadeId]="aluno.assistidoId" [nome]="aluno.nomeCompleto" [size]="44" />
+            <span class="aluno-texto">
+              <span class="aluno-nome">{{ aluno.nomeCompleto }}</span>
+              <span class="aluno-resp">
+                @if (aluno.responsavelNome) {
+                  {{ aluno.responsavelNome }}@if (aluno.responsavelParentesco) { <span> ({{ aluno.responsavelParentesco.toLowerCase() }})</span> }
+                } @else {
+                  Sem responsável principal
+                }
+              </span>
+            </span>
+            <app-icon class="seta" name="chevron-right" [size]="18" />
+          </button>
+          @if (aluno.responsavelTelefone; as tel) {
+            <a class="contato" [href]="linkTelefone(tel)" [attr.aria-label]="'Ligar para ' + (aluno.responsavelNome ?? 'responsável')">
+              <app-icon name="phone" [size]="14" /> {{ telefone(tel) }}
+            </a>
+          }
+        </li>
+      }
+    </ul>
+  }
+</app-modal>

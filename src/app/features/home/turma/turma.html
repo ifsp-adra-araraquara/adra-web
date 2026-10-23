@@ -133,6 +133,13 @@
         <span class="pct">{{ turma.quantidadeAlunos ?? 0 }}/{{ turma.capacidade }} vagas</span>
       </div>
 
+      @if (drawerVisao() === 'historico') {
+        <button type="button" class="drawer-voltar" (click)="drawerVisao.set('acoes')">
+          <app-icon name="chevron-left" [size]="16" /> Voltar
+        </button>
+        <p class="drawer-secao-titulo">Histórico de oficineiros</p>
+        <app-historico-oficineiros recurso="turmas" [id]="turma.turmaId" />
+      } @else {
       <p class="drawer-secao-titulo">Alunos e aulas</p>
       <div class="drawer-acoes">
         <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); verAlunos(turma)">
@@ -176,6 +183,15 @@
             {{ turma.ativo ? 'Inativar turma' : 'Reativar turma' }}
           </button>
         </div>
+      }
+
+      <p class="drawer-secao-titulo">Histórico</p>
+      <div class="drawer-acoes">
+        <button type="button" class="drawer-acao" (click)="drawerVisao.set('historico')">
+          <app-icon name="users" />
+          Histórico de oficineiros
+        </button>
+      </div>
       }
     </app-drawer>
   }
@@ -984,3 +1000,6 @@
     </app-button>
   </ng-template>
 </app-modal>
+
+<!-- MODAL: ALUNOS DA TURMA (visão rápida; clique abre a ficha do aluno) -->
+<app-alunos-turma-modal [turma]="turmaAlunosModal()" (fechar)="turmaAlunosModal.set(null)" />

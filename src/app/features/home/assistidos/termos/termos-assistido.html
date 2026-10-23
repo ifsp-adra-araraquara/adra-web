@@ -1,0 +1,15 @@
+<div class="termos">
+  @for (termo of termos; track termo.campo) {
+    <label class="termo" [class.termo--marcado]="marcado(termo.campo)">
+      <input
+        type="checkbox"
+        [checked]="marcado(termo.campo)"
+        (change)="alternar(termo.campo, $any($event.target).checked)"
+      />
+      <span>
+        <b>{{ termo.titulo }}</b>
+        <small>{{ termo.descricao }}</small>
+      </span>
+    </label>
+  }
+</div>

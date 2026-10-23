@@ -7,6 +7,7 @@ import { Assistidos } from './assistidos';
 import { environment } from '../../../../environments/environment';
 import { AssistidoResponseDTO } from '../../../shared/models/assistido/AssistidoResponseDTO';
 import { VinculoFamiliarResponseDTO } from '../../../shared/models/vinculoFamiliar/VinculoFamiliarResponseDTO';
+import { Escolaridade } from '../../../shared/enum/Escolaridade';
 
 describe('Assistidos', () => {
   let component: Assistidos;
@@ -40,9 +41,15 @@ describe('Assistidos', () => {
       assistidoId: 7,
       responsavelId: 3,
       nomeResponsavel: 'Maria Souza',
+      dataNascimentoResponsavel: '1985-04-10',
       cpfResponsavel: '10433218100',
       telefoneResponsavel: '16999990001',
       emailResponsavel: 'maria@email.com',
+      enderecoResponsavel: { logradouro: 'Rua A', numero: '10', bairro: 'Centro', pontoReferencia: null },
+      escolaridadeResponsavel: Escolaridade.MEDIO_COMPLETO,
+      estadoCivilResponsavel: null,
+      profissaoResponsavel: 'Diarista',
+      rendaResponsavel: 1500,
       parentesco: 'Mãe',
       responsavelPrincipal: true,
       contatoEmergencia: true,
@@ -53,6 +60,7 @@ describe('Assistidos', () => {
     component.assistidoSelecionado.set({ assistidoId: 7 } as AssistidoResponseDTO);
     component.abrirEdicaoResponsavel(vinculo);
     component.atualizarCampoEdicaoResponsavel('telefone', '16988887777');
+    component.formEdicaoResponsavel = { ...component.formEdicaoResponsavel, renda: 1800 };
 
     const salvando = component.salvarEdicaoResponsavel();
 
@@ -63,7 +71,7 @@ describe('Assistidos', () => {
       cpf: '10433218100',
       telefone: '16999990001',
       email: 'maria@email.com',
-      endereco: 'Rua A, 10',
+      endereco: { logradouro: 'Rua A', numero: '10', bairro: 'Centro', pontoReferencia: null },
       observacoes: null,
     });
     await Promise.resolve();
@@ -71,7 +79,10 @@ describe('Assistidos', () => {
     expect(putResponsavel.request.body).toMatchObject({
       telefone: '16988887777',
       dataNascimento: '1985-04-10',
-      endereco: 'Rua A, 10',
+      endereco: { logradouro: 'Rua A', numero: '10', bairro: 'Centro', pontoReferencia: null },
+      escolaridade: Escolaridade.MEDIO_COMPLETO,
+      profissao: 'Diarista',
+      renda: 1800,
     });
     putResponsavel.flush({});
     await Promise.resolve();

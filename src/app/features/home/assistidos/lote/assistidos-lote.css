@@ -49,6 +49,11 @@
 
 .lote-detalhe > td { padding-top: 0; }
 
+.lote-anexos {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); align-items: start; gap: 16px;
+  margin-bottom: 12px; padding: 12px 14px; border: 1px solid var(--gray-100); border-radius: var(--radius);
+}
+
 .lote-responsaveis { border: 1px solid var(--gray-100); border-radius: var(--radius); margin-bottom: 12px; }
 .lote-responsaveis-head {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;
@@ -68,8 +73,3 @@
 .lote-progresso b { color: var(--gray-800); }
 .lote-progresso progress { width: 100%; height: 6px; accent-color: var(--color-adra-green-400); }
 .lote-rodape-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
-
-.sr-only {
-  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
-  clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
-}

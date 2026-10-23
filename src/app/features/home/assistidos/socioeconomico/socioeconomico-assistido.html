@@ -1,0 +1,66 @@
+<div class="form-row">
+  <div>
+    <app-input
+      label="Renda familiar mensal (R$)"
+      type="number"
+      min="0"
+      placeholder="0,00"
+      [ngModel]="dados().rendaFamiliar"
+      (ngModelChange)="atualizar('rendaFamiliar', $event)"
+      [errorMessage]="acimaDoLimite() ? 'Acima do limite do programa (' + formatarMoeda(limiteRenda()) + ').' : null"
+    />
+    @if (somaRendaResponsaveis(); as soma) {
+      <p class="dica">Soma da renda dos responsáveis informados: {{ formatarMoeda(soma) }}</p>
+    }
+    @if (limiteRenda() != null && !acimaDoLimite()) {
+      <p class="dica">Limite do programa: {{ formatarMoeda(limiteRenda()) }}</p>
+    }
+  </div>
+
+  <app-input
+    label="NIS / CadÚnico"
+    placeholder="11 dígitos"
+    [maxLength]="11"
+    [ngModel]="dados().nis"
+    (ngModelChange)="atualizarNis($event)"
+  />
+</div>
+
+<div class="form-row">
+  <div class="field">
+    <label>Recebe programa de transferência de renda?</label>
+    <app-select
+      [ngModel]="dados().recebeProgramaTransferencia ?? null"
+      (ngModelChange)="atualizar('recebeProgramaTransferencia', $event)"
+      [options]="simNaoOptions"
+    />
+  </div>
+</div>
+
+@if (dados().recebeProgramaTransferencia) {
+  <fieldset class="programas">
+    <legend>Qual? <span class="obrigatorio" aria-hidden="true">*</span></legend>
+    <div class="programas-grid">
+      @for (programa of programas; track programa.valor) {
+        <label class="check">
+          <input
+            type="checkbox"
+            [checked]="programaMarcado(programa.valor)"
+            (change)="alternarPrograma(programa.valor, $any($event.target).checked)"
+          />
+          {{ programa.label }}
+        </label>
+      }
+    </div>
+  </fieldset>
+
+  @if (temOutro()) {
+    <app-input
+      label="Qual outro programa?"
+      [required]="true"
+      [maxLength]="120"
+      [ngModel]="dados().programaTransferenciaOutro"
+      (ngModelChange)="atualizar('programaTransferenciaOutro', $event)"
+    />
+  }
+}

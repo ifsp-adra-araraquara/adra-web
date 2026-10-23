@@ -1,0 +1,67 @@
+<div class="upload-doc" [class.upload-doc--invalido]="invalido() && arquivos().length === 0">
+  <div class="upload-doc__cabecalho">
+    <span class="upload-doc__label">
+      {{ label() }}
+      @if (obrigatorio()) {
+        <span class="upload-doc__obrigatorio" aria-hidden="true">*</span>
+        <span class="sr-only">(obrigatório)</span>
+      }
+    </span>
+    @if (dica()) {
+      <span class="upload-doc__dica">{{ dica() }}</span>
+    }
+  </div>
+
+  @if (previas().length > 0) {
+    <ul class="upload-doc__lista" role="list">
+      @for (previa of previas(); track previa.arquivo; let i = $index) {
+        <li class="upload-doc__item">
+          @if (previa.url; as src) {
+            <img class="upload-doc__miniatura" [src]="src" [alt]="label() + ' ' + (i + 1)" />
+          } @else {
+            <span class="upload-doc__miniatura upload-doc__miniatura--pdf" aria-hidden="true">
+              <app-icon name="file-text" [size]="26" />
+              PDF
+            </span>
+          }
+          <button
+            type="button"
+            class="btn-icon btn-icon--danger"
+            [attr.aria-label]="'Remover ' + label() + ' ' + (i + 1)"
+            appTooltip="Remover"
+            (click)="remover(i)"
+          >
+            <app-icon name="trash" />
+          </button>
+        </li>
+      }
+    </ul>
+  }
+
+  @if (!cheio()) {
+    <!-- accept sem capture: no celular o sistema oferece câmera, galeria ou arquivos -->
+    <input
+      #seletor
+      class="upload-doc__input"
+      type="file"
+      accept="image/*,application/pdf"
+      tabindex="-1"
+      aria-hidden="true"
+      [id]="inputId"
+      [multiple]="maximo() > 1"
+      (change)="aoSelecionar($event)"
+    />
+    <app-button variant="secondary" size="sm" [loading]="processando()" (click)="seletor.click()">
+      <app-icon name="camera" [size]="14" />
+      {{ arquivos().length === 0 ? 'Adicionar foto ou PDF' : 'Adicionar outro arquivo' }}
+    </app-button>
+  }
+
+  <p class="upload-doc__ajuda" aria-live="polite">
+    @if (erro()) {
+      <span class="upload-doc__erro" role="alert">{{ erro() }}</span>
+    } @else if (invalido() && arquivos().length === 0) {
+      <span class="upload-doc__erro">{{ label() }} é obrigatório.</span>
+    }
+  </p>
+</div>

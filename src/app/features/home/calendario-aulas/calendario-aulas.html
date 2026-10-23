@@ -7,7 +7,7 @@
       </div>
       <div class="field">
         <label>De</label>
-        <input class="input" type="date" [(ngModel)]="dataInicioFiltro" name="dataInicioFiltro" />
+        <input class="input" type="date" [ngModel]="dataInicioFiltro()" (ngModelChange)="irParaData($event)" name="dataInicioFiltro" />
       </div>
       <div class="field">
         <label>Até</label>
@@ -22,6 +22,7 @@
         <button type="button" class="seg-btn" [class.active]="visualizacao() === 'listWeek'" (click)="alternarVisualizacao('listWeek')">Lista</button>
       </div>
       @if (podeGerenciar()) {
+        <button type="button" class="btn btn-sm btn-ghost" (click)="abrirDiasSemAula()">Dias sem aula</button>
         <button type="button" class="btn btn-sm" (click)="abrirRecorrencia()">Gerar aulas</button>
       }
     </div>
@@ -31,6 +32,15 @@
     @for (item of legendaStatus; track item.status) {
       <span class="legend-chip">
         <span class="legend-dot" [style.background]="'var(--' + item.variant + '-400)'"></span>
+        {{ item.label }}
+      </span>
+    }
+  </div>
+  <div class="cal-legend cal-legend--sem-aula" aria-label="Dias sem aula">
+    <span class="legend-titulo">Sem aula:</span>
+    @for (item of legendaExcecoes; track item.tipo) {
+      <span class="legend-chip">
+        <span class="legend-quadro" [style.background]="'var(--' + item.variant + '-50, var(--gray-100))'" [style.border-color]="'var(--' + item.variant + '-400)'"></span>
         {{ item.label }}
       </span>
     }
@@ -64,6 +74,15 @@
     size="sm"
     (closed)="fecharPainelDia()"
   >
+    @if (excecaoDoDiaSelecionado(); as excecao) {
+      <div class="notice notice-amber dia-sem-aula-aviso">
+        <strong>{{ excecao.info.label }}</strong>
+        @if (excecao.descricao) {
+          <span> — {{ excecao.descricao }}</span>
+        }
+        <div class="muted">Dia sem aula.</div>
+      </div>
+    }
     @if (aulasDoDiaSelecionado().length === 0) {
       <p class="empty">Nenhuma aula neste dia.</p>
     } @else {
@@ -87,4 +106,70 @@
       </div>
     }
   </app-modal>
+
+  @if (podeGerenciar()) {
+    <app-modal [(open)]="mostrarDiasSemAula" title="Dias sem aula" subtitle="Férias, feriados, ponto facultativo ou evento/passeio no lugar da aula.">
+      @if (erroExcecao()) {
+        <div class="notice notice-error" role="alert">{{ erroExcecao() }}</div>
+      }
+
+      <div class="field">
+        <label>Motivo</label>
+        <app-select
+          [options]="tipoExcecaoOpcoes"
+          [ngModel]="formExcecao.tipo"
+          (ngModelChange)="atualizarCampoExcecao('tipo', $event)"
+          name="tipoExcecao"
+        />
+      </div>
+
+      <div class="form-row">
+        <app-input
+          label="Data (ou início do período)"
+          type="date"
+          [ngModel]="formExcecao.dataExcecao"
+          (ngModelChange)="atualizarCampoExcecao('dataExcecao', $event)"
+        />
+        <app-input
+          label="Até (opcional)"
+          type="date"
+          [min]="formExcecao.dataExcecao"
+          [ngModel]="formExcecao.dataFim"
+          (ngModelChange)="atualizarCampoExcecao('dataFim', $event)"
+        />
+      </div>
+
+      <app-input
+        label="Descrição (opcional)"
+        placeholder="Ex.: Férias de julho, Passeio ao zoológico"
+        [maxLength]="150"
+        [ngModel]="formExcecao.descricao"
+        (ngModelChange)="atualizarCampoExcecao('descricao', $event)"
+      />
+
+      <p class="hint">Aulas planejadas nesses dias passam para "Cancelada".</p>
+
+      <app-button size="sm" [loading]="salvandoExcecao()" (click)="salvarExcecao()">Adicionar</app-button>
+
+      <p class="form-sec-title">Próximos dias sem aula</p>
+      @if (proximasExcecoes().length === 0) {
+        <p class="empty">Nenhum dia sem aula cadastrado daqui pra frente.</p>
+      } @else {
+        <ul class="excecoes-lista">
+          @for (excecao of proximasExcecoes(); track excecao.excecaoId) {
+            <li>
+              <span>
+                <strong>{{ excecao.dataExcecao.split('-').reverse().join('/') }}</strong>
+                · {{ rotuloTipo(excecao.tipo) }}
+                @if (excecao.descricao) {
+                  <span class="muted">— {{ excecao.descricao }}</span>
+                }
+              </span>
+              <button type="button" class="btn-icon" [attr.aria-label]="'Remover ' + excecao.dataExcecao" (click)="removerExcecao(excecao)">✕</button>
+            </li>
+          }
+        </ul>
+      }
+    </app-modal>
+  }
 </div>

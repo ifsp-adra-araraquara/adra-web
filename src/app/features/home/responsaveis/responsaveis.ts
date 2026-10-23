@@ -11,6 +11,11 @@ import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Icon } from '../../../shared/components/icon/icon';
 import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 import { cliqueEmElementoInterativo } from '../../../shared/utils/clique.util';
+import { formatarEndereco } from '../../../shared/utils/endereco.util';
+import { calcularIdade } from '../../../shared/utils/idade.util';
+import { formatarMoeda } from '../../../shared/utils/mascara.util';
+import { ESCOLARIDADE_LABELS } from '../../../shared/enum/Escolaridade';
+import { ESTADO_CIVIL_LABELS } from '../../../shared/enum/EstadoCivil';
 
 type FiltroContato = 'todos' | 'sem-telefone' | 'sem-email';
 
@@ -23,6 +28,12 @@ type FiltroContato = 'todos' | 'sem-telefone' | 'sem-email';
 })
 export class Responsaveis implements OnInit {
   private responsavelService = inject(ResponsavelService);
+
+  protected readonly formatarEndereco = formatarEndereco;
+  protected readonly formatarMoeda = formatarMoeda;
+  protected readonly idade = calcularIdade;
+  protected readonly escolaridadeLabels = ESCOLARIDADE_LABELS;
+  protected readonly estadoCivilLabels = ESTADO_CIVIL_LABELS;
 
   responsaveis = signal<ResponsavelResponseDTO[]>([]);
   carregando = signal(false);

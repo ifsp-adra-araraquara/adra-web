@@ -1,5 +1,5 @@
 :host { display: block; width: 100%; }
-.aula-completa-page { width: 100%; max-width: 1100px; }
+.aula-completa-page { width: 100%; max-width: none; }
 
 .page-header { margin-bottom: 20px; }
 .eyebrow { margin: 0 0 6px; color: var(--color-adra-green-400); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
@@ -47,6 +47,17 @@ h1 { margin: 0 0 6px; font-size: 20px; }
   box-shadow: var(--shadow-sm);
 }
 
+.aluno-cabecalho { display: flex; align-items: center; gap: 10px; min-width: 0; }
+/* Foto com anel na cor do status de presença (sem foto: iniciais pintadas pelo status) */
+.aluno-foto {
+  flex: none; display: inline-flex; border-radius: 50%; padding: 2px;
+  background: var(--gray-200);
+  --avatar-bg: var(--gray-200); --avatar-fg: var(--gray-700, #374151);
+}
+.aluno-foto.presente { background: var(--color-adra-green-400); --avatar-bg: var(--color-adra-green-400); --avatar-fg: #fff; }
+.aluno-foto.falta { background: var(--coral-600); --avatar-bg: var(--coral-600); --avatar-fg: #fff; }
+.aluno-foto.justificada { background: var(--amber-600); --avatar-bg: var(--amber-600); --avatar-fg: #fff; }
+
 .aluno-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .aluno-nome { font-weight: 700; font-size: 14px; color: var(--gray-800, #1f2937); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .aluno-sub { font-size: 12px; color: var(--gray-600); }
@@ -75,3 +86,36 @@ h1 { margin: 0 0 6px; font-size: 20px; }
   .alunos-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
   .acoes-finais { margin: 0 -26px; padding: 12px 26px; }
 }
+
+/* Histórico recente do aluno (bolinhas + frequência) — mesmo visual do modal de chamada */
+.aluno-historico { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+.faixa-dias { display: inline-flex; align-items: center; gap: 3px; }
+.faixa-dia { width: 8px; height: 8px; border-radius: 50%; background: var(--gray-200); flex: none; }
+.faixa-dia.presente { background: var(--color-adra-green-400); }
+.faixa-dia.falta { background: var(--coral-600); }
+.faixa-dia.justificada { background: var(--amber-600); }
+.resumo-freq { font-size: 11.5px; color: var(--gray-600); white-space: nowrap; }
+.resumo-freq b { color: var(--color-adra-green-600); font-weight: 700; }
+.resumo-freq b.resumo-freq--baixa { color: var(--coral-600); }
+.alerta-faltas {
+  display: inline-flex; align-items: center; gap: 4px; align-self: flex-start;
+  margin-top: 2px; padding: 2px 8px; border-radius: 999px;
+  background: var(--coral-50); color: var(--coral-600);
+  font-size: 11px; font-weight: 700; white-space: nowrap;
+}
+.alerta-faltas app-icon { width: 13px; height: 13px; }
+
+/* Ordem A–Z / Z–A da lista */
+.ordem-nome { display: flex; align-items: center; gap: 4px; margin: 0 0 10px; font-size: 12px; color: var(--gray-600); }
+.ordem-nome button {
+  min-height: 32px; padding: 0 10px; border: 1px solid var(--gray-100); border-radius: 999px;
+  background: #fff; color: var(--gray-600); font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.ordem-nome button.ativo { border-color: var(--color-adra-green-400); background: var(--color-adra-green-50); color: var(--color-adra-green-600); }
+
+/* Quem pode buscar */
+.quem-busca { display: block; margin-top: 2px; font-size: 12px; color: var(--gray-600); }
+.quem-busca b { color: var(--gray-800); font-weight: 600; }
+.quem-busca--vazio { color: var(--amber-600); }
+
+.alerta-justificadas { background: var(--amber-50); color: var(--amber-600); }

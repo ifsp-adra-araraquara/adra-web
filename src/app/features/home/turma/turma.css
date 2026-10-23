@@ -183,3 +183,10 @@ textarea {
 .drawer-acao.perigo:hover app-icon {
   background: #fff;
 }
+
+/* Drawer: voltar da visão "Histórico de oficineiros" para as ações */
+.drawer-voltar {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin: 4px 0 8px; padding: 6px 0; border: none; background: none;
+  font-size: 13px; font-weight: 600; color: var(--color-adra-green-600); cursor: pointer;
+}

@@ -111,6 +111,10 @@
                 <th>Responsável</th>
                 <th class="col-larga">Contato</th>
                 <th>Turma</th>
+                @if (turmaFiltroAtual()) {
+                  <th>Entrada na turma</th>
+                  <th>Saída da turma</th>
+                }
                 <th>Frequência</th>
                 <th>Status</th>
                 <th class="col-acoes">Ações</th>
@@ -120,10 +124,15 @@
               @for (assistido of assistidos(); track assistido.assistidoId) {
                 <tr class="linha-clicavel" (click)="abrirFichaPelaLinha($event, assistido)">
                   <td>
-                    <span class="cell-name">{{ assistido.nomeCompleto }}</span>
-                    <span class="cell-sub so-compacta">
-                      {{ calcularIdade(assistido.dataNascimento) }} anos · {{ cpfMascarado(assistido.cpf) }}
-                    </span>
+                    <div class="pessoa">
+                      <app-avatar [entidadeId]="assistido.assistidoId" [nome]="assistido.nomeCompleto" [size]="36" />
+                      <div class="pessoa-texto">
+                        <span class="cell-name">{{ assistido.nomeCompleto }}</span>
+                        <span class="cell-sub so-compacta">
+                          {{ calcularIdade(assistido.dataNascimento) }} anos · {{ cpfMascarado(assistido.cpf) }}
+                        </span>
+                      </div>
+                    </div>
                   </td>
                   <td class="col-larga nowrap">{{ calcularIdade(assistido.dataNascimento) }} anos</td>
                   <td class="col-larga nowrap cpf">{{ cpfMascarado(assistido.cpf) }}</td>
@@ -143,6 +152,10 @@
                     }
                   </td>
                   <td>{{ assistido.nomeTurma || 'Sem turma' }}</td>
+                  @if (turmaFiltroAtual()) {
+                    <td>{{ assistido.dataEntradaTurma ? (assistido.dataEntradaTurma | date: 'dd/MM/yyyy') : '-' }}</td>
+                    <td>{{ assistido.dataSaidaTurma ? (assistido.dataSaidaTurma | date: 'dd/MM/yyyy') : '-' }}</td>
+                  }
                   <td>
                     <ng-container *ngTemplateOutlet="frequencia; context: { $implicit: assistido }" />
                   </td>
@@ -168,9 +181,12 @@
         @for (assistido of assistidos(); track assistido.assistidoId) {
           <li class="assistido-cartao linha-clicavel" (click)="abrirFichaPelaLinha($event, assistido)">
             <div class="cartao-topo">
-              <div class="cartao-identidade">
-                <span class="cell-name">{{ assistido.nomeCompleto }}</span>
-                <span class="cell-sub">{{ calcularIdade(assistido.dataNascimento) }} anos · {{ cpfMascarado(assistido.cpf) }}</span>
+              <div class="pessoa">
+                <app-avatar [entidadeId]="assistido.assistidoId" [nome]="assistido.nomeCompleto" [size]="44" />
+                <div class="cartao-identidade">
+                  <span class="cell-name">{{ assistido.nomeCompleto }}</span>
+                  <span class="cell-sub">{{ calcularIdade(assistido.dataNascimento) }} anos · {{ cpfMascarado(assistido.cpf) }}</span>
+                </div>
               </div>
               <app-action-menu
                 [label]="'Ações de ' + assistido.nomeCompleto"
@@ -210,6 +226,16 @@
                 <dt>Turma</dt>
                 <dd>{{ assistido.nomeTurma || 'Sem turma' }}</dd>
               </div>
+              @if (turmaFiltroAtual()) {
+                <div>
+                  <dt>Na turma</dt>
+                  <dd>
+                    {{ assistido.dataEntradaTurma ? (assistido.dataEntradaTurma | date: 'dd/MM/yyyy') : '-' }}
+                    até
+                    {{ assistido.dataSaidaTurma ? (assistido.dataSaidaTurma | date: 'dd/MM/yyyy') : 'hoje' }}
+                  </dd>
+                </div>
+              }
               <div class="cartao-frequencia">
                 <dt>Frequência</dt>
                 <dd><ng-container *ngTemplateOutlet="frequencia; context: { $implicit: assistido }" /></dd>
@@ -289,6 +315,21 @@
 
         <p class="form-sec-title">Dados pessoais</p>
 
+        <div class="midia-cadastro">
+          <app-foto-perfil
+            [(arquivo)]="fotoPerfilNovoAssistido"
+          />
+
+          <app-upload-documento
+            label="RG ou CPF"
+            dica="Uma foto do documento ou PDF."
+            [(arquivos)]="documentosIdentidadeNovo"
+            [maximo]="1"
+            [obrigatorio]="true"
+            [invalido]="tentouSalvarNovo()"
+          />
+        </div>
+
         <app-input
           label="Nome completo"
           placeholder="Nome do assistido"
@@ -338,6 +379,11 @@
           </textarea>
         </div>
 
+        <app-dados-complementares-assistido
+          [(dados)]="novoAssistido"
+          [enderecoSugerido]="enderecoResponsavelPrincipalNovo()"
+        />
+
         <!-- ============================================================
      NÚCLEO FAMILIAR
      ============================================================ -->
@@ -345,22 +391,15 @@
         <p class="form-sec-title">Núcleo familiar</p>
 
         @if (responsaveisVinculados().length > 0) {
-          <table class="mb-s">
-            <thead>
-              <tr>
-                <th>Responsável</th>
-                <th>Parentesco</th>
-                <th>Contato</th>
-                <th>Marcações</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (resp of responsaveisVinculados(); track $index) {
-                <tr>
-                  <td class="cell-name">{{ resp.nomeCompleto }}</td>
-                  <td>{{ resp.parentesco || '—' }}</td>
-                  <td>{{ resp.telefone || resp.email || '—' }}</td>
-                  <td>
+          <div class="resp-lista">
+            @for (resp of responsaveisVinculados(); track $index; let i = $index) {
+              <div class="card card-pad resp-card" [class.resp-card--editando]="indiceResponsavelEmEdicaoNovo() === i">
+                <div class="resp-card__topo">
+                  <div>
+                    <div class="cell-name">{{ resp.nomeCompleto }}</div>
+                    <span class="cell-sub">{{ resp.parentesco || 'Parentesco não informado' }}</span>
+                  </div>
+                  <div class="resp-card__acoes">
                     @if (resp.responsavelPrincipal) {
                       <app-badge variant="blue" label="Principal" />
                     }
@@ -370,95 +409,163 @@
                     @if (resp.autorizadoRetirada) {
                       <app-badge variant="amber" label="Pode retirar" />
                     }
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
+                    <button
+                      type="button"
+                      class="btn-icon"
+                      [attr.aria-label]="'Editar ' + resp.nomeCompleto"
+                      appTooltip="Editar"
+                      (click)="editarResponsavelNovo(i)"
+                    >
+                      <app-icon name="edit" />
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-icon"
+                      [attr.aria-label]="'Remover ' + resp.nomeCompleto"
+                      appTooltip="Remover"
+                      (click)="removerResponsavelNovo(i)"
+                    >
+                      <app-icon name="trash" />
+                    </button>
+                  </div>
+                </div>
+
+                <dl class="resp-card__dados">
+                  <div><dt>CPF</dt><dd>{{ resp.cpf || '—' }}</dd></div>
+                  <div><dt>Telefone</dt><dd>{{ telefoneFormatado(resp.telefone) || '—' }}</dd></div>
+                  <div><dt>E-mail</dt><dd>{{ resp.email || '—' }}</dd></div>
+                  <div>
+                    <dt>Nascimento</dt>
+                    <dd>
+                      @if (resp.dataNascimento) {
+                        {{ resp.dataNascimento | date: 'dd/MM/yyyy' }} · {{ calcularIdadeResponsavel(resp.dataNascimento) }}
+                      } @else {
+                        —
+                      }
+                    </dd>
+                  </div>
+                  <div><dt>Escolaridade</dt><dd>{{ rotuloEscolaridade(resp.escolaridade) }}</dd></div>
+                  <div><dt>Estado civil</dt><dd>{{ rotuloEstadoCivil(resp.estadoCivil) }}</dd></div>
+                  <div><dt>Profissão</dt><dd>{{ resp.profissao || '—' }}</dd></div>
+                  <div><dt>Renda</dt><dd>{{ resp.renda != null ? formatarMoeda(resp.renda) : '—' }}</dd></div>
+                  <div class="resp-card__largo"><dt>Endereço</dt><dd>{{ formatarEndereco(resp.endereco) || '—' }}</dd></div>
+                </dl>
+              </div>
+            }
+          </div>
 
           <p class="muted" style="font-size: 12px; margin-bottom: 12px">
-            ✓ Responsáveis acima já foram salvos e vinculados a este assistido.
+            Os responsáveis só são gravados ao clicar em "Salvar assistido". Até lá, dá para editar ou remover.
           </p>
         }
 
-        @if (erroResponsavel()) {
-          <div class="notice notice-error" role="alert">{{ erroResponsavel() }}</div>
-        }
+        @if (mostrarFormResponsavelNovo()) {
+          <div class="card card-pad resp-form">
+            <p class="resp-form__titulo">
+              {{ indiceResponsavelEmEdicaoNovo() !== null ? 'Editar responsável' : 'Novo responsável' }}
+            </p>
 
-        <div class="form-row">
-          <app-input
-            label="Responsável"
-            placeholder="Nome do responsável"
-            [ngModel]="novoResponsavel.nomeCompleto"
-            (ngModelChange)="atualizarCampoResponsavel('nomeCompleto', $event)"
-          />
+          @if (erroResponsavel()) {
+            <div class="notice notice-error" role="alert">{{ erroResponsavel() }}</div>
+          }
 
-          <div class="field">
-            <label>Parentesco</label>
-            <app-select
-              [ngModel]="novoResponsavel.parentesco"
-              (ngModelChange)="atualizarCampoResponsavel('parentesco', $event)"
-              [options]="parentescoOptions"
+          <div class="form-row">
+            <app-input
+              label="Responsável"
+              placeholder="Nome do responsável"
+              [ngModel]="novoResponsavel.nomeCompleto"
+              (ngModelChange)="atualizarCampoResponsavel('nomeCompleto', $event)"
+            />
+
+            <div class="field">
+              <label>Parentesco</label>
+              <app-select
+                [ngModel]="novoResponsavel.parentesco"
+                (ngModelChange)="atualizarCampoResponsavel('parentesco', $event)"
+                [options]="parentescoOptions"
+              />
+            </div>
+          </div>
+
+          <div class="form-row-3">
+            <app-input
+              label="CPF do responsável"
+              mask="cpf"
+              placeholder="000.000.000-00"
+              [ngModel]="novoResponsavel.cpf"
+              (ngModelChange)="atualizarCampoResponsavel('cpf', $event)"
+            />
+
+            <app-input
+              label="Telefone"
+              mask="telefone"
+              placeholder="(16) 90000-0000"
+              [ngModel]="novoResponsavel.telefone"
+              (ngModelChange)="atualizarCampoResponsavel('telefone', $event)"
+            />
+
+            <app-input
+              label="E-mail"
+              type="email"
+              placeholder="email@exemplo.com"
+              [ngModel]="novoResponsavel.email"
+              (ngModelChange)="atualizarCampoResponsavel('email', $event)"
             />
           </div>
-        </div>
 
-        <div class="form-row-3">
-          <app-input
-            label="CPF do responsável"
-            mask="cpf"
-            placeholder="000.000.000-00"
-            [ngModel]="novoResponsavel.cpf"
-            (ngModelChange)="atualizarCampoResponsavel('cpf', $event)"
-          />
+          <app-dados-complementares-responsavel [(dados)]="novoResponsavel" />
 
-          <app-input
-            label="Telefone"
-            mask="telefone"
-            placeholder="(16) 90000-0000"
-            [ngModel]="novoResponsavel.telefone"
-            (ngModelChange)="atualizarCampoResponsavel('telefone', $event)"
-          />
+          <label class="check">
+            <input
+              type="checkbox"
+              [ngModel]="novoResponsavel.autorizadoRetirada"
+              (ngModelChange)="atualizarCampoResponsavel('autorizadoRetirada', $event)"
+            />
+            Autorizado a retirar o assistido
+          </label>
 
-          <app-input
-            label="E-mail"
-            type="email"
-            placeholder="email@exemplo.com"
-            [ngModel]="novoResponsavel.email"
-            (ngModelChange)="atualizarCampoResponsavel('email', $event)"
-          />
-        </div>
+          <label class="check">
+            <input
+              type="checkbox"
+              [ngModel]="novoResponsavel.contatoEmergencia"
+              (ngModelChange)="atualizarCampoResponsavel('contatoEmergencia', $event)"
+            />
+            Contato de emergência
+          </label>
 
-        <label class="check">
-          <input
-            type="checkbox"
-            [ngModel]="novoResponsavel.autorizadoRetirada"
-            (ngModelChange)="atualizarCampoResponsavel('autorizadoRetirada', $event)"
-          />
-          Autorizado a retirar o assistido
-        </label>
+          <label class="check">
+            <input
+              type="checkbox"
+              [ngModel]="novoResponsavel.responsavelPrincipal"
+              (ngModelChange)="atualizarCampoResponsavel('responsavelPrincipal', $event)"
+            />
+            Responsável principal
+          </label>
 
-        <label class="check">
-          <input
-            type="checkbox"
-            [ngModel]="novoResponsavel.contatoEmergencia"
-            (ngModelChange)="atualizarCampoResponsavel('contatoEmergencia', $event)"
-          />
-          Contato de emergência
-        </label>
+            <div class="resp-form__acoes">
+              @if (responsaveisVinculados().length > 0) {
+                <app-button variant="secondary" size="sm" (click)="cancelarFormResponsavelNovo()">Cancelar</app-button>
+              }
+              <app-button size="sm" [loading]="salvandoResponsavel()" (click)="salvarResponsavel()">
+                {{ indiceResponsavelEmEdicaoNovo() !== null ? 'Atualizar responsável' : 'Salvar responsável' }}
+              </app-button>
+            </div>
+          </div>
+        } @else {
+          <app-button variant="secondary" size="sm" (click)="abrirFormResponsavelNovo()">
+            <app-icon name="plus" [size]="16" /> Adicionar outro responsável
+          </app-button>
+        }
 
-        <label class="check">
-          <input
-            type="checkbox"
-            [ngModel]="novoResponsavel.responsavelPrincipal"
-            (ngModelChange)="atualizarCampoResponsavel('responsavelPrincipal', $event)"
-          />
-          Responsável principal
-        </label>
+        <p class="form-sec-title">Socioeconômico (família)</p>
+        <app-socioeconomico-assistido
+          [(dados)]="novoAssistido"
+          [limiteRenda]="limiteRendaFamiliar()"
+          [somaRendaResponsaveis]="somaRendaResponsaveisNovo()"
+        />
 
-        <app-button size="sm" class="mt-s" [loading]="salvandoResponsavel()" (click)="salvarResponsavel()">
-          Salvar responsável
-        </app-button>
+        <p class="form-sec-title">Termos e autorizações</p>
+        <app-termos-assistido [(dados)]="novoAssistido" />
 
   <ng-template #footer>
     @if (erroSalvar()) {
@@ -486,10 +593,18 @@
       <app-icon name="user" />
     </div>
 
-    <p class="cell-sub">
-      {{ calcularIdade(assistidoSelecionado()!.dataNascimento) }} anos ·
-      <app-badge [status]="assistidoSelecionado()!.status" />
-    </p>
+    <div class="ficha-identidade">
+      <app-avatar
+        [entidadeId]="assistidoSelecionado()!.assistidoId"
+        [nome]="assistidoSelecionado()!.nomeCompleto"
+        [size]="72"
+        [ampliavel]="true"
+      />
+      <p class="cell-sub">
+        {{ calcularIdade(assistidoSelecionado()!.dataNascimento) }} anos ·
+        <app-badge [status]="assistidoSelecionado()!.status" />
+      </p>
+    </div>
 
     <!-- ABAS -->
     <div class="tabs">
@@ -506,6 +621,13 @@
         (click)="trocarAbaVerAssistido('fam')"
       >
         Família
+      </button>
+      <button
+        class="tab"
+        [class.active]="abaVerAssistido() === 'perm'"
+        (click)="trocarAbaVerAssistido('perm')"
+      >
+        Permissões
       </button>
       <button
         class="tab"
@@ -572,12 +694,89 @@
         </div>
       </div>
 
+      <div class="form-row">
+        <div class="field">
+          <label>Sexo</label>
+          <div class="input" style="background: var(--gray-50)">
+            {{ rotuloSexo(assistidoSelecionado()!.sexo) }}
+          </div>
+        </div>
+      </div>
+
       <div class="field mt-s">
         <label>Necessidades específicas</label>
         <div class="input" style="background: var(--gray-50); min-height: 45px">
           {{ assistidoSelecionado()!.necessidadesEspecificas || 'Nenhuma registrada' }}
         </div>
       </div>
+
+      <p class="form-sec-title mt-s">Saúde</p>
+      <div class="form-row">
+        <div class="field">
+          <label>Problema de saúde</label>
+          <div class="input" style="background: var(--gray-50)">
+            @if (assistidoSelecionado()!.possuiProblemaSaude) {
+              Sim — {{ assistidoSelecionado()!.problemaSaude }}
+            } @else {
+              {{ rotuloSimNao(assistidoSelecionado()!.possuiProblemaSaude) }}
+            }
+          </div>
+        </div>
+        <div class="field">
+          <label>Pessoa com deficiência (PcD)</label>
+          <div class="input" style="background: var(--gray-50)">
+            @if (assistidoSelecionado()!.pcd) {
+              Sim — {{ assistidoSelecionado()!.deficiencia }}
+            } @else {
+              {{ rotuloSimNao(assistidoSelecionado()!.pcd) }}
+            }
+          </div>
+        </div>
+      </div>
+
+      <p class="form-sec-title mt-s">Escola</p>
+      <div class="field">
+        <label>Nome da escola</label>
+        <div class="input" style="background: var(--gray-50)">
+          {{ assistidoSelecionado()!.escolaNome || 'Não informado' }}
+        </div>
+      </div>
+      <div class="form-row-3">
+        <div class="field">
+          <label>Ano/série</label>
+          <div class="input" style="background: var(--gray-50)">
+            {{ assistidoSelecionado()!.escolaAnoSerie || 'Não informado' }}
+          </div>
+        </div>
+        <div class="field">
+          <label>Turno na escola</label>
+          <div class="input" style="background: var(--gray-50)">
+            {{ assistidoSelecionado()!.escolaTurno || 'Não informado' }}
+          </div>
+        </div>
+        <div class="field">
+          <label>Estuda no contraturno</label>
+          <div class="input" style="background: var(--gray-50)">
+            {{ rotuloSimNao(assistidoSelecionado()!.estudaContraturno) }}
+          </div>
+        </div>
+      </div>
+
+      <p class="form-sec-title mt-s">Endereço</p>
+      <div class="field">
+        <label>Endereço</label>
+        <div class="input" style="background: var(--gray-50)">
+          {{ formatarEndereco(assistidoSelecionado()!.endereco) || 'Não informado' }}
+        </div>
+      </div>
+      @if (assistidoSelecionado()!.endereco?.pontoReferencia) {
+        <div class="field">
+          <label>Ponto de referência</label>
+          <div class="input" style="background: var(--gray-50)">
+            {{ assistidoSelecionado()!.endereco?.pontoReferencia }}
+          </div>
+        </div>
+      }
 
       <div class="field mt-s">
         <label>Observações</label>
@@ -588,10 +787,66 @@
           {{ assistidoSelecionado()!.observacoes || 'Nenhuma observação registrada.' }}
         </div>
       </div>
+
+      @if (podeVerDocumentos()) {
+        <p class="form-sec-title mt-s">RG ou CPF</p>
+        <app-lista-documentos
+          [entidadeId]="assistidoSelecionado()!.assistidoId"
+          [categoria]="CategoriaArquivo.DOCUMENTO_IDENTIDADE"
+          rotulo="RG ou CPF"
+          vazio="Nenhum documento enviado. Para adicionar, use Editar."
+        />
+      }
     }
 
     <!-- ==================== ABA: FAMÍLIA ==================== -->
     @if (abaVerAssistido() === 'fam') {
+      <p class="form-sec-title">
+        Renda e programas da família
+        @if (podeEditarCadastro() && !editandoSocioeconomico()) {
+          <app-button size="sm" variant="secondary" class="sec-acao" (click)="abrirEdicaoSocioeconomico()">
+            <app-icon name="edit" [size]="16" /> Editar
+          </app-button>
+        }
+      </p>
+
+      @if (editandoSocioeconomico()) {
+        <div class="card card-pad mb-s">
+          @if (erroSocioeconomico()) {
+            <div class="notice notice-error mb-s" role="alert">{{ erroSocioeconomico() }}</div>
+          }
+          <!-- Sem [limiteRenda]: a regra de corte vale só na entrada da família. -->
+          <app-socioeconomico-assistido [(dados)]="formSocioeconomico" />
+          <div style="display: flex; gap: 8px; margin-top: 12px">
+            <app-button variant="secondary" size="sm" (click)="cancelarEdicaoSocioeconomico()">Cancelar</app-button>
+            <app-button size="sm" [loading]="salvandoSocioeconomico()" (click)="salvarSocioeconomico()">
+              Salvar
+            </app-button>
+          </div>
+        </div>
+      } @else {
+        <div class="form-row">
+          <div class="field">
+            <label>Renda familiar mensal</label>
+            <div class="input" style="background: var(--gray-50)">
+              {{ assistidoSelecionado()!.rendaFamiliar != null ? formatarMoeda(assistidoSelecionado()!.rendaFamiliar) : 'Não informado' }}
+            </div>
+          </div>
+          <div class="field">
+            <label>NIS / CadÚnico</label>
+            <div class="input" style="background: var(--gray-50)">
+              {{ assistidoSelecionado()!.nis || 'Não informado' }}
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Programa de transferência de renda</label>
+          <div class="input" style="background: var(--gray-50)">
+            {{ rotuloProgramas(assistidoSelecionado()!) }}
+          </div>
+        </div>
+      }
+
       <p class="form-sec-title">
         Responsáveis
         @if (podeEditarCadastro() && responsaveisDoAssistido().length > 0 && !mostrarFormNovoResponsavelVinculado()) {
@@ -661,6 +916,8 @@
                 (ngModelChange)="atualizarCampoResponsavelVinculado('email', $event)"
               />
             </div>
+
+            <app-dados-complementares-responsavel [(dados)]="novoResponsavelVinculado" />
 
             <label class="check">
               <input
@@ -783,6 +1040,60 @@
                 </div>
               </div>
 
+              <div class="form-row">
+                <div class="field">
+                  <label>Data de nascimento</label>
+                  <div class="input" style="background: var(--gray-50)">
+                    @if (responsavel.dataNascimentoResponsavel) {
+                      {{ responsavel.dataNascimentoResponsavel | date: 'dd/MM/yyyy' }}
+                      <span class="cell-sub">· {{ calcularIdadeResponsavel(responsavel.dataNascimentoResponsavel) }}</span>
+                    } @else {
+                      Não informado
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="field">
+                  <label>Escolaridade</label>
+                  <div class="input" style="background: var(--gray-50)">
+                    {{ rotuloEscolaridade(responsavel.escolaridadeResponsavel) }}
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Estado civil</label>
+                  <div class="input" style="background: var(--gray-50)">
+                    {{ rotuloEstadoCivil(responsavel.estadoCivilResponsavel) }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="field">
+                  <label>Profissão</label>
+                  <div class="input" style="background: var(--gray-50)">
+                    {{ responsavel.profissaoResponsavel || 'Não informado' }}
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Renda mensal</label>
+                  <div class="input" style="background: var(--gray-50)">
+                    {{ responsavel.rendaResponsavel != null ? formatarMoeda(responsavel.rendaResponsavel) : 'Não informado' }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Endereço</label>
+                <div class="input" style="background: var(--gray-50)">
+                  {{ formatarEndereco(responsavel.enderecoResponsavel) || 'Não informado' }}
+                  @if (responsavel.enderecoResponsavel?.pontoReferencia) {
+                    <span class="cell-sub"> · Ref.: {{ responsavel.enderecoResponsavel?.pontoReferencia }}</span>
+                  }
+                </div>
+              </div>
+
               @if (responsavel.observacoes) {
                 <div class="field">
                   <label>Observações</label>
@@ -795,6 +1106,39 @@
           }
         </div>
       }
+    }
+
+    <!-- ==================== ABA: PERMISSÕES (termos) ==================== -->
+    @if (abaVerAssistido() === 'perm') {
+      <p class="form-sec-title">
+        Termos e autorizações
+        @if (podeEditarCadastro()) {
+          <app-button size="sm" variant="secondary" class="sec-acao" (click)="executarAcaoDaFicha('editar')">
+            <app-icon name="edit" [size]="16" /> Editar
+          </app-button>
+        }
+      </p>
+
+      <ul class="permissoes">
+        @for (termo of termosFicha; track termo.campo) {
+          <li class="permissao" [class.permissao--sim]="assistidoSelecionado()![termo.campo]">
+            <span class="permissao__icone" aria-hidden="true">
+              <app-icon [name]="assistidoSelecionado()![termo.campo] ? 'check' : 'x'" [size]="16" />
+            </span>
+            <div class="permissao__texto">
+              <b>{{ termo.titulo }}</b>
+              <small>{{ termo.descricao }}</small>
+              @if (termo.campo === 'aceiteLgpd' && assistidoSelecionado()!.aceiteLgpdEm) {
+                <small>Aceito em {{ assistidoSelecionado()!.aceiteLgpdEm | date: 'dd/MM/yyyy' }}</small>
+              }
+            </div>
+            <app-badge
+              [variant]="assistidoSelecionado()![termo.campo] ? 'green' : 'gray'"
+              [label]="assistidoSelecionado()![termo.campo] ? 'Autorizado' : 'Não autorizado'"
+            />
+          </li>
+        }
+      </ul>
     }
 
     <!-- ==================== ABA: CHAMADAS (frequência) ==================== -->
@@ -883,6 +1227,7 @@
             <thead>
               <tr>
                 <th>Turma</th>
+                <th>Oficina</th>
                 <th>Data de entrada</th>
                 <th>Data de saída</th>
                 <th>Vínculo</th>
@@ -898,6 +1243,7 @@
                   <span class="cell-sub"> (turma inativa)</span>
                   }
                 </td>
+                <td>{{ vinculo.nomeOficina || '—' }}</td>
                 <td>{{ vinculo.dataEntrada | date: 'dd/MM/yyyy' }}</td>
                 <td>{{ vinculo.dataSaida ? (vinculo.dataSaida | date: 'dd/MM/yyyy') : '-' }}</td>
                 <td>
@@ -1004,6 +1350,8 @@
         (ngModelChange)="atualizarCampoEdicaoResponsavel('email', $event)"
       />
     </div>
+
+    <app-dados-complementares-responsavel [(dados)]="formEdicaoResponsavel" />
 
     <label class="check">
       <input
@@ -1119,6 +1467,28 @@
     } @else {
       <p class="form-sec-title">Dados pessoais</p>
 
+      <div class="midia-cadastro">
+        <app-foto-perfil
+          [(arquivo)]="fotoPerfilEdicao"
+          [entidadeIdAtual]="assistidoEmEdicao()!.assistidoId"
+          [nomeAtual]="assistidoEmEdicao()!.nomeCompleto"
+        />
+
+        <div>
+          <app-lista-documentos
+            [entidadeId]="assistidoEmEdicao()!.assistidoId"
+            [categoria]="CategoriaArquivo.DOCUMENTO_IDENTIDADE"
+            rotulo="RG ou CPF"
+          />
+          <app-upload-documento
+            label="Trocar RG ou CPF"
+            dica="O novo arquivo substitui o atual ao salvar."
+            [(arquivos)]="documentosIdentidadeEdicao"
+            [maximo]="1"
+          />
+        </div>
+      </div>
+
       <app-input
         label="Nome completo"
         placeholder="Nome do assistido"
@@ -1168,6 +1538,11 @@
         >
         </textarea>
       </div>
+
+      <app-dados-complementares-assistido [(dados)]="formEdicaoAssistido" />
+
+      <p class="form-sec-title">Termos e autorizações</p>
+      <app-termos-assistido [(dados)]="formEdicaoAssistido" />
     }
 
     <ng-template #footer>

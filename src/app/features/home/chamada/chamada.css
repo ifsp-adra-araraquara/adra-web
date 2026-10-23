@@ -11,7 +11,7 @@ h2 { margin-bottom: 0; font-size: 17px; }
 .panel-header { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--gray-100); flex-wrap: wrap; }
 .subtle { font-size: 12px; }
 
-.filtros { display: flex; gap: 8px; align-items: center; }
+.filtros { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 

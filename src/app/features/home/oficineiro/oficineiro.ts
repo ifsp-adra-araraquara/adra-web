@@ -354,7 +354,7 @@ export class Oficineiro implements OnInit {
           `${this.api}/api/aulas/turma/${turmaId}/detalhes`,
         ),
       );
-      this.aulas.set([...aulas].sort((a, b) => b.dataAula.localeCompare(a.dataAula)));
+      this.aulas.set([...aulas].sort((a, b) => b.dataAula.localeCompare(a.dataAula) || (a.horarioInicio ?? '').localeCompare(b.horarioInicio ?? '')));
       return;
     }
 
@@ -367,7 +367,7 @@ export class Oficineiro implements OnInit {
         ),
       ),
     );
-    this.aulas.set(aulas.flat().sort((a, b) => b.dataAula.localeCompare(a.dataAula)));
+    this.aulas.set(aulas.flat().sort((a, b) => b.dataAula.localeCompare(a.dataAula) || (a.horarioInicio ?? '').localeCompare(b.horarioInicio ?? '')));
   }
 
   private async carregarMateriais(): Promise<void> {

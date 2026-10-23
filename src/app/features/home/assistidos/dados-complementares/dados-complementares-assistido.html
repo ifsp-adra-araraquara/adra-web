@@ -1,0 +1,103 @@
+<div class="form-row">
+  <div class="field">
+    <label>Sexo</label>
+    <app-select
+      [ngModel]="dados().sexo ?? null"
+      (ngModelChange)="atualizar('sexo', $event)"
+      [options]="sexoOptions"
+    />
+  </div>
+</div>
+
+<p class="form-sec-title">Saúde</p>
+
+<div class="form-row">
+  <div class="field">
+    <label>Possui problema de saúde?</label>
+    <app-select
+      [ngModel]="dados().possuiProblemaSaude ?? null"
+      (ngModelChange)="atualizar('possuiProblemaSaude', $event)"
+      [options]="simNaoOptions"
+    />
+  </div>
+
+  @if (dados().possuiProblemaSaude) {
+    <app-input
+      label="Qual problema de saúde?"
+      placeholder="Ex.: asma, diabetes…"
+      [required]="true"
+      [ngModel]="dados().problemaSaude"
+      (ngModelChange)="atualizar('problemaSaude', $event)"
+    />
+  }
+</div>
+
+<div class="form-row">
+  <div class="field">
+    <label>É pessoa com deficiência (PcD)?</label>
+    <app-select
+      [ngModel]="dados().pcd ?? null"
+      (ngModelChange)="atualizar('pcd', $event)"
+      [options]="simNaoOptions"
+    />
+  </div>
+
+  @if (dados().pcd) {
+    <app-input
+      label="Qual deficiência?"
+      placeholder="Ex.: auditiva, física, intelectual…"
+      [required]="true"
+      [ngModel]="dados().deficiencia"
+      (ngModelChange)="atualizar('deficiencia', $event)"
+    />
+  }
+</div>
+
+<p class="form-sec-title">Escola</p>
+
+<app-input
+  label="Nome da escola"
+  placeholder="Escola onde estuda"
+  [maxLength]="180"
+  [ngModel]="dados().escolaNome"
+  (ngModelChange)="atualizar('escolaNome', $event)"
+/>
+
+<div class="form-row-3">
+  <app-input
+    label="Ano/série"
+    placeholder="Ex.: 5º ano"
+    [maxLength]="40"
+    [ngModel]="dados().escolaAnoSerie"
+    (ngModelChange)="atualizar('escolaAnoSerie', $event)"
+  />
+
+  <div class="field">
+    <label>Turno na escola</label>
+    <app-select
+      [ngModel]="dados().escolaTurno ?? null"
+      (ngModelChange)="atualizar('escolaTurno', $event)"
+      [options]="turnoOptions"
+    />
+  </div>
+
+  <div class="field">
+    <label>Estuda no contraturno?</label>
+    <app-select
+      [ngModel]="dados().estudaContraturno ?? null"
+      (ngModelChange)="atualizar('estudaContraturno', $event)"
+      [options]="simNaoOptions"
+    />
+  </div>
+</div>
+
+<p class="form-sec-title">
+  Endereço
+  @if (podeCopiarEndereco()) {
+    <app-button size="sm" variant="secondary" class="sec-acao" (click)="copiarEnderecoSugerido()">
+      Mesmo do responsável
+    </app-button>
+  }
+</p>
+
+<app-endereco-form [ngModel]="dados().endereco" (ngModelChange)="atualizar('endereco', $event)" />

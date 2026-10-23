@@ -10,13 +10,19 @@ import {
   Validators,
 } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { AssistidoLoteService } from '../../../../core/assistido-lote.service';
+import { AssistidoService } from '../../../../core/assistido.service';
 import { Badge } from '../../../../shared/components/badge/badge';
 import { Button } from '../../../../shared/components/button/button';
+import { FotoPerfil } from '../../../../shared/components/foto-perfil/foto-perfil';
 import { Icon } from '../../../../shared/components/icon/icon';
 import { Input } from '../../../../shared/components/input/input';
 import { StatCard } from '../../../../shared/components/stat-card/stat-card';
+import { TooltipDirective } from '../../../../shared/components/tooltip/tooltip';
+import { UploadDocumento } from '../../../../shared/components/upload-documento/upload-documento';
 import { AssistidoLoteRequestDTO } from '../../../../shared/models/assistido/AssistidoLoteRequestDTO';
+import { AssistidoRequestDTO } from '../../../../shared/models/assistido/AssistidoRequestDTO';
 import { ResultadoLinhaLoteDTO } from '../../../../shared/models/assistido/ResultadoLinhaLoteDTO';
 import { BadgeVariant } from '../../../../shared/utils/badge-status.util';
 import {
@@ -30,6 +36,7 @@ import {
 } from '../../../../shared/utils/csv-assistidos.util';
 import { mensagemErro } from '../../../../shared/utils/erro-http.util';
 import { cpfValido, telefoneValido } from '../../../../shared/validators/cpf.validator';
+import { MENSAGEM_SEM_DOCUMENTO } from '../mensagens-cadastro';
 
 type ResponsavelForm = FormGroup<{
   nomeCompleto: FormControl<string>;
@@ -50,13 +57,15 @@ type AssistidoForm = FormGroup<{
 
 interface LinhaLote {
   form: AssistidoForm;
+  foto: WritableSignal<File | null>;
+  documentos: WritableSignal<File[]>;
   resultado: WritableSignal<ResultadoLinhaLoteDTO | null>;
   expandida: WritableSignal<boolean>;
 }
 
 type Filtro = 'todos' | 'erro' | 'prontas';
 
-const LIMITE_LINHAS = 500;
+const LIMITE_LINHAS = 50;
 
 const NOMES_CAMPOS: Record<string, string> = {
   nomeCompleto: 'Nome',
@@ -90,13 +99,14 @@ function revalidar(controle: AbstractControl): void {
 
 @Component({
   selector: 'app-assistidos-lote',
-  imports: [ReactiveFormsModule, RouterLink, Input, Button, Badge, Icon, StatCard],
+  imports: [ReactiveFormsModule, RouterLink, Input, Button, Badge, Icon, StatCard, TooltipDirective, FotoPerfil, UploadDocumento],
   templateUrl: './assistidos-lote.html',
   styleUrl: './assistidos-lote.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AssistidosLote {
   private readonly loteService = inject(AssistidoLoteService);
+  private readonly assistidoService = inject(AssistidoService);
 
   readonly limite = LIMITE_LINHAS;
   readonly linhas = signal<LinhaLote[]>([]);
@@ -104,6 +114,7 @@ export class AssistidosLote {
   readonly enviando = signal(false);
   readonly erro = signal<string | null>(null);
   readonly aviso = signal<string | null>(null);
+  readonly progresso = signal('');
 
   readonly prontas = computed(() => this.linhas().filter((linha) => linha.resultado()?.status === 'VALIDA').length);
   readonly comErro = computed(() => this.linhas().filter((linha) => linha.resultado()?.status === 'INVALIDA').length);
@@ -134,6 +145,16 @@ export class AssistidosLote {
     const responsavel = responsaveis.at(indice);
     responsaveis.removeAt(indice);
     responsaveis.insert(0, responsavel);
+  }
+
+  trocarFoto(linha: LinhaLote, foto: File | null): void {
+    linha.foto.set(foto);
+    linha.resultado.set(null);
+  }
+
+  trocarDocumentos(linha: LinhaLote, documentos: File[]): void {
+    linha.documentos.set(documentos);
+    linha.resultado.set(null);
   }
 
   alternarExpansao(linha: LinhaLote): void {
@@ -184,7 +205,10 @@ export class AssistidosLote {
     }
 
     this.linhas.update((linhas) => [...linhas, ...importadas.map((dados) => this.criarLinha(dados))]);
-    this.aviso.set(`${importadas.length} assistido(s) importado(s) de ${arquivo.name}. Clique em Validar para conferir.`);
+    this.aviso.set(
+      `${importadas.length} assistido(s) importado(s) de ${arquivo.name}. ` +
+        'Adicione o RG ou CPF de cada um e clique em Validar.',
+    );
   }
 
   baixarModelo(): void {
@@ -199,11 +223,62 @@ export class AssistidosLote {
   }
 
   validar(): void {
-    this.enviar('validar');
+    const enviadas = this.linhas();
+    if (!enviadas.length) return;
+
+    enviadas.forEach((linha) => linha.form.markAllAsTouched());
+    this.erro.set(null);
+    this.aviso.set(null);
+    this.enviando.set(true);
+
+    this.loteService.validar(enviadas.map((linha) => this.paraRequest(linha))).subscribe({
+      next: (resultados) => {
+        for (const resultado of resultados) {
+          const linha = enviadas[resultado.indice];
+          const erros = linha.documentos().length ? resultado.erros : [...resultado.erros, MENSAGEM_SEM_DOCUMENTO];
+          this.aplicarResultado(linha, { ...resultado, status: erros.length ? 'INVALIDA' : 'VALIDA', erros });
+        }
+        this.enviando.set(false);
+      },
+      error: (resposta: HttpErrorResponse) => {
+        this.erro.set(mensagemErro(resposta, 'Não foi possível validar o lote. Tente novamente.'));
+        this.enviando.set(false);
+      },
+    });
   }
 
-  cadastrar(): void {
-    this.enviar('cadastrar');
+  // Uma linha por vez: irmãos reaproveitam o responsável criado pela linha anterior.
+  async cadastrar(): Promise<void> {
+    const prontas = this.linhas().filter((linha) => linha.resultado()?.status === 'VALIDA');
+    if (!prontas.length) return;
+
+    this.erro.set(null);
+    this.aviso.set(null);
+    this.enviando.set(true);
+
+    let cadastradas = 0;
+    for (const [posicao, linha] of prontas.entries()) {
+      const resultado = linha.resultado();
+      if (resultado?.status !== 'VALIDA' || !this.linhas().includes(linha)) continue;
+
+      this.progresso.set(`Cadastrando ${posicao + 1} de ${prontas.length}…`);
+      try {
+        await firstValueFrom(this.assistidoService.cadastrar(this.paraCadastro(linha), linha.foto(), linha.documentos()));
+        this.removerLinha(linha);
+        cadastradas++;
+      } catch (resposta) {
+        this.aplicarResultado(linha, { ...resultado, status: 'INVALIDA', erros: this.errosDoCadastro(resposta as HttpErrorResponse) });
+      }
+    }
+
+    this.progresso.set('');
+    this.enviando.set(false);
+    const pendentes = this.linhas().length;
+    this.aviso.set(
+      pendentes
+        ? `${cadastradas} assistido(s) cadastrado(s). ${pendentes} linha(s) continuam na grade para correção.`
+        : `${cadastradas} assistido(s) cadastrado(s).`,
+    );
   }
 
   statusDaLinha(linha: LinhaLote): { label: string; variant: BadgeVariant } {
@@ -237,34 +312,15 @@ export class AssistidosLote {
     return `${rotulo}: ${mensagem}`;
   }
 
-  private enviar(acao: 'validar' | 'cadastrar'): void {
-    const enviadas = this.linhas();
-    if (!enviadas.length) return;
+  private aplicarResultado(linha: LinhaLote, resultado: ResultadoLinhaLoteDTO): void {
+    linha.resultado.set(resultado);
+    this.marcarErrosNosCampos(linha, resultado.erros);
+    if (resultado.status === 'INVALIDA') linha.expandida.set(true);
+  }
 
-    enviadas.forEach((linha) => linha.form.markAllAsTouched());
-    this.erro.set(null);
-    this.aviso.set(null);
-    this.enviando.set(true);
-
-    const itens = enviadas.map((linha) => this.paraRequest(linha));
-    const requisicao = acao === 'validar' ? this.loteService.validar(itens) : this.loteService.cadastrar(itens);
-
-    requisicao.subscribe({
-      next: (resultados) => {
-        for (const resultado of resultados) {
-          const linha = enviadas[resultado.indice];
-          linha.resultado.set(resultado);
-          this.marcarErrosNosCampos(linha, resultado.erros);
-          if (resultado.status === 'INVALIDA') linha.expandida.set(true);
-        }
-        if (acao === 'cadastrar') this.removerCriadas(resultados.filter((r) => r.status === 'CRIADA').length);
-        this.enviando.set(false);
-      },
-      error: (resposta: HttpErrorResponse) => {
-        this.erro.set(mensagemErro(resposta, 'Não foi possível processar o lote. Tente novamente.'));
-        this.enviando.set(false);
-      },
-    });
+  private errosDoCadastro(resposta: HttpErrorResponse): string[] {
+    const detalhes: string[] = resposta.error?.detalhes ?? [];
+    return detalhes.length ? detalhes : [mensagemErro(resposta, 'Não foi possível cadastrar este assistido.')];
   }
 
   // Erros "campo: mensagem" da API ficam no próprio campo; os demais vão para o quadro da linha.
@@ -284,16 +340,6 @@ export class AssistidosLote {
     }
   }
 
-  private removerCriadas(totalCriadas: number): void {
-    this.linhas.update((linhas) => linhas.filter((linha) => linha.resultado()?.status !== 'CRIADA'));
-    const pendentes = this.linhas().length;
-    this.aviso.set(
-      pendentes
-        ? `${totalCriadas} assistido(s) cadastrado(s). ${pendentes} linha(s) continuam na grade para correção.`
-        : `${totalCriadas} assistido(s) cadastrado(s).`,
-    );
-  }
-
   private paraRequest(linha: LinhaLote): AssistidoLoteRequestDTO {
     const valor = linha.form.getRawValue();
     return {
@@ -311,6 +357,11 @@ export class AssistidosLote {
         autorizadoRetirada: responsavel.autorizadoRetirada,
       })),
     };
+  }
+
+  private paraCadastro(linha: LinhaLote): AssistidoRequestDTO {
+    const dados = this.paraRequest(linha);
+    return { ...dados, dataNascimento: dados.dataNascimento ?? '' };
   }
 
   private criarLinha(dados?: AssistidoLinhaLote): LinhaLote {
@@ -333,6 +384,8 @@ export class AssistidosLote {
 
     const linha: LinhaLote = {
       form,
+      foto: signal(null),
+      documentos: signal([]),
       resultado: signal(null),
       expandida: signal(true),
     };

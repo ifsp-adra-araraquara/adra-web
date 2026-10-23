@@ -1,0 +1,45 @@
+.topo { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+@media (min-width: 720px) {
+  .topo { flex-direction: row; align-items: center; }
+  .busca { flex: 1; }
+}
+
+.busca {
+  display: flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 0 12px;
+  border: 1px solid var(--gray-100); border-radius: 10px; background: var(--gray-50);
+  color: var(--gray-600);
+}
+.busca:focus-within { border-color: var(--color-adra-green-400); background: #fff; }
+.busca input { flex: 1; min-width: 0; border: none; outline: none; background: transparent; font: inherit; font-size: 14px; color: var(--gray-800); }
+
+.lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.lista li {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px;
+  padding: 8px 4px; border-bottom: 1px solid var(--gray-100);
+}
+.lista li:last-child { border-bottom: none; }
+
+.aluno {
+  flex: 1 1 260px; display: flex; align-items: center; gap: 12px; min-width: 0;
+  padding: 6px; border: none; border-radius: 10px; background: none;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.aluno:hover { background: var(--gray-50); }
+.aluno:focus-visible { outline: 2px solid var(--color-adra-green-400); outline-offset: 2px; }
+
+.aluno-texto { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.aluno-nome { font-size: 14px; font-weight: 600; color: var(--gray-800); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.aluno-resp { font-size: 12px; color: var(--gray-600); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seta { color: var(--gray-400); flex: none; }
+
+.contato {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 36px; padding: 0 12px; margin-left: 62px;
+  border-radius: 999px; background: var(--color-adra-green-50);
+  color: var(--color-adra-green-600); font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap;
+}
+@media (min-width: 720px) { .contato { margin-left: 0; } }
+
+.estado { margin: 12px 0; font-size: 13px; color: var(--gray-600); text-align: center; }
+.estado--erro { color: var(--coral-600); }

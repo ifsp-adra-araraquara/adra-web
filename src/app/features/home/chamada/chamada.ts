@@ -14,7 +14,7 @@ import { podeCorrigirDataChamada } from '../../../shared/utils/chamada.util';
 import { SituacaoAula } from '../../../shared/enum/SituacaoAula';
 import { BadgeVariant } from '../../../shared/utils/badge-status.util';
 import { Badge } from '../../../shared/components/badge/badge';
-import { Input } from '../../../shared/components/input/input';
+import { NavegadorData } from '../../../shared/components/navegador-data/navegador-data';
 import { Button } from '../../../shared/components/button/button';
 import { Icon } from '../../../shared/components/icon/icon';
 
@@ -36,7 +36,7 @@ import { Icon } from '../../../shared/components/icon/icon';
 @Component({
   selector: 'app-chamada',
   standalone: true,
-  imports: [Icon, FormsModule, AulaModal, Badge, Input, Button],
+  imports: [Icon, FormsModule, AulaModal, Badge, Button, NavegadorData],
   templateUrl: './chamada.html',
   styleUrl: './chamada.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -62,7 +62,7 @@ export class AulasTurmaModal implements OnChanges {
           `${this.api}/api/aulas/turma/${this.turmaId}/detalhes`,
         ),
       );
-      this.aulas.set([...aulas].sort((a, b) => b.dataAula.localeCompare(a.dataAula)));
+      this.aulas.set([...aulas].sort((a, b) => b.dataAula.localeCompare(a.dataAula) || (a.horarioInicio ?? '').localeCompare(b.horarioInicio ?? '')));
     } catch {
       this.erro.set('Não foi possível carregar as aulas desta turma.');
     } finally {
