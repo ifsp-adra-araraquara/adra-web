@@ -1,142 +1,94 @@
 <section class="chamada-page" aria-labelledby="chamada-titulo">
   <header class="page-header">
-    <button type="button" class="btn-voltar" (click)="voltar()">
-      <app-icon name="chevron-left" />
-      Voltar
-    </button>
-    <p class="eyebrow">Pedagógico</p>
-    <h1 id="chamada-titulo">Chamada</h1>
-    <p class="page-intro">
-      @if (ehCoordenador()) {
-      Aulas do dia selecionado, de todas as turmas. Clique em uma aula de hoje ou já passada para abrir a chamada.
-      } @else {
-      Aulas de hoje, de todas as turmas. Clique em uma aula para realizar a chamada.
-      }
-    </p>
+    <div class="page-header-texto">
+      <h1 id="chamada-titulo">Chamada</h1>
+      <p class="page-intro">
+        @if (ehCoordenador()) {
+          Toque em uma aula para fazer ou conferir a chamada.
+        } @else {
+          Aulas de hoje. Toque em uma aula para fazer a chamada.
+        }
+      </p>
+    </div>
+    @if (ehCoordenador()) {
+      <div class="page-header-acoes">
+        <app-button variant="secondary" (click)="irParaStatusChamadas()">Relatório por período</app-button>
+      </div>
+    }
   </header>
 
-  <section class="panel">
-    <div class="panel-header">
-      <div>
-        <h2>Aulas do dia</h2>
-        <span class="subtle">{{ dataSelecionada() === hojeISO() ? 'Hoje' : dataSelecionada() }}</span>
-      </div>
+  @if (ehCoordenador()) {
+    <div class="tabs" role="tablist" aria-label="Aulas">
+      <button type="button" class="tab" role="tab" [class.active]="aba() === 'dia'"
+              [attr.aria-selected]="aba() === 'dia'" (click)="trocarAba('dia')">
+        Aulas do dia
+      </button>
+      <button type="button" class="tab" role="tab" [class.active]="aba() === 'pendentes'"
+              [attr.aria-selected]="aba() === 'pendentes'" (click)="trocarAba('pendentes')">
+        Pendentes @if (pendentes().length) { <span class="count count-alerta">{{ pendentes().length }}</span> }
+      </button>
+    </div>
+  }
+
+  @if (aba() === 'dia') {
+    <div class="dia-barra">
+      <h2>{{ tituloDia() }}</h2>
       @if (ehCoordenador()) {
-      <div class="filtros">
-        <app-navegador-data
-          label="Filtrar por data"
-          [data]="dataSelecionada()"
-          (dataChange)="onDataChange($event)"
-        />
-        <app-button
-          variant="secondary"
-          size="sm"
-          [disabled]="dataSelecionada() === hojeISO()"
-          (click)="irParaHoje()"
-        >
-          Hoje
-        </app-button>
-        <app-button variant="secondary" size="sm" (click)="irParaStatusChamadas()">
-          Status das chamadas
-        </app-button>
-      </div>
+        <div class="dia-filtros">
+          <app-navegador-data label="Data" [data]="dataSelecionada()" (dataChange)="onDataChange($event)" />
+          @if (dataSelecionada() !== hojeISO()) {
+            <app-button variant="secondary" size="sm" (click)="onDataChange(hojeISO())">Hoje</app-button>
+          }
+        </div>
       }
     </div>
 
-    @if (carregando()) {
-    <p class="feedback" role="status">Carregando...</p>
-    } @else if (erro()) {
-    <p class="feedback error" role="alert">{{ erro() }}</p>
+    @if (erro()) {
+      <div class="notice notice-error" role="alert"><app-icon name="alert-circle" /><span>{{ erro() }}</span></div>
     }
 
-    <div data-tour="chamada-tabela">
-      <!-- Mobile (<720px): cards, horário/turma/ação em destaque — ver chamada.css -->
-      <ul class="chamada-cards" role="list">
-        @for (aula of aulas(); track aula.aulaId) {
-        <li
-          class="chamada-card"
-          [class.hoje]="ehHoje(aula)"
-          [class.bloqueada]="!podeAbrir(aula)"
-          [attr.tabindex]="podeAbrir(aula) ? 0 : null"
-          [attr.aria-disabled]="!podeAbrir(aula)"
-          (click)="abrirAula(aula)"
-          (keydown.enter)="abrirAula(aula)"
-        >
-          <div class="cc-topo">
-            <span class="cc-horario">
-              {{ aula.horarioInicio && aula.horarioFim ? aula.horarioInicio + ' - ' + aula.horarioFim : '-' }}
-              @if (ehHoje(aula)) { <span class="tag-hoje">Hoje</span> }
+    <ul class="aulas" role="list" data-tour="chamada-tabela" [class.recarregando]="carregando()">
+      @for (aula of aulas(); track aula.aulaId) {
+        <li>
+          <button type="button" class="aula" (click)="abrir(aula.aulaId)">
+            <span class="aula-hora">{{ horario(aula.horarioInicio, aula.horarioFim) }}</span>
+            <span class="aula-texto">
+              <span class="aula-turma">{{ aula.nomeTurma || 'Aula' }}</span>
+              <span class="aula-meta">
+                {{ aula.nomeOficineiro || 'Sem oficineiro' }} · {{ aula.quantidadeAlunos ?? 0 }} alunos
+              </span>
             </span>
-            @if (rotuloAcao(aula); as acao) {
-              <app-badge [variant]="acao.variant" [label]="acao.label" />
-            } @else {
-              <app-badge [status]="situacaoAula(aula)" />
-            }
-          </div>
-          <strong class="cc-turma">{{ aula.nomeTurma || '-' }}</strong>
-          <span class="cc-meta">
-            {{ aula.nomeOficineiro || '-' }} · {{ aula.quantidadeAlunos ?? 0 }} alunos
-            @if (aula.titulo) { · {{ aula.titulo }} }
-          </span>
-          @if (!podeAbrir(aula)) {
-            <span class="cc-bloqueio">
-              {{ ehCoordenador() ? 'Só aulas de hoje ou já passadas' : 'Só aulas de hoje' }}
-            </span>
-          }
+            <app-badge [variant]="estado(aula).variant" [label]="estado(aula).label" />
+            <app-icon name="chevron-right" class="aula-seta" />
+          </button>
         </li>
-        } @empty {
-        <li class="empty">Nenhuma aula cadastrada para esta data.</li>
+      } @empty {
+        @if (!carregando()) {
+          <li class="vazio">Nenhuma aula neste dia.</li>
         }
-      </ul>
-
-      <!-- Desktop (≥720px): tabela, todas as colunas -->
-      <div class="table-wrap chamada-table-desktop" role="region" tabindex="0" aria-label="Aulas do dia">
-        <table>
-          <thead>
-            <tr>
-              <th>Horário</th>
-              <th>Turma</th>
-              <th>Oficineiro</th>
-              <th>Alunos</th>
-              <th>Título</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (aula of aulas(); track aula.aulaId) {
-            <tr
-              [class.linha-hoje]="ehHoje(aula)"
-              [class.linha-bloqueada]="!podeAbrir(aula)"
-              [attr.title]="podeAbrir(aula) ? 'Abrir aula' : (ehCoordenador() ? 'Só é possível abrir aulas de hoje ou já passadas' : 'Você só pode realizar a chamada de aulas de hoje')"
-              (click)="abrirAula(aula)"
-              [attr.tabindex]="podeAbrir(aula) ? 0 : null"
-              (keydown.enter)="abrirAula(aula)"
-            >
-              <td>{{ aula.horarioInicio && aula.horarioFim ? aula.horarioInicio + ' - ' + aula.horarioFim : '-' }} @if (ehHoje(aula)) { <span class="tag-hoje">Hoje</span> }</td>
-              <td class="strong">{{ aula.nomeTurma || '-' }}</td>
-              <td>{{ aula.nomeOficineiro || '-' }}</td>
-              <td>{{ aula.quantidadeAlunos ?? '-' }}</td>
-              <td>{{ aula.titulo || '-' }}</td>
-              <td>
-                @if (rotuloAcao(aula); as acao) {
-                  <app-badge [variant]="acao.variant" [label]="acao.label" />
-                } @else {
-                  <app-badge [status]="situacaoAula(aula)" />
-                }
-              </td>
-            </tr>
-            } @empty {
-            <tr><td colspan="6" class="empty">Nenhuma aula cadastrada para esta data.</td></tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <app-aula-modal
-    [aula]="aulaAberta()"
-    (fechar)="fecharAulaModal()"
-    (chamadaSalva)="aoSalvarChamada()">
-  </app-aula-modal>
+      }
+    </ul>
+  } @else {
+    <p class="hint-pendentes">Aulas dos últimos 60 dias que ainda estão sem chamada, da mais recente para a mais antiga.</p>
+    <ul class="aulas" role="list">
+      @for (aula of pendentes(); track aula.aulaId) {
+        <li>
+          <button type="button" class="aula" (click)="abrir(aula.aulaId)">
+            <span class="aula-hora">
+              {{ dataBr(aula.dataAula).slice(0, 5) }}
+              <small>{{ horario(aula.horarioInicio, aula.horarioFim) }}</small>
+            </span>
+            <span class="aula-texto">
+              <span class="aula-turma">{{ aula.nomeTurma || 'Aula' }}</span>
+              @if (aula.titulo) { <span class="aula-meta">{{ aula.titulo }}</span> }
+            </span>
+            <app-badge variant="amber" label="Sem chamada" />
+            <app-icon name="chevron-right" class="aula-seta" />
+          </button>
+        </li>
+      } @empty {
+        <li class="vazio">Nenhuma chamada pendente. Tudo em dia!</li>
+      }
+    </ul>
+  }
 </section>

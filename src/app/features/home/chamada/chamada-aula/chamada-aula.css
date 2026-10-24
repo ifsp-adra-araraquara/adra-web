@@ -1,0 +1,180 @@
+/* ============================================================
+   CHAMADA DA AULA (FT-06) — celular primeiro, no modelo do app
+   do professor da Sistema Quality: lista limpa, um botão por
+   aluno à direita e rodapé fixo com contadores + ação.
+   ============================================================ */
+
+:host {
+  /* P verde · F vermelho · FJ amarelo — texto com contraste AA */
+  --st-p-bg: var(--color-adra-green-400);
+  --st-p-fg: #fff;
+  --st-f-bg: var(--red-600);
+  --st-f-fg: #fff;
+  --st-fj-bg: #F5C04A;
+  --st-fj-fg: #3D2A00;
+  display: block;
+}
+
+.chamada-aula { width: 100%; min-width: 0; }
+.chamada-aula.com-rodape { padding-bottom: 8px; }
+
+/* Três abas cabem lado a lado; em tela estreita rolam em vez de quebrar linha */
+.tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: none; white-space: nowrap; }
+
+.page-header { margin-bottom: 12px; }
+.situacao { flex: none; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+.notice-sucesso { background: var(--color-brand-soft); color: var(--color-adra-green-600); }
+.recarregando { opacity: .55; transition: opacity .15s; }
+
+/* ---- Busca ---- */
+.busca {
+  display: flex; align-items: center; gap: 8px;
+  min-height: 44px; margin-bottom: 8px; padding: 0 12px;
+  border: 1px solid var(--gray-200); border-radius: var(--radius-sm);
+  background: #fff; color: var(--gray-400);
+}
+.busca:focus-within { border-color: var(--color-brand); box-shadow: 0 0 0 3px var(--color-brand-soft); }
+.busca input {
+  flex: 1; min-width: 0; height: 42px; border: none; outline: none;
+  background: transparent; font: inherit; font-size: 15px; color: var(--gray-800);
+}
+
+/* ---- Lista ---- */
+.lista {
+  list-style: none; margin: 0; padding: 0;
+  background: #fff; border: 1px solid var(--gray-100); border-radius: var(--radius);
+}
+.aluno { padding: 6px 8px 6px 12px; border-top: 1px solid var(--gray-100); }
+.aluno:first-child { border-top: none; }
+.aluno-linha { display: flex; align-items: center; gap: 10px; }
+
+.aluno-info {
+  display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;
+  min-height: 56px; padding: 4px 0; border: none; background: none;
+  font: inherit; text-align: left; color: inherit; cursor: pointer;
+}
+.aluno-info:focus-visible { outline: 3px solid var(--color-brand-soft); outline-offset: 2px; border-radius: var(--radius-sm); }
+.aluno-info app-avatar { flex: none; }
+.aluno-texto { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.aluno-nome { font-size: 15px; font-weight: 500; line-height: 1.3; color: var(--gray-800); overflow-wrap: anywhere; }
+.aluno-sub { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; font-size: 12.5px; }
+
+.aluno-status { font-weight: 500; }
+.aluno-status.st-p { color: var(--color-adra-green-600); }
+.aluno-status.st-f { color: var(--red-600); }
+.aluno-status.st-fj { color: var(--amber-600); }
+
+/* Bolinhas das últimas aulas (mais antiga à esquerda) */
+.faixa { display: inline-flex; align-items: center; gap: 4px; }
+.bolinha { width: 8px; height: 8px; border-radius: 50%; background: var(--gray-200); flex: none; }
+.bolinha.st-p { background: var(--st-p-bg); }
+.bolinha.st-f { background: var(--st-f-bg); }
+.bolinha.st-fj { background: var(--st-fj-bg); box-shadow: inset 0 0 0 1px #C99A2E; }
+
+/* Botão único P/F/FJ */
+.presenca {
+  display: grid; place-items: center; flex: none;
+  width: 48px; height: 48px; border: none; border-radius: 10px;
+  font: inherit; font-size: 16px; font-weight: 700; letter-spacing: .02em;
+  cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
+  transition: transform .08s, background-color .15s;
+}
+.presenca:active { transform: scale(.94); }
+.presenca:focus-visible { outline: 3px solid var(--color-brand-ring); outline-offset: 2px; }
+.presenca.st-p { background: var(--st-p-bg); color: var(--st-p-fg); }
+.presenca.st-f { background: var(--st-f-bg); color: var(--st-f-fg); }
+.presenca.st-fj { background: var(--st-fj-bg); color: var(--st-fj-fg); }
+.presenca-lida { width: 40px; height: 40px; font-size: 14px; cursor: default; opacity: .9; }
+
+/* Motivo da FJ, abaixo do nome */
+.motivo { display: flex; flex-direction: column; gap: 8px; margin: 2px 0 8px 52px; }
+.motivo .select { width: 100%; min-width: 0; }
+.motivo-lido { margin: 0 0 8px 52px; font-size: 12.5px; color: var(--gray-600); }
+textarea { width: 100%; }
+
+.vazio { padding: 28px 16px; text-align: center; color: var(--gray-600); font-size: 14px; }
+
+/* ---- Rodapé fixo ---- */
+.rodape {
+  position: sticky; bottom: 0; z-index: 5;
+  display: flex; flex-direction: column; gap: 10px;
+  margin: 16px -16px 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: #fff; border-top: 1px solid var(--gray-100);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, .06);
+}
+.contadores { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.contador {
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  padding: 6px 4px; border-radius: var(--radius-sm); background: var(--gray-50);
+  font-size: 12px; color: var(--gray-600);
+}
+.contador b { font-size: 18px; line-height: 1.2; font-weight: 600; }
+.contador.st-p b { color: var(--color-adra-green-600); }
+.contador.st-f b { color: var(--red-600); }
+.contador.st-fj b { color: var(--amber-600); }
+.rodape-acoes { display: flex; gap: 8px; }
+.rodape-acoes > app-button { flex: 1 1 0; min-width: 0; }
+.rodape-acoes > app-button ::ng-deep .app-button { width: 100%; white-space: nowrap; }
+
+/* ---- Detalhes ---- */
+.detalhes-lista { display: grid; gap: 14px; margin: 0 0 16px; padding: 16px; }
+.detalhes-lista dt { font-size: 12px; font-weight: 500; color: var(--gray-400); text-transform: uppercase; letter-spacing: .04em; }
+.detalhes-lista dd { margin: 2px 0 0; font-size: 14.5px; color: var(--gray-800); white-space: pre-line; overflow-wrap: anywhere; }
+.detalhes-acoes { display: flex; flex-direction: column; gap: 8px; }
+
+/* ---- Ficha do aluno ---- */
+.ficha-status { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
+.ficha-opcao {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  min-height: 56px; padding: 6px; border: 2px solid var(--gray-200); border-radius: 10px;
+  background: #fff; font: inherit; font-size: 12px; color: var(--gray-600); cursor: pointer;
+}
+.ficha-opcao b { font-size: 16px; }
+.ficha-opcao.ativo.st-p { background: var(--st-p-bg); border-color: var(--st-p-bg); color: var(--st-p-fg); }
+.ficha-opcao.ativo.st-f { background: var(--st-f-bg); border-color: var(--st-f-bg); color: var(--st-f-fg); }
+.ficha-opcao.ativo.st-fj { background: var(--st-fj-bg); border-color: var(--st-fj-bg); color: var(--st-fj-fg); }
+.ficha-opcao:focus-visible { outline: 3px solid var(--color-brand-ring); outline-offset: 2px; }
+.ficha-linha { margin: 0 0 14px; font-size: 14px; }
+.ficha-dados { display: grid; gap: 12px; margin: 4px 0 0; }
+.ficha-dados dt { font-size: 12px; font-weight: 500; color: var(--gray-400); }
+.ficha-dados dd { margin: 2px 0 0; font-size: 14px; color: var(--gray-800); }
+.ficha-dados .baixa { color: var(--red-600); }
+.faixa-grande { display: flex; gap: 12px; }
+.bolinha-dia { display: inline-flex; flex-direction: column; align-items: center; gap: 3px; }
+.bolinha-dia .bolinha { width: 12px; height: 12px; }
+.bolinha-dia small { font-size: 11px; color: var(--gray-600); }
+.alerta-texto { color: var(--amber-600); }
+
+@media (min-width: 720px) {
+  /* A partir do iPad: lista única, centralizada e com largura de leitura.
+     A grade do mês usa a largura toda (ver .larga). */
+  .chamada-aula { max-width: 880px; margin: 0 auto; }
+  .chamada-aula.larga { max-width: none; }
+
+  .rodape {
+    flex-direction: row; align-items: center; justify-content: space-between;
+    margin: 16px 0 0; border: 1px solid var(--gray-100); border-radius: var(--radius);
+  }
+  .contadores { display: flex; gap: 8px; }
+  .contador { flex-direction: row; gap: 6px; padding: 8px 12px; font-size: 13px; }
+  .contador b { font-size: 16px; }
+  .rodape-acoes > app-button { flex: none; }
+  .detalhes-acoes { flex-direction: row; }
+  .aluno { padding: 6px 12px 6px 16px; }
+  .busca { max-width: 420px; }
+
+  /* Turma grande: linha compacta, com status e bolinhas ao lado do nome */
+  .lista.compacta .aluno { padding-top: 2px; padding-bottom: 2px; }
+  .lista.compacta .aluno-info { min-height: 48px; padding: 2px 0; gap: 10px; }
+  .lista.compacta .aluno-texto { flex-direction: row; align-items: center; flex-wrap: wrap; gap: 2px 14px; }
+  .lista.compacta .presenca { width: 44px; height: 40px; font-size: 15px; }
+  .lista.compacta .presenca-lida { width: 36px; height: 34px; }
+}

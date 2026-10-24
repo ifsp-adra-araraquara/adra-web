@@ -125,6 +125,13 @@ export const routes: Routes = [
         canActivate: [roleGuard],
       },
       {
+        path: 'chamada/aula/:aulaId',
+        loadComponent: () =>
+          import('./features/home/chamada/chamada-aula/chamada-aula').then((m) => m.ChamadaAula),
+        data: { roles: [Role.COORD, Role.SOCIO, Role.OFICINEIRO] },
+        canActivate: [roleGuard],
+      },
+      {
         path: 'chamada/status',
         loadComponent: () =>
           import('./features/home/status-chamada/status-chamada').then((m) => m.StatusChamadaPainel),

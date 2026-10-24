@@ -129,6 +129,38 @@ export function marcarPresenca(
   });
 }
 
+/** FT-06: cada toque no botão do aluno avança P → F → FJ → P (sem status conta como P). */
+export function proximoStatusPresenca(atual: StatusPresenca | null): StatusPresenca {
+  switch (atual) {
+    case StatusPresenca.FALTA:
+      return StatusPresenca.FALTA_JUSTIFICADA;
+    case StatusPresenca.FALTA_JUSTIFICADA:
+      return StatusPresenca.PRESENTE;
+    default:
+      return StatusPresenca.FALTA;
+  }
+}
+
+export const SIGLA_PRESENCA: Record<StatusPresenca, string> = {
+  [StatusPresenca.PRESENTE]: 'P',
+  [StatusPresenca.FALTA]: 'F',
+  [StatusPresenca.FALTA_JUSTIFICADA]: 'FJ',
+};
+
+export const ROTULO_PRESENCA: Record<StatusPresenca, string> = {
+  [StatusPresenca.PRESENTE]: 'Presente',
+  [StatusPresenca.FALTA]: 'Falta',
+  [StatusPresenca.FALTA_JUSTIFICADA]: 'Falta justificada',
+};
+
+/** Busca da chamada: pelo nome, ignorando acento e caixa. */
+export function filtrarPorNome(alunos: LinhaChamada[], termo: string): LinhaChamada[] {
+  const normalizar = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const busca = normalizar(termo.trim());
+  if (!busca) return alunos;
+  return alunos.filter((a) => normalizar(a.nomeCompleto).includes(busca));
+}
+
 export function marcarTodosPresentes(alunos: LinhaChamada[]): LinhaChamada[] {
   return alunos.map((a) => ({
     ...a,

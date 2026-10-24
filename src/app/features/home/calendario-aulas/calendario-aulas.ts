@@ -412,7 +412,7 @@ export class CalendarioAulas implements OnInit {
   }
 
   abrirChamadaDaAula(aula: AulaComDetalhesResponseDTO): void {
-    this.router.navigate(['/chamada'], { queryParams: { data: aula.dataAula, aulaId: aula.aulaId } });
+    this.router.navigate(['/chamada/aula', aula.aulaId]);
   }
 
   /**

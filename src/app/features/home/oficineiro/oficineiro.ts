@@ -17,7 +17,6 @@ import { ArquivoService } from '../../../core/arquivo.service';
 import { CategoriaArquivo } from '../../../shared/enum/CategoriaArquivo';
 import { EntidadeArquivo } from '../../../shared/enum/EntidadeArquivo';
 import { AulasTurmaModal } from '../aulas-turma-modal/aulas-turma-modal';
-import { AulaModal } from '../../../shared/components/aula-modal/aula-modal';
 import { PaginaResponse } from '../../../shared/models/PaginaResponse';
 import { AssistidoResponseDTO } from '../../../shared/models/assistido/AssistidoResponseDTO';
 import { calcularSituacaoAula, ehAulaDeHoje, podeAbrirAula, ROTULO_SITUACAO_AULA } from '../../../shared/utils/aula.util';
@@ -37,26 +36,17 @@ type AbaOficineiro = 'turmas' | 'aulas' | 'calendario' | 'materiais' | 'comunica
 
 @Component({
   selector: 'app-oficineiro',
-  imports: [TooltipDirective, Icon, FormsModule, AulasTurmaModal, AulaModal, Select, Badge, Input, Button, Modal, CalendarioAulas],
+  imports: [TooltipDirective, Icon, FormsModule, AulasTurmaModal, Select, Badge, Input, Button, Modal, CalendarioAulas],
   templateUrl: './oficineiro.html',
   styleUrl: './oficineiro.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Oficineiro implements OnInit {
   readonly turmaAulasSelecionada = signal<OficineiroTurmaDTO | null>(null);
-  readonly aulaAberta = signal<AulaComDetalhesResponseDTO | null>(null);
-
+  /** FT-06: abre a tela da chamada em modo leitura (com o atalho para os materiais da aula). */
   abrirAula(aula: AulaComDetalhesResponseDTO): void {
     if (!this.podeAbrir(aula)) return;
-    this.aulaAberta.set(aula);
-  }
-
-  fecharAulaModal(): void {
-    this.aulaAberta.set(null);
-  }
-
-  aoSalvarChamada(): void {
-    this.carregarAulas();
+    this.router.navigate(['/chamada/aula', aula.aulaId]);
   }
 
   podeAbrir(aula: AulaComDetalhesResponseDTO): boolean {

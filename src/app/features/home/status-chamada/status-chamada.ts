@@ -92,7 +92,7 @@ export class StatusChamadaPainel implements OnInit {
 
   /** CA-71.4: abre a tela de chamada (US-66) já na data e com a aula aberta. */
   abrirChamada(aula: AulaStatusChamadaResponseDTO): void {
-    this.router.navigate(['/chamada'], { queryParams: { data: aula.dataAula, aulaId: aula.aulaId } });
+    this.router.navigate(['/chamada/aula', aula.aulaId]);
   }
 
   voltar(): void {
