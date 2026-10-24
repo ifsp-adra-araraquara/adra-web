@@ -1,0 +1,166 @@
+/* ============================================================
+   DISCIPLINAR — celular (cartões) → iPad (cartões 2 col) → tabela
+   Mesmos breakpoints da listagem de Assistidos.
+   ============================================================ */
+
+
+/* ---- Pendências: 2×2 no celular, 4 em linha a partir do iPad ---- */
+.pendencias {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.pendencia {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 10px;
+  min-height: 72px;
+  padding: 12px 14px;
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius);
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+}
+.pendencia:hover { border-color: var(--color-brand); }
+.pendencia:focus-visible { outline: 3px solid var(--color-brand-soft); outline-offset: 2px; }
+.pendencia-ico {
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+.pendencia-ico svg { width: 18px; height: 18px; }
+.pendencia-valor { font-size: 22px; font-weight: 700; line-height: 1.1; color: var(--gray-400); }
+.pendencia.ativa .pendencia-valor { color: var(--gray-800); }
+.pendencia-rotulo { font-size: 12px; line-height: 1.3; color: var(--gray-600); }
+
+/* ---- Abas ---- */
+.tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: none; white-space: nowrap; }
+
+/* ---- Filtros ---- */
+.filtros { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.filtros > * { min-width: 0; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 16px; }
+.chip {
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 1px solid var(--gray-200);
+  border-radius: 999px;
+  background: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-600);
+  cursor: pointer;
+}
+.chip.ativo { border-color: var(--color-brand); background: var(--color-brand-soft); color: var(--color-adra-green-600); font-weight: 600; }
+.chip-limpar { border-style: dashed; }
+.chip:focus-visible { outline: 3px solid var(--color-brand-soft); outline-offset: 2px; }
+
+/* ---- Estados ---- */
+.lista-estado { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 32px 16px; text-align: center; }
+.lista-estado p { margin: 0; }
+.recarregando { opacity: .55; transition: opacity .15s; }
+
+/* ---- Tabela (notebook/desktop) ---- */
+.lista-tabela { display: none; }
+.lista-tabela td { vertical-align: middle; }
+.lista-tabela .cell-name, .lista-tabela .cell-sub { display: block; }
+.lista-tabela .cell-sub { margin-top: 3px; }
+.col-acoes { width: 1%; text-align: right; }
+.nowrap { white-space: nowrap; }
+tr.arquivado td { opacity: .6; }
+
+.motivo { color: var(--gray-800); overflow-wrap: anywhere; }
+.motivo.automatico { font-style: italic; color: var(--gray-600); }
+
+/* ---- Cartões (celular/iPad) ---- */
+.lista-cartoes { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.registro-cartao {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+.registro-cartao.arquivado { opacity: .65; }
+.cartao-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.cartao-identidade { flex: 1; min-width: 0; }
+.cartao-topo app-avatar, .assistido-cell app-avatar { flex: none; }
+.assistido-cell { display: flex; align-items: center; gap: 10px; }
+.cartao-identidade .cell-name { display: block; font-size: 15px; overflow-wrap: anywhere; }
+.cartao-identidade .cell-sub { display: block; margin-top: 2px; }
+.cartao-meio { display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; font-size: 13.5px; }
+.cartao-meio app-badge { flex: none; }
+.periodo { font-size: 12.5px; font-weight: 600; color: var(--red-600); }
+
+/* ---- Situação ---- */
+.situacao { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; }
+.situacao-pendente { color: var(--amber-600); }
+.situacao-ok { color: var(--color-adra-green-600); }
+.situacao-arquivado { color: var(--gray-400); }
+
+/* ---- Paginação ---- */
+.paginacao { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding: 12px 0; }
+.pagina-info { font-size: 13px; color: var(--gray-600); text-align: center; }
+.pagina-total { display: block; font-size: 12px; color: var(--gray-400); }
+
+/* ---- Motivos ---- */
+.motivos-intro { margin: 0 0 14px; font-size: 13px; color: var(--gray-600); max-width: 72ch; }
+.motivos-grid { display: grid; gap: 14px; }
+.motivos-grupo { padding: 14px 16px; }
+.motivos-grupo-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.motivos-grupo-topo h2 { margin: 0 0 4px; font-size: 14px; }
+.motivos-lista { list-style: none; margin: 0; padding: 0; }
+.motivos-lista li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 4px 0;
+  border-top: 1px solid var(--gray-100);
+}
+.motivos-lista li.inativo .motivo-nome { color: var(--gray-400); text-decoration: line-through; }
+.motivo-nome { flex: 1; min-width: 0; font-size: 13.5px; color: var(--gray-800); overflow-wrap: anywhere; }
+
+@media (max-width: 380px) {
+  .pag-rotulo { display: none; }
+  .pendencia { padding: 10px 12px; column-gap: 8px; }
+  .pendencia-ico { width: 32px; height: 32px; }
+}
+
+/* iPad na vertical: cartões em 2 colunas */
+@media (min-width: 560px) {
+  .lista-cartoes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 720px) {
+  .pendencias { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .filtros { display: flex; }
+  .filtros-busca { flex: 1; }
+  .filtros-select { width: 220px; flex: none; }
+  .motivos-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* iPad na horizontal e notebook: tabela */
+@media (min-width: 1024px) {
+  .lista-tabela { display: block; }
+  .lista-cartoes { display: none; }
+  .paginacao { padding: 12px 16px; margin-top: 0; }
+  .pagina-total { display: inline; }
+}

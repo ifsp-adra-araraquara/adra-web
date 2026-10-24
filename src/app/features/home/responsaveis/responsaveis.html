@@ -1,10 +1,13 @@
 <div>
-  <div class="card-head" style="border: none; padding: 0 0 18px;">
-    <h1>Responsáveis</h1>
-    <div class="right">
+  <header class="page-header">
+    <div class="page-header-texto">
+      <h1>Responsáveis</h1>
+      <p class="page-intro">Pais, mães e demais responsáveis vinculados aos assistidos.</p>
+    </div>
+    <div class="page-header-acoes">
       <app-button size="sm" (click)="abrirNovo()"><app-icon name="plus" [size]="16" /> Novo responsável</app-button>
     </div>
-  </div>
+  </header>
 
   @if (carregando()) {
     <div class="muted">Carregando...</div>
@@ -57,14 +60,11 @@
                   <td>{{ responsavel.cpf }}</td>
                   <td>{{ responsavel.telefone || '-' }}</td>
                   <td>
-                    <div class="t-actions">
-                      <button type="button" aria-label="Ver responsável" appTooltip="Ver responsável" (click)="abrirVisualizacao(responsavel)">
-                        <app-icon name="eye" />
-                      </button>
-                      <button type="button" aria-label="Editar responsável" appTooltip="Editar responsável" (click)="abrirEdicao(responsavel)">
-                        <app-icon name="edit" />
-                      </button>
-                    </div>
+                    <app-action-menu
+                      [label]="'Ações de ' + responsavel.nomeCompleto"
+                      [itens]="acoesResponsavel"
+                      (selecionado)="executarAcao($event, responsavel)"
+                    />
                   </td>
                 </tr>
               }
@@ -81,12 +81,7 @@
         <app-icon name="user" />
       </div>
 
-      <p class="form-sec-title">
-        Dados pessoais
-        <app-button size="sm" variant="secondary" class="sec-acao" (click)="editarPelaVisualizacao()">
-          <app-icon name="edit" [size]="16" /> Editar
-        </app-button>
-      </p>
+      <p class="form-sec-title">Dados pessoais</p>
 
       <div class="form-row">
         <div class="field">

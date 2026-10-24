@@ -19,7 +19,6 @@ import { Icon, IconName } from '../../../shared/components/icon/icon';
  * (Fase 2) — não é mais uma tela própria.
  */
 const MODULOS_OCULTOS = new Set([
-  'DISCIPLINAR',
   'PRONTUARIOS',
   'EXPORTACAO',
   'ACESSO',
@@ -48,9 +47,9 @@ export class Sidebar {
     OFICINAS: 'Gestão',
     TURMAS: 'Gestão',
     CHAMADA: 'Pedagógico',
+    DISCIPLINAR: 'Pedagógico',
     MATERIAIS: 'Pedagógico',
     COMUNICADOS: 'Pedagógico',
-    DISCIPLINAR: 'Especializado',
     PRONTUARIOS: 'Especializado',
     EXPORTACAO: 'Financeiro',
     USUARIOS: 'Conta',
@@ -72,6 +71,7 @@ export class Sidebar {
     OFICINAS: 'layers',
     TURMAS: 'grid',
     CHAMADA: 'check-square',
+    DISCIPLINAR: 'flag',
     AULAS: 'calendar',
     MATERIAIS: 'book',
     COMUNICADOS: 'bell',

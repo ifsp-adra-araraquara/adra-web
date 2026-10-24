@@ -33,7 +33,7 @@
       @for (row of pagedData(); track trackRow($index, row)) {
         <tr [class.linha-clicavel]="rowClick()" (click)="onRowClick($event, row)">
           @for (column of columns(); track column.key) {
-            <td [style.text-align]="column.align ?? 'left'">
+            <td [style.text-align]="column.align ?? 'left'" [attr.data-label]="column.header">
               @if (column.type === 'badge') {
                 <app-badge [status]="cellStatus(row, column)" />
               } @else if (column.type === 'custom' && cellTemplate(); as cell) {

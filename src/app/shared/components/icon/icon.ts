@@ -63,6 +63,7 @@ const ICONES = {
   book: LIVRO,
   'book-plus': [...LIVRO, 'M12 6v6', 'M9 9h6'],
   list: ['M8 6h13', 'M8 12h13', 'M8 18h13', 'M3 6h.01', 'M3 12h.01', 'M3 18h.01'],
+  flag: ['M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z', 'M4 22v-7'],
   bell: ['M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9', 'M13.73 21a2 2 0 0 1-3.46 0'],
   file: ARQUIVO,
   'file-text': [...ARQUIVO, 'M16 13H8', 'M16 17H8', 'M10 9H8'],

@@ -27,7 +27,7 @@ const LARGURA_MENU = 220;
 const MARGEM = 8;
 
 /**
- * Botão "⋯" que abre um menu de ações da linha/cartão (padrão WAI-ARIA menu
+ * Botão ">" (mesmo da linha de Turmas) que abre um menu de ações da linha/cartão (padrão WAI-ARIA menu
  * button). O painel usa `position: fixed` calculado a partir do botão, então
  * não é cortado pelo `overflow` da tabela; fecha ao rolar, redimensionar,
  * clicar fora ou com Esc (devolvendo o foco ao botão).
@@ -53,7 +53,7 @@ const MARGEM = 8;
       (keydown.arrowdown)="abrirComFoco($event, 0)"
       (keydown.arrowup)="abrirComFoco($event, -1)"
     >
-      <app-icon name="more-horizontal" />
+      <app-icon name="chevron-right" />
     </button>
 
     @if (aberto()) {

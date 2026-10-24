@@ -22,8 +22,10 @@
         <button type="button" class="seg-btn" [class.active]="visualizacao() === 'listWeek'" (click)="alternarVisualizacao('listWeek')">Lista</button>
       </div>
       @if (podeGerenciar()) {
-        <button type="button" class="btn btn-sm btn-ghost" (click)="abrirDiasSemAula()">Dias sem aula</button>
-        <button type="button" class="btn btn-sm" (click)="abrirRecorrencia()">Gerar aulas</button>
+        <div class="cal-botoes">
+          <button type="button" class="btn btn-sm btn-ghost" (click)="abrirDiasSemAula()">Dias sem aula</button>
+          <button type="button" class="btn btn-sm" (click)="abrirRecorrencia()">Gerar aulas</button>
+        </div>
       }
     </div>
   </div>

@@ -1,5 +1,8 @@
-<p class="page-intro">
-  Bem-vindo(a), {{ auth.currentUser()?.name }} — {{ auth.currentUser()?.role }}
-</p>
+<header class="page-header">
+  <div class="page-header-texto">
+    <h1>Calendário</h1>
+    <p class="page-intro">Olá, {{ primeiroNome() }}. Aulas e dias sem aula do período.</p>
+  </div>
+</header>
 
 <app-calendario-aulas [turmas]="turmas()" [oficinas]="oficinas()" [podeGerenciar]="podeGerenciar()" />

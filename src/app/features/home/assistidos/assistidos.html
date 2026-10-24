@@ -1,8 +1,11 @@
 <section class="page" id="page-assistidos">
-  <header class="page-header cabecalho">
-    <h1 class="cabecalho-titulo">Assistidos</h1>
+  <header class="page-header">
+    <div class="page-header-texto">
+      <h1>Assistidos</h1>
+      <p class="page-intro">Cadastro e acompanhamento dos assistidos.</p>
+    </div>
 
-    <div class="cabecalho-acao">
+    <div class="page-header-acoes">
       <app-button variant="secondary" size="sm" (click)="abrirCadastroEmMassa()">
         <app-icon name="users" [size]="16" /> Cadastro em massa
       </app-button>
@@ -10,10 +13,6 @@
         <app-icon name="plus" [size]="16" /> Novo assistido
       </app-button>
     </div>
-
-    <p class="page-intro cabecalho-intro">
-      Cadastro e acompanhamento dos assistidos.
-    </p>
   </header>
 
   @if (turmaFiltroAtual(); as turmaCtx) {
@@ -649,14 +648,7 @@
 
     <!-- ==================== ABA: DADOS PESSOAIS ==================== -->
     @if (abaVerAssistido() === 'dados') {
-      <p class="form-sec-title">
-        Dados pessoais
-        @if (podeEditarCadastro()) {
-          <app-button size="sm" variant="secondary" class="sec-acao" (click)="executarAcaoDaFicha('editar')">
-            <app-icon name="edit" [size]="16" /> Editar
-          </app-button>
-        }
-      </p>
+      <p class="form-sec-title">Dados pessoais</p>
 
       <div class="form-row">
         <div class="field">
@@ -1110,14 +1102,7 @@
 
     <!-- ==================== ABA: PERMISSÕES (termos) ==================== -->
     @if (abaVerAssistido() === 'perm') {
-      <p class="form-sec-title">
-        Termos e autorizações
-        @if (podeEditarCadastro()) {
-          <app-button size="sm" variant="secondary" class="sec-acao" (click)="executarAcaoDaFicha('editar')">
-            <app-icon name="edit" [size]="16" /> Editar
-          </app-button>
-        }
-      </p>
+      <p class="form-sec-title">Termos e autorizações</p>
 
       <ul class="permissoes">
         @for (termo of termosFicha; track termo.campo) {

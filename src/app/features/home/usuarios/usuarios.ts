@@ -23,11 +23,11 @@ import { Modal } from '../../../shared/components/modal/modal';
 import { Badge } from '../../../shared/components/badge/badge';
 import { BadgeVariant } from '../../../shared/utils/badge-status.util';
 import { Icon } from '../../../shared/components/icon/icon';
-import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
+import { ActionMenu, ActionMenuItem } from '../../../shared/components/action-menu/action-menu';
 
 @Component({
   selector: 'app-usuarios',
-  imports: [TooltipDirective, Icon, FormsModule, CadastroUsuario, Select, Input, Button, Modal, Badge],
+  imports: [ActionMenu, Icon, FormsModule, CadastroUsuario, Select, Input, Button, Modal, Badge],
   templateUrl: './usuarios.html',
   styleUrl: './usuarios.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -298,6 +298,41 @@ export class Usuarios implements OnInit {
           this.salvando.set(false);
         },
       });
+  }
+
+  /** Menu ">" da linha. Inativar a própria conta não aparece (antes era um botão desabilitado). */
+  acoesUsuario(usuario: UsuarioResponse): ActionMenuItem[] {
+    const itens: ActionMenuItem[] = [];
+    if (this.isConvitePendente(usuario)) {
+      itens.push({ id: 'convite', label: 'Reenviar convite', icon: 'mail' });
+    }
+    itens.push(
+      { id: 'editar', label: 'Editar', icon: 'edit' },
+      { id: 'senha', label: 'Redefinir senha', icon: 'lock' },
+    );
+    if (!usuario.ativo) {
+      itens.push({ id: 'status', label: 'Reativar', icon: 'rotate-ccw' });
+    } else if (!this.isProprioUsuario(usuario)) {
+      itens.push({ id: 'status', label: 'Inativar', icon: 'power', danger: true });
+    }
+    return itens;
+  }
+
+  executarAcaoUsuario(acao: string, usuario: UsuarioResponse): void {
+    switch (acao) {
+      case 'convite':
+        this.reenviarConvite(usuario);
+        break;
+      case 'editar':
+        this.abrirModalEditarUsuario(usuario);
+        break;
+      case 'senha':
+        this.abrirModalRedefinicao(usuario);
+        break;
+      case 'status':
+        this.alterarStatus(usuario);
+        break;
+    }
   }
 
   isProprioUsuario(usuario: UsuarioResponse): boolean {
