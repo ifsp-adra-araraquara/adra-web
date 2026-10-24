@@ -83,6 +83,13 @@
                           }
                         </span>
                       }
+                      @if (aniversario(aluno); as niver) {
+                        @if (niver.tipo === 'hoje') {
+                          <app-badge variant="amber" [label]="'🎂 Aniversário hoje · ' + niver.idade + ' anos'" [plain]="true" />
+                        } @else {
+                          <span class="niver" [title]="'Faz ' + niver.idade + ' anos em ' + niver.dia">🎂 {{ niver.dia }}</span>
+                        }
+                      }
                       @if (suspensoAte(aluno); as ate) {
                         <app-badge variant="red" [label]="'Suspenso até ' + dataBr(ate)" [plain]="true" />
                       }
@@ -257,6 +264,14 @@
               <span class="bolinha" [class]="classeStatus(dia.statusPresenca)"></span>
               <small>{{ dataBr(dia.dataAula).slice(0, 5) }}</small>
             </span>
+          }
+        </dd></div>
+      }
+      @if (aluno.dataNascimento) {
+        <div><dt>Aniversário</dt><dd>
+          {{ dataBr(aluno.dataNascimento).slice(0, 5) }}
+          @if (aniversario(aluno); as niver) {
+            · {{ niver.tipo === 'hoje' ? 'hoje! 🎂' : 'neste mês 🎂' }} Faz {{ niver.idade }} anos
           }
         </dd></div>
       }

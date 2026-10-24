@@ -69,7 +69,7 @@
               }
             </th>
             <td class="col-niver" [class.niver-mes]="linha.aniversarioNoMes" [attr.title]="linha.aniversarioNoMes ? 'Aniversário neste mês' : null">
-              {{ linha.aluno.dataNascimento ? diaMes(linha.aluno.dataNascimento) : '–' }}
+              @if (linha.aniversarioNoMes) { 🎂 }{{ linha.aluno.dataNascimento ? diaMes(linha.aluno.dataNascimento) : '–' }}
             </td>
             @for (coluna of colunas(); track coluna.data; let c = $index) {
               @if (ehColunaSemChamada(coluna)) {

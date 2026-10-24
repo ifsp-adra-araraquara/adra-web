@@ -231,6 +231,27 @@ export function podeCorrigirDataChamada(perfil: Role | null, aulaEhHoje: boolean
 }
 
 /**
+ * Aniversário do aluno em relação à aula, como a coluna "Niver" da planilha:
+ * `hoje` quando cai no dia da aula, `mes` quando cai no mesmo mês. `dia` vem
+ * como dd/mm e `idade` é a que o aluno completa no ano da aula.
+ */
+export function aniversarioNaAula(
+  dataNascimento: string | null | undefined,
+  dataAula: string | null | undefined,
+): { tipo: 'hoje' | 'mes'; dia: string; idade: number } | null {
+  if (!dataNascimento || !dataAula) return null;
+  const [anoNasc, mesNasc, diaNasc] = dataNascimento.split('-').map(Number);
+  const [ano, mes] = dataAula.split('-').map(Number);
+  if (mesNasc !== mes) return null;
+  const aluno = { dataNascimento } as LinhaChamada;
+  return {
+    tipo: aniversariantesDoDia([aluno], dataAula).length > 0 ? 'hoje' : 'mes',
+    dia: `${String(diaNasc).padStart(2, '0')}/${String(mesNasc).padStart(2, '0')}`,
+    idade: ano - anoNasc,
+  };
+}
+
+/**
  * Alunos que fazem aniversário no dia da aula, com a idade que completam.
  * Quem nasceu em 29/02 comemora em 28/02 nos anos não bissextos.
  */

@@ -131,7 +131,7 @@ th.sem-chamada { background: #EEEDE8; }
 
 /* Celular: só o essencial fica fixo, o resto rola */
 @media (max-width: 559px) {
-  .col-niver, .col-num { display: none; }
+  .col-num { display: none; }
 }
 
 @media (min-width: 560px) {

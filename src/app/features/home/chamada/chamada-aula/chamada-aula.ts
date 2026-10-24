@@ -18,6 +18,7 @@ import { calcularSituacaoAula, ehAulaDeHoje } from '../../../../shared/utils/aul
 import { dataBr } from '../../../../shared/utils/disciplinar.util';
 import {
   DIAS_FAIXA_HISTORICO,
+  aniversarioNaAula,
   LIMIAR_FALTAS_CONSECUTIVAS,
   LIMIAR_JUSTIFICADAS_CONSECUTIVAS,
   LinhaChamada,
@@ -215,6 +216,11 @@ export class ChamadaAula {
 
   suspensoAte(aluno: LinhaChamada): string | null {
     return this.sinalizacoes().get(aluno.assistidoId)?.suspensoAte ?? null;
+  }
+
+  /** "Niver" da planilha: selo no dia do aniversário, data discreta quando cai no mês da aula. */
+  aniversario(aluno: LinhaChamada) {
+    return aniversarioNaAula(aluno.dataNascimento, this.aula()?.dataAula);
   }
 
   faixaHistorico(aluno: LinhaChamada) {

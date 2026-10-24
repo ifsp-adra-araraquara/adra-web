@@ -100,6 +100,8 @@
 .motivo-lido { margin: 0 0 8px 52px; font-size: 12.5px; color: var(--gray-600); }
 textarea { width: 100%; }
 
+.niver { font-weight: 500; color: var(--amber-600); white-space: nowrap; }
+
 .vazio { padding: 28px 16px; text-align: center; color: var(--gray-600); font-size: 14px; }
 
 /* ---- Rodapé fixo ---- */

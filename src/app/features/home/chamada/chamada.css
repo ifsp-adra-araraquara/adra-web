@@ -1,5 +1,6 @@
 :host { display: block; width: 100%; }
-.chamada-page { max-width: 860px; }
+/* Mesma coluna centralizada da tela da aula (chamada-aula.css) */
+.chamada-page { max-width: 880px; margin: 0 auto; }
 
 .count-alerta { background: var(--amber-50) !important; color: var(--amber-600) !important; }
 
