@@ -79,6 +79,8 @@ tbody tr:hover { background: #fafbfc; }
 .announcement time { color: var(--gray-400); font-size: 12px; }
 .feedback { color: var(--gray-600); }
 .feedback.error { color: var(--coral-600); }
+.feedback.sucesso { color: var(--green-700, #0f7a5c); margin-bottom: 12px; }
+.hint-material { display: block; margin-top: 4px; font-size: 12px; font-weight: 400; color: var(--gray-600); }
 .student { margin: 0; padding: 12px 20px; border-bottom: 1px solid var(--gray-100); }
 
 .dialog-body > label,
@@ -113,3 +115,34 @@ tbody tr:hover { background: #fafbfc; }
   h1 { font-size: 26px; }
   .panel-header { align-items: center; flex-direction: row; }
 }
+
+/* Aba Materiais: uma linha por aula, os arquivos dela listados na última coluna */
+.materiais-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.materiais-acoes app-select { min-width: 200px; }
+.materiais-sucesso { margin: 12px 20px 0; }
+.materiais-table td { vertical-align: top; }
+.lista-materiais { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.lista-materiais li { display: flex; align-items: center; gap: 8px; }
+.lista-materiais app-icon { color: var(--color-adra-green-600); flex-shrink: 0; }
+.nome-material { max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
+.botao-abrir { margin-left: auto; padding: 4px 10px; font-size: 12px; }
+@media (min-width: 720px) {
+  .panel-header:has(.materiais-acoes) { flex-direction: row; align-items: center; }
+}
+.botao-excluir { padding: 4px 10px; font-size: 12px; color: var(--coral-600); }
+
+/* Aba Aulas: atalho da aula de hoje, filtro por status e rodapé */
+.hoje-bloco { padding: 16px 20px; border-bottom: 1px solid var(--gray-100); background: var(--color-adra-green-50); }
+.hoje-titulo { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-weight: 700; }
+.hoje-cards { display: grid; gap: 8px; }
+.hoje-card { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--gray-100); border-radius: 10px; background: #fff; }
+.hoje-card__info { display: flex; flex: 1; min-width: 200px; flex-direction: column; gap: 2px; }
+.hoje-vazio { margin: 0; color: var(--gray-600); font-size: 13px; }
+.filtro-situacao { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 20px; border-bottom: 1px solid var(--gray-100); }
+.chip-situacao { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm, 8px); background: #fff; color: var(--gray-600); font: inherit; font-size: 13px; cursor: pointer; }
+.chip-situacao:hover { border-color: var(--color-adra-green-400); }
+.chip-situacao.ativo { border-color: var(--color-adra-green-600); background: var(--color-adra-green-50); color: var(--color-adra-green-600); font-weight: 700; }
+.chip-total { min-width: 18px; padding: 0 6px; border-radius: 4px; background: var(--gray-100); font-size: 11px; text-align: center; }
+.chip-situacao.ativo .chip-total { background: #fff; }
+.aulas-table-principal .celula-texto { max-width: 240px; overflow: hidden; text-overflow: ellipsis; }
+.rodape-aulas { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; }
