@@ -33,6 +33,12 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
+        path: 'painel',
+        loadComponent: () => import('./features/home/painel/painel').then((m) => m.Painel),
+        data: { roles: [Role.COORD] },
+        canActivate: [roleGuard],
+      },
+      {
         path: 'dashboard',
         loadComponent: () => import('./features/home/home').then((m) => m.Home),
         data: { roles: [Role.COORD, Role.SOCIO] },

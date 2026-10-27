@@ -1,0 +1,148 @@
+/* ============================================================
+   PAINEL DO COORDENADOR (FT-05)
+   Princípios: superfícies brancas com borda fina e sem sombra;
+   cor só onde carrega informação (verde = presença, âmbar/vermelho
+   = atenção); números grandes, rótulos pequenos e discretos.
+   Celular: uma coluna em ordem de prioridade. Computador: análise
+   à esquerda, operação de hoje numa coluna à direita.
+   ============================================================ */
+
+:host {
+  --linha: var(--borda);
+  --texto: var(--gray-800);
+  --texto-2: var(--gray-600);
+  --texto-3: var(--gray-400);
+  --serie: var(--color-adra-green-400);
+  --alerta: #C98A1B;
+  --ruim: var(--red-600);
+  display: block;
+}
+
+.painel { max-width: 1320px; margin: 0 auto; }
+
+/* ---------- Cabeçalho ---------- */
+.topo { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+.topo-rotulo { margin: 0 0 4px; font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--color-adra-green-600); }
+.topo h1 { margin: 0; font-size: 26px; font-weight: 600; line-height: 1.2; letter-spacing: -.02em; color: var(--texto); }
+.topo-sub { display: flex; flex-wrap: wrap; gap: 2px 6px; margin: 6px 0 0; font-size: 14px; color: var(--texto-2); }
+.topo-ponto { color: var(--texto-3); }
+
+.filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.filtro-oficina { position: relative; flex: 1 1 100%; }
+.filtro-oficina select {
+  width: 100%; height: 40px; padding: 0 32px 0 12px; appearance: none;
+  border: 1px solid var(--gray-200); border-radius: 8px; background: #fff;
+  font: inherit; font-size: 14px; color: var(--texto); cursor: pointer;
+}
+.filtro-oficina select:focus-visible { outline: 3px solid var(--color-brand-ring); outline-offset: 1px; }
+.filtro-seta { position: absolute; right: 12px; top: 50%; transform: translateY(-50%) rotate(90deg); color: var(--texto-3); pointer-events: none; }
+
+.mes {
+  display: flex; align-items: center; flex: 1; height: 40px;
+  border: 1px solid var(--gray-200); border-radius: 8px; background: #fff;
+}
+.mes-btn, .icone-btn {
+  display: grid; place-items: center; width: 40px; height: 38px; flex: none;
+  border: none; background: none; color: var(--texto-2); cursor: pointer; border-radius: 8px;
+}
+.mes-btn:hover:not(:disabled), .icone-btn:hover { color: var(--texto); background: var(--gray-50); }
+.mes-btn:disabled { opacity: .35; cursor: default; }
+.mes-btn:focus-visible, .icone-btn:focus-visible { outline: 3px solid var(--color-brand-ring); outline-offset: -2px; }
+.mes-rotulo { flex: 1; min-width: 120px; text-align: center; font-size: 14px; font-weight: 500; color: var(--texto); }
+.mes-rotulo::first-letter { text-transform: uppercase; }
+.icone-btn { width: 40px; height: 40px; border: 1px solid var(--gray-200); background: #fff; }
+
+/* ---------- Avisos ---------- */
+.aviso { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding: 10px 14px; border-radius: 8px; font-size: 14px; }
+.aviso-erro { background: var(--red-50); color: var(--red-600); }
+.aviso .link { margin-left: auto; color: inherit; }
+
+/* ---------- Layout ---------- */
+.indicadores { margin-bottom: 16px; transition: opacity .15s; }
+.indicadores.carregando { opacity: .6; }
+.layout { display: flex; flex-direction: column; gap: 16px; transition: opacity .15s; }
+.layout.carregando { opacity: .6; }
+/* No celular as duas colunas "somem" e os blocos se ordenam por prioridade. */
+.principal, .lateral { display: contents; }
+.atencao { order: 2; }
+.tendencia { order: 3; }
+.turmas { order: 4; }
+.disciplina { order: 5; }
+.semana { order: 6; }
+.faixas { order: 7; }
+.atividade { order: 8; }
+
+/* ---------- Listas (semana e atividade) ---------- */
+.semana ul, .linha-tempo { list-style: none; margin: 0; padding: 0; }
+.item, .evento {
+  display: flex; align-items: center; gap: 10px; width: calc(100% + 12px); min-height: 44px;
+  margin: 0 -6px; padding: 6px; border: none; border-radius: 8px; background: none;
+  font: inherit; text-align: left; color: inherit; cursor: pointer;
+}
+.item:hover, .evento:hover { background: var(--gray-50); }
+.item:focus-visible, .evento:focus-visible { outline: 3px solid var(--color-brand-ring); outline-offset: -2px; }
+.item app-avatar { flex: none; }
+.item-compacto { min-height: 36px; }
+.item-icone { flex: none; color: var(--texto-2); }
+.item-texto { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.item-texto b { font-size: 14px; font-weight: 500; color: var(--texto); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-texto small { font-size: 13px; color: var(--texto-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-fim { flex: none; font-size: 13px; font-weight: 500; color: var(--texto-2); }
+.item-fim.texto-ruim { font-weight: 600; }
+.item-seta { flex: none; color: var(--texto-3); }
+/* ---------- Disciplina ---------- */
+.empilhada { display: flex; gap: 2px; height: 12px; margin-bottom: 12px; }
+.empilhada span { min-width: 4px; height: 100%; }
+.empilhada span:first-child { border-radius: 4px 0 0 4px; }
+.empilhada span:last-child { border-radius: 0 4px 4px 0; }
+.empilhada span:only-child { border-radius: 4px; }
+.legenda { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px; }
+.legenda li { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--texto-2); }
+.legenda li b { margin-left: auto; font-weight: 600; color: var(--texto); font-variant-numeric: tabular-nums; }
+.legenda li.zerado { opacity: .55; }
+.amostra { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+
+/* ---------- Faixa etária (rosca) ---------- */
+.titulo-sub { margin-left: 8px; font-size: 14px; font-weight: 400; color: var(--texto-3); }
+.rosca-area { display: flex; flex-wrap: wrap; align-items: center; gap: 20px 28px; }
+.rosca { position: relative; flex: none; width: 148px; height: 148px; }
+.rosca svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); }
+.rosca circle { fill: none; stroke-width: 14; }
+.rosca-fundo { stroke: var(--gray-50); }
+/* Total exatamente no centro do furo: grade centrada, sem posição manual */
+.rosca-centro { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; pointer-events: none; }
+.rosca-centro b { font-size: 26px; font-weight: 700; line-height: 1; letter-spacing: -.5px; color: var(--texto); }
+.rosca-centro small { margin-top: 4px; font-size: 12.5px; color: var(--texto-3); }
+.rosca-legenda { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; flex: 1; min-width: 180px; max-width: 300px; }
+.rosca-legenda li { display: grid; grid-template-columns: 11px minmax(0, 1fr) auto 38px; align-items: center; gap: 8px; font-size: 14px; color: var(--texto-2); }
+.rosca-legenda b { font-weight: 600; color: var(--texto); font-variant-numeric: tabular-nums; }
+.rosca-legenda small { font-size: 13px; text-align: right; color: var(--texto-3); font-variant-numeric: tabular-nums; }
+.rosca-legenda .amostra { width: 11px; height: 11px; border-radius: 3px; }
+
+/* ---------- Atividade recente ---------- */
+.evento-icone { display: grid; place-items: center; flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--gray-50); color: var(--texto-2); }
+.evento-chamada { background: var(--color-adra-green-50); color: var(--color-adra-green-600); }
+.evento-disciplinar { background: var(--amber-50); color: var(--amber-600); }
+.evento-assistido { background: var(--blue-50); color: var(--blue-600); }
+
+@media (prefers-reduced-motion: reduce) { .layout { transition: none; } }
+
+/* ---------- iPad ---------- */
+@media (min-width: 720px) {
+  .topo { flex-direction: row; align-items: flex-end; justify-content: space-between; }
+  .topo h1 { font-size: 30px; }
+  .topo-texto { min-width: 0; }
+  /* Grade de colunas fixas: com flex, o Firefox media o grupo menor que o
+     conteúdo (ignorava a largura da caixa do mês) e o botão de atualizar
+     estourava para fora da tela, rolando a página para o lado. */
+  .filtros { display: grid; grid-template-columns: 210px 236px 40px; flex: none; }
+  .mes-rotulo { min-width: 0; }
+  .legenda { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* ---------- Computador: duas colunas ---------- */
+@media (min-width: 1180px) {
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; align-items: start; gap: 20px; }
+  .principal, .lateral { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .legenda { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

@@ -1,0 +1,64 @@
+<section class="bloco turmas" aria-labelledby="turmas-titulo">
+  <header class="bloco-topo">
+    <div>
+      <h2 id="turmas-titulo">Turmas</h2>
+      <p class="bloco-sub">
+        Da menor para a maior frequência em {{ tituloMes() }}
+        @if (turmasAbaixo() > 0) { · <span class="texto-ruim">{{ turmasAbaixo() }} abaixo de {{ FREQUENCIA_MINIMA }}%</span> }
+      </p>
+    </div>
+  </header>
+
+  @if (dados()) {
+    @if (turmas().length === 0) {
+      <p class="vazio">Nenhuma turma ativa{{ filtrado() ? ' nesta oficina' : '' }}.</p>
+    } @else {
+      <div class="tabela">
+        <div class="tabela-cabeca" aria-hidden="true">
+          <span>Turma</span>
+          <span>Alunos</span>
+          <span>Aulas</span>
+          <span class="col-freq">Frequência</span>
+        </div>
+        <ul role="list" aria-label="Turmas por frequência">
+        @for (t of turmasVisiveis(); track t.turmaId) {
+          <li><button type="button" class="tabela-linha" (click)="abrirTurma(t.turmaId)"
+                  [attr.aria-label]="t.nomeTurma + ', ' + (t.frequencia != null ? t.frequencia + '% de frequência' : 'sem chamada no mês') + '. Abrir grade do mês'">
+            <span class="cel-turma">
+              <b>{{ t.nomeTurma }}</b>
+              @if (t.nomeOficina) { <small>{{ t.nomeOficina }}</small> }
+            </span>
+            <span class="cel-alunos">
+              {{ t.alunos }}@if (t.capacidade) {<small>/{{ t.capacidade }}</small>}
+              <span class="rotulo-movel"> alunos</span>
+            </span>
+            <span class="cel-aulas">
+              {{ t.aulasRealizadas }}<span class="rotulo-movel"> aulas</span>
+              @if (t.chamadasPendentes > 0) { <span class="pendente">{{ t.chamadasPendentes }} sem chamada</span> }
+            </span>
+            <span class="cel-freq">
+              <span class="trilho" aria-hidden="true">
+                @if (t.frequencia != null) {
+                  <span class="preenchido" [class]="t.tom" [style.width.%]="t.frequencia"></span>
+                }
+                <span class="marca-minima" [style.left.%]="FREQUENCIA_MINIMA"></span>
+              </span>
+              <span class="freq-valor" [class]="t.tom">
+                @if (t.frequencia == null) { — } @else {
+                  @if (t.tom === 'abaixo') { <app-icon name="alert-triangle" [size]="12" /> }
+                  {{ t.frequencia }}%
+                }
+              </span>
+            </span>
+          </button></li>
+        }
+        </ul>
+      </div>
+      @if (turmas().length > turmasVisiveis().length) {
+        <button type="button" class="link link-mais" (click)="todasTurmas.set(true)">Ver todas as {{ turmas().length }} turmas</button>
+      }
+    }
+  } @else {
+    <div class="esq esq-lista" aria-hidden="true"></div>
+  }
+</section>

@@ -30,6 +30,7 @@
           [attr.aria-label]="item.nomeExibicao"
           [attr.data-tour]="'nav-' + item.codigo"
           [appTooltip]="collapsed() ? item.nomeExibicao : ''"
+          appTooltipPosicao="right"
           (click)="selecionarModulo(item.codigo)">
           <span class="nav-item-icon" aria-hidden="true">
             <app-icon [name]="iconeModulo(item.codigo)" />

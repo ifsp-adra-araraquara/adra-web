@@ -1,0 +1,20 @@
+<div class="cartoes" [attr.aria-label]="'Indicadores do mês'" role="group">
+  @if (cartoes(); as lista) {
+    @for (c of lista; track c.rotulo) {
+      <div class="cartao">
+        <span class="icone" [class]="'icone-' + c.cor" aria-hidden="true"><app-icon [name]="c.icone" [size]="21" /></span>
+        <span class="valor">{{ c.valor }}</span>
+        <span class="rotulo">{{ c.rotulo }}</span>
+        @if (c.tendencia; as t) {
+          <span class="tendencia" [class]="'tom-' + t.tom">{{ t.seta }} {{ t.texto }}</span>
+        }
+      </div>
+    }
+  } @else {
+    @for (i of [1, 2, 3, 4]; track i) {
+      <div class="cartao" aria-hidden="true">
+        <span class="esq esq-icone"></span><span class="esq esq-numero"></span><span class="esq esq-texto"></span>
+      </div>
+    }
+  }
+</div>

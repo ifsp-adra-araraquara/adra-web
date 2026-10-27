@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ResponsavelRequestDTO } from '../shared/models/responsavel/ResponsavelRequestDTO';
 import { ResponsavelResponseDTO } from '../shared/models/responsavel/ResponsavelResponseDTO';
+import { AssistidoVinculadoDTO } from '../shared/models/responsavel/AssistidoVinculadoDTO';
 
 @Injectable({ providedIn: 'root' })
 export class ResponsavelService {
@@ -20,6 +21,11 @@ export class ResponsavelService {
 
   listar(): Observable<ResponsavelResponseDTO[]> {
     return this.http.get<ResponsavelResponseDTO[]>(this.baseUrl);
+  }
+
+  /** Assistidos vinculados — pedido só quando a ficha do responsável é aberta. */
+  listarAssistidos(id: number): Observable<AssistidoVinculadoDTO[]> {
+    return this.http.get<AssistidoVinculadoDTO[]>(`${this.baseUrl}/${id}/assistidos`);
   }
 
   buscarPorId(id: number): Observable<ResponsavelResponseDTO> {

@@ -1,0 +1,63 @@
+<section class="bloco tendencia" aria-labelledby="tendencia-titulo">
+  <header class="bloco-topo">
+    <div>
+      <h2 id="tendencia-titulo">Frequência nos últimos 6 meses</h2>
+      <p class="bloco-sub">Presença sobre o total esperado em aulas realizadas</p>
+    </div>
+    <span class="legenda-ref"><span class="traco-ref"></span> mínimo {{ FREQUENCIA_MINIMA }}%</span>
+  </header>
+
+  @if (pontos()) {
+    @if (tendencia().vazio) {
+      <p class="vazio">Nenhuma aula realizada nesses 6 meses.</p>
+    } @else {
+      <div class="grafico" #grafico (mouseleave)="pontoAtivo.set(null)">
+        <svg [attr.viewBox]="'0 0 ' + G().largura + ' ' + G().altura" role="img" [attr.aria-label]="tendenciaDescricao()">
+          @for (g of tendencia().grade; track g.v) {
+            <line class="grade" [attr.x1]="G().esq" [attr.x2]="G().largura - G().dir" [attr.y1]="g.y" [attr.y2]="g.y" />
+            <text class="eixo" [attr.x]="G().esq - 8" [attr.y]="g.y + 4" text-anchor="end">{{ g.v }}%</text>
+          }
+          <line class="referencia" [attr.x1]="G().esq" [attr.x2]="G().largura - G().dir" [attr.y1]="tendencia().yMinima" [attr.y2]="tendencia().yMinima" />
+
+          @for (l of tendencia().linhas; track $index) { <path class="linha" [attr.d]="l" /> }
+
+          @if (pontoAtivo() != null && tendencia().nos[pontoAtivo()!]; as n) {
+            <line class="mira" [attr.x1]="n.x" [attr.x2]="n.x" [attr.y1]="G().topo" [attr.y2]="tendencia().base" />
+          }
+
+          @for (n of tendencia().nos; track n.mes; let i = $index) {
+            @if (n.y != null) {
+              <circle class="ponto" [class.ponto-atual]="n.atual" [class.ponto-ativo]="pontoAtivo() === i"
+                      [attr.cx]="n.x" [attr.cy]="n.y" [attr.r]="n.atual || pontoAtivo() === i ? 5 : 4" />
+            }
+            @if (n.atual && n.y != null) {
+              <text class="valor-atual" [attr.x]="n.x" [attr.y]="n.y - 12" text-anchor="end">{{ n.percentual }}%</text>
+            }
+            <text class="eixo" [class.eixo-atual]="n.atual" [attr.x]="n.x" [attr.y]="G().altura - 8" text-anchor="middle">{{ n.rotulo }}</text>
+            <!-- Alvo de hover maior que o ponto: a faixa inteira do mês -->
+            <rect class="alvo" [attr.x]="n.x - tendencia().passo / 2" [attr.y]="0"
+                  [attr.width]="tendencia().passo" [attr.height]="G().altura"
+                  (mouseenter)="pontoAtivo.set(i)" />
+          }
+        </svg>
+
+        @if (tooltip(); as t) {
+          <div class="tooltip" [style.left.%]="t.esquerda" role="status">
+            <b>{{ t.valor }}</b>
+            <span>{{ t.titulo }} · {{ t.aulas }} {{ t.aulas === 1 ? 'aula' : 'aulas' }}</span>
+          </div>
+        }
+      </div>
+      <table class="sr-only">
+        <caption>Frequência mensal</caption>
+        <tbody>
+          @for (n of tendencia().nos; track n.mes) {
+            <tr><th scope="row">{{ n.titulo }}</th><td>{{ n.percentual == null ? 'sem aula' : n.percentual + '%' }}</td><td>{{ n.aulas }} aulas</td></tr>
+          }
+        </tbody>
+      </table>
+    }
+  } @else {
+    <div class="esq esq-grafico" aria-hidden="true"></div>
+  }
+</section>

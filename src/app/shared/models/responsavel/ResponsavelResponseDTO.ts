@@ -17,4 +17,7 @@ export interface ResponsavelResponseDTO {
   renda: number | null;
   criadoEm: string;
   atualizadoEm: string;
+  /** Assistidos vinculados (só vem preenchido na listagem e na consulta por id). */
+  totalAssistidos?: number | null;
+  assistidosAtivos?: number | null;
 }

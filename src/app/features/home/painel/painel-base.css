@@ -1,0 +1,38 @@
+/* Primitivas compartilhadas pelos blocos do Painel (FT-05). As variáveis
+   (--texto, --linha…) vêm do host de <app-painel> e são herdadas. */
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ---------- Bloco ---------- */
+.bloco { min-width: 0; padding: 20px; background: #fff; border: 1px solid var(--borda); border-radius: var(--radius); box-shadow: var(--shadow-card); }
+.bloco-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.bloco-topo h2 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -.005em; color: var(--texto); }
+.bloco-sub { margin: 3px 0 0; font-size: 13.5px; color: var(--texto-2); }
+.vazio { display: flex; align-items: center; gap: 8px; margin: 4px 0; font-size: 14px; color: var(--texto-2); }
+.vazio-ok { color: var(--color-adra-green-600); }
+
+.texto-ruim, .texto-ruim * { color: var(--ruim); }
+.texto-bom { color: var(--color-adra-green-600); }
+.texto-neutro { color: var(--texto-2); }
+.texto-destaque, .item-fim.texto-destaque { color: var(--blue-600); font-weight: 600; }
+
+.link {
+  min-height: 36px; padding: 0 2px; border: none; background: none;
+  font: inherit; font-size: 14px; font-weight: 500; color: var(--color-adra-green-600);
+  text-decoration: underline; text-underline-offset: 2px; cursor: pointer;
+}
+.link-mais { margin-top: 4px; }
+
+/* ---------- Carregando ---------- */
+.esq { display: block; border-radius: 6px; background: linear-gradient(90deg, var(--gray-50), var(--gray-100), var(--gray-50)); background-size: 200% 100%; animation: brilho 1.2s linear infinite; }
+.esq-texto { width: 60%; height: 12px; }
+.esq-numero { width: 40%; height: 28px; margin: 6px 0; }
+.esq-grafico { height: 180px; }
+.esq-lista { height: 160px; }
+.esq-curto { height: 80px; }
+@keyframes brilho { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .esq { animation: none; } }
+
