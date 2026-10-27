@@ -9,7 +9,7 @@ import { Button } from '../../../shared/components/button/button';
 import { Input } from '../../../shared/components/input/input';
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Icon } from '../../../shared/components/icon/icon';
-import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
+import { ActionMenu, ActionMenuItem } from '../../../shared/components/action-menu/action-menu';
 import { cliqueEmElementoInterativo } from '../../../shared/utils/clique.util';
 import { formatarEndereco } from '../../../shared/utils/endereco.util';
 import { calcularIdade } from '../../../shared/utils/idade.util';
@@ -21,7 +21,7 @@ type FiltroContato = 'todos' | 'sem-telefone' | 'sem-email';
 
 @Component({
   selector: 'app-responsaveis',
-  imports: [DatePipe, TooltipDirective, Icon, FormsModule, ResponsavelForm, Modal, Button, Input, Select],
+  imports: [DatePipe, ActionMenu, Icon, FormsModule, ResponsavelForm, Modal, Button, Input, Select],
   templateUrl: './responsaveis.html',
   styleUrl: './responsaveis.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -135,10 +135,18 @@ export class Responsaveis implements OnInit {
     this.responsavelVisualizado.set(null);
   }
 
-  editarPelaVisualizacao(): void {
-    const responsavel = this.responsavelVisualizado()!;
-    this.fecharVisualizacao();
-    this.abrirEdicao(responsavel);
+  /** Menu ">" da linha. Editar só por aqui: a visualização (linha/"Ver") é só leitura. */
+  readonly acoesResponsavel: ActionMenuItem[] = [
+    { id: 'ver', label: 'Ver responsável', icon: 'eye' },
+    { id: 'editar', label: 'Editar', icon: 'edit' },
+  ];
+
+  executarAcao(acao: string, responsavel: ResponsavelResponseDTO): void {
+    if (acao === 'ver') {
+      this.abrirVisualizacao(responsavel);
+    } else if (acao === 'editar') {
+      this.abrirEdicao(responsavel);
+    }
   }
 
   aoSalvar(): void {

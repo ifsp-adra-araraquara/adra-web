@@ -1,0 +1,113 @@
+<div class="barra no-print">
+  <app-button variant="secondary" size="sm" (click)="voltar()">
+    <app-icon name="chevron-left" [size]="16" /> Voltar
+  </app-button>
+  @if (registro()) {
+    <app-button size="sm" (click)="imprimir()">
+      <app-icon name="file-text" [size]="16" /> Imprimir
+    </app-button>
+  }
+</div>
+
+@if (carregando()) {
+  <p class="muted no-print">Carregando documento…</p>
+} @else if (erro()) {
+  <div class="notice notice-error no-print" role="alert">{{ erro() }}</div>
+} @else if (registro(); as r) {
+  <article class="folha" aria-label="Documento para impressão">
+    <header class="folha-cabecalho">
+      <app-brand-logo [size]="44" [markOnly]="true" />
+      <div>
+        <p class="instituicao">{{ INSTITUICAO.nome }}</p>
+        <p>{{ INSTITUICAO.nucleo }}</p>
+        <p class="cnpj">{{ INSTITUICAO.cnpj }}</p>
+      </div>
+    </header>
+
+    <h1 class="folha-titulo">{{ titulo() }}</h1>
+
+    <p class="folha-data">{{ dataPorExtenso() }}</p>
+
+    <p>Prezados responsáveis,</p>
+
+    @switch (r.nivel) {
+      @case (NivelDisciplinar.UNIFORME) {
+        <p class="paragrafo">
+          Comunicamos que o(a) atendido(a) <b>{{ r.nomeAssistido }}</b> compareceu ao projeto
+          <b>sem o uniforme obrigatório</b>, conforme estabelecido nas normas internas da ADRA.
+        </p>
+        <p class="paragrafo">
+          O uso do uniforme é obrigatório durante as atividades, por questões de organização, identificação e
+          segurança, sendo o mesmo fornecido pela instituição.
+        </p>
+        <p class="paragrafo">
+          Esta é a <b>{{ ordinal() }}</b> ocorrência registrada por não utilização do uniforme.
+        </p>
+        <p class="paragrafo">
+          Informamos que, ao completar <b>três ocorrências</b>, o(a) atendido(a) somente poderá retornar às
+          atividades <b>acompanhado(a) do responsável</b>, para conversa e alinhamento junto à coordenação.
+        </p>
+      }
+      @case (NivelDisciplinar.ADVERTENCIA) {
+        <p class="paragrafo">
+          Comunicamos que o(a) atendido(a) <b>{{ r.nomeAssistido }}</b> recebeu <b>advertência escrita</b> em
+          {{ dataBr(r.dataRegistro) }},
+          @if (r.origem === 'PROGRESSAO') {
+            por ter completado <b>três ocorrências</b> registradas no Livro de Ocorrências.
+          } @else {
+            pelo seguinte motivo: <b>{{ r.motivo }}</b>.
+          }
+        </p>
+        @if (r.origem === 'MANUAL') {
+          <p class="paragrafo">Descrição: {{ r.descricao }}</p>
+        }
+        <p class="paragrafo">Esta é a <b>{{ ordinal() }}</b> advertência escrita registrada.</p>
+        <p class="paragrafo">
+          Informamos que, ao completar <b>três advertências</b>, o(a) atendido(a) será <b>suspenso(a) por três dias</b>.
+        </p>
+      }
+      @case (NivelDisciplinar.SUSPENSAO) {
+        <p class="paragrafo">
+          Comunicamos que o(a) atendido(a) <b>{{ r.nomeAssistido }}</b> está <b>suspenso(a)</b> das atividades do
+          projeto de <b>{{ dataBr(r.suspensaoInicio) }}</b> a <b>{{ dataBr(r.suspensaoFim) }}</b>, podendo retornar
+          em <b>{{ dataRetorno() }}</b>,
+          @if (r.origem === 'PROGRESSAO') {
+            por ter completado <b>três advertências escritas</b>.
+          } @else {
+            pelo seguinte motivo: <b>{{ r.motivo }}</b>.
+          }
+        </p>
+        @if (r.origem === 'MANUAL') {
+          <p class="paragrafo">Descrição: {{ r.descricao }}</p>
+        }
+        <p class="paragrafo">Esta é a <b>{{ ordinal() }}</b> suspensão registrada.</p>
+        <p class="paragrafo">
+          Informamos que, ao completar <b>três suspensões</b>, o(a) atendido(a) <b>perderá o próximo passeio</b>.
+        </p>
+      }
+    }
+
+    <p class="paragrafo">
+      Solicitamos a devolução deste comunicado devidamente assinado no próximo dia de participação.
+    </p>
+    <p class="paragrafo">Contamos com a parceria da família para o cumprimento das normas do projeto.</p>
+
+    <div class="assinaturas">
+      <div>
+        <p>Atenciosamente,</p>
+        <p class="signatario">{{ INSTITUICAO.signatario }}</p>
+        <p><b>{{ INSTITUICAO.cargo }}</b></p>
+        <p><b>{{ INSTITUICAO.nucleo }}</b></p>
+      </div>
+      <div class="assinatura-responsavel">
+        <span class="linha"></span>
+        <b>Assinatura do(a) Responsável</b>
+      </div>
+    </div>
+
+    <footer class="folha-rodape">
+      <p>{{ INSTITUICAO.endereco }}</p>
+      <p>{{ INSTITUICAO.contato }}</p>
+    </footer>
+  </article>
+}

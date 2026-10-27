@@ -3,7 +3,7 @@
     <div class="cal-filters">
       <div class="field">
         <label>Oficina</label>
-        <app-select [options]="oficinasOpcoes()" placeholder="Todas as oficinas" name="oficinaIdFiltro" [(ngModel)]="oficinaIdFiltro" />
+        <app-select [options]="oficinasOpcoes()" name="oficinaIdFiltro" [(ngModel)]="oficinaIdFiltro" />
       </div>
       <div class="field">
         <label>De</label>
@@ -22,8 +22,10 @@
         <button type="button" class="seg-btn" [class.active]="visualizacao() === 'listWeek'" (click)="alternarVisualizacao('listWeek')">Lista</button>
       </div>
       @if (podeGerenciar()) {
-        <button type="button" class="btn btn-sm btn-ghost" (click)="abrirDiasSemAula()">Dias sem aula</button>
-        <button type="button" class="btn btn-sm" (click)="abrirRecorrencia()">Gerar aulas</button>
+        <div class="cal-botoes">
+          <button type="button" class="btn btn-sm btn-ghost" (click)="abrirDiasSemAula()">Dias sem aula</button>
+          <button type="button" class="btn btn-sm" (click)="abrirRecorrencia()">Gerar aulas</button>
+        </div>
       }
     </div>
   </div>

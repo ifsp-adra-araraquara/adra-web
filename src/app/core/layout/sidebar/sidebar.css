@@ -10,8 +10,8 @@
 .sidebar-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 16px 18px; min-height: var(--topbar-h); transition: padding .2s var(--ease); }
 .brand { display: flex; align-items: center; gap: 10px; min-width: 0; overflow: hidden; }
 .brand app-brand-logo { display: block; flex: none; }
-.sidebar-logo { font-family: 'Space Grotesk', sans-serif; font-size: 19px; font-weight: 600; color: #fff; overflow: hidden; white-space: nowrap; }
-.sidebar-logo small { display: block; font-family: 'DM Sans'; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--color-adra-green-200); font-weight: 500; }
+.sidebar-logo { font-family: 'Roboto', sans-serif; font-size: 19px; font-weight: 600; color: #fff; overflow: hidden; white-space: nowrap; }
+.sidebar-logo small { display: block; font-family: 'Roboto'; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--color-adra-green-200); font-weight: 500; }
 
 .collapse-btn {
   display: none;

@@ -81,9 +81,11 @@ export class CalendarioAulas implements OnInit {
    */
   readonly turmaIdsPermitidos = input<number[] | null>(null);
 
-  protected readonly oficinasOpcoes = computed<SelectOption<number>[]>(() =>
-    this.oficinas().map((o) => ({ value: o.oficinaId, label: o.nomeOficina }))
-  );
+  /** Filtro de oficina: "Todas as oficinas" é uma opção real (null), não placeholder desabilitado. */
+  protected readonly oficinasOpcoes = computed<SelectOption<number | null>[]>(() => [
+    { value: null, label: 'Todas as oficinas' },
+    ...this.oficinas().map((o) => ({ value: o.oficinaId, label: o.nomeOficina })),
+  ]);
 
   /** Legenda de status na toolbar — um item por valor do enum. */
   protected readonly legendaStatus = Object.values(StatusAula).map((status) => ({

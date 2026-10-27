@@ -1,25 +1,16 @@
 <section class="page" id="page-oficinas">
-  <div
-    class="page-header"
-    style="
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 8px;
-    "
-  >
-    <div>
-      <h1 style="margin: 0">Oficinas</h1>
-      <p class="page-intro" style="margin: 4px 0 0">
-        Cada oficina identifica o tipo de atividade oferecida e quem é o oficineiro responsável.
-      </p>
+  <header class="page-header">
+    <div class="page-header-texto">
+      <h1>Oficinas</h1>
+      <p class="page-intro">Cada oficina identifica o tipo de atividade oferecida e quem é o oficineiro responsável.</p>
     </div>
 
-    <app-button size="sm" style="flex-shrink: 0" (click)="abrirModalNovaOficina()">
-      <app-icon name="plus" [size]="16" /> Nova oficina
-    </app-button>
-  </div>
+    <div class="page-header-acoes">
+      <app-button size="sm" (click)="abrirModalNovaOficina()">
+        <app-icon name="plus" [size]="16" /> Nova oficina
+      </app-button>
+    </div>
+  </header>
 
   <div class="toolbar">
     <app-input
@@ -54,25 +45,11 @@
         [trackBy]="trackByOficinaId"
       >
         <ng-template #rowActions let-oficina>
-          @if (oficina.ativo) {
-            <button type="button" aria-label="Editar oficina" appTooltip="Editar oficina" (click)="abrirModalEdicao(oficina)">
-              <app-icon name="edit" />
-            </button>
-
-            <button type="button" class="btn-icon--danger" aria-label="Inativar oficina" appTooltip="Inativar oficina" (click)="abrirConfirmacaoInativacao(oficina)">
-              <app-icon name="power" />
-            </button>
-          } @else {
-            <button
-              type="button"
-              aria-label="Reativar oficina"
-              appTooltip="Reativar oficina"
-              [disabled]="reativando()"
-              (click)="abrirConfirmacaoReativacao(oficina)"
-            >
-              <app-icon name="rotate-ccw" />
-            </button>
-          }
+          <app-action-menu
+            [label]="'Ações de ' + oficina.nomeOficina"
+            [itens]="acoesOficina(oficina)"
+            (selecionado)="executarAcaoOficina($event, oficina)"
+          />
         </ng-template>
       </app-table>
     }

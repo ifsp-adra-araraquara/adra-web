@@ -1,28 +1,21 @@
 <section class="page" id="page-turmas">
-  <div
-    class="page-header"
-    style="
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 8px;
-    "
-  >
-    <div>
-      <h1 style="margin: 0">Turmas</h1>
-      <p class="page-intro" style="margin: 4px 0 0">
-        Cada turma define turno, faixa etária e capacidade máxima. Turmas inativas são preservadas
-        no histórico e não podem receber novos vínculos.
+  <header class="page-header">
+    <div class="page-header-texto">
+      <h1>Turmas</h1>
+      <p class="page-intro">
+        Cada turma define turno, faixa etária e capacidade máxima. Turmas inativas ficam no histórico e não
+        recebem novos vínculos.
       </p>
     </div>
 
     @if (isCoordenador()) {
-      <app-button size="sm" style="flex-shrink: 0" (click)="abrirModalNovaTurma()">
-        <app-icon name="plus" [size]="16" /> Nova turma
-      </app-button>
+      <div class="page-header-acoes">
+        <app-button size="sm" (click)="abrirModalNovaTurma()">
+          <app-icon name="plus" [size]="16" /> Nova turma
+        </app-button>
+      </div>
     }
-  </div>
+  </header>
 
   @if (avisoPosCriacao()) {
     <div class="notice notice-amber" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px">

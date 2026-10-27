@@ -93,32 +93,11 @@
                 </td>
 
                 <td>
-                  <div class="t-actions">
-                    @if (isConvitePendente(usuario)) {
-                      <button type="button" aria-label="Reenviar convite" appTooltip="Reenviar convite" (click)="reenviarConvite(usuario)">
-                        <app-icon name="mail" />
-                      </button>
-                    }
-
-                    <button type="button" aria-label="Editar usuário" appTooltip="Editar usuário" (click)="abrirModalEditarUsuario(usuario)">
-                      <app-icon name="edit" />
-                    </button>
-
-                    <button type="button" aria-label="Redefinir senha" appTooltip="Redefinir senha" (click)="abrirModalRedefinicao(usuario)">
-                      <app-icon name="lock" />
-                    </button>
-
-                    <button
-                      type="button"
-                      [class.btn-icon--danger]="usuario.ativo"
-                      [attr.aria-label]="usuario.ativo ? 'Inativar usuário' : 'Reativar usuário'"
-                      [appTooltip]="usuario.ativo ? 'Inativar usuário' : 'Reativar usuário'"
-                      [attr.title]="isProprioUsuario(usuario) && usuario.ativo ? 'Não é permitido inativar seu próprio usuário' : null"
-                      [disabled]="isProprioUsuario(usuario) && usuario.ativo"
-                      (click)="alterarStatus(usuario)">
-                      <app-icon [name]="usuario.ativo ? 'power' : 'rotate-ccw'" />
-                    </button>
-                  </div>
+                  <app-action-menu
+                    [label]="'Ações de ' + usuario.nomeCompleto"
+                    [itens]="acoesUsuario(usuario)"
+                    (selecionado)="executarAcaoUsuario($event, usuario)"
+                  />
                 </td>
               </tr>
             } @empty {

@@ -3,4 +3,5 @@ export enum EntidadeArquivo {
   ASSISTIDO = 'ASSISTIDO',
   RESPONSAVEL = 'RESPONSAVEL',
   USUARIO = 'USUARIO',
+  AULA = 'AULA',
 }

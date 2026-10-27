@@ -104,6 +104,21 @@ export const routes: Routes = [
         pathMatch: 'full',
       },
       {
+        path: 'disciplinar',
+        loadComponent: () => import('./features/home/disciplinar/disciplinar').then((m) => m.Disciplinar),
+        data: { roles: [Role.COORD, Role.SOCIO] },
+        canActivate: [roleGuard],
+      },
+      {
+        path: 'disciplinar/documento/:registroId',
+        loadComponent: () =>
+          import('./features/home/disciplinar/documento-disciplinar/documento-disciplinar').then(
+            (m) => m.DocumentoDisciplinar,
+          ),
+        data: { roles: [Role.COORD, Role.SOCIO] },
+        canActivate: [roleGuard],
+      },
+      {
         path: 'chamada',
         loadComponent: () => import('./features/home/chamada/chamada').then((m) => m.Chamada),
         data: { roles: [Role.COORD, Role.SOCIO] },

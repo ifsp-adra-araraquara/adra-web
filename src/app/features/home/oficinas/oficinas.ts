@@ -16,14 +16,14 @@ import { Table, TableColumn } from '../../../shared/components/table/table';
 import { Input } from '../../../shared/components/input/input';
 import { Button } from '../../../shared/components/button/button';
 import { Icon } from '../../../shared/components/icon/icon';
-import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
+import { ActionMenu, ActionMenuItem } from '../../../shared/components/action-menu/action-menu';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
 import { HistoricoOficineiros } from '../../../shared/components/historico-oficineiros/historico-oficineiros';
 
 @Component({
   selector: 'app-oficinas',
   standalone: true,
-  imports: [HistoricoOficineiros, TooltipDirective, Icon, CommonModule, FormsModule, Select, Modal, Table, Input, Button],
+  imports: [HistoricoOficineiros, ActionMenu, Icon, CommonModule, FormsModule, Select, Modal, Table, Input, Button],
   templateUrl: './oficinas.html',
   styleUrl: './oficinas.css',
 })
@@ -249,6 +249,26 @@ export class Oficinas implements OnInit {
    * MODAL: EDITAR OFICINA (US-14)
    * ============================================================ */
   modoEdicao = signal(false);
+  /** Itens do menu ">" da linha — mesmo padrão de Assistidos/Responsáveis/Usuários. */
+  acoesOficina(oficina: OficinaResponseDTO): ActionMenuItem[] {
+    return oficina.ativo
+      ? [
+          { id: 'editar', label: 'Editar', icon: 'edit' },
+          { id: 'inativar', label: 'Inativar', icon: 'power', danger: true },
+        ]
+      : [{ id: 'reativar', label: 'Reativar', icon: 'rotate-ccw' }];
+  }
+
+  executarAcaoOficina(acao: string, oficina: OficinaResponseDTO): void {
+    if (acao === 'editar') {
+      this.abrirModalEdicao(oficina);
+    } else if (acao === 'inativar') {
+      this.abrirConfirmacaoInativacao(oficina);
+    } else if (acao === 'reativar' && !this.reativando()) {
+      this.abrirConfirmacaoReativacao(oficina);
+    }
+  }
+
   oficinaSendoEditada = signal<OficinaResponseDTO | null>(null);
 
   abrirModalEdicao(oficina: OficinaResponseDTO): void {

@@ -8,13 +8,18 @@
   padding-bottom: 14px;
   border-bottom: 1px solid var(--gray-100);
 }
-.cal-filters { display: flex; flex-wrap: wrap; gap: 14px; }
-.cal-filters .field { flex: 1 1 160px; margin-bottom: 0; }
-.cal-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+/* Celular: Oficina na largura toda, De/Até lado a lado; visualização e botões
+   em linhas próprias, cada botão com a mesma largura. */
+.cal-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.cal-filters .field { margin-bottom: 0; min-width: 0; }
+.cal-filters .field:first-child { grid-column: 1 / -1; }
+.cal-actions { display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
+.cal-botoes { display: flex; gap: 8px; }
+.cal-botoes .btn { flex: 1 1 0; min-height: 44px; white-space: nowrap; justify-content: center; }
 
 /* Controle segmentado Mês/Semana — visual de toggle único, não dois botões soltos */
 .seg-control {
-  display: inline-flex;
+  display: flex;
   background: var(--gray-50);
   border: 1.5px solid var(--gray-200);
   border-radius: var(--radius-sm);
@@ -22,6 +27,7 @@
   gap: 2px;
 }
 .seg-btn {
+  flex: 1 1 0;
   border: none;
   background: transparent;
   color: var(--gray-600);
@@ -176,6 +182,12 @@
 @media (min-width: 720px) {
   .cal-scroll .fc { padding: 14px; }
   .cal-toolbar { flex-direction: row; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; }
+  .cal-filters { display: flex; flex-wrap: wrap; gap: 14px; }
+  .cal-filters .field { flex: 1 1 160px; }
+  .cal-actions { flex-direction: row; align-items: center; }
+  .seg-control { display: inline-flex; }
+  .seg-btn { flex: none; }
+  .cal-botoes .btn { flex: none; }
   ::ng-deep .fc .fc-daygrid-day-frame { min-height: 84px; padding: 4px; margin: 2px; }
   ::ng-deep .evt-sub { display: block; }
 }
