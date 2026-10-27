@@ -1,0 +1,26 @@
+
+/* Coluna "Assistidos" e seção de vinculados na ficha do responsável */
+.vinculos { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.vinculos app-icon { color: var(--gray-400); }
+.vinculos-zero { color: var(--gray-400); }
+.contagem-vinculos {
+  display: inline-grid; place-items: center; min-width: 22px; height: 20px; padding: 0 6px; margin-left: 6px;
+  border-radius: 10px; background: var(--color-adra-green-50); color: var(--color-adra-green-600);
+  font-size: 11.5px; letter-spacing: 0;
+}
+.vinculos-vazio { margin: 0 0 8px; }
+.lista-vinculados { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; }
+.vinculado {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 8px 10px;
+  border: 1px solid var(--gray-100); border-radius: var(--radius-sm); background: #fff;
+  font: inherit; text-align: left; color: inherit; cursor: pointer;
+}
+.vinculado:hover { border-color: var(--color-adra-green-200); background: var(--gray-50); }
+.vinculado:focus-visible { outline: 3px solid var(--color-brand-ring); outline-offset: 2px; }
+.vinculado app-avatar { flex: none; }
+.vinculado-texto { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.vinculado-texto b { font-size: 14px; font-weight: 500; color: var(--gray-800); overflow-wrap: anywhere; }
+.vinculado-texto small { font-size: 12.5px; color: var(--gray-600); }
+.vinculado-papeis { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.vinculado-papeis:empty { display: none; }
+.vinculado-seta { flex: none; color: var(--gray-400); }
