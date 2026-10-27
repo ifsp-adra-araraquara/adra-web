@@ -41,6 +41,7 @@ export class Sidebar {
   collapsed = model(false);
 
   private secoesPorModulo: Record<string, string> = {
+    PAINEL: 'Principal',
     DASHBOARD: 'Principal',
     ASSISTIDOS: 'Gestão',
     RESPONSAVEIS: 'Gestão',
@@ -65,6 +66,7 @@ export class Sidebar {
 
   /** Chave do ícone (ver @switch em sidebar.html) exibido para cada módulo. */
   private iconesPorModulo: Record<string, IconName> = {
+    PAINEL: 'activity',
     DASHBOARD: 'calendar',
     ASSISTIDOS: 'users',
     RESPONSAVEIS: 'user-check',

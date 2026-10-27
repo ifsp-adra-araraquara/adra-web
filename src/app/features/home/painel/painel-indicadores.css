@@ -1,0 +1,28 @@
+/* Cartões do topo no modelo do protótipo da ADRA (ícone em quadrado colorido). */
+:host { display: block; min-width: 0; }
+
+.cartoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.cartao {
+  display: flex; flex-direction: column; align-items: flex-start; min-width: 0;
+  padding: 18px 20px; background: #fff; border: 1px solid var(--borda);
+  border-radius: var(--radius); box-shadow: var(--shadow-card);
+}
+.icone { display: grid; place-items: center; width: 40px; height: 40px; margin-bottom: 14px; border-radius: 11px; }
+.icone-verde { background: var(--color-adra-green-50); color: var(--color-adra-green-400); }
+.icone-teal { background: var(--teal-50); color: var(--teal-600); }
+.icone-azul { background: var(--blue-50); color: var(--blue-600); }
+.icone-coral { background: var(--coral-50); color: var(--coral-600); }
+.valor { font-size: 30px; font-weight: 700; line-height: 1; letter-spacing: -1px; color: var(--gray-800); }
+.rotulo { margin-top: 6px; font-size: 14px; color: var(--gray-600); }
+.tendencia { margin-top: 8px; font-size: 13px; font-weight: 600; }
+.tom-bom { color: var(--color-adra-green-400); }
+.tom-ruim { color: var(--coral-400); }
+.tom-neutro { color: var(--gray-400); font-weight: 500; }
+
+.esq-icone { width: 40px; height: 40px; margin-bottom: 14px; border-radius: 11px; }
+.esq-numero { width: 50%; height: 30px; }
+.esq-texto { width: 70%; height: 12px; margin-top: 8px; }
+
+@media (min-width: 1000px) {
+  .cartoes { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+}

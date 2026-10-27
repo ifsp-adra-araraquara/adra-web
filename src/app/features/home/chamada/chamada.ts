@@ -67,6 +67,8 @@ export class Chamada implements OnInit {
     }
     const data = this.route.snapshot.queryParamMap.get('data');
     if (this.ehCoordenador() && data) this.dataSelecionada.set(data);
+    // Painel do Coordenador: "Ver as pendentes" abre direto na aba.
+    if (this.ehCoordenador() && this.route.snapshot.queryParamMap.get('aba') === 'pendentes') this.aba.set('pendentes');
 
     this.carregarDia();
     if (this.ehCoordenador()) this.carregarPendentes();

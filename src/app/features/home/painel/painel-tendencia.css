@@ -1,0 +1,25 @@
+:host { display: block; min-width: 0; }
+
+/* ---------- Tendência ---------- */
+.legenda-ref { display: inline-flex; align-items: center; gap: 6px; flex: none; font-size: 13px; color: var(--texto-2); }
+.traco-ref { width: 16px; height: 0; border-top: 1px solid var(--texto-3); }
+.grafico { position: relative; min-height: 190px; }
+.grafico svg { display: block; width: 100%; height: 190px; overflow: visible; }
+.grade { stroke: var(--linha); stroke-width: 1; }
+.referencia { stroke: var(--texto-3); stroke-width: 1; }
+.eixo { font-size: 12px; fill: var(--texto-2); font-variant-numeric: tabular-nums; }
+.eixo-atual { font-weight: 600; fill: var(--texto); }
+.linha { fill: none; stroke: var(--serie); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ponto { fill: var(--serie); stroke: #fff; stroke-width: 2; }
+.ponto-atual, .ponto-ativo { fill: var(--color-adra-green-600); }
+.valor-atual { font-size: 14px; font-weight: 600; fill: var(--texto); }
+.mira { stroke: var(--gray-200); stroke-width: 1; }
+.alvo { fill: transparent; cursor: default; }
+.tooltip {
+  position: absolute; top: 0; transform: translateX(-50%);
+  display: flex; flex-direction: column; gap: 1px; padding: 8px 10px; white-space: nowrap; pointer-events: none;
+  background: var(--gray-800); color: #fff; border-radius: 8px; font-size: 13px;
+}
+.tooltip b { font-weight: 600; }
+.tooltip span { color: var(--gray-200); }
+

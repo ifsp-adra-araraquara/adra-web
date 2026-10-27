@@ -1,4 +1,5 @@
 export enum AppModule {
+  PAINEL = 'painel',
   DASHBOARD = 'dashboard',
   ASSISTIDOS = 'assistidos',
   RESPONSAVEIS = 'responsaveis',
