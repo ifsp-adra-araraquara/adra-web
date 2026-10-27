@@ -1534,7 +1534,7 @@ export class Assistidos implements OnInit {
   }
 
   editarChamada(item: FrequenciaAulaDTO): void {
-    this.router.navigate(['/chamada'], { queryParams: { data: item.dataAula, aulaId: item.aulaId } });
+    this.router.navigate(['/chamada/aula', item.aulaId]);
   }
 
   abrirEdicaoResponsavel(vinculo: VinculoFamiliarResponseDTO): void {

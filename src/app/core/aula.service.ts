@@ -37,6 +37,11 @@ export class AulaService {
   readonly aulas = signal<AulaComDetalhesResponseDTO[]>([]);
   readonly carregando = signal(false);
 
+  /** Tela da chamada (FT-06): uma aula só, com turma, oficineiro e quantidade de alunos. */
+  buscarComDetalhes(aulaId: number): Observable<AulaComDetalhesResponseDTO> {
+    return this.http.get<AulaComDetalhesResponseDTO>(`${this.api}/api/aulas/${aulaId}/detalhes`);
+  }
+
   gerarAulas(payload: CriacaoAulasRequestDTO): Observable<GerarAulasResponseDTO> {
     return this.http.post<GerarAulasResponseDTO>(`${this.api}/api/aulas/gerar`, payload);
   }
