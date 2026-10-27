@@ -1,14 +1,11 @@
 /* ============================================================
    OFICINAS - ESTILOS (US-13 + US-14)
 
-   Modal, tabela e badge de status agora vêm dos componentes
-   compartilhados (app-modal / app-table / app-badge — US-61); os
-   estilos aqui são só o que é específico desta página.
+   O card usa as classes globais .oficina-card / .oficina-top /
+   .oficina-meta / .oficina-foot (styles.css); modal e
+   badge vêm dos componentes compartilhados. Aqui fica só o que é
+   específico desta página.
    ============================================================ */
-
-/* =========================
-   PÁGINA E CABEÇALHO
-   ========================= */
 
 .page {
   max-width: 1200px;
@@ -17,64 +14,117 @@
 
 /* Cabeçalho: padrão global .page-header (styles.css). */
 
-/* =========================
-   CARD
-   ========================= */
-
-.card {
-  background: #fff;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
-  overflow: hidden;
-}
-
-.card-head {
-  padding: 12px 16px;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
-}
-
-.card-head h3 {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #1f2937;
-}
-
 .muted {
   color: #9ca3af;
   text-align: center;
   font-style: italic;
 }
 
+.estado {
+  padding: 32px 20px;
+}
+
+/* =========================
+   CARDS
+   ========================= */
+
+.lista-oficinas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.oficina-card {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Sem o translateY do hover global: um transform faz o card virar a
+   referência do position: fixed do menu ">", e o overflow: hidden do
+   card cortava o menu (Editar/Inativar sumiam). A sombra continua. */
+.oficina-card:hover {
+  transform: none;
+}
+
+.oficina-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1;
+}
+
+.oficina-body h3 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.oficina-meta {
+  align-self: stretch;
+  margin: 6px 0 8px;
+}
+
+.oficina-meta .m {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Uma linha por agenda; o ícone fica alinhado à primeira. */
+.oficina-meta .m:has(.horarios) {
+  align-items: flex-start;
+}
+
+.horarios {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.oficina-meta .extra {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-600);
+  white-space: nowrap;
+}
+
+/* gray-600 (não 400) para manter contraste AA em texto pequeno. */
+.vazio {
+  color: var(--gray-600);
+  font-style: italic;
+}
+
+.oficina-foot {
+  align-self: stretch;
+  margin-top: auto;
+  gap: 12px;
+}
+
+.vagas {
+  font-size: 13px;
+  color: var(--gray-600);
+}
+
+.vagas b {
+  font-weight: 600;
+  color: var(--gray-800);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Inativa: continua legível, mas sem cor de destaque. */
+.oficina-card.inativa .oficina-top {
+  filter: grayscale(1);
+  opacity: 0.45;
+}
+
+.oficina-card.inativa h3 {
+  color: var(--gray-600);
+}
+
 /* =========================
    FORMULÁRIO (conteúdo projetado nos app-modal)
    ========================= */
 
-.field {
-  display: flex;
-  flex-direction: column;
-
-  gap: 6px;
-
-  margin-bottom: 16px;
-}
-
-.field label {
-  font-size: 13px;
-
-  font-weight: 600;
-
-  color: #374151;
-}
-
-textarea {
-  resize: vertical;
-
-  min-height: 80px;
-
-  font-family: inherit;
-}
+/* .field e .field label vêm do global (mesmo rótulo do app-input). */
 
 .hint {
   font-size: 12px;
@@ -88,27 +138,14 @@ textarea {
 
 .notice {
   padding: 12px 14px;
-
   margin-bottom: 16px;
-
   border-radius: 7px;
-
   font-size: 13px;
-
   line-height: 1.5;
 }
 
 @media (min-width: 720px) {
   .page {
     padding: 20px;
-  }
-
-
-  .card-head {
-    padding: 16px 20px;
-  }
-
-  .card-head h3 {
-    font-size: 16px;
   }
 }

@@ -28,32 +28,61 @@
     />
   </div>
 
-  <div class="card">
-    <div class="card-head">
-      <h3>Oficinas cadastradas</h3>
-    </div>
+  @if (carregando() && oficinas().length === 0) {
+    <p class="muted estado">Carregando…</p>
+  } @else if (erroListar()) {
+    <p class="muted estado">{{ erroListar() }}</p>
+  } @else if (cards().length === 0) {
+    <p class="muted estado">Nenhuma oficina encontrada.</p>
+  } @else {
+    <ul class="grid g-3 lista-oficinas" role="list" [attr.aria-busy]="carregando()">
+      @for (c of cards(); track c.oficina.oficinaId) {
+        <li class="oficina-card" [class.inativa]="!c.oficina.ativo">
+          <div class="oficina-top" [style.background]="c.cor" aria-hidden="true"></div>
+          <div class="oficina-body">
+            <h3>{{ c.oficina.nomeOficina }}</h3>
+            <app-badge [status]="c.oficina.ativo" [label]="c.oficina.ativo ? 'Ativa' : 'Inativa'" />
 
-    @if (carregando()) {
-      <p class="muted" style="padding: 20px; text-align: center">Carregando…</p>
-    } @else if (erroListar()) {
-      <p class="muted" style="padding: 20px; text-align: center">{{ erroListar() }}</p>
-    } @else {
-      <app-table
-        label="Oficinas"
-        [columns]="colunasOficinas"
-        [data]="oficinas()"
-        [trackBy]="trackByOficinaId"
-      >
-        <ng-template #rowActions let-oficina>
-          <app-action-menu
-            [label]="'Ações de ' + oficina.nomeOficina"
-            [itens]="acoesOficina(oficina)"
-            (selecionado)="executarAcaoOficina($event, oficina)"
-          />
-        </ng-template>
-      </app-table>
-    }
-  </div>
+            <div class="oficina-meta">
+              <span class="m"><app-icon name="user" [size]="15" />{{ c.oficineiro }}</span>
+              <span class="m">
+                <app-icon name="calendar" [size]="15" />
+                @if (c.horarios.length > 0) {
+                  <span class="horarios">
+                    @for (h of c.horarios; track h) { <span>{{ h }}</span> }
+                    @if (c.outrosHorarios > 0) {
+                      <small class="extra">e mais {{ c.outrosHorarios }} {{ c.outrosHorarios === 1 ? 'horário' : 'horários' }}</small>
+                    }
+                  </span>
+                } @else {
+                  <span class="vazio">Sem horário definido</span>
+                }
+              </span>
+              <span class="m">
+                <app-icon name="map-pin" [size]="15" />
+                @if (c.oficina.local) { {{ c.oficina.local }} } @else { <span class="vazio">Local não informado</span> }
+              </span>
+            </div>
+
+            <div class="oficina-foot">
+              <span class="vagas">
+                @if (c.turmasAtivas > 0) {
+                  <b>{{ c.alunos }}/{{ c.capacidade }}</b> vagas · {{ c.turmasAtivas }} {{ c.turmasAtivas === 1 ? 'turma' : 'turmas' }}
+                } @else {
+                  Nenhuma turma ativa
+                }
+              </span>
+              <app-action-menu
+                [label]="'Ações de ' + c.oficina.nomeOficina"
+                [itens]="acoesOficina(c.oficina)"
+                (selecionado)="executarAcaoOficina($event, c.oficina)"
+              />
+            </div>
+          </div>
+        </li>
+      }
+    </ul>
+  }
 </section>
 
 <!-- ============================================================
@@ -86,13 +115,22 @@
     </p>
   }
 
-  <div class="field">
-    <label>Oficineiro responsável</label>
-    <app-select
-      [ngModel]="formOficina.oficineiroResponsavelId"
-      (ngModelChange)="atualizarCampoOficina('oficineiroResponsavelId', $event)"
-      [placeholder]="'Selecione'"
-      [options]="oficineiroOptions()"
+  <div class="form-row">
+    <div class="field">
+      <label>Oficineiro responsável</label>
+      <app-select
+        [ngModel]="formOficina.oficineiroResponsavelId"
+        (ngModelChange)="atualizarCampoOficina('oficineiroResponsavelId', $event)"
+        [placeholder]="'Selecione'"
+        [options]="oficineiroOptions()"
+      />
+    </div>
+
+    <app-input
+      label="Local"
+      placeholder="Ex.: Sala 1"
+      [ngModel]="formOficina.local"
+      (ngModelChange)="atualizarCampoOficina('local', $event)"
     />
   </div>
 

@@ -375,7 +375,7 @@ export class AssistidosLote {
         nonNullable: true,
         validators: [Validators.required, dataNascimentoValidator],
       }),
-      cpf: new FormControl(dados?.cpf ?? '', { nonNullable: true, validators: [cpfValidator] }),
+      cpf: new FormControl(dados?.cpf ?? '', { nonNullable: true, validators: [Validators.required, cpfValidator] }),
       responsaveis: new FormArray(
         responsaveis.map((responsavel) => this.criarResponsavel(responsavel)),
         Validators.minLength(1),

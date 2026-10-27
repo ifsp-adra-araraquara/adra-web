@@ -37,12 +37,12 @@
 }
 
 @theme {
-  --color-adra-gray-50:  #F8F7F4;
-  --color-adra-gray-100: #EFEDE6;
-  --color-adra-gray-200: #D3D1C7;
-  --color-adra-gray-400: #888780;
-  --color-adra-gray-600: #54585A;
-  --color-adra-gray-800: #2C2C2A;
+  --color-adra-gray-50:  #F6F7F8;
+  --color-adra-gray-100: #ECEEF0;
+  --color-adra-gray-200: #D5D9DD;
+  --color-adra-gray-400: #7D848A;
+  --color-adra-gray-600: #4D5459;
+  --color-adra-gray-800: #1F2427;
 
   --color-adra-teal-400:  #1D9E75;
   --color-adra-blue-400:  #378ADD;
@@ -62,12 +62,12 @@
 /* ===== DESIGN TOKENS (Manual de Marca Oficial ADRA) ===== */
 :root {
   /* verdes: ver @theme static acima (--color-adra-green-* / --color-brand-*) */
-  --gray-50:  #F8F7F4;
-  --gray-100: #EFEDE6;
-  --gray-200: #D3D1C7;
-  --gray-400: #888780;
-  --gray-600: #54585A;
-  --gray-800: #2C2C2A;
+  --gray-50:  #F6F7F8;
+  --gray-100: #ECEEF0;
+  --gray-200: #D5D9DD;
+  --gray-400: #7D848A;
+  --gray-600: #4D5459;
+  --gray-800: #1F2427;
 
   --teal-50:  #E1F5EE; --teal-400:  #1D9E75; --teal-600:  #0F6E56;
   --blue-50:  #E6F1FB; --blue-400:  #378ADD; --blue-600:  #185FA5;
@@ -88,12 +88,22 @@
 
   /* Superfícies no fundo branco: borda um tom acima de gray-100 e sombra
      em duas camadas (contato + difusa), discreta mas legível. */
-  --borda: #E6E4DC;
-  --borda-forte: #D8D6CD;
+  --borda: #E3E6E9;
+  --borda-forte: #CFD4D8;
   --shadow-card: 0 1px 2px rgba(16, 32, 26, .05), 0 2px 8px -2px rgba(16, 32, 26, .06);
   --shadow-card-hover: 0 2px 4px rgba(16, 32, 26, .06), 0 8px 20px -6px rgba(16, 32, 26, .12);
-  --cabecalho-tabela: #F4F6F5;
+  --cabecalho-tabela: #F5F7F8;
   --linha-hover: color-mix(in srgb, var(--color-adra-green-50) 55%, #fff);
+
+  /* Campos de formulário: fundo branco e borda fina (antes: fundo gray-50
+     e borda de 1.5px, que davam o tom "creme"). Usados no global e nos
+     componentes app-input / app-select. */
+  --campo-bg: #fff;
+  --campo-borda: #D5D9DD;
+  --campo-borda-hover: #B4BBC1;
+  --campo-placeholder: #8A9096;
+  --campo-desabilitado: #F3F4F6;
+  --rotulo: #3F464B;
 
   --ease: cubic-bezier(.4,0,.2,1);
 }
@@ -125,17 +135,23 @@ button { font-family: inherit; cursor: pointer; }
 
 /* ===== FORM ELEMENTS (usados em login, chamada, modais, etc.) ===== */
 .field { margin-bottom: 16px; }
-.field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: var(--gray-600); }
+.field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: var(--rotulo); }
 .input, .select, textarea {
-  width: 100%; min-height: 44px; padding: 11px 13px; font-size: 16px; line-height: 1.25; font-family: inherit;
-  color: var(--gray-800); background: var(--gray-50);
-  border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm);
-  transition: border-color .15s, background .15s, box-shadow .15s;
+  width: 100%; min-height: 44px; padding: 10px 12px; font-size: 16px; line-height: 1.25; font-family: inherit;
+  color: var(--gray-800); background: var(--campo-bg);
+  border: 1px solid var(--campo-borda); border-radius: var(--radius-sm);
+  box-shadow: 0 1px 2px rgba(16, 24, 32, .04);
+  transition: border-color .15s, box-shadow .15s;
+}
+.input:hover:not(:disabled):not(:focus), .select:hover:not(:disabled):not(:focus), textarea:hover:not(:disabled):not(:focus) {
+  border-color: var(--campo-borda-hover);
 }
 .input:focus, .select:focus, textarea:focus {
-  outline: none; border-color: var(--color-brand); background: #fff;
+  outline: none; border-color: var(--color-brand);
   box-shadow: 0 0 0 3px var(--color-brand-soft);
 }
+.input::placeholder, textarea::placeholder { color: var(--campo-placeholder); }
+.input:disabled, .select:disabled, textarea:disabled, .input[readonly], textarea[readonly] { background: var(--campo-desabilitado); }
 .select { appearance: none; cursor: pointer; min-width: 160px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%2354585A' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 12px center; padding-right: 38px;
@@ -147,6 +163,9 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
 .hint { font-size: 12px; color: var(--gray-400); margin-top: 5px; }
 
 .form-row, .form-row-3 { display: grid; grid-template-columns: 1fr; gap: 14px; }
+/* Botões dentro do corpo de um formulário (não o rodapé do modal). */
+.form-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
+.form-acoes--topo { margin-top: 18px; }
 .form-sec-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .6px; color: var(--color-adra-green-600); margin: 22px 0 12px; display: flex; align-items: center; gap: 8px; }
 .form-sec-title::after { content:''; flex: 1; height: 1px; background: var(--gray-100); }
 .form-sec-title:first-child { margin-top: 0; }

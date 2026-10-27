@@ -50,6 +50,7 @@ const ICONES = {
   activity: ['M22 12h-4l-3 9L9 3l-3 9H2'],
   'book-open': ['M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z', 'M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z'],
   'chart-line': ['M3 3v18h18', 'm19 9-5 5-4-4-3 3'],
+  'map-pin': ['M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z', c(12, 10, 3)],
   circle: [c(12, 12, 9)],
   // entidades / módulos
   home: ['M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z', 'M9 22V12h6v10'],

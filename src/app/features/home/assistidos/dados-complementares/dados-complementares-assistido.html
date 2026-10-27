@@ -1,16 +1,19 @@
-<div class="form-row">
-  <div class="field">
-    <label>Sexo</label>
-    <app-select
-      [ngModel]="dados().sexo ?? null"
-      (ngModelChange)="atualizar('sexo', $event)"
-      [options]="sexoOptions"
-    />
+@if (exibirSexo()) {
+  <div class="form-row">
+    <div class="field">
+      <label>Sexo</label>
+      <app-select
+        [ngModel]="dados().sexo ?? null"
+        (ngModelChange)="atualizar('sexo', $event)"
+        [options]="sexoOptions"
+      />
+    </div>
   </div>
-</div>
+}
 
 <p class="form-sec-title">Saúde</p>
 
+<!-- As duas perguntas lado a lado; o "Qual?" de cada uma aparece embaixo quando a resposta é Sim. -->
 <div class="form-row">
   <div class="field">
     <label>Possui problema de saúde?</label>
@@ -21,18 +24,6 @@
     />
   </div>
 
-  @if (dados().possuiProblemaSaude) {
-    <app-input
-      label="Qual problema de saúde?"
-      placeholder="Ex.: asma, diabetes…"
-      [required]="true"
-      [ngModel]="dados().problemaSaude"
-      (ngModelChange)="atualizar('problemaSaude', $event)"
-    />
-  }
-</div>
-
-<div class="form-row">
   <div class="field">
     <label>É pessoa com deficiência (PcD)?</label>
     <app-select
@@ -41,17 +32,33 @@
       [options]="simNaoOptions"
     />
   </div>
-
-  @if (dados().pcd) {
-    <app-input
-      label="Qual deficiência?"
-      placeholder="Ex.: auditiva, física, intelectual…"
-      [required]="true"
-      [ngModel]="dados().deficiencia"
-      (ngModelChange)="atualizar('deficiencia', $event)"
-    />
-  }
 </div>
+
+@if (dados().possuiProblemaSaude || dados().pcd) {
+  <div class="form-row">
+    @if (dados().possuiProblemaSaude) {
+      <app-input
+        label="Qual problema de saúde?"
+        placeholder="Ex.: asma, diabetes…"
+        [required]="true"
+        [ngModel]="dados().problemaSaude"
+        (ngModelChange)="atualizar('problemaSaude', $event)"
+      />
+    } @else {
+      <span aria-hidden="true"></span>
+    }
+
+    @if (dados().pcd) {
+      <app-input
+        label="Qual deficiência?"
+        placeholder="Ex.: auditiva, física, intelectual…"
+        [required]="true"
+        [ngModel]="dados().deficiencia"
+        (ngModelChange)="atualizar('deficiencia', $event)"
+      />
+    }
+  </div>
+}
 
 <p class="form-sec-title">Escola</p>
 

@@ -10,7 +10,7 @@
         [errorMessage]="erroCpfBusca()"
       />
 
-      <div class="modal-foot" style="padding: 0; border: none; justify-content: flex-start;">
+      <div class="form-acoes">
         <app-button (click)="buscarPorCpf()" [loading]="buscandoCpf()">Buscar</app-button>
         <app-button variant="secondary" type="button" (click)="cancelar()">Cancelar</app-button>
       </div>
@@ -27,7 +27,7 @@
       <p class="cell-name">{{ existente.nomeCompleto }}</p>
       <p class="cell-sub mt-s">{{ existente.telefone || 'Sem telefone cadastrado' }}</p>
 
-      <div class="modal-foot" style="padding: 18px 0 0; border: none; justify-content: flex-start;">
+      <div class="form-acoes form-acoes--topo">
         <app-button (click)="usarResponsavelEncontrado()">Usar este responsável</app-button>
         <app-button variant="secondary" (click)="buscarOutroCpf()">Buscar outro CPF</app-button>
       </div>
@@ -100,7 +100,7 @@
         <textarea id="observacoes" class="input" formControlName="observacoes"></textarea>
       </div>
 
-      <div class="modal-foot" style="padding: 18px 0 0; border: none; justify-content: flex-start;">
+      <div class="form-acoes form-acoes--topo">
         <app-button type="submit" [loading]="salvando()">
           {{ modoEdicao() ? 'Salvar alterações' : 'Cadastrar' }}
         </app-button>

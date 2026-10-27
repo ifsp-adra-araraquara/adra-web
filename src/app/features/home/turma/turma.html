@@ -264,7 +264,7 @@
       </div>
     </div>
 
-    <div class="form-row">
+    <div class="form-row-3">
       <div class="field">
         <label>Turno</label>
         <app-select
@@ -275,6 +275,16 @@
         />
       </div>
 
+      <div class="field">
+        <label>Faixa etária</label>
+        <app-select
+          [ngModel]="formTurma.faixaEtaria"
+          (ngModelChange)="atualizarCampoTurma('faixaEtaria', $event)"
+          [placeholder]="'Selecione'"
+          [options]="faixaEtariaOptions"
+        />
+      </div>
+
       <app-input
         label="Capacidade"
         type="number"
@@ -282,16 +292,6 @@
         placeholder="Ex.: 24"
         [ngModel]="formTurma.capacidade"
         (ngModelChange)="atualizarCampoTurma('capacidade', $event)"
-      />
-    </div>
-
-    <div class="field">
-      <label>Faixa etária</label>
-      <app-select
-        [ngModel]="formTurma.faixaEtaria"
-        (ngModelChange)="atualizarCampoTurma('faixaEtaria', $event)"
-        [placeholder]="'Selecione'"
-        [options]="faixaEtariaOptions"
       />
     </div>
 

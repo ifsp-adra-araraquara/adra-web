@@ -1,0 +1,218 @@
+<section class="page cadastro" aria-labelledby="cadastro-titulo">
+  <button type="button" class="btn-voltar" (click)="voltar()">
+    <app-icon name="chevron-left" />
+    Assistidos
+  </button>
+
+  <header class="page-header">
+    <div class="page-header-texto">
+      <h1 id="cadastro-titulo">Novo assistido</h1>
+      <p class="page-intro">
+        @if (etapa() === 'cpf') {
+          Comece pelo CPF da criança: se ela já tiver cadastro, você vai direto para a ficha dela.
+        } @else {
+          Preencha os dados e informe pelo menos um responsável. Nada é gravado até clicar em "Salvar assistido".
+        }
+      </p>
+    </div>
+  </header>
+
+  @if (etapa() === 'cpf') {
+    <!-- ======================= Etapa 1: CPF ======================= -->
+    <div class="card card-pad busca-cpf">
+      <form class="busca-cpf__form" (ngSubmit)="buscarCpf()">
+        <app-input
+          label="CPF do assistido"
+          mask="cpf"
+          placeholder="000.000.000-00"
+          [required]="true"
+          name="cpf"
+          [errorMessage]="erroCpf()"
+          [ngModel]="cpfBusca()"
+          (ngModelChange)="cpfBusca.set($event); erroCpf.set(null); existente.set(null)"
+        />
+        <app-button type="submit" [loading]="buscandoCpf()">
+          <app-icon name="search" [size]="16" /> Verificar CPF
+        </app-button>
+      </form>
+
+      @if (existente(); as e) {
+        <div class="existente" role="status">
+          <div class="notice notice-amber">
+            <app-icon name="alert-circle" />
+            <span>Este CPF já está cadastrado. Não é preciso cadastrar de novo.</span>
+          </div>
+          <dl class="existente__dados">
+            <div><dt>Nome</dt><dd>{{ e.nomeCompleto }}</dd></div>
+            <div><dt>Nascimento</dt><dd>{{ e.dataNascimento | date: 'dd/MM/yyyy' }}</dd></div>
+            <div><dt>Turma</dt><dd>{{ e.nomeTurma || 'Sem turma' }}</dd></div>
+            <div><dt>Situação</dt><dd><app-badge [status]="e.status" /></dd></div>
+          </dl>
+          <div class="acoes">
+            <app-button (click)="abrirFicha(e)">Abrir ficha</app-button>
+            <app-button variant="secondary" (click)="trocarCpf()">Verificar outro CPF</app-button>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- ======================= Etapa 2: formulário ======================= -->
+    @if (alertaDuplicidade()) {
+      <div class="notice notice-amber">
+        Já existe um assistido com o mesmo nome e data de nascimento. O cadastro só é aceito se os dois tiverem
+        CPFs diferentes.
+      </div>
+    }
+
+    <section class="card card-pad bloco" aria-labelledby="sec-dados">
+      <h2 id="sec-dados" class="form-sec-title">Dados pessoais</h2>
+
+      <div class="cpf-fixo">
+        <span>CPF <b>{{ formatarCpf(assistido().cpf ?? '') }}</b></span>
+        <button type="button" class="link" (click)="trocarCpf()">Trocar CPF</button>
+      </div>
+
+      <div class="midia-cadastro">
+        <app-foto-perfil [(arquivo)]="foto" />
+        <app-upload-documento
+          label="RG ou CPF"
+          dica="Uma foto do documento ou PDF."
+          [(arquivos)]="documentos"
+          [maximo]="1"
+          [obrigatorio]="true"
+          [invalido]="tentouSalvar()"
+        />
+      </div>
+
+      <app-input
+        label="Nome completo"
+        placeholder="Nome do assistido"
+        [required]="true"
+        [ngModel]="assistido().nomeCompleto"
+        (ngModelChange)="atualizar('nomeCompleto', $event)"
+      />
+
+      <div class="form-row-3">
+        <app-input
+          label="Data de nascimento"
+          type="date"
+          [required]="true"
+          [ngModel]="assistido().dataNascimento"
+          (ngModelChange)="atualizar('dataNascimento', $event)"
+        />
+        <div class="field">
+          <label>Sexo</label>
+          <app-select
+            [ngModel]="assistido().sexo ?? null"
+            (ngModelChange)="atualizar('sexo', $event)"
+            [options]="sexoOptions"
+          />
+        </div>
+        <div class="field">
+          <label>Turma</label>
+          <app-select
+            [ngModel]="assistido().turmaId"
+            (ngModelChange)="atualizar('turmaId', $event)"
+            [options]="turmaOptions()"
+          />
+        </div>
+      </div>
+
+      <app-input
+        label="Necessidades específicas"
+        [ngModel]="assistido().necessidadesEspecificas"
+        (ngModelChange)="atualizar('necessidadesEspecificas', $event)"
+      />
+
+      <div class="field">
+        <label for="obs-assistido">Observações gerais</label>
+        <textarea
+          id="obs-assistido"
+          placeholder="Informações relevantes para o acompanhamento"
+          [ngModel]="assistido().observacoes"
+          (ngModelChange)="atualizar('observacoes', $event)"
+        ></textarea>
+      </div>
+
+      <app-dados-complementares-assistido
+        [(dados)]="assistido"
+        [enderecoSugerido]="enderecoDoPrincipal()"
+        [exibirSexo]="false"
+      />
+    </section>
+
+    <section class="card card-pad bloco" aria-labelledby="sec-familia">
+      <h2 id="sec-familia" class="form-sec-title">Núcleo familiar</h2>
+
+      @if (responsaveis().length === 0) {
+        <p class="vazio">Nenhum responsável ainda. Adicione pelo menos um.</p>
+      } @else {
+        <ul class="resp-lista" role="list">
+          @for (r of responsaveis(); track r.cpf; let i = $index) {
+            <li class="resp-card">
+              <div class="resp-card__topo">
+                <div>
+                  <span class="cell-name">{{ r.nomeCompleto }}</span>
+                  <span class="cell-sub">{{ r.parentesco || 'Parentesco não informado' }} · CPF {{ formatarCpf(r.cpf) }}</span>
+                </div>
+                <div class="resp-card__acoes">
+                  <button type="button" class="btn-icon" [attr.aria-label]="'Editar ' + r.nomeCompleto" appTooltip="Editar" (click)="editarResponsavel(i)">
+                    <app-icon name="edit" />
+                  </button>
+                  <button type="button" class="btn-icon" [attr.aria-label]="'Remover ' + r.nomeCompleto" appTooltip="Remover" (click)="removerResponsavel(i)">
+                    <app-icon name="trash" />
+                  </button>
+                </div>
+              </div>
+              <div class="resp-card__selos">
+                @if (r.responsavelId) { <app-badge variant="gray" label="Já cadastrado" /> }
+                @if (r.responsavelPrincipal) { <app-badge variant="blue" label="Principal" /> }
+                @if (r.contatoEmergencia) { <app-badge variant="green" label="Emergência" /> }
+                @if (r.autorizadoRetirada) { <app-badge variant="amber" label="Pode retirar" /> }
+                @if (r.telefone) { <span class="cell-sub">{{ formatarTelefone(r.telefone) }}</span> }
+              </div>
+            </li>
+          }
+        </ul>
+      }
+
+      <app-button variant="secondary" size="sm" (click)="adicionarResponsavel()">
+        <app-icon name="plus" [size]="16" /> Adicionar responsável
+      </app-button>
+    </section>
+
+    <section class="card card-pad bloco" aria-labelledby="sec-socio">
+      <h2 id="sec-socio" class="form-sec-title">Socioeconômico (família)</h2>
+      <app-socioeconomico-assistido
+        [(dados)]="assistido"
+        [limiteRenda]="limiteRendaFamiliar()"
+        [somaRendaResponsaveis]="somaRendaResponsaveis()"
+      />
+    </section>
+
+    <section class="card card-pad bloco" aria-labelledby="sec-termos">
+      <h2 id="sec-termos" class="form-sec-title">Termos e autorizações</h2>
+      <app-termos-assistido [(dados)]="assistido" />
+    </section>
+
+    <!-- Barra de ações fixa no rodapé: o formulário é longo. -->
+    <div class="rodape">
+      @if (erroSalvar()) {
+        <div class="notice notice-error" role="alert">{{ erroSalvar() }}</div>
+      }
+      <div class="acoes">
+        <app-button variant="secondary" (click)="voltar()">Cancelar</app-button>
+        <app-button [loading]="salvando()" (click)="salvar()">
+          {{ salvando() ? 'Salvando...' : 'Salvar assistido' }}
+        </app-button>
+      </div>
+    </div>
+  }
+</section>
+
+<app-responsavel-vinculo-modal
+  [(open)]="modalResponsavel"
+  [inicial]="responsavelEmEdicao()"
+  [cpfsUsados]="cpfsUsados()"
+  (confirmado)="responsavelConfirmado($event)"
+/>
