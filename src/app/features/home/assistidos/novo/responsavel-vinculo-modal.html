@@ -1,0 +1,125 @@
+<app-modal
+  [(open)]="open"
+  [title]="editando ? 'Editar responsável' : 'Adicionar responsável'"
+  [subtitle]="etapa() === 'cpf' ? 'Comece pelo CPF: se a pessoa já tiver cadastro, ela é só vinculada.' : ''"
+  size="lg"
+>
+  <div modal-icon class="mh-ico ico-green">
+    <app-icon name="user-plus" />
+  </div>
+
+  @if (erro()) {
+    <div class="notice notice-error" role="alert">{{ erro() }}</div>
+  }
+
+  @switch (etapa()) {
+    @case ('cpf') {
+      <form (ngSubmit)="buscar()">
+        <app-input
+          label="CPF do responsável"
+          mask="cpf"
+          placeholder="000.000.000-00"
+          [required]="true"
+          name="cpfBusca"
+          [ngModel]="cpfBusca()"
+          (ngModelChange)="cpfBusca.set($event); erro.set(null)"
+        />
+      </form>
+    }
+
+    @case ('existente') {
+      <div class="notice notice-info">
+        <span>Responsável já cadastrado. Ele será vinculado a este assistido, sem cadastrar de novo.</span>
+      </div>
+
+      <dl class="resp-resumo">
+        <div><dt>Nome</dt><dd>{{ form().nomeCompleto }}</dd></div>
+        <div><dt>CPF</dt><dd>{{ formatarCpf(form().cpf) }}</dd></div>
+        <div><dt>Telefone</dt><dd>{{ formatarTelefone(form().telefone ?? '') || '—' }}</dd></div>
+        <div><dt>E-mail</dt><dd>{{ form().email || '—' }}</dd></div>
+      </dl>
+      <p class="hint">Para corrigir os dados dessa pessoa, use a tela de Responsáveis.</p>
+
+      <p class="form-sec-title">Vínculo com o assistido</p>
+      <ng-container *ngTemplateOutlet="vinculo" />
+    }
+
+    @case ('novo') {
+      @if (!editando) {
+        <div class="notice notice-info">
+          <span>CPF sem cadastro. Preencha os dados do responsável.</span>
+        </div>
+      }
+
+      <div class="form-row">
+        <app-input
+          label="Nome completo"
+          placeholder="Nome do responsável"
+          [required]="true"
+          [ngModel]="form().nomeCompleto"
+          (ngModelChange)="atualizar('nomeCompleto', $event)"
+        />
+        <app-input label="CPF" mask="cpf" [readonly]="true" [ngModel]="form().cpf" />
+      </div>
+
+      <div class="form-row">
+        <app-input
+          label="Telefone"
+          mask="telefone"
+          placeholder="(16) 90000-0000"
+          [required]="true"
+          [ngModel]="form().telefone"
+          (ngModelChange)="atualizar('telefone', $event)"
+        />
+        <app-input
+          label="E-mail"
+          type="email"
+          placeholder="email@exemplo.com"
+          [ngModel]="form().email"
+          (ngModelChange)="atualizar('email', $event)"
+        />
+      </div>
+
+      <app-dados-complementares-responsavel [dados]="form()" (dadosChange)="atualizarComplementares($event)" />
+
+      <p class="form-sec-title">Vínculo com o assistido</p>
+      <ng-container *ngTemplateOutlet="vinculo" />
+    }
+  }
+
+  <ng-template #vinculo>
+    <div class="field">
+      <label>Parentesco</label>
+      <app-select
+        [ngModel]="form().parentesco"
+        (ngModelChange)="atualizar('parentesco', $event)"
+        [options]="parentescoOptions"
+      />
+    </div>
+
+    <label class="check">
+      <input type="checkbox" [ngModel]="form().responsavelPrincipal" (ngModelChange)="atualizar('responsavelPrincipal', $event)" />
+      Responsável principal
+    </label>
+    <label class="check">
+      <input type="checkbox" [ngModel]="form().contatoEmergencia" (ngModelChange)="atualizar('contatoEmergencia', $event)" />
+      Contato de emergência
+    </label>
+    <label class="check">
+      <input type="checkbox" [ngModel]="form().autorizadoRetirada" (ngModelChange)="atualizar('autorizadoRetirada', $event)" />
+      Autorizado a retirar o assistido
+    </label>
+  </ng-template>
+
+  <ng-template #footer>
+    @if (etapa() !== 'cpf' && !editando) {
+      <app-button variant="secondary" (click)="buscarOutroCpf()">Outro CPF</app-button>
+    }
+    <app-button variant="secondary" (click)="open.set(false)">Cancelar</app-button>
+    @if (etapa() === 'cpf') {
+      <app-button [loading]="buscando()" (click)="buscar()">Buscar CPF</app-button>
+    } @else {
+      <app-button (click)="confirmar()">{{ editando ? 'Atualizar responsável' : 'Adicionar responsável' }}</app-button>
+    }
+  </ng-template>
+</app-modal>

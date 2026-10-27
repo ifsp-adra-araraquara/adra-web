@@ -65,6 +65,13 @@ export const routes: Routes = [
         canActivate: [roleGuard],
       },
       {
+        path: 'assistidos/novo',
+        loadComponent: () =>
+          import('./features/home/assistidos/novo/assistido-novo').then((m) => m.AssistidoNovo),
+        data: { roles: [Role.COORD, Role.SOCIO] },
+        canActivate: [roleGuard],
+      },
+      {
         path: 'acesso',
         loadComponent: () => import('./features/home/acesso/acesso').then((m) => m.Acesso),
         data: { roles: [Role.ADMIN] },

@@ -31,6 +31,12 @@ const SIM_NAO: SelectOption<boolean | null>[] = [
   { value: false, label: 'Não' },
 ];
 
+/** Opções de sexo — também usadas por quem desenha o campo fora do bloco (`exibirSexo=false`). */
+export const SEXO_OPTIONS: SelectOption<Sexo | null>[] = [
+  { value: null, label: 'Não informado' },
+  ...Object.values(Sexo).map((sexo) => ({ value: sexo, label: SEXO_LABELS[sexo] })),
+];
+
 /**
  * Sexo, saúde/PCD, escola e endereço do assistido — mesmo bloco no cadastro e na edição.
  * Two-way no objeto do formulário pai: `<app-dados-complementares-assistido [(dados)]="form" />`.
@@ -46,12 +52,11 @@ export class DadosComplementaresAssistidoForm<T extends DadosComplementaresAssis
   dados = model.required<T>();
   /** Endereço do responsável principal, oferecido como atalho ("mesmo endereço"). */
   enderecoSugerido = input<EnderecoDTO | null>(null);
+  /** false quando o formulário pai põe o Sexo na mesma linha de outros dados pessoais. */
+  exibirSexo = input(true);
 
   protected readonly simNaoOptions = SIM_NAO;
-  protected readonly sexoOptions: SelectOption<Sexo | null>[] = [
-    { value: null, label: 'Não informado' },
-    ...Object.values(Sexo).map((sexo) => ({ value: sexo, label: SEXO_LABELS[sexo] })),
-  ];
+  protected readonly sexoOptions = SEXO_OPTIONS;
   protected readonly turnoOptions: SelectOption<Turno | null>[] = [
     { value: null, label: 'Não informado' },
     ...TURNOS_DISPONIVEIS.map((turno) => ({ value: turno, label: turno })),
