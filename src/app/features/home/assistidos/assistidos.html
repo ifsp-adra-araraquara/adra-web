@@ -1,19 +1,18 @@
 <section class="page" id="page-assistidos">
-  <header class="page-header cabecalho">
-    <h1 class="cabecalho-titulo">Assistidos</h1>
+  <header class="page-header">
+    <div class="page-header-texto">
+      <h1>Assistidos</h1>
+      <p class="page-intro">Cadastro e acompanhamento dos assistidos.</p>
+    </div>
 
-    <div class="cabecalho-acao">
+    <div class="page-header-acoes">
       <app-button variant="secondary" size="sm" (click)="abrirCadastroEmMassa()">
         <app-icon name="users" [size]="16" /> Cadastro em massa
       </app-button>
-      <app-button size="sm" (click)="abrirModalNovoAssistido()">
+      <app-button size="sm" (click)="abrirCadastroNovo()">
         <app-icon name="plus" [size]="16" /> Novo assistido
       </app-button>
     </div>
-
-    <p class="page-intro cabecalho-intro">
-      Cadastro e acompanhamento dos assistidos.
-    </p>
   </header>
 
   @if (turmaFiltroAtual(); as turmaCtx) {
@@ -284,299 +283,15 @@
   </ng-template>
 
   <ng-template #status let-a>
-    @if (a.emAcompanhamento) {
+    @if (cadastroPendente(a); as motivo) {
+      <app-badge variant="coral" label="Cadastro pendente" [appTooltip]="motivo" />
+    } @else if (a.emAcompanhamento) {
       <app-badge variant="amber" label="Em acompanhamento" />
     } @else {
       <app-badge [status]="a.status" />
     }
   </ng-template>
 </section>
-
-<!-- ============================================================
-     MODAL: NOVO ASSISTIDO
-     ============================================================ -->
-
-<app-modal
-  [(open)]="mostrarModalNovo"
-  title="Novo assistido"
-  size="lg"
-  (closed)="fecharModalNovoAssistido()"
->
-  <div modal-icon class="mh-ico ico-green">
-    <app-icon name="user-plus" />
-  </div>
-
-        @if (alertaDuplicidade()) {
-          <div class="notice notice-amber">
-            Já existe um assistido com o mesmo nome e data de nascimento. O cadastro só é aceito se os dois tiverem
-            CPFs diferentes.
-          </div>
-        }
-
-        <p class="form-sec-title">Dados pessoais</p>
-
-        <div class="midia-cadastro">
-          <app-foto-perfil
-            [(arquivo)]="fotoPerfilNovoAssistido"
-          />
-
-          <app-upload-documento
-            label="RG ou CPF"
-            dica="Uma foto do documento ou PDF."
-            [(arquivos)]="documentosIdentidadeNovo"
-            [maximo]="1"
-            [obrigatorio]="true"
-            [invalido]="tentouSalvarNovo()"
-          />
-        </div>
-
-        <app-input
-          label="Nome completo"
-          placeholder="Nome do assistido"
-          [ngModel]="novoAssistido.nomeCompleto"
-          (ngModelChange)="atualizarCampoAssistido('nomeCompleto', $event)"
-        />
-
-        <div class="form-row-3">
-          <app-input
-            label="Data de nascimento"
-            type="date"
-            [ngModel]="novoAssistido.dataNascimento"
-            (ngModelChange)="atualizarCampoAssistido('dataNascimento', $event)"
-          />
-
-          <app-input
-            label="CPF"
-            mask="cpf"
-            placeholder="000.000.000-00"
-            [ngModel]="novoAssistido.cpf"
-            (ngModelChange)="atualizarCampoAssistido('cpf', $event)"
-          />
-
-          <div class="field">
-            <label>Turma</label>
-            <app-select
-              [ngModel]="novoAssistido.turmaId"
-              (ngModelChange)="atualizarCampoAssistido('turmaId', $event)"
-              [options]="turmaNovoAssistidoOptions()"
-            />
-          </div>
-        </div>
-
-        <app-input
-          label="Necessidades específicas"
-          [ngModel]="novoAssistido.necessidadesEspecificas"
-          (ngModelChange)="atualizarCampoAssistido('necessidadesEspecificas', $event)"
-        />
-
-        <div class="field">
-          <label>Observações gerais</label>
-          <textarea
-            placeholder="Informações relevantes para o acompanhamento"
-            [ngModel]="novoAssistido.observacoes"
-            (ngModelChange)="atualizarCampoAssistido('observacoes', $event)"
-          >
-          </textarea>
-        </div>
-
-        <app-dados-complementares-assistido
-          [(dados)]="novoAssistido"
-          [enderecoSugerido]="enderecoResponsavelPrincipalNovo()"
-        />
-
-        <!-- ============================================================
-     NÚCLEO FAMILIAR
-     ============================================================ -->
-
-        <p class="form-sec-title">Núcleo familiar</p>
-
-        @if (responsaveisVinculados().length > 0) {
-          <div class="resp-lista">
-            @for (resp of responsaveisVinculados(); track $index; let i = $index) {
-              <div class="card card-pad resp-card" [class.resp-card--editando]="indiceResponsavelEmEdicaoNovo() === i">
-                <div class="resp-card__topo">
-                  <div>
-                    <div class="cell-name">{{ resp.nomeCompleto }}</div>
-                    <span class="cell-sub">{{ resp.parentesco || 'Parentesco não informado' }}</span>
-                  </div>
-                  <div class="resp-card__acoes">
-                    @if (resp.responsavelPrincipal) {
-                      <app-badge variant="blue" label="Principal" />
-                    }
-                    @if (resp.contatoEmergencia) {
-                      <app-badge variant="green" label="Emergência" />
-                    }
-                    @if (resp.autorizadoRetirada) {
-                      <app-badge variant="amber" label="Pode retirar" />
-                    }
-                    <button
-                      type="button"
-                      class="btn-icon"
-                      [attr.aria-label]="'Editar ' + resp.nomeCompleto"
-                      appTooltip="Editar"
-                      (click)="editarResponsavelNovo(i)"
-                    >
-                      <app-icon name="edit" />
-                    </button>
-                    <button
-                      type="button"
-                      class="btn-icon"
-                      [attr.aria-label]="'Remover ' + resp.nomeCompleto"
-                      appTooltip="Remover"
-                      (click)="removerResponsavelNovo(i)"
-                    >
-                      <app-icon name="trash" />
-                    </button>
-                  </div>
-                </div>
-
-                <dl class="resp-card__dados">
-                  <div><dt>CPF</dt><dd>{{ resp.cpf || '—' }}</dd></div>
-                  <div><dt>Telefone</dt><dd>{{ telefoneFormatado(resp.telefone) || '—' }}</dd></div>
-                  <div><dt>E-mail</dt><dd>{{ resp.email || '—' }}</dd></div>
-                  <div>
-                    <dt>Nascimento</dt>
-                    <dd>
-                      @if (resp.dataNascimento) {
-                        {{ resp.dataNascimento | date: 'dd/MM/yyyy' }} · {{ calcularIdadeResponsavel(resp.dataNascimento) }}
-                      } @else {
-                        —
-                      }
-                    </dd>
-                  </div>
-                  <div><dt>Escolaridade</dt><dd>{{ rotuloEscolaridade(resp.escolaridade) }}</dd></div>
-                  <div><dt>Estado civil</dt><dd>{{ rotuloEstadoCivil(resp.estadoCivil) }}</dd></div>
-                  <div><dt>Profissão</dt><dd>{{ resp.profissao || '—' }}</dd></div>
-                  <div><dt>Renda</dt><dd>{{ resp.renda != null ? formatarMoeda(resp.renda) : '—' }}</dd></div>
-                  <div class="resp-card__largo"><dt>Endereço</dt><dd>{{ formatarEndereco(resp.endereco) || '—' }}</dd></div>
-                </dl>
-              </div>
-            }
-          </div>
-
-          <p class="muted" style="font-size: 12px; margin-bottom: 12px">
-            Os responsáveis só são gravados ao clicar em "Salvar assistido". Até lá, dá para editar ou remover.
-          </p>
-        }
-
-        @if (mostrarFormResponsavelNovo()) {
-          <div class="card card-pad resp-form">
-            <p class="resp-form__titulo">
-              {{ indiceResponsavelEmEdicaoNovo() !== null ? 'Editar responsável' : 'Novo responsável' }}
-            </p>
-
-          @if (erroResponsavel()) {
-            <div class="notice notice-error" role="alert">{{ erroResponsavel() }}</div>
-          }
-
-          <div class="form-row">
-            <app-input
-              label="Responsável"
-              placeholder="Nome do responsável"
-              [ngModel]="novoResponsavel.nomeCompleto"
-              (ngModelChange)="atualizarCampoResponsavel('nomeCompleto', $event)"
-            />
-
-            <div class="field">
-              <label>Parentesco</label>
-              <app-select
-                [ngModel]="novoResponsavel.parentesco"
-                (ngModelChange)="atualizarCampoResponsavel('parentesco', $event)"
-                [options]="parentescoOptions"
-              />
-            </div>
-          </div>
-
-          <div class="form-row-3">
-            <app-input
-              label="CPF do responsável"
-              mask="cpf"
-              placeholder="000.000.000-00"
-              [ngModel]="novoResponsavel.cpf"
-              (ngModelChange)="atualizarCampoResponsavel('cpf', $event)"
-            />
-
-            <app-input
-              label="Telefone"
-              mask="telefone"
-              placeholder="(16) 90000-0000"
-              [ngModel]="novoResponsavel.telefone"
-              (ngModelChange)="atualizarCampoResponsavel('telefone', $event)"
-            />
-
-            <app-input
-              label="E-mail"
-              type="email"
-              placeholder="email@exemplo.com"
-              [ngModel]="novoResponsavel.email"
-              (ngModelChange)="atualizarCampoResponsavel('email', $event)"
-            />
-          </div>
-
-          <app-dados-complementares-responsavel [(dados)]="novoResponsavel" />
-
-          <label class="check">
-            <input
-              type="checkbox"
-              [ngModel]="novoResponsavel.autorizadoRetirada"
-              (ngModelChange)="atualizarCampoResponsavel('autorizadoRetirada', $event)"
-            />
-            Autorizado a retirar o assistido
-          </label>
-
-          <label class="check">
-            <input
-              type="checkbox"
-              [ngModel]="novoResponsavel.contatoEmergencia"
-              (ngModelChange)="atualizarCampoResponsavel('contatoEmergencia', $event)"
-            />
-            Contato de emergência
-          </label>
-
-          <label class="check">
-            <input
-              type="checkbox"
-              [ngModel]="novoResponsavel.responsavelPrincipal"
-              (ngModelChange)="atualizarCampoResponsavel('responsavelPrincipal', $event)"
-            />
-            Responsável principal
-          </label>
-
-            <div class="resp-form__acoes">
-              @if (responsaveisVinculados().length > 0) {
-                <app-button variant="secondary" size="sm" (click)="cancelarFormResponsavelNovo()">Cancelar</app-button>
-              }
-              <app-button size="sm" [loading]="salvandoResponsavel()" (click)="salvarResponsavel()">
-                {{ indiceResponsavelEmEdicaoNovo() !== null ? 'Atualizar responsável' : 'Salvar responsável' }}
-              </app-button>
-            </div>
-          </div>
-        } @else {
-          <app-button variant="secondary" size="sm" (click)="abrirFormResponsavelNovo()">
-            <app-icon name="plus" [size]="16" /> Adicionar outro responsável
-          </app-button>
-        }
-
-        <p class="form-sec-title">Socioeconômico (família)</p>
-        <app-socioeconomico-assistido
-          [(dados)]="novoAssistido"
-          [limiteRenda]="limiteRendaFamiliar()"
-          [somaRendaResponsaveis]="somaRendaResponsaveisNovo()"
-        />
-
-        <p class="form-sec-title">Termos e autorizações</p>
-        <app-termos-assistido [(dados)]="novoAssistido" />
-
-  <ng-template #footer>
-    @if (erroSalvar()) {
-      <div class="notice notice-error" role="alert">{{ erroSalvar() }}</div>
-    }
-    <app-button variant="secondary" (click)="fecharModalNovoAssistido()">Cancelar</app-button>
-    <app-button [loading]="salvando()" (click)="salvarAssistido()">
-      {{ salvando() ? 'Salvando...' : 'Salvar assistido' }}
-    </app-button>
-  </ng-template>
-</app-modal>
 
 <!-- ============================================================
      MODAL: VISUALIZAR ASSISTIDO
@@ -649,14 +364,7 @@
 
     <!-- ==================== ABA: DADOS PESSOAIS ==================== -->
     @if (abaVerAssistido() === 'dados') {
-      <p class="form-sec-title">
-        Dados pessoais
-        @if (podeEditarCadastro()) {
-          <app-button size="sm" variant="secondary" class="sec-acao" (click)="executarAcaoDaFicha('editar')">
-            <app-icon name="edit" [size]="16" /> Editar
-          </app-button>
-        }
-      </p>
+      <p class="form-sec-title">Dados pessoais</p>
 
       <div class="form-row">
         <div class="field">
@@ -1110,14 +818,7 @@
 
     <!-- ==================== ABA: PERMISSÕES (termos) ==================== -->
     @if (abaVerAssistido() === 'perm') {
-      <p class="form-sec-title">
-        Termos e autorizações
-        @if (podeEditarCadastro()) {
-          <app-button size="sm" variant="secondary" class="sec-acao" (click)="executarAcaoDaFicha('editar')">
-            <app-icon name="edit" [size]="16" /> Editar
-          </app-button>
-        }
-      </p>
+      <p class="form-sec-title">Termos e autorizações</p>
 
       <ul class="permissoes">
         @for (termo of termosFicha; track termo.campo) {
@@ -1522,12 +1223,22 @@
         </div>
       </div>
 
-      <app-input
-        label="Necessidades específicas"
-        placeholder="Ex.: TEA, TDAH, mobilidade reduzida…"
-        [ngModel]="formEdicaoAssistido.necessidadesEspecificas"
-        (ngModelChange)="atualizarCampoEdicaoAssistido('necessidadesEspecificas', $event)"
-      />
+      <div class="form-row">
+        <div class="field">
+          <label>Sexo</label>
+          <app-select
+            [ngModel]="formEdicaoAssistido.sexo ?? null"
+            (ngModelChange)="atualizarCampoEdicaoAssistido('sexo', $event)"
+            [options]="sexoOptions"
+          />
+        </div>
+        <app-input
+          label="Necessidades específicas"
+          placeholder="Ex.: TEA, TDAH, mobilidade reduzida…"
+          [ngModel]="formEdicaoAssistido.necessidadesEspecificas"
+          (ngModelChange)="atualizarCampoEdicaoAssistido('necessidadesEspecificas', $event)"
+        />
+      </div>
 
       <div class="field">
         <label>Observações gerais</label>
@@ -1539,7 +1250,7 @@
         </textarea>
       </div>
 
-      <app-dados-complementares-assistido [(dados)]="formEdicaoAssistido" />
+      <app-dados-complementares-assistido [(dados)]="formEdicaoAssistido" [exibirSexo]="false" />
 
       <p class="form-sec-title">Termos e autorizações</p>
       <app-termos-assistido [(dados)]="formEdicaoAssistido" />

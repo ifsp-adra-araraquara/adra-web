@@ -129,6 +129,38 @@ export function marcarPresenca(
   });
 }
 
+/** FT-06: cada toque no botão do aluno avança P → F → FJ → P (sem status conta como P). */
+export function proximoStatusPresenca(atual: StatusPresenca | null): StatusPresenca {
+  switch (atual) {
+    case StatusPresenca.FALTA:
+      return StatusPresenca.FALTA_JUSTIFICADA;
+    case StatusPresenca.FALTA_JUSTIFICADA:
+      return StatusPresenca.PRESENTE;
+    default:
+      return StatusPresenca.FALTA;
+  }
+}
+
+export const SIGLA_PRESENCA: Record<StatusPresenca, string> = {
+  [StatusPresenca.PRESENTE]: 'P',
+  [StatusPresenca.FALTA]: 'F',
+  [StatusPresenca.FALTA_JUSTIFICADA]: 'FJ',
+};
+
+export const ROTULO_PRESENCA: Record<StatusPresenca, string> = {
+  [StatusPresenca.PRESENTE]: 'Presente',
+  [StatusPresenca.FALTA]: 'Falta',
+  [StatusPresenca.FALTA_JUSTIFICADA]: 'Falta justificada',
+};
+
+/** Busca da chamada: pelo nome, ignorando acento e caixa. */
+export function filtrarPorNome(alunos: LinhaChamada[], termo: string): LinhaChamada[] {
+  const normalizar = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const busca = normalizar(termo.trim());
+  if (!busca) return alunos;
+  return alunos.filter((a) => normalizar(a.nomeCompleto).includes(busca));
+}
+
 export function marcarTodosPresentes(alunos: LinhaChamada[]): LinhaChamada[] {
   return alunos.map((a) => ({
     ...a,
@@ -196,6 +228,27 @@ export function podeEditarChamada(perfil: Role | null): boolean {
  */
 export function podeCorrigirDataChamada(perfil: Role | null, aulaEhHoje: boolean): boolean {
   return perfil === Role.COORD || aulaEhHoje;
+}
+
+/**
+ * Aniversário do aluno em relação à aula, como a coluna "Niver" da planilha:
+ * `hoje` quando cai no dia da aula, `mes` quando cai no mesmo mês. `dia` vem
+ * como dd/mm e `idade` é a que o aluno completa no ano da aula.
+ */
+export function aniversarioNaAula(
+  dataNascimento: string | null | undefined,
+  dataAula: string | null | undefined,
+): { tipo: 'hoje' | 'mes'; dia: string; idade: number } | null {
+  if (!dataNascimento || !dataAula) return null;
+  const [anoNasc, mesNasc, diaNasc] = dataNascimento.split('-').map(Number);
+  const [ano, mes] = dataAula.split('-').map(Number);
+  if (mesNasc !== mes) return null;
+  const aluno = { dataNascimento } as LinhaChamada;
+  return {
+    tipo: aniversariantesDoDia([aluno], dataAula).length > 0 ? 'hoje' : 'mes',
+    dia: `${String(diaNasc).padStart(2, '0')}/${String(mesNasc).padStart(2, '0')}`,
+    idade: ano - anoNasc,
+  };
 }
 
 /**

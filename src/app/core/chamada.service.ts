@@ -8,7 +8,7 @@ import { StatusPresenca } from '../shared/enum/StatusPresenca';
 import { PresencaRequestDTO } from '../shared/models/presenca/PresencaRequestDTO';
 import { PresencaResponseDTO } from '../shared/models/presenca/PresencaResponseDTO';
 import { FrequenciaAulaDTO } from '../shared/models/presenca/FrequenciaAulaDTO';
-import { GradeFrequenciaTurmaDTO } from '../shared/models/presenca/GradeFrequenciaTurmaDTO';
+import { GradeMensalTurmaDTO } from '../shared/models/presenca/GradeMensalTurmaDTO';
 import { LinhaChamada, linhaChamadaDePresenca, ordenarPorNome } from '../shared/utils/chamada.util';
 
 /**
@@ -90,10 +90,12 @@ export class ChamadaService {
     );
   }
 
-  /** "Ver grade da turma" — carregada só sob demanda, nunca no fluxo normal de chamada. */
-  async carregarGradeTurma(turmaId: number): Promise<GradeFrequenciaTurmaDTO> {
+  /** Grade mensal da turma (estilo planilha) — `mes` no formato yyyy-MM. Carregada só sob demanda. */
+  async carregarGradeMensal(turmaId: number, mes: string): Promise<GradeMensalTurmaDTO> {
     return firstValueFrom(
-      this.http.get<GradeFrequenciaTurmaDTO>(`${this.api}/api/chamadas/turma/${turmaId}/grade`),
+      this.http.get<GradeMensalTurmaDTO>(`${this.api}/api/chamadas/turma/${turmaId}/grade`, {
+        params: { mes },
+      }),
     );
   }
 }

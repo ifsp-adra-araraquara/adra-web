@@ -27,11 +27,21 @@ export const routes: Routes = [
       import('./features/acesso-negado/acesso-negado').then((m) => m.AcessoNegado),
   },
   {
+    path: 'pre-cadastro',
+    loadComponent: () => import('./features/pre-cadastro/pre-cadastro').then((m) => m.PreCadastro),
+  },
+  {
     path: '',
     loadComponent: () => import('./core/layout/layout').then((m) => m.Layout),
     canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      {
+        path: 'painel',
+        loadComponent: () => import('./features/home/painel/painel').then((m) => m.Painel),
+        data: { roles: [Role.COORD] },
+        canActivate: [roleGuard],
+      },
       {
         path: 'dashboard',
         loadComponent: () => import('./features/home/home').then((m) => m.Home),
@@ -55,6 +65,13 @@ export const routes: Routes = [
         path: 'assistidos/lote',
         loadComponent: () =>
           import('./features/home/assistidos/lote/assistidos-lote').then((m) => m.AssistidosLote),
+        data: { roles: [Role.COORD, Role.SOCIO] },
+        canActivate: [roleGuard],
+      },
+      {
+        path: 'assistidos/novo',
+        loadComponent: () =>
+          import('./features/home/assistidos/novo/assistido-novo').then((m) => m.AssistidoNovo),
         data: { roles: [Role.COORD, Role.SOCIO] },
         canActivate: [roleGuard],
       },
@@ -104,9 +121,37 @@ export const routes: Routes = [
         pathMatch: 'full',
       },
       {
+        path: 'pre-cadastros',
+        loadComponent: () => import('./features/home/pre-cadastros/pre-cadastros').then((m) => m.PreCadastros),
+        data: { roles: [Role.COORD, Role.SOCIO] },
+        canActivate: [roleGuard],
+      },
+      {
+        path: 'disciplinar',
+        loadComponent: () => import('./features/home/disciplinar/disciplinar').then((m) => m.Disciplinar),
+        data: { roles: [Role.COORD, Role.SOCIO] },
+        canActivate: [roleGuard],
+      },
+      {
+        path: 'disciplinar/documento/:registroId',
+        loadComponent: () =>
+          import('./features/home/disciplinar/documento-disciplinar/documento-disciplinar').then(
+            (m) => m.DocumentoDisciplinar,
+          ),
+        data: { roles: [Role.COORD, Role.SOCIO] },
+        canActivate: [roleGuard],
+      },
+      {
         path: 'chamada',
         loadComponent: () => import('./features/home/chamada/chamada').then((m) => m.Chamada),
         data: { roles: [Role.COORD, Role.SOCIO] },
+        canActivate: [roleGuard],
+      },
+      {
+        path: 'chamada/aula/:aulaId',
+        loadComponent: () =>
+          import('./features/home/chamada/chamada-aula/chamada-aula').then((m) => m.ChamadaAula),
+        data: { roles: [Role.COORD, Role.SOCIO, Role.OFICINEIRO] },
         canActivate: [roleGuard],
       },
       {

@@ -75,6 +75,8 @@ h1 { margin: 0 0 6px; font-size: 20px; }
 
 .panel-materiais { padding: 48px 0; text-align: center; }
 .panel-materiais .empty { margin-bottom: 16px; }
+.panel-materiais .dica-material { margin-top: 8px; font-size: 12px; color: var(--gray-600); }
+.panel-materiais .erro-material { margin-top: 12px; color: var(--red-600, #b42318); }
 
 .empty { padding: 24px; color: var(--gray-600); text-align: center; }
 .feedback { padding: 12px 0; color: var(--gray-600); }
@@ -119,3 +121,37 @@ h1 { margin: 0 0 6px; font-size: 20px; }
 .quem-busca--vazio { color: var(--amber-600); }
 
 .alerta-justificadas { background: var(--amber-50); color: var(--amber-600); }
+
+/* Lista de materiais da aula */
+.panel-materiais .lista-materiais-aula { max-width: 720px; margin: 0 auto 24px; padding: 0; list-style: none; text-align: left; }
+.lista-materiais-aula li { display: flex; align-items: center; gap: 10px; padding: 12px 4px; border-bottom: 1px solid var(--gray-100); }
+.lista-materiais-aula li.empty { display: block; border: 0; text-align: center; }
+.lista-materiais-aula app-icon { color: var(--color-adra-green-600); flex-shrink: 0; }
+.info-material { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 2px; }
+.nome-material { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.meta-material { color: var(--gray-600); font-size: 12px; }
+
+/* Visão da Coordenação na aba Materiais (só leitura) */
+.materiais-coord { padding: 24px 0; }
+.materiais-coord__topo { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.materiais-coord__topo h2 { margin: 0 0 4px; font-size: 17px; }
+.materiais-coord__resumo { margin: 0; color: var(--gray-600); font-size: 13px; }
+.materiais-coord__selo { padding: 4px 10px; border-radius: 999px; background: var(--gray-100); color: var(--gray-600); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.materiais-coord .table-wrap { overflow-x: auto; border: 1px solid var(--gray-100); border-radius: 10px; background: #fff; }
+.materiais-coord__tabela { width: 100%; border-collapse: collapse; font-size: 13px; }
+.materiais-coord__tabela th { padding: 10px 14px; background: #f7f7f9; color: var(--gray-600); font-size: 11px; font-weight: 600; letter-spacing: .03em; text-align: left; text-transform: uppercase; }
+.materiais-coord__tabela td { padding: 12px 14px; border-top: 1px solid var(--gray-100); vertical-align: middle; white-space: nowrap; }
+.materiais-coord__tabela tbody tr:hover { background: #fafaf8; }
+.materiais-coord__arquivo { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.materiais-coord__tipo { display: grid; flex-shrink: 0; width: 34px; height: 34px; place-items: center; border-radius: 8px; background: var(--color-adra-green-50); color: var(--color-adra-green-600); font-size: 10px; font-weight: 700; }
+.materiais-coord__nome { max-width: 340px; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+.materiais-coord__hora { margin-left: 4px; color: var(--gray-600); }
+.materiais-coord__acoes { width: 1%; text-align: right; }
+.materiais-coord__vazio { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 16px; border: 1px dashed var(--gray-200); border-radius: 10px; color: var(--gray-600); text-align: center; }
+.materiais-coord__vazio p { margin: 0; }
+.materiais-coord .erro-material { margin-top: 12px; }
+
+/* Visão do Oficineiro: mesma tabela da Coordenação + ações de enviar/excluir */
+.materiais-ofic__botoes { display: inline-flex; gap: 8px; }
+.materiais-ofic__confirmar { --btn-color: var(--coral-600); color: var(--coral-600); }
+.materiais-coord .erro-material { margin: 0 0 12px; color: var(--coral-600, #b42318); }

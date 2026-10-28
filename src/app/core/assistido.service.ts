@@ -18,4 +18,9 @@ export class AssistidoService {
     documentos.forEach((documento) => formData.append('documentos', documento));
     return this.http.post<AssistidoResponseDTO>(this.baseUrl, formData);
   }
+
+  /** 404 quando o CPF não tem cadastro — é o caso de seguir com um cadastro novo. */
+  buscarPorCpf(cpf: string): Observable<AssistidoResponseDTO> {
+    return this.http.get<AssistidoResponseDTO>(`${this.baseUrl}/cpf/${cpf}`);
+  }
 }

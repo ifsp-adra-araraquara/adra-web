@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, signal, untracked } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { DatePipe, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -8,7 +8,13 @@ import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/auth.service';
 import { AulaService } from '../../../core/aula.service';
 import { ChamadaService } from '../../../core/chamada.service';
+import { ArquivoService } from '../../../core/arquivo.service';
+import { CategoriaArquivo } from '../../../shared/enum/CategoriaArquivo';
+import { EntidadeArquivo } from '../../../shared/enum/EntidadeArquivo';
+import { ArquivoResponseDTO } from '../../../shared/models/arquivo/ArquivoResponseDTO';
+import { mensagemErro } from '../../../shared/utils/erro-http.util';
 import { StatusPresenca } from '../../../shared/enum/StatusPresenca';
+import { Role } from '../../../shared/enum/role.enum';
 import { MotivoFalta, MOTIVO_FALTA_OPTIONS } from '../../../shared/enum/MotivoFalta';
 import { SituacaoAula } from '../../../shared/enum/SituacaoAula';
 import { calcularSituacaoAula, ehAulaDeHoje } from '../../../shared/utils/aula.util';
@@ -67,12 +73,39 @@ export class AulaCompleta implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly aulaService = inject(AulaService);
   private readonly chamadaService = inject(ChamadaService);
+  private readonly arquivoService = inject(ArquivoService);
   private readonly location = inject(Location);
   private readonly api = environment.apiUrl;
 
   readonly StatusPresenca = StatusPresenca;
   readonly MotivoFalta = MotivoFalta;
   readonly motivoFaltaOptions = MOTIVO_FALTA_OPTIONS;
+
+  // ── Aba Materiais ────────────────────────────────────────────────────────
+  // O arquivo vai pro POST /api/arquivos com dono AULA (entidadeId = id da aula).
+  // Regras (o back aplica; aqui só mostra/esconde):
+  //  - Oficineiro da turma envia e vê/abre/exclui SÓ os que ele enviou (o back já filtra a lista);
+  //  - Coordenação vê todos, com quem enviou, sem enviar/excluir.
+  readonly EntidadeArquivo = EntidadeArquivo;
+  readonly CategoriaArquivo = CategoriaArquivo;
+  /** Espelha CategoriaArquivo.MATERIAL_AULA do back — mudou lá, mude aqui. */
+  readonly tiposMaterialAceitos = ['application/pdf'];
+  readonly tamanhoMaximoMaterialBytes = 2 * 1024 * 1024;
+  readonly aulaId = Number(this.route.snapshot.paramMap.get('aulaId')) || null;
+  readonly enviandoMaterial = signal(false);
+  readonly erroMaterial = signal<string | null>(null);
+  readonly materiais = signal<ArquivoResponseDTO[]>([]);
+  readonly carregandoMateriais = signal(false);
+  readonly abrindoMaterialId = signal<number | null>(null);
+  /** Exclusão em dois cliques: 1º marca, 2º confirma (sem diálogo do navegador). */
+  readonly confirmandoExclusaoId = signal<number | null>(null);
+  readonly excluindoMaterialId = signal<number | null>(null);
+
+  /** Recarrega ao entrar na aba e após qualquer envio/exclusão (ArquivoService.revisaoArquivos). */
+  private readonly recarregarMateriais = effect(() => {
+    this.arquivoService.revisaoArquivos();
+    if (this.aba() === 'materiais') untracked(() => this.carregarMateriais());
+  });
 
   readonly aba = signal<AbaAulaCompleta>('alunos');
   readonly carregando = signal(true);
@@ -108,6 +141,15 @@ export class AulaCompleta implements OnInit {
 
   /** US-67: quem tem acesso à edição/correção de chamada (lançar ou corrigir) — mesma regra do <app-aula-modal>. */
   readonly podeEditarChamada = computed(() => podeEditarChamadaUtil(this.perfil()));
+  /** Só o Oficineiro envia material da aula (o back confere se a turma é dele). */
+  readonly podeEnviarMaterial = computed(() => this.perfil() === Role.OFICINEIRO);
+  private readonly meuUsuarioId = computed(() => this.auth.currentUserResponse()?.usuarioId ?? null);
+  /** Coordenação vê de todos — aí vale mostrar quem enviou. */
+  readonly mostrarAutorMaterial = computed(() => this.perfil() !== Role.OFICINEIRO);
+  /** Nomes de quem enviou, sem repetir — pro resumo da visão da Coordenação. */
+  readonly autoresMateriais = computed(() => [
+    ...new Set(this.materiais().map((m) => m.enviadoPorNome || 'não informado')),
+  ]);
 
   readonly situacao = computed<SituacaoAula | null>(() => {
     const aula = this.aula();
@@ -261,6 +303,100 @@ export class AulaCompleta implements OnInit {
       this.erro.set('Não foi possível salvar a chamada. Tente novamente.');
     } finally {
       this.salvando.set(false);
+    }
+  }
+
+  podeExcluirMaterial(arq: ArquivoResponseDTO): boolean {
+    return this.perfil() === Role.OFICINEIRO && arq.enviadoPorId === this.meuUsuarioId();
+  }
+
+  private async carregarMateriais(): Promise<void> {
+    if (!this.aulaId) return;
+    this.carregandoMateriais.set(true);
+    try {
+      this.materiais.set(
+        await this.arquivoService.listar(EntidadeArquivo.AULA, this.aulaId, CategoriaArquivo.MATERIAL_AULA),
+      );
+    } catch {
+      this.erroMaterial.set('Não foi possível carregar os materiais desta aula.');
+    } finally {
+      this.carregandoMateriais.set(false);
+    }
+  }
+
+  /** URL assinada gerada no clique; a aba abre já no clique pra não cair no bloqueador de pop-up. */
+  async abrirMaterial(arq: ArquivoResponseDTO): Promise<void> {
+    const novaJanela = window.open('', '_blank');
+    if (novaJanela) novaJanela.opener = null;
+    this.abrindoMaterialId.set(arq.arquivoId);
+    try {
+      const { url } = await this.arquivoService.gerarUrl(arq.arquivoId);
+      if (novaJanela) novaJanela.location.href = url;
+      else window.location.href = url;
+    } catch {
+      novaJanela?.close();
+      this.erroMaterial.set('Não foi possível abrir o material.');
+    } finally {
+      this.abrindoMaterialId.set(null);
+    }
+  }
+
+  async excluirMaterial(arq: ArquivoResponseDTO): Promise<void> {
+    if (this.confirmandoExclusaoId() !== arq.arquivoId) {
+      this.confirmandoExclusaoId.set(arq.arquivoId);
+      return;
+    }
+    this.confirmandoExclusaoId.set(null);
+    this.excluindoMaterialId.set(arq.arquivoId);
+    this.erroMaterial.set(null);
+    try {
+      await this.arquivoService.remover(arq.arquivoId); // exclusão lógica; a lista recarrega sozinha
+    } catch (e) {
+      this.erroMaterial.set(
+        e instanceof HttpErrorResponse
+          ? mensagemErro(e, 'Não foi possível excluir o material.')
+          : 'Não foi possível excluir o material.',
+      );
+    } finally {
+      this.excluindoMaterialId.set(null);
+    }
+  }
+
+  tamanhoLegivel(bytes: number): string {
+    return bytes < 1024 * 1024
+      ? `${Math.max(1, Math.round(bytes / 1024))} KB`
+      : `${(bytes / 1024 / 1024).toFixed(1).replace('.', ',')} MB`;
+  }
+
+  /** Disparado pelo <input type="file"> escondido da aba Materiais. */
+  async enviarMaterial(evento: Event): Promise<void> {
+    const input = evento.target as HTMLInputElement;
+    const arquivo = input.files?.[0];
+    input.value = ''; // deixa escolher o mesmo arquivo de novo depois
+    if (!arquivo || !this.aulaId) return;
+
+    // Checagem rápida só pra dar retorno na hora — quem decide de verdade é o back.
+    if (!this.tiposMaterialAceitos.includes(arquivo.type)) {
+      this.erroMaterial.set('Tipo de arquivo não permitido. Envie um PDF.');
+      return;
+    }
+    if (arquivo.size > this.tamanhoMaximoMaterialBytes) {
+      this.erroMaterial.set('Arquivo muito grande. O limite é 2 MB.');
+      return;
+    }
+
+    this.erroMaterial.set(null);
+    this.enviandoMaterial.set(true);
+    try {
+      await this.arquivoService.enviar(EntidadeArquivo.AULA, this.aulaId, CategoriaArquivo.MATERIAL_AULA, arquivo);
+    } catch (e) {
+      this.erroMaterial.set(
+        e instanceof HttpErrorResponse
+          ? mensagemErro(e, 'Não foi possível enviar o material.')
+          : 'Não foi possível enviar o material.',
+      );
+    } finally {
+      this.enviandoMaterial.set(false);
     }
   }
 }

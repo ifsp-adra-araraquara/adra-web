@@ -11,7 +11,7 @@
   font-size: 13px;
   font-weight: 500;
   margin-bottom: 6px;
-  color: var(--gray-600, #54585a);
+  color: var(--rotulo, #3f464b);
   font-family: inherit;
 }
 
@@ -41,21 +41,33 @@
 .app-input-control-el {
   width: 100%;
   min-height: 44px;
-  padding: 11px 13px;
+  padding: 10px 12px;
   font-size: 16px;
   line-height: 1.25;
   font-family: inherit;
-  color: var(--gray-800, #2c2c2a);
-  background: var(--gray-50, #f8f7f4);
-  border: 1.5px solid var(--gray-200, #d3d1c7);
+  color: var(--gray-800, #1f2427);
+  background: var(--campo-bg, #fff);
+  border: 1px solid var(--campo-borda, #d5d9dd);
   border-radius: var(--radius-sm, 8px);
-  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  box-shadow: 0 1px 2px rgba(16, 24, 32, 0.04);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.app-input-control-el::placeholder {
+  color: var(--campo-placeholder, #8a9096);
+}
+
+.app-input-control-el:hover:not(:disabled):not(:focus) {
+  border-color: var(--campo-borda-hover, #b4bbc1);
+}
+
+.app-input-control-el[readonly] {
+  background: var(--campo-desabilitado, #f3f4f6);
 }
 
 .app-input-control-el:focus {
   outline: none;
   border-color: var(--color-brand);
-  background: #fff;
   box-shadow: 0 0 0 3px var(--color-brand-soft);
 }
 

@@ -27,11 +27,14 @@ describe('AssistidosLote', () => {
     await fixture.whenStable();
   });
 
+  /** CPF do assistido é obrigatório: cada irmão com o seu (válidos, de teste). */
+  const CPF_IRMAO: Record<string, string> = { 'Ana Souza': '22233344405', 'Bruno Souza': '33344455508' };
+
   function adicionarIrmao(nomeCompleto: string): void {
     component.adicionarLinha({
       nomeCompleto,
       dataNascimento: '10/03/2015',
-      cpf: '',
+      cpf: CPF_IRMAO[nomeCompleto],
       responsaveis: [
         {
           nomeCompleto: 'Maria Souza',

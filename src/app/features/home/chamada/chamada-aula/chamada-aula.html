@@ -1,0 +1,304 @@
+<section class="chamada-aula" [class.com-rodape]="aula() && aba() === 'alunos'" [class.larga]="aba() === 'grade'" aria-labelledby="chamada-aula-titulo">
+  <button type="button" class="btn-voltar" (click)="voltar()">
+    <app-icon name="chevron-left" />
+    Voltar
+  </button>
+
+  @if (carregando() && !aula()) {
+    <p class="hint" role="status">Carregando chamada…</p>
+  } @else if (aula(); as a) {
+    <header class="page-header">
+      <div class="page-header-texto">
+        <h1 id="chamada-aula-titulo">{{ a.nomeTurma || 'Aula' }}</h1>
+        <p class="page-intro">
+          {{ dataPorExtenso() }}@if (horario()) { · {{ horario() }} }
+          @if (a.nomeOficineiro) { · {{ a.nomeOficineiro }} }
+        </p>
+      </div>
+      <div class="situacao">
+        @if (editando() && !realizada()) {
+          <app-badge variant="blue" label="Chamada em aberto" />
+        } @else if (situacao(); as s) {
+          <app-badge [status]="s" />
+        }
+      </div>
+    </header>
+
+    <div class="tabs" role="tablist" aria-label="Seções da aula">
+      <button type="button" class="tab" role="tab" id="aba-alunos" aria-controls="painel-alunos"
+              [class.active]="aba() === 'alunos'" [attr.aria-selected]="aba() === 'alunos'" (click)="aba.set('alunos')">
+        Alunos <span class="count">{{ alunos().length }}</span>
+      </button>
+      @if (a.turmaId) {
+        <button type="button" class="tab" role="tab" id="aba-grade" aria-controls="painel-grade"
+                [class.active]="aba() === 'grade'" [attr.aria-selected]="aba() === 'grade'" (click)="aba.set('grade')">
+          Grade do mês
+        </button>
+      }
+      <button type="button" class="tab" role="tab" id="aba-detalhes" aria-controls="painel-detalhes"
+              [class.active]="aba() === 'detalhes'" [attr.aria-selected]="aba() === 'detalhes'" (click)="aba.set('detalhes')">
+        Detalhes da aula
+      </button>
+    </div>
+
+    @if (erro()) {
+      <div class="notice notice-error" role="alert"><app-icon name="alert-circle" /><span>{{ erro() }}</span></div>
+    }
+    @if (sucesso()) {
+      <div class="notice notice-sucesso" role="status"><app-icon name="check" /><span>{{ sucesso() }}</span></div>
+    }
+
+    @if (aba() === 'alunos') {
+      <div id="painel-alunos" role="tabpanel" aria-labelledby="aba-alunos">
+        @if (aviso(); as msg) {
+          <div class="notice notice-lock" role="status"><app-icon name="lock" /><span>{{ msg }}</span></div>
+        }
+
+        <app-aniversario-cards [alunos]="alunos()" [dataAula]="a.dataAula" />
+
+        @if (alunos().length > 6) {
+          <label class="busca">
+            <app-icon name="search" [size]="18" />
+            <span class="sr-only">Buscar aluno</span>
+            <input type="search" placeholder="Buscar aluno" [ngModel]="busca()" (ngModelChange)="busca.set($event)" />
+          </label>
+        }
+
+        <ul class="lista" role="list" [class.recarregando]="carregando()" [class.compacta]="alunos().length > 12">
+          @for (aluno of alunosVisiveis(); track aluno.assistidoId) {
+            <li class="aluno">
+              <div class="aluno-linha">
+                <button type="button" class="aluno-info" (click)="abrirFicha(aluno)" [attr.aria-label]="'Ver ' + aluno.nomeCompleto">
+                  <app-avatar [entidadeId]="aluno.assistidoId" [nome]="aluno.nomeCompleto" [size]="40" />
+                  <span class="aluno-texto">
+                    <span class="aluno-nome">{{ aluno.nomeCompleto }}</span>
+                    <span class="aluno-sub">
+                      @if (mostrarStatus()) {
+                        <span class="aluno-status" [class]="classeStatus(aluno.statusPresenca)">{{ ROTULO[status(aluno)] }}</span>
+                      }
+                      @if (aluno.historicoRecente.length > 0) {
+                        <span class="faixa" [attr.aria-label]="'Últimas aulas: ' + aluno.historicoRecente.length">
+                          @for (dia of faixaHistorico(aluno); track dia.dataAula) {
+                            <span class="bolinha" [class]="classeStatus(dia.statusPresenca)" [title]="dataBr(dia.dataAula) + ': ' + ROTULO[dia.statusPresenca]"></span>
+                          }
+                        </span>
+                      }
+                      @if (aniversario(aluno); as niver) {
+                        @if (niver.tipo === 'hoje') {
+                          <app-badge variant="amber" [label]="'🎂 Aniversário hoje · ' + niver.idade + ' anos'" [plain]="true" />
+                        } @else {
+                          <span class="niver" [title]="'Faz ' + niver.idade + ' anos em ' + niver.dia">🎂 {{ niver.dia }}</span>
+                        }
+                      }
+                      @if (suspensoAte(aluno); as ate) {
+                        <app-badge variant="red" [label]="'Suspenso até ' + dataBr(ate)" [plain]="true" />
+                      }
+                    </span>
+                  </span>
+                </button>
+
+                @if (editando()) {
+                  <button type="button" class="presenca" [class]="classeStatus(aluno.statusPresenca)"
+                          [attr.aria-label]="rotuloBotao(aluno)" (click)="alternar(aluno)">
+                    {{ SIGLA[status(aluno)] }}
+                  </button>
+                } @else if (realizada()) {
+                  <span class="presenca presenca-lida" [class]="classeStatus(aluno.statusPresenca)" [attr.aria-label]="ROTULO[status(aluno)]">
+                    {{ SIGLA[status(aluno)] }}
+                  </span>
+                }
+              </div>
+
+              @if (aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA) {
+                @if (editando()) {
+                  <div class="motivo">
+                    <select class="select" [attr.aria-label]="'Motivo da falta de ' + aluno.nomeCompleto"
+                            [ngModel]="aluno.motivoFalta" (ngModelChange)="mudarMotivo(aluno.assistidoId, $event)">
+                      <option [ngValue]="null" disabled>Motivo da falta…</option>
+                      @for (opcao of motivoFaltaOptions; track opcao.value) {
+                        <option [ngValue]="opcao.value">{{ opcao.label }}</option>
+                      }
+                    </select>
+                    @if (aluno.motivoFalta === MotivoFalta.OUTRO) {
+                      <textarea rows="2" placeholder="Descreva o motivo (obrigatório)"
+                                [attr.aria-label]="'Descrição do motivo de ' + aluno.nomeCompleto"
+                                [ngModel]="aluno.observacao" (ngModelChange)="mudarObservacao(aluno.assistidoId, $event)"></textarea>
+                    }
+                  </div>
+                } @else if (aluno.motivoFalta) {
+                  <p class="motivo-lido">
+                    Motivo: {{ MOTIVO_FALTA_LABELS[aluno.motivoFalta] }}@if (aluno.observacao) { — {{ aluno.observacao }} }
+                  </p>
+                }
+              }
+            </li>
+          } @empty {
+            <li class="vazio">{{ busca() ? 'Nenhum aluno com esse nome.' : 'Nenhum aluno nesta turma.' }}</li>
+          }
+        </ul>
+      </div>
+    } @else if (aba() === 'grade' && a.turmaId) {
+      <div id="painel-grade" role="tabpanel" aria-labelledby="aba-grade">
+        <app-grade-mensal
+          [turmaId]="a.turmaId"
+          [mes]="mesGrade()"
+          (mesChange)="mesGrade.set($event)"
+          [aulaAtualId]="a.aulaId"
+          (abrirAula)="abrirAulaDaGrade($event)"
+        />
+      </div>
+    } @else {
+      <div id="painel-detalhes" role="tabpanel" aria-labelledby="aba-detalhes" class="detalhes">
+        <dl class="card detalhes-lista">
+          <div><dt>Turma</dt><dd>{{ a.nomeTurma || '—' }}</dd></div>
+          <div><dt>Data</dt><dd>{{ dataPorExtenso() }}</dd></div>
+          @if (horario()) { <div><dt>Horário</dt><dd>{{ horario() }}</dd></div> }
+          @if (a.nomeOficineiro) { <div><dt>Oficineiro</dt><dd>{{ a.nomeOficineiro }}</dd></div> }
+          @if (a.titulo) { <div><dt>Título</dt><dd>{{ a.titulo }}</dd></div> }
+          @if (a.descricao) { <div><dt>Descrição</dt><dd>{{ a.descricao }}</dd></div> }
+          @if (a.conteudoPrevisto) { <div><dt>Conteúdo previsto</dt><dd>{{ a.conteudoPrevisto }}</dd></div> }
+          @if (a.conteudoMinistrado) { <div><dt>Conteúdo dado</dt><dd>{{ a.conteudoMinistrado }}</dd></div> }
+          @if (a.objetivos) { <div><dt>Objetivos</dt><dd>{{ a.objetivos }}</dd></div> }
+          @if (a.recursosNecessarios) { <div><dt>Recursos</dt><dd>{{ a.recursosNecessarios }}</dd></div> }
+          @if (a.observacoes) { <div><dt>Observações</dt><dd>{{ a.observacoes }}</dd></div> }
+        </dl>
+
+        <div class="detalhes-acoes">
+          <app-button variant="secondary" (click)="verMateriais()"><app-icon name="book" [size]="16" /> Materiais da aula</app-button>
+        </div>
+      </div>
+    }
+
+    <!-- Rodapé fixo: contadores + ação, como no app da Quality -->
+    @if (aba() === 'alunos' && mostrarStatus()) {
+      <footer class="rodape">
+        <div class="contadores" aria-live="polite">
+          <span class="contador st-p"><b>{{ totalPresentes() }}</b> Presentes</span>
+          <span class="contador st-f"><b>{{ totalFaltas() }}</b> Faltas</span>
+          <span class="contador st-fj"><b>{{ totalJustificadas() }}</b> FJ</span>
+        </div>
+        <div class="rodape-acoes">
+          @if (editando()) {
+            @if (atualizando()) {
+              <app-button variant="secondary" (click)="cancelarEdicao()">Cancelar</app-button>
+            }
+            <app-button [loading]="salvando()" (click)="salvar()">{{ realizada() ? 'Salvar alterações' : 'Salvar chamada' }}</app-button>
+          } @else if (podeLancar()) {
+            <app-button variant="secondary" (click)="iniciarAtualizacao()">Atualizar chamada</app-button>
+          }
+        </div>
+      </footer>
+    }
+  } @else if (erro()) {
+    <div class="notice notice-error" role="alert"><app-icon name="alert-circle" /><span>{{ erro() }}</span></div>
+  }
+</section>
+
+<!-- Ficha do aluno: toque no nome. Mostra o que saiu da linha para a lista ficar limpa. -->
+<app-modal
+  [open]="fichaAberta()"
+  [title]="fichaAluno()?.nomeCompleto ?? ''"
+  [subtitle]="fichaAluno() ? (fichaIndice() + 1) + ' de ' + alunosVisiveis().length : ''"
+  size="sm"
+  (closed)="fecharFicha()"
+>
+  @if (fichaAluno(); as aluno) {
+    <div modal-icon>
+      <app-avatar [entidadeId]="aluno.assistidoId" [nome]="aluno.nomeCompleto" [size]="40" [ampliavel]="true" />
+    </div>
+  }
+
+  @if (fichaAluno(); as aluno) {
+    @if (editando()) {
+      <div class="ficha-status" role="radiogroup" aria-label="Presença">
+        @for (s of [StatusPresenca.PRESENTE, StatusPresenca.FALTA, StatusPresenca.FALTA_JUSTIFICADA]; track s) {
+          <button type="button" role="radio" class="ficha-opcao" [class]="classeStatus(s)"
+                  [class.ativo]="status(aluno) === s" [attr.aria-checked]="status(aluno) === s"
+                  (click)="definirStatus(aluno.assistidoId, s)">
+            <b>{{ SIGLA[s] }}</b> {{ ROTULO[s] }}
+          </button>
+        }
+      </div>
+      @if (aluno.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA) {
+        <div class="field">
+          <label for="ficha-motivo">Motivo da falta</label>
+          <select id="ficha-motivo" class="select" [ngModel]="aluno.motivoFalta" (ngModelChange)="mudarMotivo(aluno.assistidoId, $event)">
+            <option [ngValue]="null" disabled>Selecione…</option>
+            @for (opcao of motivoFaltaOptions; track opcao.value) {
+              <option [ngValue]="opcao.value">{{ opcao.label }}</option>
+            }
+          </select>
+          @if (aluno.motivoFalta === MotivoFalta.OUTRO) {
+            <textarea rows="2" placeholder="Descreva o motivo (obrigatório)" aria-label="Descrição do motivo"
+                      [ngModel]="aluno.observacao" (ngModelChange)="mudarObservacao(aluno.assistidoId, $event)"></textarea>
+          }
+        </div>
+      }
+    } @else if (mostrarStatus()) {
+      <p class="ficha-linha"><span class="aluno-status" [class]="classeStatus(aluno.statusPresenca)">{{ ROTULO[status(aluno)] }}</span>
+        @if (aluno.motivoFalta) { · {{ MOTIVO_FALTA_LABELS[aluno.motivoFalta] }} }
+      </p>
+    }
+
+    @if (suspensoAte(aluno); as ate) {
+      <div class="notice notice-error"><app-icon name="flag" /><span><b>Suspenso até {{ dataBr(ate) }}</b> pelo Sistema Disciplinar.</span></div>
+    }
+    @if (faltasSeguidas(aluno); as n) {
+      <div class="notice notice-amber"><app-icon name="alert-triangle" /><span><b>{{ n }} faltas seguidas.</b> Vale contatar a família.</span></div>
+    }
+    @if (justificadasSeguidas(aluno); as n) {
+      <div class="notice notice-amber"><app-icon name="alert-circle" /><span><b>{{ n }} faltas justificadas seguidas.</b></span></div>
+    }
+
+    <dl class="ficha-dados">
+      @if (aluno.aulasRealizadas) {
+        <div><dt>Frequência</dt><dd>
+          <b [class.baixa]="(aluno.frequenciaPercentual ?? 100) < 75">{{ aluno.frequenciaPercentual }}%</b>
+          · {{ aluno.aulasRealizadas }} de {{ aluno.aulasPrevistas }} aulas
+        </dd></div>
+      }
+      @if (aluno.historicoRecente.length > 0) {
+        <div><dt>Últimas aulas</dt><dd class="faixa faixa-grande">
+          @for (dia of faixaHistorico(aluno); track dia.dataAula) {
+            <span class="bolinha-dia">
+              <span class="bolinha" [class]="classeStatus(dia.statusPresenca)"></span>
+              <small>{{ dataBr(dia.dataAula).slice(0, 5) }}</small>
+            </span>
+          }
+        </dd></div>
+      }
+      @if (aluno.dataNascimento) {
+        <div><dt>Aniversário</dt><dd>
+          {{ dataBr(aluno.dataNascimento).slice(0, 5) }}
+          @if (aniversario(aluno); as niver) {
+            · {{ niver.tipo === 'hoje' ? 'hoje! 🎂' : 'neste mês 🎂' }} Faz {{ niver.idade }} anos
+          }
+        </dd></div>
+      }
+      <div><dt>Saída</dt><dd>
+        @if (aluno.podeIrEmboraSozinho) {
+          Pode ir embora sozinho
+        } @else if (aluno.autorizadosRetirada?.length) {
+          Buscado por {{ rotuloAutorizados(aluno.autorizadosRetirada) }}
+        } @else {
+          <span class="alerta-texto">Ninguém autorizado a buscar — confira o cadastro</span>
+        }
+      </dd></div>
+      @if (aluno.atualizadoPorNome || aluno.criadoPorNome) {
+        <div><dt>Lançado por</dt><dd>
+          {{ aluno.atualizadoPorNome || aluno.criadoPorNome }}
+          @if (aluno.atualizadoEm || aluno.criadoEm; as quando) { em {{ dataBr(quando.slice(0, 10)) }} }
+        </dd></div>
+      }
+    </dl>
+
+    <ng-template #footer>
+      <app-button variant="secondary" [disabled]="fichaIndice() <= 0" (click)="navegarFicha(-1)">
+        <app-icon name="chevron-left" [size]="16" /> Anterior
+      </app-button>
+      <app-button variant="secondary" [disabled]="fichaIndice() >= alunosVisiveis().length - 1" (click)="navegarFicha(1)">
+        Próximo <app-icon name="chevron-right" [size]="16" />
+      </app-button>
+    </ng-template>
+  }
+</app-modal>

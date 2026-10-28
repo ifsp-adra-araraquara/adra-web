@@ -29,6 +29,7 @@ export class Home implements OnInit {
   private readonly api = environment.apiUrl;
 
   readonly podeGerenciar = computed(() => this.auth.currentProfile() === Role.COORD);
+  /** "Coordenador ADRA" → "Coordenador": saudação curta no cabeçalho. */
 
   readonly turmas = signal<TurmaResponseDTO[]>([]);
   readonly oficinas = signal<OficinaResponseDTO[]>([]);

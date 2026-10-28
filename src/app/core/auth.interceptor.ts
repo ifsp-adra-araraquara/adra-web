@@ -8,7 +8,9 @@ const ROTAS_PUBLICAS = ['/api/auth/login'];
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
 
-  const ehRotaPublica = ROTAS_PUBLICAS.some(rota => req.url.includes(rota));
+  // Pré-cadastro: só o POST em si é público; /pendentes, /descartar e /converter são da equipe.
+  const ehPreCadastroPublico = req.method === 'POST' && /\/api\/pre-cadastro$/.test(req.url);
+  const ehRotaPublica = ehPreCadastroPublico || ROTAS_PUBLICAS.some(rota => req.url.includes(rota));
   if (ehRotaPublica) {
     return next(req);
   }

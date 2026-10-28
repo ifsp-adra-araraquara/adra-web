@@ -1,0 +1,101 @@
+<div class="grade-topo">
+  <div class="mes-nav" role="group" aria-label="Mês">
+    <button type="button" class="mes-btn" aria-label="Mês anterior" (click)="mudarMes(-1)">
+      <app-icon name="chevron-left" />
+    </button>
+    <h2 class="mes-titulo" aria-live="polite">{{ tituloMes() }}</h2>
+    <button type="button" class="mes-btn" aria-label="Próximo mês" (click)="mudarMes(1)">
+      <app-icon name="chevron-right" />
+    </button>
+    @if (!ehMesAtual()) {
+      <button type="button" class="btn-link" (click)="irParaMesAtual()">Mês atual</button>
+    }
+  </div>
+
+  <ul class="legenda" aria-label="Legenda">
+    <li><span class="cel presente">P</span> Presente</li>
+    <li><span class="cel falta">F</span> Falta</li>
+    <li><span class="cel justificada">FJ</span> Justificada</li>
+    <li><span class="cel pendente"></span> Pendente</li>
+    <li><span class="cel desligado"></span> Desligado</li>
+  </ul>
+</div>
+
+@if (carregando() && !grade()) {
+  <p class="feedback" role="status">Carregando grade…</p>
+} @else if (erro()) {
+  <div class="notice notice-error" role="alert"><app-icon name="alert-circle" /><span>{{ erro() }}</span></div>
+} @else if (colunas().length === 0) {
+  <p class="feedback">Nenhuma aula desta turma em {{ tituloMes() }}.</p>
+} @else {
+  <p class="dica-rolar">Arraste a grade para o lado para ver todos os dias. Toque no dia para abrir a chamada.</p>
+  <div class="grade-wrap" [class.recarregando]="carregando()" role="region" tabindex="0" [attr.aria-label]="'Frequência de ' + tituloMes()">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-num" scope="col"><span class="sr-only">Nº</span></th>
+          <th class="col-aluno" scope="col">Nome</th>
+          <th class="col-niver" scope="col">Niver</th>
+          @for (coluna of colunas(); track coluna.data) {
+            <th scope="col" class="col-dia" [class.hoje]="ehHoje(coluna)" [class.atual]="ehAtual(coluna)"
+                [class.sem-chamada]="ehColunaSemChamada(coluna)" [attr.aria-current]="ehAtual(coluna) ? 'date' : null">
+              @if (podeAbrirColuna(coluna)) {
+                <button type="button" class="dia-btn" [class.pendente]="coluna.tipo === 'PENDENTE'"
+                        [attr.aria-label]="rotuloCabecalho(coluna)" (click)="abrirColuna(coluna)">
+                  <span class="dia-sem">{{ diaSemana(coluna.data) }}</span>
+                  <span class="dia-num">{{ diaMes(coluna.data) }}</span>
+                </button>
+              } @else {
+                <span class="dia-sem">{{ diaSemana(coluna.data) }}</span>
+                <span class="dia-num">{{ diaMes(coluna.data) }}</span>
+              }
+            </th>
+          }
+          <th class="col-total" scope="col" title="Faltas no mês">F</th>
+          <th class="col-total" scope="col" title="Faltas justificadas no mês">FJ</th>
+          <th class="col-total" scope="col" title="Presença no mês">%</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (linha of linhas(); track linha.aluno.assistidoId; let first = $first; let i = $index) {
+          <tr [class.linha-desligado]="linha.aluno.dataSaida">
+            <td class="col-num">{{ i + 1 }}</td>
+            <th class="col-aluno" scope="row">
+              <span class="nome">{{ linha.aluno.nomeCompleto }}</span>
+              @if (linha.aluno.dataSaida) {
+                <span class="tag-desligado">
+                  Desligado em {{ diaMes(linha.aluno.dataSaida) }}@if (linha.aluno.motivoSaida) { · {{ linha.aluno.motivoSaida }} }
+                </span>
+              }
+            </th>
+            <td class="col-niver" [class.niver-mes]="linha.aniversarioNoMes" [attr.title]="linha.aniversarioNoMes ? 'Aniversário neste mês' : null">
+              @if (linha.aniversarioNoMes) { 🎂 }{{ linha.aluno.dataNascimento ? diaMes(linha.aluno.dataNascimento) : '–' }}
+            </td>
+            @for (coluna of colunas(); track coluna.data; let c = $index) {
+              @if (ehColunaSemChamada(coluna)) {
+                @if (first) {
+                  <td class="col-evento" [attr.rowspan]="linhas().length">
+                    <span class="evento-rotulo">{{ coluna.rotulo }}</span>
+                  </td>
+                }
+              } @else {
+                <td class="col-dia" [class.hoje]="ehHoje(coluna)" [class.atual]="ehAtual(coluna)">
+                  <span [class]="'cel ' + linha.celulas[c].classe" [attr.title]="linha.celulas[c].titulo || null">
+                    {{ linha.celulas[c].sigla }}
+                  </span>
+                </td>
+              }
+            }
+            <td class="col-total txt-f">{{ linha.faltas || '' }}</td>
+            <td class="col-total txt-fj">{{ linha.justificadas || '' }}</td>
+            <td class="col-total" [class.freq-baixa]="linha.frequencia != null && linha.frequencia < 75">
+              {{ linha.frequencia != null ? linha.frequencia + '%' : '–' }}
+            </td>
+          </tr>
+        } @empty {
+          <tr><td [attr.colspan]="colunas().length + 6" class="empty">Nenhum aluno nesta turma em {{ tituloMes() }}.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

@@ -1,0 +1,39 @@
+:host { display: block; min-width: 0; }
+
+/* ---------- Atenção, semana e listas ---------- */
+.contador {
+  display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 7px;
+  border-radius: 12px; background: var(--red-50); color: var(--red-600); font-size: 13.5px; font-weight: 600;
+}
+.grupo + .grupo { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--linha); }
+.grupo ul, .semana ul { list-style: none; margin: 0; padding: 0; }
+.grupo-titulo {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 4px;
+  font-size: 13px; font-weight: 600; color: var(--texto-2);
+}
+.grupo-total { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--texto); }
+.sinal { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.sinal-ruim { background: var(--ruim); }
+.sinal-alerta { background: var(--alerta); }
+
+.item, .evento {
+  display: flex; align-items: center; gap: 10px; width: calc(100% + 12px); min-height: 44px;
+  margin: 0 -6px; padding: 6px; border: none; border-radius: 8px; background: none;
+  font: inherit; text-align: left; color: inherit; cursor: pointer;
+}
+.item:hover, .evento:hover { background: var(--gray-50); }
+.item:focus-visible, .evento:focus-visible { outline: 3px solid var(--color-brand-ring); outline-offset: -2px; }
+.item app-avatar { flex: none; }
+.item-compacto { min-height: 36px; }
+.item-icone { flex: none; color: var(--texto-2); }
+.item-texto { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.item-texto b { font-size: 14px; font-weight: 500; color: var(--texto); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-texto small { font-size: 13px; color: var(--texto-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-fim { flex: none; font-size: 13px; font-weight: 500; color: var(--texto-2); }
+.item-fim.texto-ruim { font-weight: 600; }
+.item-seta { flex: none; color: var(--texto-3); }
+.data {
+  display: grid; place-items: center; flex: none; width: 44px; height: 28px; border-radius: 6px;
+  background: var(--amber-50); color: var(--amber-600); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+

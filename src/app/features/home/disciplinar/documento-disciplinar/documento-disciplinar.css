@@ -1,0 +1,74 @@
+:host { display: block; }
+
+.barra {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  max-width: 210mm;
+  margin: 0 auto 16px;
+}
+
+/* Folha A4 na tela; no celular vira largura total, com fonte legível. */
+.folha {
+  box-sizing: border-box;
+  max-width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 18mm 18mm 14mm;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  color: #111;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12pt;
+  line-height: 1.6;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-100);
+}
+.folha p { margin: 0; }
+
+.folha-cabecalho { display: flex; align-items: center; gap: 14px; justify-content: center; text-align: center; }
+.instituicao { font-variant: small-caps; font-size: 13pt; }
+.cnpj { font-size: 8.5pt; }
+
+.folha-titulo {
+  margin: 28px 0 22px;
+  text-align: center;
+  font-size: 14pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-decoration: underline;
+}
+.folha-data { text-align: right; margin-bottom: 22px !important; }
+.paragrafo { text-indent: 2.5em; text-align: justify; margin-top: 6px !important; }
+
+.assinaturas {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 48px;
+}
+.signatario { margin-top: 18px !important; }
+.assinatura-responsavel { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 220px; }
+.linha { display: block; width: 100%; border-top: 1px solid #111; }
+
+.folha-rodape {
+  margin-top: auto;
+  padding-top: 24px;
+  text-align: center;
+  font-size: 9pt;
+  font-style: italic;
+}
+
+@media (max-width: 719px) {
+  .folha { min-height: 0; padding: 20px 16px; font-size: 11pt; }
+  .folha-cabecalho { flex-direction: column; }
+  .assinaturas { flex-direction: column; align-items: stretch; }
+}
+
+@media print {
+  @page { size: A4; margin: 0; }
+  .folha { box-shadow: none; border: none; max-width: none; width: 210mm; min-height: 297mm; }
+}

@@ -6,6 +6,7 @@ import { CategoriaArquivo } from '../shared/enum/CategoriaArquivo';
 import { EntidadeArquivo } from '../shared/enum/EntidadeArquivo';
 import { ArquivoResponseDTO } from '../shared/models/arquivo/ArquivoResponseDTO';
 import { UrlArquivoDTO } from '../shared/models/arquivo/UrlArquivoDTO';
+import { AulaArquivoDTO } from '../shared/models/arquivo/AulaArquivoDTO';
 
 /** Margem para não entregar uma URL assinada que expira enquanto a imagem carrega. */
 const MARGEM_EXPIRACAO_MS = 30_000;
@@ -37,6 +38,11 @@ export class ArquivoService {
     let params = new HttpParams().set('entidadeTipo', entidadeTipo).set('entidadeId', entidadeId);
     if (categoria) params = params.set('categoria', categoria);
     return firstValueFrom(this.http.get<ArquivoResponseDTO[]>(this.api, { params }));
+  }
+
+  /** GET /api/arquivos/turma/{id}/materiais — aulas da turma que têm material, com os arquivos. */
+  listarMateriaisPorTurma(turmaId: number): Promise<AulaArquivoDTO[]> {
+    return firstValueFrom(this.http.get<AulaArquivoDTO[]>(`${this.api}/turma/${turmaId}/materiais`));
   }
 
   /** POST /api/arquivos (multipart). Para FOTO_PERFIL o back substitui a foto anterior. */

@@ -19,7 +19,6 @@ import { Icon, IconName } from '../../../shared/components/icon/icon';
  * (Fase 2) — não é mais uma tela própria.
  */
 const MODULOS_OCULTOS = new Set([
-  'DISCIPLINAR',
   'PRONTUARIOS',
   'EXPORTACAO',
   'ACESSO',
@@ -42,15 +41,16 @@ export class Sidebar {
   collapsed = model(false);
 
   private secoesPorModulo: Record<string, string> = {
+    PAINEL: 'Principal',
     DASHBOARD: 'Principal',
     ASSISTIDOS: 'Gestão',
     RESPONSAVEIS: 'Gestão',
     OFICINAS: 'Gestão',
     TURMAS: 'Gestão',
     CHAMADA: 'Pedagógico',
+    DISCIPLINAR: 'Pedagógico',
     MATERIAIS: 'Pedagógico',
     COMUNICADOS: 'Pedagógico',
-    DISCIPLINAR: 'Especializado',
     PRONTUARIOS: 'Especializado',
     EXPORTACAO: 'Financeiro',
     USUARIOS: 'Conta',
@@ -66,12 +66,14 @@ export class Sidebar {
 
   /** Chave do ícone (ver @switch em sidebar.html) exibido para cada módulo. */
   private iconesPorModulo: Record<string, IconName> = {
+    PAINEL: 'activity',
     DASHBOARD: 'calendar',
     ASSISTIDOS: 'users',
     RESPONSAVEIS: 'user-check',
     OFICINAS: 'layers',
     TURMAS: 'grid',
     CHAMADA: 'check-square',
+    DISCIPLINAR: 'flag',
     AULAS: 'calendar',
     MATERIAIS: 'book',
     COMUNICADOS: 'bell',

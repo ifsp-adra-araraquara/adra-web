@@ -214,10 +214,136 @@
   </section>
   }
   @case ('materiais') {
-  <section class="panel-materiais">
-    <p class="empty">Nenhum material vinculado a esta aula ainda.</p>
-    <app-button variant="secondary" size="sm" [disabled]="true" title="Em breve">Adicionar material</app-button>
+  @if (mostrarAutorMaterial()) {
+  <!-- Visão da Coordenação: só leitura, todos os materiais da aula com quem enviou -->
+  <section class="materiais-coord" aria-labelledby="materiais-coord-titulo">
+    <header class="materiais-coord__topo">
+      <div>
+        <h2 id="materiais-coord-titulo">Materiais desta aula</h2>
+        <p class="materiais-coord__resumo">
+          @if (materiais().length) {
+            {{ materiais().length }} {{ materiais().length === 1 ? 'arquivo' : 'arquivos' }}
+            · enviados por {{ autoresMateriais().join(', ') }}
+          } @else {
+            Os materiais enviados pelo oficineiro aparecem aqui.
+          }
+        </p>
+      </div>
+      <span class="materiais-coord__selo">Somente leitura</span>
+    </header>
+
+    @if (carregandoMateriais() && !materiais().length) {
+      <p class="materiais-coord__vazio" role="status">Carregando materiais…</p>
+    } @else if (!materiais().length) {
+      <div class="materiais-coord__vazio">
+        <app-icon name="file-text" [size]="28" />
+        <p>Nenhum material vinculado a esta aula ainda.</p>
+      </div>
+    } @else {
+      <div class="table-wrap" role="region" tabindex="0" aria-label="Materiais da aula">
+        <table class="materiais-coord__tabela">
+          <thead>
+            <tr><th>Arquivo</th><th>Enviado por</th><th>Enviado em</th><th>Tamanho</th><th><span class="sr-only">Ações</span></th></tr>
+          </thead>
+          <tbody>
+            @for (arq of materiais(); track arq.arquivoId) {
+            <tr>
+              <td>
+                <span class="materiais-coord__arquivo">
+                  <span class="materiais-coord__tipo">PDF</span>
+                  <span class="materiais-coord__nome" [title]="arq.nomeOriginal || 'material.pdf'">{{ arq.nomeOriginal || 'material.pdf' }}</span>
+                </span>
+              </td>
+              <td>{{ arq.enviadoPorNome || 'Não informado' }}</td>
+              <td>{{ arq.criadoEm | date: 'dd/MM/yyyy' }} <span class="materiais-coord__hora">{{ arq.criadoEm | date: 'HH:mm' }}</span></td>
+              <td>{{ tamanhoLegivel(arq.tamanhoBytes) }}</td>
+              <td class="materiais-coord__acoes">
+                <app-button variant="secondary" size="sm" [loading]="abrindoMaterialId() === arq.arquivoId" (click)="abrirMaterial(arq)">Abrir</app-button>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (erroMaterial(); as msg) {
+      <p class="erro-material" role="alert">{{ msg }}</p>
+    }
   </section>
+  } @else {
+  <!-- Visão do Oficineiro: os materiais que ELE enviou para esta aula (o back já filtra) -->
+  <section class="materiais-coord" aria-labelledby="materiais-ofic-titulo">
+    <header class="materiais-coord__topo">
+      <div>
+        <h2 id="materiais-ofic-titulo">Meus materiais desta aula</h2>
+        <p class="materiais-coord__resumo">
+          @if (materiais().length) {
+            {{ materiais().length }} {{ materiais().length === 1 ? 'arquivo enviado' : 'arquivos enviados' }} · PDF de até 2 MB
+          } @else {
+            Envie apostilas e atividades em PDF de até 2 MB.
+          }
+        </p>
+      </div>
+      @if (podeEnviarMaterial()) {
+        <!-- input escondido: o botão abre o seletor de arquivos -->
+        <input #inputMaterial type="file" accept="application/pdf,.pdf" hidden (change)="enviarMaterial($event)" />
+        <app-button size="sm" [loading]="enviandoMaterial()" (click)="inputMaterial.click()">
+          <app-icon name="plus" [size]="16" /> Adicionar material
+        </app-button>
+      }
+    </header>
+
+    @if (erroMaterial(); as msg) {
+      <p class="erro-material" role="alert">{{ msg }}</p>
+    }
+
+    @if (carregandoMateriais() && !materiais().length) {
+      <p class="materiais-coord__vazio" role="status">Carregando materiais…</p>
+    } @else if (!materiais().length) {
+      <div class="materiais-coord__vazio">
+        <app-icon name="file-text" [size]="28" />
+        <p>Você ainda não enviou material para esta aula.</p>
+      </div>
+    } @else {
+      <div class="table-wrap" role="region" tabindex="0" aria-label="Meus materiais da aula">
+        <table class="materiais-coord__tabela">
+          <thead>
+            <tr><th>Arquivo</th><th>Enviado em</th><th>Tamanho</th><th><span class="sr-only">Ações</span></th></tr>
+          </thead>
+          <tbody>
+            @for (arq of materiais(); track arq.arquivoId) {
+            <tr>
+              <td>
+                <span class="materiais-coord__arquivo">
+                  <span class="materiais-coord__tipo">PDF</span>
+                  <span class="materiais-coord__nome" [title]="arq.nomeOriginal || 'material.pdf'">{{ arq.nomeOriginal || 'material.pdf' }}</span>
+                </span>
+              </td>
+              <td>{{ arq.criadoEm | date: 'dd/MM/yyyy' }} <span class="materiais-coord__hora">{{ arq.criadoEm | date: 'HH:mm' }}</span></td>
+              <td>{{ tamanhoLegivel(arq.tamanhoBytes) }}</td>
+              <td class="materiais-coord__acoes">
+                <span class="materiais-ofic__botoes">
+                  <app-button variant="secondary" size="sm" [loading]="abrindoMaterialId() === arq.arquivoId" (click)="abrirMaterial(arq)">Abrir</app-button>
+                  @if (podeExcluirMaterial(arq)) {
+                  <app-button
+                    variant="secondary"
+                    size="sm"
+                    [class.materiais-ofic__confirmar]="confirmandoExclusaoId() === arq.arquivoId"
+                    [loading]="excluindoMaterialId() === arq.arquivoId"
+                    (click)="excluirMaterial(arq)"
+                  >{{ confirmandoExclusaoId() === arq.arquivoId ? 'Confirmar exclusão' : 'Excluir' }}</app-button>
+                  }
+                </span>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+  }
   }
   }
   }

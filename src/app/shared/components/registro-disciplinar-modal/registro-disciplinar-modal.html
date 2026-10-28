@@ -1,0 +1,198 @@
+<app-modal
+  [(open)]="open"
+  [title]="resultado() ? 'Registro salvo' : 'Registrar ocorrência'"
+  [subtitle]="assistidoAtual()?.nomeCompleto ?? ''"
+  (closed)="fechar()"
+>
+  <div modal-icon class="mh-ico" [class.ico-amber]="!resultado()" [class.ico-green]="resultado()">
+    <app-icon [name]="resultado() ? 'check' : 'flag'" />
+  </div>
+
+  @if (erro()) {
+    <div class="notice notice-error" role="alert">{{ erro() }}</div>
+  }
+
+  @if (resultado(); as criados) {
+    <!-- ================= RESULTADO: o que foi registrado e o que a progressão gerou ================= -->
+    <ul class="resultado" role="list">
+      @for (r of criados; track r.registroId; let primeiro = $first) {
+        <li class="resultado-item" [class.gerado]="!primeiro">
+          <app-badge [variant]="NIVEIS[r.nivel].variant" [label]="NIVEIS[r.nivel].rotulo" />
+          <div class="resultado-texto">
+            @if (primeiro) {
+              <b>{{ rotuloSequencia(r) }} registrada</b>
+              <span>{{ r.motivo }}</span>
+            } @else {
+              <b>{{ rotuloSequencia(r) }} gerada automaticamente</b>
+              <span>{{ r.motivo }}</span>
+            }
+            @if (r.suspensaoInicio && r.suspensaoFim) {
+              <span class="resultado-periodo">
+                Suspenso de {{ dataBr(r.suspensaoInicio) }} a {{ dataBr(r.suspensaoFim) }}
+              </span>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+
+    @for (r of criados; track r.registroId) {
+      @if (r.consequencia === 'PERDE_PROXIMO_PASSEIO') {
+        <div class="notice notice-amber" role="status">
+          <app-icon name="alert-triangle" />
+          <span>3ª suspensão: o assistido <b>perde o próximo passeio</b>. Fica pendente até a coordenação registrar.</span>
+        </div>
+      }
+      @if (r.consequencia === 'RETORNO_COM_RESPONSAVEL') {
+        <div class="notice notice-amber" role="status">
+          <app-icon name="alert-triangle" />
+          <span>3ª ocorrência de uniforme: o assistido <b>só retorna acompanhado do responsável</b>.</span>
+        </div>
+      }
+    }
+
+    @if (comDocumento().length > 0) {
+      <p class="form-sec-title">Documento para os pais assinarem</p>
+      <div class="documentos">
+        @for (r of comDocumento(); track r.registroId) {
+          <app-button variant="secondary" (click)="imprimir(r)">
+            <app-icon name="file-text" [size]="16" /> Imprimir {{ NIVEIS[r.nivel].rotulo.toLowerCase() }}
+          </app-button>
+        }
+      </div>
+    }
+
+    <ng-template #footer>
+      <app-button variant="secondary" (click)="registrarOutro()">Registrar outro</app-button>
+      <app-button (click)="fechar()">Concluir</app-button>
+    </ng-template>
+  } @else {
+    <!-- ================= FORMULÁRIO ================= -->
+    @if (!assistido()) {
+      <div class="field">
+        @if (assistidoEscolhido(); as escolhido) {
+          <label>Assistido</label>
+          <div class="assistido-escolhido">
+            <app-avatar [entidadeId]="escolhido.assistidoId" [nome]="escolhido.nomeCompleto" [size]="40" />
+            <span class="assistido-texto">
+              <span class="assistido-nome">{{ escolhido.nomeCompleto }}</span>
+              <span class="assistido-sub">{{ descricaoAssistido(escolhido) }}</span>
+            </span>
+            <button type="button" class="link" (click)="trocarAssistido()">Trocar</button>
+          </div>
+        } @else {
+          <app-input
+            label="Assistido"
+            placeholder="Buscar pelo nome…"
+            [ngModel]="termoBusca()"
+            (ngModelChange)="onBusca($event)"
+          />
+          @if (termoBusca().trim()) {
+          <div class="busca-area" [class.buscando]="buscando()" aria-live="polite">
+            @if (resultadosBusca().length > 0) {
+              <ul class="busca-resultados" role="listbox" aria-label="Assistidos">
+                @for (a of resultadosBusca(); track a.assistidoId) {
+                  <li>
+                    <button type="button" role="option" [attr.aria-selected]="false" (click)="escolherAssistido(a)">
+                      <app-avatar [entidadeId]="a.assistidoId" [nome]="a.nomeCompleto" [size]="36" />
+                      <span class="assistido-texto">
+                        <span class="assistido-nome">{{ a.nomeCompleto }}</span>
+                        <span class="assistido-sub">{{ descricaoAssistido(a) }}</span>
+                      </span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            } @else if (buscando()) {
+              <p class="hint">Buscando…</p>
+            } @else {
+              <p class="hint">Nenhum assistido ativo encontrado.</p>
+            }
+          </div>
+          }
+        }
+      </div>
+    }
+
+    <fieldset class="motivo-fieldset" [attr.aria-describedby]="erroMotivo() ? 'registro-motivo-erro' : null">
+      <legend class="field-legend">Motivo</legend>
+      @for (grupo of gruposMotivos(); track grupo.nivel) {
+        <div class="motivo-grupo">
+          <span class="motivo-grupo-rotulo">{{ grupo.rotulo }}</span>
+          <div class="chips" role="group" [attr.aria-label]="grupo.rotulo">
+            @for (m of grupo.motivos; track m.motivoId) {
+              <button
+                type="button"
+                class="chip"
+                [class.ativo]="motivoId() === m.motivoId"
+                [attr.aria-pressed]="motivoId() === m.motivoId"
+                (click)="motivoId.set(m.motivoId)"
+              >
+                {{ m.nome }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+      @if (erroMotivo(); as msg) {
+        <p id="registro-motivo-erro" class="app-input-error" role="alert">{{ msg }}</p>
+      }
+      @if (nivelSelecionado(); as nivel) {
+        <p class="nivel-dica">
+          <app-badge [variant]="NIVEIS[nivel].variant" [label]="NIVEIS[nivel].rotulo" />
+          <span>Pedir desculpas. {{ NIVEIS[nivel].consequencia }}</span>
+        </p>
+      }
+    </fieldset>
+
+    <app-input
+      label="Data"
+      type="date"
+      [max]="hoje"
+      [required]="true"
+      [errorMessage]="erroData()"
+      [ngModel]="data()"
+      (ngModelChange)="onData($event)"
+    />
+
+    @if (ehSuspensao()) {
+      <div class="form-row">
+        <app-input
+          label="Suspenso de"
+          type="date"
+          [errorMessage]="erroSuspensao()"
+          [ngModel]="suspensaoInicio()"
+          (ngModelChange)="suspensaoInicio.set($event)"
+        />
+        <app-input
+          label="Até"
+          type="date"
+          [min]="suspensaoInicio()"
+          [ngModel]="suspensaoFim()"
+          (ngModelChange)="suspensaoFim.set($event)"
+        />
+      </div>
+    }
+
+    <div class="field">
+      <label for="registro-descricao">O que aconteceu</label>
+      <textarea
+        id="registro-descricao"
+        rows="4"
+        placeholder="Descreva o fato com objetividade (onde, com quem, o que foi dito/feito)."
+        [ngModel]="descricao()"
+        (ngModelChange)="descricao.set($event)"
+        [attr.aria-invalid]="erroDescricao() ? true : null"
+        [attr.aria-describedby]="erroDescricao() ? 'registro-descricao-erro' : null"
+      ></textarea>
+      @if (erroDescricao(); as msg) {
+        <p id="registro-descricao-erro" class="app-input-error" role="alert">{{ msg }}</p>
+      }
+    </div>
+
+    <ng-template #footer>
+      <app-button variant="secondary" (click)="fechar()">Cancelar</app-button>
+      <app-button [loading]="salvando()" (click)="registrar()">Registrar</app-button>
+    </ng-template>
+  }
+</app-modal>

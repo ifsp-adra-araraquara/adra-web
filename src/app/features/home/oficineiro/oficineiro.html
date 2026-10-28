@@ -80,6 +80,42 @@
         />
       </div>
     </div>
+    <!-- Atalho: aula de hoje (ou a próxima, se hoje não tiver) -->
+    <div class="hoje-bloco">
+      @if (aulasDeHoje().length) {
+        <p class="hoje-titulo"><span class="tag-hoje">Hoje</span> {{ aulasDeHoje().length === 1 ? 'Sua aula de hoje' : 'Suas aulas de hoje' }}</p>
+        <div class="hoje-cards">
+          @for (aula of aulasDeHoje(); track aula.aulaId) {
+          <article class="hoje-card">
+            <div class="hoje-card__info">
+              <strong>{{ aula.titulo || 'Aula sem título' }}</strong>
+              <span class="subtle">{{ horario(aula) }} · {{ aula.nomeTurma || '-' }} · {{ aula.quantidadeAlunos ?? 0 }} alunos</span>
+            </div>
+            <app-badge [status]="situacaoAula(aula)" />
+            <app-button size="sm" [disabled]="!podeAbrir(aula)" (click)="abrirAula(aula)">Ir para a aula</app-button>
+          </article>
+          }
+        </div>
+      } @else if (proximaAula(); as prox) {
+        <p class="hoje-vazio">Você não tem aula hoje. Próxima: <strong>{{ dataCurta(prox.dataAula) }}</strong>, {{ horario(prox) }} · {{ prox.nomeTurma || '-' }}{{ prox.titulo ? ' · ' + prox.titulo : '' }}</p>
+      } @else {
+        <p class="hoje-vazio">Você não tem aula hoje.</p>
+      }
+    </div>
+
+    <!-- Filtro por situação -->
+    <div class="filtro-situacao" role="group" aria-label="Filtrar aulas por status">
+      @for (op of opcoesSituacao(); track op.rotulo) {
+      <button
+        type="button"
+        class="chip-situacao"
+        [class.ativo]="filtroSituacao() === op.valor"
+        [attr.aria-pressed]="filtroSituacao() === op.valor"
+        (click)="selecionarSituacao(op.valor)"
+      >{{ op.rotulo }} <span class="chip-total">{{ op.total }}</span></button>
+      }
+    </div>
+
     <div class="table-wrap" role="region" tabindex="0" aria-label="Aulas">
       <table class="aulas-table-principal">
         <thead>
@@ -87,16 +123,14 @@
           <th>Data</th>
           <th>Horário</th>
           <th>Turma</th>
-          <th>Oficineiro</th>
           <th>Alunos</th>
           <th>Título</th>
           <th>Conteúdo previsto</th>
-          <th>Conteúdo ministrado</th>
           <th>Status</th>
         </tr>
         </thead>
         <tbody>
-        @for (aula of aulas(); track aula.aulaId) {
+        @for (aula of aulasVisiveis(); track aula.aulaId) {
         <tr
           [class.linha-hoje]="ehHoje(aula)"
           [class.linha-bloqueada]="!podeAbrir(aula)"
@@ -105,20 +139,32 @@
           [attr.tabindex]="podeAbrir(aula) ? 0 : null"
           (keydown.enter)="abrirAula(aula)"
         >
-          <td>{{ aula.dataAula }} @if (ehHoje(aula)) { <span class="tag-hoje">Hoje</span> }</td>
-          <td>{{ aula.horarioInicio && aula.horarioFim ? aula.horarioInicio + ' - ' + aula.horarioFim : '-' }}</td>
+          <td>{{ dataCurta(aula.dataAula) }} @if (ehHoje(aula)) { <span class="tag-hoje">Hoje</span> }</td>
+          <td>{{ horario(aula) }}</td>
           <td>{{ aula.nomeTurma || '-' }}</td>
-          <td>{{ aula.nomeOficineiro || '-' }}</td>
           <td>{{ aula.quantidadeAlunos ?? '-' }}</td>
-          <td>{{ aula.titulo || '-' }}</td>
-          <td>{{ aula.conteudoPrevisto || '-' }}</td>
-          <td>{{ aula.conteudoMinistrado || '-' }}</td>
+          <td class="celula-texto" [attr.title]="aula.titulo || null">{{ aula.titulo || '-' }}</td>
+          <td class="celula-texto" [attr.title]="aula.conteudoPrevisto || null">{{ aula.conteudoPrevisto || '-' }}</td>
           <td><app-badge [status]="situacaoAula(aula)" /></td>
         </tr>
-        } @empty { <tr><td colspan="9" class="empty">{{ filtroTurmaId() ? 'Nenhuma aula cadastrada para esta turma.' : 'Nenhuma aula cadastrada para suas turmas.' }}</td></tr> }
+        } @empty {
+        <tr><td colspan="7" class="empty">
+          @if (filtroSituacao()) { Nenhuma aula com este status. }
+          @else if (filtroTurmaId()) { Nenhuma aula cadastrada para esta turma. }
+          @else { Nenhuma aula cadastrada para suas turmas. }
+        </td></tr>
+        }
         </tbody>
       </table>
     </div>
+    @if (aulasFiltradas().length) {
+    <div class="rodape-aulas">
+      <span class="subtle">Mostrando {{ aulasVisiveis().length }} de {{ aulasFiltradas().length }} aulas</span>
+      @if (aulasVisiveis().length < aulasFiltradas().length) {
+      <app-button variant="secondary" size="sm" (click)="mostrarMaisAulas()">Mostrar mais</app-button>
+      }
+    </div>
+    }
   </section>
   }
   @case ('calendario') {
@@ -136,11 +182,61 @@
   }
   @case ('materiais') {
   <section class="panel" aria-labelledby="materiais-titulo">
-    <div class="panel-header"><div><h2 id="materiais-titulo">Materiais didáticos</h2><span class="subtle">Filtrados pelas suas turmas</span></div><app-button size="sm" (click)="mostrarUploadMaterial.set(true)"><app-icon name="plus" [size]="16" /> Novo material</app-button></div>
-    <div class="material-grid">
-      @for (material of materiais(); track material.materialId) {
-      <article class="material-card"><div class="material-icon">{{ material.tipo }}</div><h3>{{ material.titulo }}</h3><p>{{ material.nomeTurma || material.nomeOficina || 'Sem vínculo informado' }}</p><a class="secondary-button" [href]="material.url" target="_blank" rel="noopener">Abrir</a></article>
-      } @empty { <p class="empty">Nenhum material disponível para suas turmas.</p> }
+    <div class="panel-header">
+      <div><h2 id="materiais-titulo">Materiais didáticos</h2><span class="subtle">Os materiais que você enviou, agrupados por aula</span></div>
+      <div class="materiais-acoes">
+        <label for="filtro-turma-materiais" class="sr-only">Filtrar por turma</label>
+        <app-select
+          id="filtro-turma-materiais"
+          [ngModel]="filtroTurmaMateriais()"
+          (ngModelChange)="onFiltroTurmaMateriaisChange($event)"
+          [options]="turmasFiltroOptions()"
+        />
+        <app-button size="sm" (click)="abrirUploadMaterial()"><app-icon name="plus" [size]="16" /> Novo material</app-button>
+      </div>
+    </div>
+    @if (sucessoMaterial()) {
+    <p class="feedback sucesso materiais-sucesso" role="status">{{ sucessoMaterial() }}</p>
+    }
+    <div class="table-wrap" role="region" tabindex="0" aria-label="Materiais por aula">
+      <table class="materiais-table">
+        <thead>
+        <tr>
+          <th>Aula</th>
+          <th>Data</th>
+          <th>Turma</th>
+          <th>Status</th>
+          <th>Materiais</th>
+        </tr>
+        </thead>
+        <tbody>
+        @for (aula of materiais(); track aula.aulaId) {
+        <tr>
+          <td class="strong">{{ aula.titulo || 'Aula sem título' }}</td>
+          <td>{{ dataBr(aula.dataAula) }}</td>
+          <td>{{ aula.nomeTurma || '-' }}</td>
+          <td><app-badge [status]="situacaoAulaMaterial(aula)" /></td>
+          <td>
+            <ul class="lista-materiais">
+              @for (arq of aula.arquivos; track arq.arquivoId) {
+              <li>
+                <app-icon name="file-text" [size]="15" />
+                <span class="nome-material" [title]="arq.nomeOriginal || 'material.pdf'">{{ arq.nomeOriginal || 'material.pdf' }}</span>
+                <span class="subtle">{{ tamanhoLegivel(arq.tamanhoBytes) }}</span>
+                <button type="button" class="secondary-button botao-abrir" [disabled]="abrindoArquivoId() === arq.arquivoId" (click)="abrirMaterial(arq.arquivoId)">Abrir</button>
+                <button type="button" class="secondary-button botao-excluir" [disabled]="excluindoArquivoId() === arq.arquivoId" (click)="excluirMaterial(arq.arquivoId)">
+                  {{ confirmandoExclusaoId() === arq.arquivoId ? 'Confirmar' : 'Excluir' }}
+                </button>
+              </li>
+              }
+            </ul>
+          </td>
+        </tr>
+        } @empty {
+        <tr><td colspan="5" class="empty">{{ filtroTurmaMateriais() ? 'Nenhum material enviado para esta turma.' : 'Nenhum material enviado para suas turmas.' }}</td></tr>
+        }
+        </tbody>
+      </table>
     </div>
   </section>
   }
@@ -197,9 +293,34 @@
   }
 
   @if (mostrarUploadMaterial()) {
-  <app-modal [open]="true" title="Novo material" (closed)="mostrarUploadMaterial.set(false)">
-      <label>Arquivo<input type="file" class="input" (change)="selecionarArquivo($event)" accept=".pdf,.mp4,.doc,.docx,.ppt,.pptx"></label>
-      <ng-template #footer><app-button variant="secondary" (click)="mostrarUploadMaterial.set(false)">Cancelar</app-button><app-button [loading]="enviandoMaterial()" (click)="enviarMaterial()">Enviar</app-button></ng-template>
+  <app-modal [open]="true" title="Novo material" (closed)="fecharUploadMaterial()">
+      <div class="dialog-body">
+        <label>Turma
+          <app-select
+            [options]="turmasMaterialOptions()"
+            [ngModel]="materialTurmaId()"
+            (ngModelChange)="selecionarTurmaMaterial($event)"
+          />
+        </label>
+        <label>A qual aula deseja vincular este material?
+          <app-select
+            [options]="aulasMaterialOptions()"
+            [ngModel]="materialAulaId()"
+            (ngModelChange)="materialAulaId.set($event)"
+            [disabled]="!materialTurmaId() || carregandoAulasMaterial() || !aulasDaTurmaMaterial().length"
+          />
+        </label>
+        <label>Arquivo
+          <input type="file" class="input" accept="application/pdf,.pdf" (change)="selecionarArquivo($event)">
+          <span class="hint-material">
+            @if (arquivoMaterial(); as arq) { {{ arq.name }} ({{ tamanhoLegivel(arq.size) }}) } @else { PDF de até 2 MB }
+          </span>
+        </label>
+        @if (erroMaterial()) {
+        <p class="feedback error" role="alert">{{ erroMaterial() }}</p>
+        }
+      </div>
+      <ng-template #footer><app-button variant="secondary" (click)="fecharUploadMaterial()">Cancelar</app-button><app-button [loading]="enviandoMaterial()" [disabled]="!podeEnviarMaterial()" (click)="enviarMaterial()">Enviar</app-button></ng-template>
   </app-modal>
   }
 
@@ -250,10 +371,4 @@
     [aberto]="turmaAulasSelecionada() !== null"
     (fechar)="fecharAulasDaTurma()">
   </app-aulas-turma-modal>
-
-  <app-aula-modal
-    [aula]="aulaAberta()"
-    (fechar)="fecharAulaModal()"
-    (chamadaSalva)="aoSalvarChamada()">
-  </app-aula-modal>
 </section>

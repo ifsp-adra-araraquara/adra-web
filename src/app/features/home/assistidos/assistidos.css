@@ -18,24 +18,6 @@
    LISTAGEM — celular (cartões) → iPad (cartões 2 col) → tabela compacta → tabela completa
    ============================================================ */
 
-/* Cabeçalho: título + botão na mesma linha; descrição embaixo, na largura toda */
-.cabecalho {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 6px 16px;
-  margin-bottom: 18px;
-}
-.cabecalho-titulo { margin: 0; }
-.cabecalho-acao { grid-column: 2; grid-row: 1; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
-.cabecalho-intro {
-  grid-column: 1 / -1;
-  max-width: 72ch;
-  margin: 0;
-  font-size: 13.5px;
-  line-height: 1.5;
-  color: var(--gray-600);
-}
 
 /* Abas roláveis no celular em vez de quebrar em duas linhas */
 .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
@@ -162,34 +144,7 @@
   border-bottom: none;
 }
 
-.form-sec-title {
-  font-size: 13px;
-  font-weight: 700;
-  margin: 0 0 14px;
-  color: #374151;
-}
-
-.form-sec-title:not(:first-child) {
-  margin-top: 24px;
-}
-
-.form-row {
-  display: grid;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.field label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #374151;
-}
+/* Título de seção, linha, campo e rótulo: padrão global (styles.css), igual ao app-input. */
 
 .textarea {
   resize: vertical;
@@ -218,9 +173,6 @@
 }
 
 
-/* Foto de perfil no modal de novo assistido */
-.foto-novo { margin-bottom: 16px; }
-
 /* Avatar + nome (tabela, cartões e ficha) */
 .pessoa { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .pessoa-texto { min-width: 0; }
@@ -242,29 +194,6 @@
     gap: 24px;
   }
 }
-
-/* Responsáveis já informados no cadastro (ainda não gravados) */
-.resp-lista { display: flex; flex-direction: column; gap: 10px; margin-bottom: 8px; }
-.resp-card--editando { border-color: var(--color-adra-green-400); }
-.resp-card__topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
-.resp-card__acoes { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-.resp-card__dados {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px 14px;
-  margin: 0;
-  font-size: 13px;
-}
-.resp-card__dados dt { font-size: 11px; color: var(--gray-600); }
-.resp-card__dados dd { margin: 0; color: var(--gray-800); overflow-wrap: anywhere; }
-.resp-card__largo { grid-column: 1 / -1; }
-@media (min-width: 720px) {
-  .resp-card__dados { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-}
-
-.resp-form { margin-bottom: 8px; }
-.resp-form__titulo { font-weight: 600; margin: 0 0 12px; }
-.resp-form__acoes { display: flex; gap: 8px; margin-top: 12px; }
 
 /* Aba Permissões */
 .permissoes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }

@@ -1,0 +1,183 @@
+<section class="painel" aria-labelledby="painel-titulo">
+  <!-- ======================= Cabeçalho + filtros ======================= -->
+  <header class="topo">
+    <div class="topo-texto">
+      <p class="topo-rotulo">Painel</p>
+      <h1 id="painel-titulo">{{ saudacao() }}</h1>
+      <p class="topo-sub">
+        <span>{{ dataHoje() }}</span>
+        @if (atualizadoAs()) { <span class="topo-ponto" aria-hidden="true">·</span><span>dados de {{ tituloMes() }}, atualizados às {{ atualizadoAs() }}</span> }
+      </p>
+    </div>
+
+    <div class="filtros" role="group" aria-label="Filtros do painel">
+      <label class="filtro-oficina">
+        <span class="sr-only">Oficina</span>
+        <select [value]="oficinaId() ?? ''" (change)="mudarOficina($any($event.target).value)">
+          <option value="">Todas as oficinas</option>
+          @for (o of oficinas(); track o.oficinaId) {
+            <option [value]="o.oficinaId">{{ o.nome }}</option>
+          }
+        </select>
+        <app-icon name="chevron-right" [size]="14" class="filtro-seta" />
+      </label>
+
+      <div class="mes" role="group" aria-label="Mês">
+        <button type="button" class="mes-btn" aria-label="Mês anterior" (click)="mudarMes(-1)">
+          <app-icon name="chevron-left" [size]="16" />
+        </button>
+        <span class="mes-rotulo" aria-live="polite">{{ tituloMes() }}</span>
+        <button type="button" class="mes-btn" aria-label="Próximo mês" [disabled]="ehMesAtual()" (click)="mudarMes(1)">
+          <app-icon name="chevron-right" [size]="16" />
+        </button>
+      </div>
+
+      <button type="button" class="icone-btn" aria-label="Atualizar números" title="Atualizar" (click)="atualizar()">
+        <app-icon name="rotate-ccw" [size]="16" />
+      </button>
+    </div>
+  </header>
+
+  @if (erroMes()) {
+    <div class="aviso aviso-erro" role="alert">
+      <app-icon name="alert-circle" [size]="16" />
+      <span>{{ erroMes() }}</span>
+      <button type="button" class="link" (click)="atualizar()">Tentar de novo</button>
+    </div>
+  }
+
+  @if (mensal() || !erroMes()) {
+    <app-painel-indicadores class="indicadores" [class.carregando]="carregandoMes() && !!mensal()" [mensal]="mensal()" />
+  }
+
+  <div class="layout" [class.carregando]="carregandoMes() && !!mensal()" [attr.aria-busy]="carregandoMes()">
+    <!-- ======================= Coluna principal: análise do mês ======================= -->
+    <div class="principal">
+
+      <app-painel-tendencia class="tendencia" [pontos]="mensal()?.tendencia ?? null" />
+      <app-painel-turmas class="turmas" [dados]="mensal()?.turmas ?? null" [mes]="mes()" [filtrado]="oficinaId() != null" />
+
+      <!-- Faixa etária -->
+      <section class="bloco faixas" aria-labelledby="faixas-titulo">
+        <header class="bloco-topo">
+          <h2 id="faixas-titulo">Faixa etária <span class="titulo-sub">assistidos ativos</span></h2>
+        </header>
+        @if (mensal()) {
+          @if (faixas(); as f) {
+            @if (f.total === 0) {
+              <p class="vazio">Nenhum assistido ativo{{ oficinaId() ? ' nesta oficina' : '' }}.</p>
+            } @else {
+              <div class="rosca-area">
+                <div class="rosca" role="img" [attr.aria-label]="f.descricao">
+                  <svg viewBox="0 0 120 120" aria-hidden="true">
+                    <circle class="rosca-fundo" cx="60" cy="60" [attr.r]="RAIO_ROSCA" />
+                    @for (s of f.segmentos; track s.rotulo) {
+                      <circle cx="60" cy="60" [attr.r]="RAIO_ROSCA" [attr.stroke]="s.cor"
+                              [attr.stroke-dasharray]="s.traco" [attr.stroke-dashoffset]="s.deslocamento">
+                        <title>{{ s.legenda }}: {{ s.total }} ({{ s.percentual }}%)</title>
+                      </circle>
+                    }
+                  </svg>
+                  <span class="rosca-centro" aria-hidden="true"><b>{{ f.total }}</b><small>total</small></span>
+                </div>
+                <ul class="rosca-legenda" role="list">
+                  @for (s of f.segmentos; track s.rotulo) {
+                    <li>
+                      <span class="amostra" [style.background]="s.cor"></span>
+                      <span class="rosca-rotulo">{{ s.legenda }}</span>
+                      <b>{{ s.total }}</b>
+                      <small>{{ s.percentual }}%</small>
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
+          }
+        } @else {
+          <div class="esq esq-curto" aria-hidden="true"></div>
+        }
+      </section>
+    </div>
+
+    <!-- ======================= Coluna lateral: hoje ======================= -->
+    <div class="lateral">
+
+      <app-painel-atencao class="atencao" [hoje]="hoje()" [erro]="erroHoje()" />
+
+      <!-- Disciplina do mês -->
+      <section class="bloco disciplina" aria-labelledby="disciplina-titulo">
+        <header class="bloco-topo">
+          <div>
+            <h2 id="disciplina-titulo">Disciplina no mês</h2>
+            @if (disciplina(); as d) {
+              <p class="bloco-sub">{{ d.total }} {{ d.total === 1 ? 'registro' : 'registros' }} ·
+                <span [class]="'texto-' + d.variacao.tom">{{ d.variacao.seta }} {{ d.variacao.texto }}</span></p>
+            }
+          </div>
+        </header>
+        @if (disciplina(); as d) {
+          @if (d.total === 0) {
+            <p class="vazio">Nenhum registro em {{ tituloMes() }}.</p>
+          } @else {
+            <div class="empilhada" role="img" [attr.aria-label]="'Registros por nível: ' + d.total">
+              @for (s of d.segmentos; track s.nivel) {
+                @if (s.valor > 0) { <span [style.width.%]="s.largura" [style.background]="s.cor" [title]="s.rotulo + ': ' + s.valor"></span> }
+              }
+            </div>
+            <ul class="legenda" role="list">
+              @for (s of d.segmentos; track s.nivel) {
+                <li [class.zerado]="s.valor === 0"><span class="amostra" [style.background]="s.cor"></span>{{ s.rotulo }}<b>{{ s.valor }}</b></li>
+              }
+            </ul>
+          }
+        } @else {
+          <div class="esq esq-curto" aria-hidden="true"></div>
+        }
+      </section>
+
+      <!-- Esta semana -->
+      @if (hoje(); as h) {
+        @if (h.aniversariantes.length > 0) {
+          <section class="bloco semana" aria-labelledby="semana-titulo">
+            <header class="bloco-topo"><h2 id="semana-titulo">Aniversariantes da semana</h2></header>
+            <ul role="list">
+              @for (a of h.aniversariantes; track a.assistidoId) {
+                <li>
+                  <button type="button" class="item" (click)="abrirAssistido(a.assistidoId)">
+                    <app-avatar [entidadeId]="a.assistidoId" [nome]="a.nome" [size]="28" />
+                    <span class="item-texto"><b>{{ a.nome }}</b><small>{{ a.idade }} anos · {{ a.turma || 'Sem turma' }}</small></span>
+                    <span class="item-fim" [class.texto-destaque]="a.dia === h.hoje">{{ diaAniversario(a.dia) }}</span>
+                  </button>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      }
+
+      <!-- Atividade recente -->
+      <section class="bloco atividade" aria-labelledby="atividade-titulo">
+        <header class="bloco-topo"><h2 id="atividade-titulo">Atividade recente</h2></header>
+        @if (hoje(); as h) {
+          @if (h.atividades.length === 0) {
+            <p class="vazio">Sem movimentação ainda.</p>
+          } @else {
+            <ol class="linha-tempo" role="list">
+              @for (a of h.atividades; track a.tipo + a.referenciaId) {
+                <li>
+                  <button type="button" class="evento" (click)="abrirAtividade(a)">
+                    <span class="evento-icone" [class]="'evento-' + a.tipo.toLowerCase()"><app-icon [name]="iconeAtividade(a)" [size]="13" /></span>
+                    <span class="item-texto"><b>{{ a.titulo }}</b><small>{{ textoAtividade(a) }}</small></span>
+                    <span class="item-fim">{{ quando(a.quando) }}</span>
+                  </button>
+                </li>
+              }
+            </ol>
+          }
+        } @else {
+          <div class="esq esq-lista" aria-hidden="true"></div>
+        }
+      </section>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,44 @@
+:host { display: block; min-width: 0; }
+
+/* ---------- Turmas ---------- */
+.tabela ul { list-style: none; margin: 0; padding: 0; }
+.tabela-cabeca { display: none; }
+.tabela li + li { border-top: 1px solid var(--linha); }
+.tabela-linha {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "turma freq" "info info";
+  align-items: center; gap: 6px 12px; width: 100%; padding: 12px 8px; margin: 0;
+  border: none; border-radius: 8px; background: none; font: inherit; text-align: left; color: inherit; cursor: pointer;
+}
+.tabela-linha:hover { background: var(--gray-50); }
+.tabela-linha:focus-visible { outline: 3px solid var(--color-brand-ring); outline-offset: -3px; }
+.cel-turma { grid-area: turma; display: flex; flex-direction: column; min-width: 0; }
+.cel-turma b { font-size: 14px; font-weight: 500; color: var(--texto); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cel-turma small { font-size: 13px; color: var(--texto-2); }
+.cel-alunos, .cel-aulas { font-size: 13.5px; color: var(--texto-2); font-variant-numeric: tabular-nums; }
+.cel-alunos small { color: var(--texto-3); }
+.cel-alunos { grid-area: info; }
+.cel-aulas { grid-area: info; justify-self: end; }
+.pendente { margin-left: 6px; color: var(--amber-600); font-weight: 500; white-space: nowrap; }
+.cel-freq { grid-area: freq; display: flex; align-items: center; gap: 10px; }
+.trilho { position: relative; display: none; height: 8px; border-radius: 0 4px 4px 0; background: var(--gray-50); }
+.preenchido { position: absolute; inset: 0 auto 0 0; border-radius: 0 4px 4px 0; background: var(--serie); }
+.preenchido.abaixo { background: var(--alerta); }
+.marca-minima { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--texto-3); }
+.freq-valor { display: inline-flex; align-items: center; justify-content: flex-end; gap: 3px; min-width: 52px; font-size: 14px; font-weight: 600; color: var(--texto); font-variant-numeric: tabular-nums; }
+.freq-valor.abaixo { color: var(--amber-600); }
+.freq-valor.sem-dado { color: var(--texto-3); font-weight: 400; }
+
+
+@media (min-width: 720px) {
+  .tabela-cabeca, .tabela-linha {
+    display: grid; grid-template-columns: minmax(0, 2.2fr) 80px 110px minmax(160px, 1.6fr);
+    grid-template-areas: none; align-items: center; gap: 12px;
+  }
+  .tabela-cabeca { padding: 0 8px 8px; border-bottom: 1px solid var(--linha); font-size: 12.5px; font-weight: 500; color: var(--texto-3); }
+  .tabela-linha { padding: 10px 8px; }
+  .cel-turma, .cel-alunos, .cel-aulas, .cel-freq { grid-area: auto; justify-self: stretch; }
+  .rotulo-movel { display: none; }
+  .cel-aulas { display: flex; flex-direction: column; }
+  .pendente { margin: 0; font-size: 12.5px; }
+  .trilho { display: block; flex: 1; }
+}

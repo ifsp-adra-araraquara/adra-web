@@ -6,30 +6,7 @@
    estilos aqui são só o conteúdo projetado nos modais (formulários).
    ========================= */
 
-.form-row {
-  display: grid;
-
-  gap: 22px;
-
-  margin-bottom: 20px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-
-  gap: 8px;
-
-  margin-bottom: 20px;
-}
-
-.field label {
-  font-size: 13px;
-
-  font-weight: 600;
-
-  color: #374151;
-}
+/* Linha, campo e rótulo: padrão global (styles.css), igual ao app-input. */
 
 textarea {
   resize: vertical;

@@ -1,0 +1,177 @@
+/* Cadastro de assistido — página. Campos, cards e títulos de seção vêm do global. */
+
+.cadastro {
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+.bloco {
+  margin-bottom: 16px;
+}
+
+textarea {
+  width: 100%;
+  min-height: 80px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.vazio {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--gray-600);
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ---------- Etapa 1: CPF ---------- */
+
+/* O app-input traz 16px de margem embaixo: o botão sobe o mesmo tanto para alinhar com o campo. */
+.busca-cpf__form {
+  display: grid;
+  gap: 0 12px;
+  align-items: end;
+}
+
+.busca-cpf__form app-button {
+  margin-bottom: 16px;
+}
+
+.link {
+  padding: 4px 0;
+  border: none;
+  background: none;
+  color: var(--color-adra-green-600);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.existente {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--borda);
+}
+
+.existente__dados {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+  margin: 0 0 16px;
+  font-size: 14px;
+}
+
+.existente__dados dt,
+.cpf-fixo {
+  font-size: 12px;
+  color: var(--gray-600);
+}
+
+.existente__dados dd {
+  margin: 0;
+  color: var(--gray-800);
+}
+
+/* ---------- Etapa 2: formulário ---------- */
+
+.cpf-fixo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+.cpf-fixo b {
+  color: var(--gray-800);
+  font-variant-numeric: tabular-nums;
+}
+
+.midia-cadastro {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 16px;
+}
+
+.resp-lista {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.resp-card {
+  padding: 12px 14px;
+  border: 1px solid var(--borda);
+  border-radius: var(--radius);
+}
+
+.resp-card__topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.resp-card__topo .cell-sub {
+  display: block;
+}
+
+.resp-card__acoes {
+  display: flex;
+  gap: 6px;
+}
+
+.resp-card__selos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* Ações fixas no fim da tela enquanto rola o formulário. */
+.rodape {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin: 0 -4px;
+  padding: 12px 4px;
+  background: rgba(255, 255, 255, 0.94);
+  border-top: 1px solid var(--borda);
+  backdrop-filter: blur(6px);
+}
+
+.rodape .notice {
+  margin-bottom: 10px;
+}
+
+.rodape .acoes {
+  justify-content: flex-end;
+}
+
+@media (min-width: 720px) {
+  .busca-cpf__form {
+    grid-template-columns: minmax(0, 320px) auto;
+    justify-content: start;
+  }
+
+  .existente__dados {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .midia-cadastro {
+    grid-template-columns: auto 1fr;
+    gap: 24px;
+  }
+}

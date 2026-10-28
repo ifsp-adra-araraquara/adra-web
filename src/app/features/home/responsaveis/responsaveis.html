@@ -1,10 +1,13 @@
 <div>
-  <div class="card-head" style="border: none; padding: 0 0 18px;">
-    <h1>Responsáveis</h1>
-    <div class="right">
+  <header class="page-header">
+    <div class="page-header-texto">
+      <h1>Responsáveis</h1>
+      <p class="page-intro">Pais, mães e demais responsáveis vinculados aos assistidos.</p>
+    </div>
+    <div class="page-header-acoes">
       <app-button size="sm" (click)="abrirNovo()"><app-icon name="plus" [size]="16" /> Novo responsável</app-button>
     </div>
-  </div>
+  </header>
 
   @if (carregando()) {
     <div class="muted">Carregando...</div>
@@ -47,6 +50,7 @@
                 <th>Nome</th>
                 <th>CPF</th>
                 <th>Telefone</th>
+                <th>Assistidos</th>
                 <th>Ações</th>
               </tr>
             </thead>
@@ -57,14 +61,17 @@
                   <td>{{ responsavel.cpf }}</td>
                   <td>{{ responsavel.telefone || '-' }}</td>
                   <td>
-                    <div class="t-actions">
-                      <button type="button" aria-label="Ver responsável" appTooltip="Ver responsável" (click)="abrirVisualizacao(responsavel)">
-                        <app-icon name="eye" />
-                      </button>
-                      <button type="button" aria-label="Editar responsável" appTooltip="Editar responsável" (click)="abrirEdicao(responsavel)">
-                        <app-icon name="edit" />
-                      </button>
-                    </div>
+                    <span class="vinculos" [class.vinculos-zero]="!responsavel.totalAssistidos"
+                          [attr.title]="responsavel.totalAssistidos ? (responsavel.assistidosAtivos ?? 0) + ' ativo(s) de ' + responsavel.totalAssistidos : 'Sem assistido vinculado'">
+                      <app-icon name="users" [size]="14" /> {{ resumoVinculos(responsavel) }}
+                    </span>
+                  </td>
+                  <td>
+                    <app-action-menu
+                      [label]="'Ações de ' + responsavel.nomeCompleto"
+                      [itens]="acoesResponsavel"
+                      (selecionado)="executarAcao($event, responsavel)"
+                    />
                   </td>
                 </tr>
               }
@@ -82,11 +89,42 @@
       </div>
 
       <p class="form-sec-title">
-        Dados pessoais
-        <app-button size="sm" variant="secondary" class="sec-acao" (click)="editarPelaVisualizacao()">
-          <app-icon name="edit" [size]="16" /> Editar
-        </app-button>
+        Assistidos vinculados
+        @if (assistidosVinculados(); as lista) { <span class="contagem-vinculos">{{ lista.length }}</span> }
       </p>
+      @if (erroVinculados()) {
+        <p class="cell-sub">Não foi possível carregar os assistidos vinculados.</p>
+      } @else if (assistidosVinculados(); as lista) {
+        @if (lista.length === 0) {
+          <p class="cell-sub vinculos-vazio">Nenhum assistido vinculado a este responsável.</p>
+        } @else {
+          <ul class="lista-vinculados" role="list">
+            @for (a of lista; track a.assistidoId) {
+              <li>
+                <button type="button" class="vinculado" (click)="abrirAssistido(a.assistidoId)"
+                        [attr.aria-label]="'Abrir ficha de ' + a.nomeCompleto">
+                  <app-avatar [entidadeId]="a.assistidoId" [nome]="a.nomeCompleto" [size]="36" />
+                  <span class="vinculado-texto">
+                    <b>{{ a.nomeCompleto }}</b>
+                    <small>{{ a.parentesco || 'Parentesco não informado' }} · {{ a.nomeTurma || 'Sem turma' }}</small>
+                    <span class="vinculado-papeis">
+                      @if (a.status !== StatusGeral.ATIVO) { <app-badge variant="gray" label="Inativo" /> }
+                      @if (a.responsavelPrincipal) { <app-badge variant="green" label="Principal" /> }
+                      @if (a.autorizadoRetirada) { <app-badge variant="blue" label="Pode buscar" /> }
+                      @if (a.contatoEmergencia) { <app-badge variant="amber" label="Emergência" /> }
+                    </span>
+                  </span>
+                  <app-icon name="chevron-right" [size]="16" class="vinculado-seta" />
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      } @else {
+        <p class="cell-sub">Carregando assistidos…</p>
+      }
+
+      <p class="form-sec-title">Dados pessoais</p>
 
       <div class="form-row">
         <div class="field">

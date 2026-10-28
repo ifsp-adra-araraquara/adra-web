@@ -10,4 +10,7 @@ export interface ArquivoResponseDTO {
   mimeType: string;
   tamanhoBytes: number;
   criadoEm: string;
+  /** Quem enviou (null em arquivos antigos sem autor gravado). */
+  enviadoPorId: number | null;
+  enviadoPorNome: string | null;
 }

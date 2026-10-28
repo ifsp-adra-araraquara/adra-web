@@ -1,0 +1,72 @@
+<section class="bloco atencao" aria-labelledby="atencao-titulo">
+  <header class="bloco-topo">
+    <h2 id="atencao-titulo">Precisa de atenção</h2>
+    @if (totalAtencao() > 0) { <span class="contador">{{ totalAtencao() }}</span> }
+  </header>
+
+  @if (erro()) {
+    <p class="vazio">{{ erro() }}</p>
+  } @else if (hoje(); as h) {
+    @if (totalAtencao() === 0) {
+      <p class="vazio vazio-ok"><app-icon name="check" [size]="16" /> Nada pendente hoje.</p>
+    }
+
+    @if (h.faltasSeguidas.total > 0) {
+      <div class="grupo">
+        <h3 class="grupo-titulo"><span class="sinal sinal-ruim"></span>Faltas seguidas<span class="grupo-total">{{ h.faltasSeguidas.total }}</span></h3>
+        <ul role="list">
+          @for (a of h.faltasSeguidas.itens; track a.assistidoId) {
+            <li>
+              <button type="button" class="item" (click)="abrirAssistido(a.assistidoId)">
+                <app-avatar [entidadeId]="a.assistidoId" [nome]="a.nome" [size]="28" />
+                <span class="item-texto"><b>{{ a.nome }}</b><small>{{ a.turma || 'Sem turma' }}</small></span>
+                <span class="item-fim texto-ruim">{{ a.faltas }} faltas</span>
+              </button>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+
+    @if (h.chamadasPendentes.total > 0) {
+      <div class="grupo">
+        <h3 class="grupo-titulo"><span class="sinal sinal-alerta"></span>Chamadas atrasadas<span class="grupo-total">{{ h.chamadasPendentes.total }}</span></h3>
+        <ul role="list">
+          @for (c of h.chamadasPendentes.itens; track c.aulaId) {
+            <li>
+              <button type="button" class="item" (click)="abrirAula(c.aulaId)">
+                <span class="data">{{ dataCurta(c.data) }}</span>
+                <span class="item-texto"><b>{{ c.turma || 'Aula' }}</b>@if (c.horario) {<small>{{ c.horario }}</small>}</span>
+                <app-icon name="chevron-right" [size]="14" class="item-seta" />
+              </button>
+            </li>
+          }
+        </ul>
+        @if (h.chamadasPendentes.total > h.chamadasPendentes.itens.length) {
+          <button type="button" class="link link-mais" (click)="abrirPendentes()">Ver as {{ h.chamadasPendentes.total }}</button>
+        }
+      </div>
+    }
+
+    @if (pendenciasDisciplina().length > 0 || h.umPassoDaProgressao.total > 0) {
+      <div class="grupo">
+        <h3 class="grupo-titulo"><span class="sinal sinal-alerta"></span>Disciplina</h3>
+        @for (p of pendenciasDisciplina(); track p.rotulo) {
+          <button type="button" class="item item-compacto" (click)="abrirDisciplinar()">
+            <app-icon [name]="p.icone" [size]="14" class="item-icone" />
+            <span class="item-texto"><b>{{ p.valor }} {{ p.rotulo }}</b></span>
+            <app-icon name="chevron-right" [size]="14" class="item-seta" />
+          </button>
+        }
+        @for (u of h.umPassoDaProgressao.itens; track u.assistidoId + u.nivel) {
+          <button type="button" class="item" (click)="abrirAssistido(u.assistidoId)">
+            <app-avatar [entidadeId]="u.assistidoId" [nome]="u.nome" [size]="28" />
+            <span class="item-texto"><b>{{ u.nome }}</b><small>{{ umPassoTexto(u.nivel, u.registros) }}</small></span>
+          </button>
+        }
+      </div>
+    }
+  } @else {
+    <div class="esq esq-lista" aria-hidden="true"></div>
+  }
+</section>

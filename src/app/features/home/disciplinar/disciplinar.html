@@ -1,0 +1,349 @@
+<section class="page" id="page-disciplinar">
+  <header class="page-header">
+    <div class="page-header-texto">
+      <h1>Disciplinar</h1>
+      <p class="page-intro">
+        Ocorrências, advertências e suspensões. A cada 3 registros do mesmo nível, o sistema aplica a consequência
+        do regulamento.
+      </p>
+    </div>
+
+    <div class="page-header-acoes">
+      <app-button size="sm" (click)="mostrarRegistro.set(true)">
+        <app-icon name="plus" [size]="16" /> Registrar ocorrência
+      </app-button>
+    </div>
+  </header>
+
+  <!-- ================= O QUE PRECISA DE ATENÇÃO ================= -->
+  @if (pendencias(); as p) {
+    <div class="pendencias" role="group" aria-label="Pendências">
+      <button type="button" class="pendencia" [class.ativa]="p.assistidosSuspensosHoje > 0" (click)="alternarPendencias()">
+        <span class="pendencia-ico ico-red"><app-icon name="alert-circle" /></span>
+        <span class="pendencia-valor">{{ p.assistidosSuspensosHoje }}</span>
+        <span class="pendencia-rotulo">Suspensos hoje</span>
+      </button>
+      <button type="button" class="pendencia" [class.ativa]="p.retornosComResponsavelPendentes > 0" (click)="alternarPendencias()">
+        <span class="pendencia-ico ico-amber"><app-icon name="users" /></span>
+        <span class="pendencia-valor">{{ p.retornosComResponsavelPendentes }}</span>
+        <span class="pendencia-rotulo">Retorno com responsável</span>
+      </button>
+      <button type="button" class="pendencia" [class.ativa]="p.perdemProximoPasseio > 0" (click)="alternarPendencias()">
+        <span class="pendencia-ico ico-coral"><app-icon name="calendar" /></span>
+        <span class="pendencia-valor">{{ p.perdemProximoPasseio }}</span>
+        <span class="pendencia-rotulo">Perdem o próximo passeio</span>
+      </button>
+      <button type="button" class="pendencia" [class.ativa]="p.documentosAAssinar > 0" (click)="alternarPendencias()">
+        <span class="pendencia-ico ico-blue"><app-icon name="file-text" /></span>
+        <span class="pendencia-valor">{{ p.documentosAAssinar }}</span>
+        <span class="pendencia-rotulo">Documentos a assinar</span>
+      </button>
+    </div>
+  }
+
+  @if (ehCoordenador()) {
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab" role="tab" [class.active]="abaAtiva() === 'registros'"
+              [attr.aria-selected]="abaAtiva() === 'registros'" (click)="trocarAba('registros')">
+        Registros
+      </button>
+      <button type="button" class="tab" role="tab" [class.active]="abaAtiva() === 'motivos'"
+              [attr.aria-selected]="abaAtiva() === 'motivos'" (click)="trocarAba('motivos')">
+        Motivos
+      </button>
+    </div>
+  }
+
+  @if (abaAtiva() === 'registros') {
+    <!-- ================= FILTROS ================= -->
+    <div class="toolbar filtros">
+      <div class="filtros-busca">
+        <app-input
+          label="Buscar por nome do assistido"
+          [hideLabel]="true"
+          placeholder="Buscar por nome do assistido…"
+          [ngModel]="termoBusca()"
+          (ngModelChange)="onBusca($event)"
+        />
+      </div>
+      <div class="filtros-select">
+        <app-select
+          [options]="opcoesNivel"
+          [ngModel]="filtroNivel()"
+          (ngModelChange)="onNivel($event)"
+          name="filtroNivel"
+        />
+      </div>
+    </div>
+
+    <div class="chips" role="group" aria-label="Filtros rápidos">
+      <button type="button" class="chip" [class.ativo]="somentePendencias()" [attr.aria-pressed]="somentePendencias()"
+              (click)="alternarPendencias()">
+        Só pendências
+      </button>
+      <button type="button" class="chip" [class.ativo]="incluirArquivados()" [attr.aria-pressed]="incluirArquivados()"
+              (click)="alternarArquivados()">
+        Mostrar arquivados
+      </button>
+      @if (temFiltros()) {
+        <button type="button" class="chip chip-limpar" (click)="limparFiltros()">Limpar filtros</button>
+      }
+    </div>
+
+    @if (erroLista()) {
+      <div class="notice notice-error" role="alert">{{ erroLista() }}</div>
+    }
+
+    @if (carregando() && registros().length === 0) {
+      <div class="card lista-estado"><p class="muted">Carregando registros…</p></div>
+    } @else if (registros().length === 0) {
+      <div class="card lista-estado">
+        @if (temFiltros()) {
+          <p class="muted">Nenhum registro encontrado para os filtros aplicados.</p>
+          <app-button variant="secondary" size="sm" (click)="limparFiltros()">Limpar filtros</app-button>
+        } @else {
+          <p class="muted">Nenhum registro disciplinar ainda.</p>
+        }
+      </div>
+    } @else {
+      <!-- Notebook/desktop: tabela -->
+      <div class="card lista-tabela" [class.recarregando]="carregando()">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Assistido</th>
+                <th>Nível</th>
+                <th>Motivo</th>
+                <th>Situação</th>
+                <th class="col-acoes">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of registros(); track r.registroId) {
+                <tr [class.arquivado]="r.arquivado">
+                  <td class="nowrap">{{ dataBr(r.dataRegistro) }}</td>
+                  <td>
+                    <div class="assistido-cell">
+                      <app-avatar [entidadeId]="r.assistidoId" [nome]="r.nomeAssistido" [size]="36" />
+                      <div>
+                        <span class="cell-name">{{ r.nomeAssistido }}</span>
+                        <span class="cell-sub">por {{ r.registradoPorNome }}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <app-badge [variant]="NIVEIS[r.nivel].variant" [label]="NIVEIS[r.nivel].rotulo" />
+                    <span class="cell-sub">{{ rotuloSequencia(r) }}</span>
+                  </td>
+                  <td>
+                    <span class="motivo" [class.automatico]="r.origem === 'PROGRESSAO'">{{ r.motivo }}</span>
+                    @if (r.suspensaoInicio && r.suspensaoFim) {
+                      <span class="cell-sub">{{ dataBr(r.suspensaoInicio) }} a {{ dataBr(r.suspensaoFim) }}</span>
+                    }
+                  </td>
+                  <td>
+                    <ng-container *ngTemplateOutlet="situacao; context: { $implicit: r }" />
+                  </td>
+                  <td class="col-acoes">
+                    <app-action-menu
+                      [label]="'Ações do registro de ' + r.nomeAssistido"
+                      [itens]="acoesRegistro(r)"
+                      (selecionado)="executarAcao($event, r)"
+                    />
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Celular e iPad: cartões -->
+      <ul class="lista-cartoes" role="list" [class.recarregando]="carregando()">
+        @for (r of registros(); track r.registroId) {
+          <li class="registro-cartao" [class.arquivado]="r.arquivado">
+            <div class="cartao-topo">
+              <app-avatar [entidadeId]="r.assistidoId" [nome]="r.nomeAssistido" [size]="44" />
+              <div class="cartao-identidade">
+                <span class="cell-name">{{ r.nomeAssistido }}</span>
+                <span class="cell-sub">{{ dataBr(r.dataRegistro) }} · {{ rotuloSequencia(r) }}</span>
+              </div>
+              <app-action-menu
+                [label]="'Ações do registro de ' + r.nomeAssistido"
+                [itens]="acoesRegistro(r)"
+                (selecionado)="executarAcao($event, r)"
+              />
+            </div>
+            <div class="cartao-meio">
+              <app-badge [variant]="NIVEIS[r.nivel].variant" [label]="NIVEIS[r.nivel].rotulo" />
+              <span class="motivo" [class.automatico]="r.origem === 'PROGRESSAO'">{{ r.motivo }}</span>
+            </div>
+            @if (r.suspensaoInicio && r.suspensaoFim) {
+              <span class="periodo">Suspenso de {{ dataBr(r.suspensaoInicio) }} a {{ dataBr(r.suspensaoFim) }}</span>
+            }
+            <ng-container *ngTemplateOutlet="situacao; context: { $implicit: r }" />
+          </li>
+        }
+      </ul>
+
+      @if (totalPaginas() > 1) {
+        <nav class="paginacao" aria-label="Paginação">
+          <app-button variant="secondary" size="sm" [disabled]="!temAnterior()" (click)="paginaAnterior()">
+            <app-icon name="chevron-left" [size]="16" /> <span class="pag-rotulo">Anterior</span>
+          </app-button>
+          <span class="pagina-info">
+            Página {{ pagina() + 1 }} de {{ totalPaginas() }}
+            <span class="pagina-total">· {{ totalElementos() }} registros</span>
+          </span>
+          <app-button variant="secondary" size="sm" [disabled]="!temProxima()" (click)="proximaPagina()">
+            <span class="pag-rotulo">Próxima</span> <app-icon name="chevron-right" [size]="16" />
+          </app-button>
+        </nav>
+      }
+    }
+  } @else {
+    <!-- ================= MOTIVOS (Coordenador) ================= -->
+    <p class="motivos-intro">
+      O nível do motivo define a contagem. Motivo inativo some do formulário de registro, mas o histórico continua.
+    </p>
+
+    @if (carregandoMotivos() && motivos().length === 0) {
+      <div class="card lista-estado"><p class="muted">Carregando motivos…</p></div>
+    } @else {
+      <div class="motivos-grid">
+        @for (grupo of gruposMotivos(); track grupo.nivel) {
+          <section class="card motivos-grupo" [attr.aria-labelledby]="'grupo-' + grupo.nivel">
+            <header class="motivos-grupo-topo">
+              <div>
+                <h2 [id]="'grupo-' + grupo.nivel">
+                  <app-badge [variant]="NIVEIS[grupo.nivel].variant" [label]="NIVEIS[grupo.nivel].rotulo" />
+                </h2>
+                <p class="cell-sub">{{ NIVEIS[grupo.nivel].consequencia }}</p>
+              </div>
+              <button type="button" class="btn-icon" [attr.aria-label]="'Novo motivo de ' + NIVEIS[grupo.nivel].rotulo"
+                      (click)="novoMotivo(grupo.nivel)">
+                <app-icon name="plus" />
+              </button>
+            </header>
+            <ul class="motivos-lista" role="list">
+              @for (m of grupo.motivos; track m.motivoId) {
+                <li [class.inativo]="!m.ativo">
+                  <span class="motivo-nome">{{ m.nome }}</span>
+                  @if (!m.ativo) { <app-badge variant="gray" label="Inativo" /> }
+                  <app-action-menu
+                    [label]="'Ações do motivo ' + m.nome"
+                    [itens]="acoesMotivo(m)"
+                    (selecionado)="executarAcaoMotivo($event, m)"
+                  />
+                </li>
+              } @empty {
+                <li class="muted">Nenhum motivo neste nível.</li>
+              }
+            </ul>
+          </section>
+        }
+      </div>
+    }
+  }
+</section>
+
+<!-- Situação do registro: o que ele ainda espera (ou que está resolvido/arquivado) -->
+<ng-template #situacao let-r>
+  @if (r.arquivado) {
+    <span class="situacao situacao-arquivado" [attr.title]="r.arquivadoMotivo">Arquivado</span>
+  } @else if (pendenciaDoRegistro(r); as pendencia) {
+    <span class="situacao situacao-pendente">
+      <app-icon name="alert-triangle" [size]="14" /> {{ pendencia }}
+    </span>
+  } @else if (r.documentoStatus === 'DEVOLVIDO_ASSINADO') {
+    <span class="situacao situacao-ok"><app-icon name="check" [size]="14" /> Assinado</span>
+  } @else if (r.consequencia && !r.consequenciaPendente) {
+    <span class="situacao situacao-ok"><app-icon name="check" [size]="14" /> Resolvido</span>
+  } @else {
+    <span class="muted">—</span>
+  }
+</ng-template>
+
+<!-- ================= MODAL: REGISTRAR ================= -->
+<app-registro-disciplinar-modal [(open)]="mostrarRegistro" (salvo)="aoRegistrar()" />
+
+<!-- ================= MODAL: AÇÕES DO REGISTRO ================= -->
+@if (acaoAberta(); as acao) {
+  <app-modal [open]="true" [title]="tituloAcao()" [subtitle]="registroEmAcao()?.nomeAssistido ?? ''" size="sm"
+             (closed)="fecharAcao()">
+    <div modal-icon class="mh-ico" [class.ico-red]="acao === 'arquivar'" [class.ico-green]="acao !== 'arquivar'">
+      <app-icon [name]="acao === 'arquivar' ? 'folder' : acao === 'periodo' ? 'calendar' : 'check'" />
+    </div>
+
+    @if (erroAcao()) {
+      <div class="notice notice-error" role="alert">{{ erroAcao() }}</div>
+    }
+
+    @switch (acao) {
+      @case ('devolvido') {
+        <p>Confirme que o documento voltou assinado pelo responsável.</p>
+        <div class="field">
+          <label for="arquivo-assinado">Foto ou PDF do documento assinado (opcional)</label>
+          <input id="arquivo-assinado" class="input" type="file" accept="image/*,application/pdf"
+                 capture="environment" (change)="onArquivoAssinado($event)" />
+          <p class="hint">No celular, dá para tirar a foto direto pela câmera.</p>
+        </div>
+      }
+      @case ('periodo') {
+        <div class="form-row">
+          <app-input label="Suspenso de" type="date" [ngModel]="acaoInicio()" (ngModelChange)="acaoInicio.set($event)" />
+          <app-input label="Até" type="date" [min]="acaoInicio()" [ngModel]="acaoFim()" (ngModelChange)="acaoFim.set($event)" />
+        </div>
+      }
+      @case ('resolver') {
+        <app-input label="Data" type="date" [max]="hoje" [ngModel]="acaoData()" (ngModelChange)="acaoData.set($event)" />
+        <div class="field">
+          <label for="acao-texto">
+            {{ registroEmAcao()?.consequencia === 'RETORNO_COM_RESPONSAVEL' ? 'Quem compareceu e o que foi combinado' : 'Qual passeio foi perdido' }}
+          </label>
+          <textarea id="acao-texto" rows="3" [ngModel]="acaoTexto()" (ngModelChange)="acaoTexto.set($event)"></textarea>
+        </div>
+      }
+      @case ('arquivar') {
+        <p>O registro sai das contagens, mas continua no histórico. Consequências já aplicadas não são desfeitas.</p>
+        <div class="field">
+          <label for="acao-arquivar">Motivo do arquivamento</label>
+          <textarea id="acao-arquivar" rows="3" placeholder="Ex.: lançado no assistido errado"
+                    [ngModel]="acaoTexto()" (ngModelChange)="acaoTexto.set($event)"></textarea>
+        </div>
+      }
+    }
+
+    <ng-template #footer>
+      <app-button variant="secondary" (click)="fecharAcao()">Cancelar</app-button>
+      <app-button [variant]="acao === 'arquivar' ? 'danger' : 'primary'" [loading]="salvandoAcao()" (click)="confirmarAcao()">
+        {{ acao === 'arquivar' ? 'Arquivar' : 'Salvar' }}
+      </app-button>
+    </ng-template>
+  </app-modal>
+}
+
+<!-- ================= MODAL: MOTIVO ================= -->
+<app-modal [(open)]="mostrarMotivoForm" [title]="motivoEditando() ? 'Editar motivo' : 'Novo motivo'" size="sm">
+  <div modal-icon class="mh-ico ico-green"><app-icon [name]="motivoEditando() ? 'edit' : 'flag'" /></div>
+
+  @if (erroMotivo()) {
+    <div class="notice notice-error" role="alert">{{ erroMotivo() }}</div>
+  }
+
+  <app-input label="Nome do motivo" placeholder="Ex.: Uso do celular em aula" [required]="true"
+             [ngModel]="motivoNome()" (ngModelChange)="motivoNome.set($event)" />
+
+  <div class="field">
+    <label>Nível</label>
+    <app-select [options]="opcoesNivelMotivo" [ngModel]="motivoNivel()" (ngModelChange)="motivoNivel.set($event)" name="motivoNivel" />
+    <p class="hint">{{ NIVEIS[motivoNivel()].consequencia }}</p>
+  </div>
+
+  <ng-template #footer>
+    <app-button variant="secondary" (click)="mostrarMotivoForm.set(false)">Cancelar</app-button>
+    <app-button [loading]="salvandoMotivo()" (click)="salvarMotivo()">Salvar</app-button>
+  </ng-template>
+</app-modal>
