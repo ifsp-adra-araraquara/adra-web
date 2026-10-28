@@ -27,6 +27,10 @@ export const routes: Routes = [
       import('./features/acesso-negado/acesso-negado').then((m) => m.AcessoNegado),
   },
   {
+    path: 'pre-cadastro',
+    loadComponent: () => import('./features/pre-cadastro/pre-cadastro').then((m) => m.PreCadastro),
+  },
+  {
     path: '',
     loadComponent: () => import('./core/layout/layout').then((m) => m.Layout),
     canActivate: [authGuard],
@@ -115,6 +119,12 @@ export const routes: Routes = [
         path: 'aulas',
         redirectTo: 'turmas',
         pathMatch: 'full',
+      },
+      {
+        path: 'pre-cadastros',
+        loadComponent: () => import('./features/home/pre-cadastros/pre-cadastros').then((m) => m.PreCadastros),
+        data: { roles: [Role.COORD, Role.SOCIO] },
+        canActivate: [roleGuard],
       },
       {
         path: 'disciplinar',
