@@ -15,14 +15,25 @@
         <app-icon name="file-text" [size]="16" /> Importar CSV
       </app-button>
       <input #seletorArquivo type="file" accept=".csv,text/csv" hidden (change)="importarCsv($event)" />
+      <app-button variant="secondary" size="sm" (click)="seletorXlsx.click()">
+        <app-icon name="file-text" [size]="16" /> Importar planilha (.xlsx)
+      </app-button>
+      <input
+        #seletorXlsx
+        type="file"
+        accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        hidden
+        (change)="importarXlsx($event)"
+      />
       <app-button variant="secondary" size="sm" [disabled]="linhas().length >= limite" (click)="adicionarLinha()">
         <app-icon name="plus" [size]="16" /> Adicionar assistido
       </app-button>
     </div>
     <p class="page-intro">
-      Baixe o modelo, preencha no Excel e importe o arquivo .csv, ou adicione os assistidos direto na grade.
-      Em cada assistido, adicione o RG ou CPF e, se quiser, a foto. Valide, corrija o que estiver marcado e cadastre.
-      O 1º responsável de cada assistido é o principal.
+      Baixe o modelo, preencha no Excel e importe o arquivo .csv, importe direto uma lista de presença (.xlsx) da
+      planilha da turma, ou adicione os assistidos direto na grade. Em cada assistido, adicione o RG ou CPF e, se
+      quiser, a foto. Valide, corrija o que estiver marcado e cadastre. O 1º responsável de cada assistido é o
+      principal.
     </p>
   </header>
 

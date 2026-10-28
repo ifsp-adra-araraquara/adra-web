@@ -61,6 +61,28 @@
   cursor: pointer;
 }
 
+.motivo-fieldset { border: 0; margin: 0 0 16px; padding: 0; }
+.field-legend { display: block; font-size: 13px; font-weight: 500; margin-bottom: 8px; color: var(--rotulo); padding: 0; }
+.motivo-grupo + .motivo-grupo { margin-top: 10px; }
+.motivo-grupo-rotulo { display: block; font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; color: var(--gray-400); margin-bottom: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1.5px solid var(--campo-borda);
+  border-radius: 999px;
+  background: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-800);
+  cursor: pointer;
+  transition: border-color .15s, background .15s, color .15s;
+}
+.chip:hover { border-color: var(--campo-borda-hover); }
+.chip:focus-visible { outline: 3px solid var(--color-brand-soft); outline-offset: 2px; }
+.chip.ativo { background: var(--color-brand-soft); border-color: var(--color-brand); color: var(--color-adra-green-600); font-weight: 600; }
+
 .nivel-dica {
   display: flex;
   align-items: flex-start;

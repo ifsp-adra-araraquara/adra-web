@@ -34,6 +34,7 @@ import {
   paraDataIso,
   parseCsvAssistidos,
 } from '../../../../shared/utils/csv-assistidos.util';
+import { parseXlsxPresenca } from '../../../../shared/utils/xlsx-assistidos.util';
 import { mensagemErro } from '../../../../shared/utils/erro-http.util';
 import { cpfValido, telefoneValido } from '../../../../shared/validators/cpf.validator';
 import { MENSAGEM_SEM_DOCUMENTO } from '../mensagens-cadastro';
@@ -208,6 +209,39 @@ export class AssistidosLote {
     this.aviso.set(
       `${importadas.length} assistido(s) importado(s) de ${arquivo.name}. ` +
         'Adicione o RG ou CPF de cada um e clique em Validar.',
+    );
+  }
+
+  // Lista de presença da turma (.xlsx): traz nome, nascimento e responsável;
+  // sem CPF, por isso a linha fica marcada pendente até alguém completar.
+  async importarXlsx(evento: Event): Promise<void> {
+    const campo = evento.target as HTMLInputElement;
+    const arquivo = campo.files?.[0];
+    campo.value = '';
+    if (!arquivo) return;
+
+    this.erro.set(null);
+    this.aviso.set(null);
+    let importadas: AssistidoLinhaLote[];
+    try {
+      importadas = await parseXlsxPresenca(await arquivo.arrayBuffer());
+    } catch {
+      this.erro.set('Não foi possível ler essa planilha. Confira se é um arquivo .xlsx válido.');
+      return;
+    }
+    if (!importadas.length) {
+      this.erro.set('Nenhum assistido encontrado nessa planilha. Confira se há uma coluna "NOME".');
+      return;
+    }
+    if (this.linhas().length + importadas.length > LIMITE_LINHAS) {
+      this.erro.set(`O lote aceita até ${LIMITE_LINHAS} assistidos. Divida o arquivo e importe em partes.`);
+      return;
+    }
+
+    this.linhas.update((linhas) => [...linhas, ...importadas.map((dados) => this.criarLinha(dados))]);
+    this.aviso.set(
+      `${importadas.length} assistido(s) importado(s) de ${arquivo.name}. ` +
+        'Essa planilha não tem CPF — preencha o de cada um antes de validar e cadastrar.',
     );
   }
 
