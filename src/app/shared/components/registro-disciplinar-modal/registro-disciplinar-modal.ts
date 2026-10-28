@@ -101,6 +101,10 @@ export class RegistroDisciplinarModal {
 
   readonly salvando = signal(false);
   readonly erro = signal<string | null>(null);
+  readonly erroMotivo = signal<string | null>(null);
+  readonly erroData = signal<string | null>(null);
+  readonly erroDescricao = signal<string | null>(null);
+  readonly erroSuspensao = signal<string | null>(null);
   readonly resultado = signal<RegistroDisciplinarDTO[] | null>(null);
 
   readonly assistidoAtual = computed(() => this.assistido() ?? this.assistidoEscolhido());
@@ -162,9 +166,12 @@ export class RegistroDisciplinarModal {
 
   async registrar(): Promise<void> {
     const assistido = this.assistidoAtual();
-    const erroValidacao = this.validar();
-    if (erroValidacao || !assistido) {
-      this.erro.set(erroValidacao ?? 'Escolha o assistido.');
+    if (!assistido) {
+      this.erro.set('Escolha o assistido.');
+      return;
+    }
+    if (!this.validar()) {
+      this.erro.set(null);
       return;
     }
 
@@ -208,17 +215,23 @@ export class RegistroDisciplinarModal {
     return rotuloSequencia(r);
   }
 
-  private validar(): string | null {
-    if (!this.assistidoAtual()) return 'Escolha o assistido.';
-    if (!this.motivoId()) return 'Escolha o motivo.';
-    if (!this.data()) return 'Informe a data.';
-    if (this.data() > this.hoje) return 'A data não pode ser no futuro.';
-    if (!this.descricao().trim()) return 'Descreva o que aconteceu.';
-    if (this.ehSuspensao()) {
-      if (!this.suspensaoInicio() || !this.suspensaoFim()) return 'Informe o período da suspensão.';
-      if (this.suspensaoFim() < this.suspensaoInicio()) return 'O fim da suspensão não pode ser antes do início.';
-    }
-    return null;
+  // Popula um erro por campo (mostrado embaixo dele) em vez de só um aviso genérico no topo.
+  private validar(): boolean {
+    this.erroMotivo.set(!this.motivoId() ? 'Escolha o motivo.' : null);
+    this.erroData.set(
+      !this.data() ? 'Informe a data.' : this.data() > this.hoje ? 'A data não pode ser no futuro.' : null,
+    );
+    this.erroDescricao.set(!this.descricao().trim() ? 'Descreva o que aconteceu.' : null);
+    this.erroSuspensao.set(
+      !this.ehSuspensao()
+        ? null
+        : !this.suspensaoInicio() || !this.suspensaoFim()
+          ? 'Informe o período da suspensão.'
+          : this.suspensaoFim() < this.suspensaoInicio()
+            ? 'O fim da suspensão não pode ser antes do início.'
+            : null,
+    );
+    return !this.erroMotivo() && !this.erroData() && !this.erroDescricao() && !this.erroSuspensao();
   }
 
   private reiniciar(): void {
@@ -231,6 +244,10 @@ export class RegistroDisciplinarModal {
     this.suspensaoInicio.set(this.hoje);
     this.suspensaoFim.set(this.somarDias(this.hoje, DIAS_SUSPENSAO_PADRAO - 1));
     this.erro.set(null);
+    this.erroMotivo.set(null);
+    this.erroData.set(null);
+    this.erroDescricao.set(null);
+    this.erroSuspensao.set(null);
     this.resultado.set(null);
   }
 

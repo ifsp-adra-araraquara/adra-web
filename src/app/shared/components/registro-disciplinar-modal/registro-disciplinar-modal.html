@@ -122,6 +122,8 @@
         class="select"
         [ngModel]="motivoId()"
         (ngModelChange)="motivoId.set($event)"
+        [attr.aria-invalid]="erroMotivo() ? true : null"
+        [attr.aria-describedby]="erroMotivo() ? 'registro-motivo-erro' : null"
       >
         <option [ngValue]="null" disabled>Selecione o motivo</option>
         @for (grupo of gruposMotivos(); track grupo.nivel) {
@@ -132,6 +134,9 @@
           </optgroup>
         }
       </select>
+      @if (erroMotivo(); as msg) {
+        <p id="registro-motivo-erro" class="app-input-error" role="alert">{{ msg }}</p>
+      }
       @if (nivelSelecionado(); as nivel) {
         <p class="nivel-dica">
           <app-badge [variant]="NIVEIS[nivel].variant" [label]="NIVEIS[nivel].rotulo" />
@@ -145,6 +150,7 @@
       type="date"
       [max]="hoje"
       [required]="true"
+      [errorMessage]="erroData()"
       [ngModel]="data()"
       (ngModelChange)="onData($event)"
     />
@@ -154,6 +160,7 @@
         <app-input
           label="Suspenso de"
           type="date"
+          [errorMessage]="erroSuspensao()"
           [ngModel]="suspensaoInicio()"
           (ngModelChange)="suspensaoInicio.set($event)"
         />
@@ -175,7 +182,12 @@
         placeholder="Descreva o fato com objetividade (onde, com quem, o que foi dito/feito)."
         [ngModel]="descricao()"
         (ngModelChange)="descricao.set($event)"
+        [attr.aria-invalid]="erroDescricao() ? true : null"
+        [attr.aria-describedby]="erroDescricao() ? 'registro-descricao-erro' : null"
       ></textarea>
+      @if (erroDescricao(); as msg) {
+        <p id="registro-descricao-erro" class="app-input-error" role="alert">{{ msg }}</p>
+      }
     </div>
 
     <ng-template #footer>

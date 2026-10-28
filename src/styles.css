@@ -162,6 +162,11 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
 .check input { width: 17px; height: 17px; accent-color: var(--color-adra-green-400); margin-top: 1px; flex: none; }
 .hint { font-size: 12px; color: var(--gray-400); margin-top: 5px; }
 
+/* Erro por campo em .select/textarea nativos fora do app-input (mesma linguagem visual dele). */
+.select[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--red-400); background: var(--red-50); }
+.select[aria-invalid="true"]:focus, textarea[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px var(--red-50); }
+.app-input-error { font-size: 12px; color: var(--red-600); margin-top: 5px; }
+
 .form-row, .form-row-3 { display: grid; grid-template-columns: 1fr; gap: 14px; }
 /* Botões dentro do corpo de um formulário (não o rodapé do modal). */
 .form-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
