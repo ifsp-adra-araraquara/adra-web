@@ -7,7 +7,8 @@ import { EnderecoDTO } from '../endereco/EnderecoDTO';
 export interface AssistidoResponseDTO {
   assistidoId: number;
   nomeCompleto: string;
-  dataNascimento: string;
+  // Opcional: cadastros importados em lote podem ficar pendentes até confirmação.
+  dataNascimento: string | null;
   cpf: string | null;
   dataEntrada: string | null;
   dataSaida: string | null;

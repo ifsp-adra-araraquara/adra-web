@@ -283,7 +283,9 @@
   </ng-template>
 
   <ng-template #status let-a>
-    @if (a.emAcompanhamento) {
+    @if (cadastroPendente(a); as motivo) {
+      <app-badge variant="coral" label="Cadastro pendente" [appTooltip]="motivo" />
+    } @else if (a.emAcompanhamento) {
       <app-badge variant="amber" label="Em acompanhamento" />
     } @else {
       <app-badge [status]="a.status" />
