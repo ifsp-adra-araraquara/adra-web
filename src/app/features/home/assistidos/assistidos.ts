@@ -425,6 +425,12 @@ export class Assistidos implements OnInit {
     return d.length === 11 ? `***.***.${d.slice(6, 9)}-**` : '—';
   }
 
+  /** Cadastro vindo de importação em lote, ainda sem CPF e/ou nascimento confirmados. */
+  cadastroPendente(a: AssistidoResponseDTO): string | null {
+    const faltando = [!a.cpf && 'CPF', !a.dataNascimento && 'data de nascimento'].filter(Boolean);
+    return faltando.length ? `Falta confirmar: ${faltando.join(' e ')}` : null;
+  }
+
   telefoneFormatado(telefone: string | null | undefined): string {
     return telefone ? formatarTelefone(telefone) : '';
   }
@@ -479,7 +485,8 @@ export class Assistidos implements OnInit {
     this.executarAcao(acao, assistido);
   }
 
-  calcularIdade(dataNascimento: string): number {
+  calcularIdade(dataNascimento: string | null): number | null {
+    if (!dataNascimento) return null;
     const nasc = new Date(dataNascimento);
     const hoje = new Date();
 
@@ -524,7 +531,7 @@ export class Assistidos implements OnInit {
   private formDoAssistido(assistido: AssistidoResponseDTO): AssistidoRequestDTO {
     return {
       nomeCompleto: assistido.nomeCompleto,
-      dataNascimento: assistido.dataNascimento,
+      dataNascimento: assistido.dataNascimento ?? '',
       cpf: assistido.cpf ?? '',
       dataEntrada: assistido.dataEntrada ?? '',
       necessidadesEspecificas: assistido.necessidadesEspecificas ?? '',
