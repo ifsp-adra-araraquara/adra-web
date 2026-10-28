@@ -114,26 +114,26 @@
       </div>
     }
 
-    <div class="field">
-      <label for="registro-motivo">Motivo</label>
-      <!-- select nativo: no celular abre o seletor do sistema, e os grupos mostram o nível -->
-      <select
-        id="registro-motivo"
-        class="select"
-        [ngModel]="motivoId()"
-        (ngModelChange)="motivoId.set($event)"
-        [attr.aria-invalid]="erroMotivo() ? true : null"
-        [attr.aria-describedby]="erroMotivo() ? 'registro-motivo-erro' : null"
-      >
-        <option [ngValue]="null" disabled>Selecione o motivo</option>
-        @for (grupo of gruposMotivos(); track grupo.nivel) {
-          <optgroup [label]="grupo.rotulo">
+    <fieldset class="motivo-fieldset" [attr.aria-describedby]="erroMotivo() ? 'registro-motivo-erro' : null">
+      <legend class="field-legend">Motivo</legend>
+      @for (grupo of gruposMotivos(); track grupo.nivel) {
+        <div class="motivo-grupo">
+          <span class="motivo-grupo-rotulo">{{ grupo.rotulo }}</span>
+          <div class="chips" role="group" [attr.aria-label]="grupo.rotulo">
             @for (m of grupo.motivos; track m.motivoId) {
-              <option [ngValue]="m.motivoId">{{ m.nome }}</option>
+              <button
+                type="button"
+                class="chip"
+                [class.ativo]="motivoId() === m.motivoId"
+                [attr.aria-pressed]="motivoId() === m.motivoId"
+                (click)="motivoId.set(m.motivoId)"
+              >
+                {{ m.nome }}
+              </button>
             }
-          </optgroup>
-        }
-      </select>
+          </div>
+        </div>
+      }
       @if (erroMotivo(); as msg) {
         <p id="registro-motivo-erro" class="app-input-error" role="alert">{{ msg }}</p>
       }
@@ -143,7 +143,7 @@
           <span>Pedir desculpas. {{ NIVEIS[nivel].consequencia }}</span>
         </p>
       }
-    </div>
+    </fieldset>
 
     <app-input
       label="Data"
