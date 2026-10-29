@@ -148,6 +148,46 @@ export class AuthService {
   }
 
   /**
+   * Troca de senha iniciada pelo próprio usuário autenticado na tela "Meu Perfil".
+   * Valida a senha atual via Supabase Auth e mantém a sessão ativa após a troca (CA-FT2.4).
+   */
+  async alterarSenha(senhaAtual: string, novaSenha: string): Promise<void> {
+    const email = this.usuarioLogado()?.email;
+    if (!email) {
+      throw new Error('Sessão inválida. Faça login novamente.');
+    }
+
+    const { error: erroValidacao } = await supabase.auth.signInWithPassword({
+      email,
+      password: senhaAtual,
+    });
+    if (erroValidacao) {
+      throw new Error('A senha atual informada está incorreta.');
+    }
+
+    const { error: erroAtualizacao } = await supabase.auth.updateUser({
+      password: novaSenha,
+    });
+    if (erroAtualizacao) {
+      throw new Error('Não foi possível alterar a senha. Tente novamente.');
+    }
+  }
+
+  /**
+   * Atualiza os dados do usuário logado em memória e no localStorage (ex.: após PUT /api/usuarios/me),
+   * preservando os módulos caso a resposta não os traga.
+   */
+  atualizarUsuarioLogado(usuario: UsuarioResponse): void {
+    const atual = this.usuarioLogado();
+    const atualizado: UsuarioResponse = {
+      ...usuario,
+      modulos: usuario.modulos?.length ? usuario.modulos : (atual?.modulos ?? []),
+    };
+    localStorage.setItem(USER_KEY, JSON.stringify(atualizado));
+    this.usuarioLogado.set(atualizado);
+  }
+
+  /**
    * @param navegarParaModuloPadrao Quando true (padrao — usado no login
    * explicito), redireciona pro modulo padrao do usuario depois de trocar o
    * token. Quando false (usado na resincronizacao passiva em segundo plano,

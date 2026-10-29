@@ -1,0 +1,251 @@
+<section class="page" id="page-meu-perfil">
+  <header class="page-header">
+    <div class="page-header-texto">
+      <h1>Meu Perfil</h1>
+      <p class="page-intro">
+        Visualize e atualize seus dados pessoais, sua foto de perfil e sua senha de acesso.
+      </p>
+    </div>
+  </header>
+
+  <div class="perfil-grid">
+    <!-- CARD 1: DADOS PESSOAIS E FOTO -->
+    <div class="card">
+      <div class="card-head">
+        <h3>Dados pessoais e foto</h3>
+      </div>
+
+      <form class="card-pad" (ngSubmit)="salvarDados()">
+        <!-- Seção de Foto de Perfil -->
+        <div class="perfil-foto-bloco">
+          <div class="perfil-foto-avatar" [attr.aria-busy]="processandoFoto()">
+            @if (previewUrl(); as url) {
+              <img class="perfil-foto-img" [src]="url" alt="Prévia da nova foto de perfil" />
+            } @else if (usuario(); as u) {
+              <app-avatar
+                [entidadeTipo]="EntidadeArquivo.USUARIO"
+                [entidadeId]="u.usuarioId"
+                [nome]="nomeCompleto || u.nomeCompleto"
+                [size]="88"
+                [ampliavel]="true"
+              />
+            }
+          </div>
+
+          <div class="perfil-foto-acoes">
+            <span class="perfil-foto-titulo">Foto de perfil</span>
+            <p class="perfil-foto-dica">
+              A imagem é ajustada automaticamente em formato quadrado (512x512 px) antes do envio.
+            </p>
+
+            <input
+              #seletorFoto
+              type="file"
+              accept="image/*"
+              class="sr-only"
+              tabindex="-1"
+              aria-hidden="true"
+              (change)="aoSelecionarFoto($event)"
+            />
+
+            <div class="perfil-foto-botoes">
+              <app-button
+                type="button"
+                size="sm"
+                variant="secondary"
+                [loading]="processandoFoto()"
+                (click)="seletorFoto.click()"
+              >
+                <app-icon name="camera" [size]="14" />
+                {{ temFotoExibida() ? 'Trocar foto' : 'Enviar foto' }}
+              </app-button>
+
+              @if (novaFoto()) {
+                <app-button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  (click)="cancelarNovaFoto()"
+                >
+                  <app-icon name="rotate-ccw" [size]="14" />
+                  Desfazer seleção
+                </app-button>
+              } @else if (fotoSalva()) {
+                <app-button
+                  type="button"
+                  size="sm"
+                  variant="danger"
+                  [loading]="removendoFoto()"
+                  (click)="removerFotoSalva()"
+                >
+                  <app-icon name="trash" [size]="14" />
+                  Remover foto
+                </app-button>
+              }
+            </div>
+
+            @if (novaFoto()) {
+              <p class="perfil-foto-pendente" role="status">
+                Nova foto pronta para envio. Clique em <strong>Salvar alterações</strong> para confirmar.
+              </p>
+            }
+
+            @if (erroFoto()) {
+              <p class="app-input-error" role="alert">{{ erroFoto() }}</p>
+            }
+          </div>
+        </div>
+
+        <p class="form-sec-title">Informações editáveis</p>
+
+        <div class="form-row">
+          <app-input
+            id="perfil-nome"
+            label="Nome completo"
+            name="nomeCompleto"
+            placeholder="Seu nome completo"
+            [required]="true"
+            [maxLength]="180"
+            [(ngModel)]="nomeCompleto"
+          />
+
+          <app-input
+            id="perfil-telefone"
+            label="Telefone"
+            name="telefone"
+            placeholder="(16) 90000-0000"
+            mask="telefone"
+            [(ngModel)]="telefone"
+          />
+        </div>
+
+        <p class="form-sec-title">Dados de acesso (somente leitura)</p>
+
+        <div class="form-row">
+          <app-input
+            id="perfil-email"
+            label="E-mail institucional"
+            name="email"
+            type="email"
+            [readonly]="true"
+            [disabled]="true"
+            [ngModel]="usuario()?.email ?? ''"
+          />
+
+          <app-input
+            id="perfil-acesso"
+            label="Perfil de acesso"
+            name="nivelPermissao"
+            [readonly]="true"
+            [disabled]="true"
+            [ngModel]="nomePerfil()"
+          />
+        </div>
+
+        <div class="notice notice-lock">
+          <app-icon name="lock" />
+          <div>
+            O <strong>e-mail institucional</strong> e o <strong>perfil de acesso</strong> só podem ser
+            alterados pelo <strong>Administrador</strong>.
+          </div>
+        </div>
+
+        @if (erroDados()) {
+          <div class="notice notice-error" role="alert">
+            <app-icon name="alert-circle" />
+            <div>{{ erroDados() }}</div>
+          </div>
+        }
+
+        @if (sucessoDados()) {
+          <div class="notice notice-info" role="status">
+            <app-icon name="check" />
+            <div>{{ sucessoDados() }}</div>
+          </div>
+        }
+
+        <div class="form-acoes form-acoes--topo">
+          <app-button type="submit" [loading]="salvandoDados()">
+            {{ salvandoDados() ? 'Salvando...' : 'Salvar alterações' }}
+          </app-button>
+        </div>
+      </form>
+    </div>
+
+    <!-- CARD 2: TROCA DE SENHA -->
+    <div class="card">
+      <div class="card-head">
+        <h3>Alterar senha</h3>
+      </div>
+
+      <form class="card-pad" (ngSubmit)="alterarSenha()">
+        <p class="perfil-senha-intro">
+          Para sua segurança, informe a senha atual antes de definir uma nova senha. Após a alteração,
+          sua sessão continuará ativa.
+        </p>
+
+        <app-input
+          id="perfil-senha-atual"
+          label="Senha atual"
+          type="password"
+          name="senhaAtual"
+          placeholder="••••••••"
+          autocomplete="current-password"
+          [required]="true"
+          [(ngModel)]="senhaAtual"
+        />
+
+        <div class="perfil-nova-senha-bloco">
+          <app-input
+            id="perfil-nova-senha"
+            label="Nova senha"
+            type="password"
+            name="novaSenha"
+            placeholder="••••••••"
+            autocomplete="new-password"
+            [required]="true"
+            [(ngModel)]="novaSenha"
+          />
+          <app-senha-forca [senha]="novaSenha" />
+        </div>
+
+        <app-input
+          id="perfil-confirmar-senha"
+          label="Confirmar nova senha"
+          type="password"
+          name="confirmarSenha"
+          placeholder="••••••••"
+          autocomplete="new-password"
+          [required]="true"
+          [(ngModel)]="confirmarSenha"
+          [errorMessage]="
+            confirmarSenha.length > 0 && confirmarSenha !== novaSenha
+              ? 'As senhas não coincidem.'
+              : null
+          "
+        />
+
+        @if (erroSenha()) {
+          <div class="notice notice-error" role="alert">
+            <app-icon name="alert-circle" />
+            <div>{{ erroSenha() }}</div>
+          </div>
+        }
+
+        @if (sucessoSenha()) {
+          <div class="notice notice-info" role="status">
+            <app-icon name="check" />
+            <div>{{ sucessoSenha() }}</div>
+          </div>
+        }
+
+        <div class="form-acoes form-acoes--topo">
+          <app-button type="submit" [loading]="salvandoSenha()">
+            {{ salvandoSenha() ? 'Alterando senha...' : 'Alterar senha' }}
+          </app-button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+

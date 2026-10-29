@@ -37,6 +37,11 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
+        path: 'perfil',
+        loadComponent: () =>
+          import('./features/home/perfil/meu-perfil').then((m) => m.MeuPerfil),
+      },
+      {
         path: 'painel',
         loadComponent: () => import('./features/home/painel/painel').then((m) => m.Painel),
         data: { roles: [Role.COORD] },

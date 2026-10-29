@@ -42,11 +42,30 @@
   </nav>
 
   <div class="sidebar-user">
-    <div class="avatar">{{ iniciais() }}</div>
-    <div class="who">
-      <b>{{ auth.currentUser()?.name }}</b>
-      <span>{{ auth.currentUser()?.role }}</span>
-    </div>
+    <button
+      type="button"
+      class="sidebar-user-perfil"
+      [class.active]="emMeuPerfil()"
+      [appTooltip]="collapsed() ? 'Meu Perfil' : 'Abrir Meu Perfil'"
+      appTooltipPosicao="right"
+      aria-label="Meu Perfil"
+      (click)="abrirMeuPerfil()"
+    >
+      @if (auth.currentUserResponse(); as usuario) {
+        <app-avatar
+          [entidadeTipo]="EntidadeArquivo.USUARIO"
+          [entidadeId]="usuario.usuarioId"
+          [nome]="usuario.nomeCompleto"
+          [size]="36"
+        />
+      } @else {
+        <div class="avatar">{{ iniciais() }}</div>
+      }
+      <div class="who">
+        <b>{{ auth.currentUser()?.name }}</b>
+        <span>{{ auth.currentUser()?.role || 'Meu Perfil' }}</span>
+      </div>
+    </button>
     <button
       type="button"
       class="icon-btn"

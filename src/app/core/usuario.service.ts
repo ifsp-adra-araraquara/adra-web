@@ -13,11 +13,25 @@ export interface NovoUsuario {
   telefone: string | null;
 }
 
+export interface MeuPerfilRequest {
+  nomeCompleto: string;
+  telefone: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class UsuarioService {
   private http = inject(HttpClient);
+  private readonly api = `${environment.apiUrl}/api/usuarios`;
 
   cadastrar(usuario: NovoUsuario): Observable<UsuarioResponse> {
-    return this.http.post<UsuarioResponse>(`${environment.apiUrl}/api/usuarios`, usuario);
+    return this.http.post<UsuarioResponse>(this.api, usuario);
+  }
+
+  buscarMeuPerfil(): Observable<UsuarioResponse> {
+    return this.http.get<UsuarioResponse>(`${this.api}/me`);
+  }
+
+  atualizarMeuPerfil(dados: MeuPerfilRequest): Observable<UsuarioResponse> {
+    return this.http.put<UsuarioResponse>(`${this.api}/me`, dados);
   }
 }

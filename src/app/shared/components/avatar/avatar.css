@@ -18,7 +18,7 @@
   place-items: center;
   /* Sobrescrevível pelo pai (ex.: chamada pinta pelo status de presença) */
   background: var(--avatar-bg, var(--color-adra-green-400));
-  color: var(--avatar-fg);
+  color: var(--avatar-fg, #fff);
   font-weight: 600;
   font-size: calc(var(--avatar-size, 40px) * 0.38);
   line-height: 1;

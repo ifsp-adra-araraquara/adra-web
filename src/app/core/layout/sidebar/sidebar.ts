@@ -2,8 +2,10 @@ import { ChangeDetectionStrategy, Component, inject, computed, model } from '@an
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../auth.service';
 import { AppModule } from '../../../shared/enum/module.enum';
+import { EntidadeArquivo } from '../../../shared/enum/EntidadeArquivo';
 import { Role } from '../../../shared/enum/role.enum';
 import { Router } from '@angular/router';
+import { Avatar } from '../../../shared/components/avatar/avatar';
 import { BrandLogo } from '../../../shared/components/brand-logo/brand-logo';
 import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 import { Icon, IconName } from '../../../shared/components/icon/icon';
@@ -28,7 +30,7 @@ const MODULOS_OCULTOS = new Set([
 
 @Component({
   selector: 'app-sidebar',
-  imports: [Icon, CommonModule, BrandLogo, TooltipDirective],
+  imports: [Icon, CommonModule, BrandLogo, TooltipDirective, Avatar],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,8 +39,12 @@ export class Sidebar {
   auth = inject(AuthService);
   router = inject(Router);
 
+  readonly EntidadeArquivo = EntidadeArquivo;
+
   open = model(false);
   collapsed = model(false);
+
+  emMeuPerfil = computed(() => (this.auth.currentModule() as string | null) === 'perfil');
 
   private secoesPorModulo: Record<string, string> = {
     PAINEL: 'Principal',
@@ -134,6 +140,11 @@ export class Sidebar {
 
   selecionarModulo(codigo: AppModule) {
     this.auth.setModule(codigo);
+    this.open.set(false);
+  }
+
+  abrirMeuPerfil(): void {
+    this.router.navigate(['/perfil']);
     this.open.set(false);
   }
 
