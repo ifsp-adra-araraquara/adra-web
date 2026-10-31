@@ -92,6 +92,7 @@ export class Usuarios implements OnInit {
     nivelPermissao: Role.COORD,
     cargoFuncao: '',
     telefone: '',
+    administrador: false,
   };
 
   // Modais dos componentes do Pedrão, abertos por cima
@@ -250,6 +251,7 @@ export class Usuarios implements OnInit {
       nivelPermissao: usuario.nivelPermissao,
       cargoFuncao: usuario.cargoFuncao ?? '',
       telefone: usuario.telefone ?? '',
+      administrador: usuario.administrador,
     };
 
     this.erroEdicao.set(null);
@@ -286,7 +288,10 @@ export class Usuarios implements OnInit {
     this.salvando.set(true);
 
     this.http
-      .put<UsuarioResponse>(`${this.apiUrl}/${usuario.usuarioId}`, this.usuarioEdicao)
+      .put<UsuarioResponse>(`${this.apiUrl}/${usuario.usuarioId}`, {
+        ...this.usuarioEdicao,
+        administrador: this.usuarioEdicao.nivelPermissao === Role.COORD && this.usuarioEdicao.administrador,
+      })
       .subscribe({
         next: () => {
           this.salvando.set(false);
