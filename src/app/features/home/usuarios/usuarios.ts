@@ -384,11 +384,11 @@ export class Usuarios implements OnInit {
 
   getBadgeVariant(perfil: Role): BadgeVariant {
     switch (perfil) {
-      case Role.ADMIN:
-        return 'gray';
       case Role.COORD:
         return 'green';
-      case Role.SOCIO:
+      case Role.ASSISTENTE:
+        return 'blue';
+      case Role.EDUCADOR:
         return 'teal';
       case Role.OFICINEIRO:
         return 'coral';

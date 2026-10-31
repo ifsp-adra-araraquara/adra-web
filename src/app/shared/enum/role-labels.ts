@@ -2,9 +2,9 @@
 import { Role } from './role.enum';
 
 export const ROLE_LABELS: Record<Role, string> = {
-  [Role.ADMIN]:      'Administrador',
   [Role.COORD]:      'Coordenador',
-  [Role.SOCIO]:      'Sociopedagógico',
+  [Role.ASSISTENTE]: 'Assistente Social',
+  [Role.EDUCADOR]:   'Educador Social',
   [Role.OFICINEIRO]: 'Oficineiro',
 };
 

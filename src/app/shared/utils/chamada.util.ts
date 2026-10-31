@@ -219,7 +219,7 @@ export function validarChamada(alunos: LinhaChamada[]): string | null {
 
 /** US-67: quem tem acesso à edição/correção de chamada (lançar ou corrigir). */
 export function podeEditarChamada(perfil: Role | null): boolean {
-  return perfil === Role.SOCIO || perfil === Role.COORD;
+  return perfil === Role.EDUCADOR || perfil === Role.COORD;
 }
 
 /**

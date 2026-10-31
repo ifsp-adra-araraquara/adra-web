@@ -100,7 +100,7 @@
     [turmaId]="turmaAulasSelecionada()?.turmaId ?? 0"
     [nomeTurma]="turmaAulasSelecionada()?.nomeTurma ?? ''"
     [aberto]="turmaAulasSelecionada() !== null"
-    [permiteAbrirAula]="ehSociopedagogico()"
+    [permiteAbrirAula]="ehEducadorSocial()"
     (fechar)="fecharAulasDaTurma()">
   </app-aulas-turma-modal>
 

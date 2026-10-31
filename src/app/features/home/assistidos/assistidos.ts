@@ -108,12 +108,12 @@ export class Assistidos implements OnInit {
   readonly ehCoordenador = computed(() => this.auth.currentProfile() === Role.COORD);
   readonly podeEditarCadastro = computed(() => {
     const perfil = this.auth.currentProfile();
-    return perfil === Role.COORD || perfil === Role.SOCIO;
+    return perfil === Role.COORD || perfil === Role.ASSISTENTE;
   });
   /** Documentos pessoais (RG/CPF) — mesmos perfis que o back libera em /api/arquivos (sem oficineiro). */
   readonly podeVerDocumentos = computed(() => {
     const perfil = this.auth.currentProfile();
-    return perfil === Role.ADMIN || perfil === Role.COORD || perfil === Role.SOCIO;
+    return perfil === Role.COORD || perfil === Role.ASSISTENTE || perfil === Role.EDUCADOR;
   });
 
   /* Listagem e Paginação */
