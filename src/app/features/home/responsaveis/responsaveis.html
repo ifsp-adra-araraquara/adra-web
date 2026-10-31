@@ -4,9 +4,11 @@
       <h1>Responsáveis</h1>
       <p class="page-intro">Pais, mães e demais responsáveis vinculados aos assistidos.</p>
     </div>
-    <div class="page-header-acoes">
-      <app-button size="sm" (click)="abrirNovo()"><app-icon name="plus" [size]="16" /> Novo responsável</app-button>
-    </div>
+    @if (podeEditar()) {
+      <div class="page-header-acoes">
+        <app-button size="sm" (click)="abrirNovo()"><app-icon name="plus" [size]="16" /> Novo responsável</app-button>
+      </div>
+    }
   </header>
 
   @if (carregando()) {
@@ -69,7 +71,7 @@
                   <td>
                     <app-action-menu
                       [label]="'Ações de ' + responsavel.nomeCompleto"
-                      [itens]="acoesResponsavel"
+                      [itens]="acoesResponsavel()"
                       (selecionado)="executarAcao($event, responsavel)"
                     />
                   </td>

@@ -59,6 +59,7 @@ export class Disciplinar implements OnInit {
   readonly hoje = hojeISO();
 
   readonly ehCoordenador = computed(() => this.auth.currentProfile() === Role.COORD);
+  readonly podeRegistrar = computed(() => this.ehCoordenador() || this.auth.currentProfile() === Role.EDUCADOR);
   readonly abaAtiva = signal<Aba>('registros');
 
   // ---- Pendências (cartões do topo) ----
@@ -235,7 +236,7 @@ export class Disciplinar implements OnInit {
   acoesRegistro(r: RegistroDisciplinarDTO): ActionMenuItem[] {
     const itens: ActionMenuItem[] = [{ id: 'ficha', label: 'Ver ficha do assistido', icon: 'user' }];
     if (r.documentoStatus) itens.push({ id: 'documento', label: 'Imprimir documento', icon: 'file-text' });
-    if (r.arquivado) return itens;
+    if (r.arquivado || !this.ehCoordenador()) return itens;
 
     if (r.documentoStatus === 'PENDENTE_ASSINATURA') {
       itens.push({ id: 'devolvido', label: 'Marcar como devolvido assinado', icon: 'check' });
@@ -250,7 +251,7 @@ export class Disciplinar implements OnInit {
         icon: 'check-square',
       });
     }
-    if (this.ehCoordenador()) itens.push({ id: 'arquivar', label: 'Arquivar', icon: 'folder', danger: true });
+    itens.push({ id: 'arquivar', label: 'Arquivar', icon: 'folder', danger: true });
     return itens;
   }
 

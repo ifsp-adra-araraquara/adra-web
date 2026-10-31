@@ -8,11 +8,13 @@
       </p>
     </div>
 
-    <div class="page-header-acoes">
-      <app-button size="sm" (click)="mostrarRegistro.set(true)">
-        <app-icon name="plus" [size]="16" /> Registrar ocorrência
-      </app-button>
-    </div>
+    @if (podeRegistrar()) {
+      <div class="page-header-acoes">
+        <app-button size="sm" (click)="mostrarRegistro.set(true)">
+          <app-icon name="plus" [size]="16" /> Registrar ocorrência
+        </app-button>
+      </div>
+    }
   </header>
 
   <!-- ================= O QUE PRECISA DE ATENÇÃO ================= -->

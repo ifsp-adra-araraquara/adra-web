@@ -15,9 +15,11 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { AuthService } from '../../../core/auth.service';
 import { DisciplinarService } from '../../../core/disciplinar.service';
 import { NIVEIS_DISCIPLINARES, NivelDisciplinar, ORDEM_NIVEIS } from '../../enum/NivelDisciplinar';
 import { MotivoDisciplinarDTO, RegistroDisciplinarDTO } from '../../models/disciplinar/Disciplinar';
+import { Role } from '../../enum/role.enum';
 import { AssistidoResponseDTO } from '../../models/assistido/AssistidoResponseDTO';
 import { PaginaResponse } from '../../models/PaginaResponse';
 import { hojeISO } from '../../utils/aula.util';
@@ -64,6 +66,7 @@ export class RegistroDisciplinarModal {
   private readonly router = inject(Router);
   private readonly disciplinarService = inject(DisciplinarService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly auth = inject(AuthService);
 
   open = model(false);
   /** Quando informado, o modal já abre com o assistido escolhido (ficha/chamada). */
@@ -77,8 +80,11 @@ export class RegistroDisciplinarModal {
   readonly hoje = hojeISO();
 
   readonly motivos = signal<MotivoDisciplinarDTO[]>([]);
+  private readonly niveisPermitidos = computed(() =>
+    this.auth.currentProfile() === Role.EDUCADOR ? [NivelDisciplinar.OCORRENCIA] : ORDEM_NIVEIS,
+  );
   readonly gruposMotivos = computed(() =>
-    ORDEM_NIVEIS.map((nivel) => ({
+    this.niveisPermitidos().map((nivel) => ({
       nivel,
       rotulo: NIVEIS_DISCIPLINARES[nivel].rotulo,
       motivos: this.motivos().filter((m) => m.nivel === nivel),
