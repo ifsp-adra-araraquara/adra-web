@@ -5,14 +5,16 @@
       <p class="page-intro">Cadastro e acompanhamento dos assistidos.</p>
     </div>
 
-    <div class="page-header-acoes">
-      <app-button variant="secondary" size="sm" (click)="abrirCadastroEmMassa()">
-        <app-icon name="users" [size]="16" /> Cadastro em massa
-      </app-button>
-      <app-button size="sm" (click)="abrirCadastroNovo()">
-        <app-icon name="plus" [size]="16" /> Novo assistido
-      </app-button>
-    </div>
+    @if (podeEditarCadastro()) {
+      <div class="page-header-acoes">
+        <app-button variant="secondary" size="sm" (click)="abrirCadastroEmMassa()">
+          <app-icon name="users" [size]="16" /> Cadastro em massa
+        </app-button>
+        <app-button size="sm" (click)="abrirCadastroNovo()">
+          <app-icon name="plus" [size]="16" /> Novo assistido
+        </app-button>
+      </div>
+    }
   </header>
 
   @if (turmaFiltroAtual(); as turmaCtx) {
@@ -573,9 +575,11 @@
           @if (!mostrarFormNovoResponsavelVinculado()) {
             <p class="muted mb-s">Nenhum responsável cadastrado para este assistido.</p>
 
-            <app-button size="sm" (click)="abrirFormNovoResponsavelVinculado()">
-              <app-icon name="plus" [size]="16" /> Cadastrar responsável
-            </app-button>
+            @if (podeEditarCadastro()) {
+              <app-button size="sm" (click)="abrirFormNovoResponsavelVinculado()">
+                <app-icon name="plus" [size]="16" /> Cadastrar responsável
+              </app-button>
+            }
           } @else {
             @if (erroResponsavelVinculado()) {
               <div class="notice notice-error mb-s" role="alert">{{ erroResponsavelVinculado() }}</div>

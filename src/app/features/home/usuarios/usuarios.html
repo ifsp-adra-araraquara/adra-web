@@ -82,6 +82,9 @@
 
                 <td>
                   <app-badge [variant]="getBadgeVariant(usuario.nivelPermissao)" [label]="getNomePerfil(usuario.nivelPermissao)" />
+                  @if (usuario.administrador) {
+                    <app-badge variant="gray" label="Administrador" />
+                  }
                 </td>
 
                 <td>
@@ -242,6 +245,13 @@
         name="cargoFuncao"
       />
     </div>
+
+    @if (usuarioEdicao.nivelPermissao === Role.COORD) {
+      <label class="check">
+        <input type="checkbox" [(ngModel)]="usuarioEdicao.administrador" name="administrador" />
+        Administrador: gerencia usuários e convites
+      </label>
+    }
 
     @if (erroEdicao()) {
       <div class="notice notice-amber" role="alert">

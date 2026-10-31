@@ -28,7 +28,7 @@ export class OnboardingService {
   /** Só Coordenador/Sociopedagógico têm a jornada Turmas → Chamada completa mapeada. */
   podeVerTour(): boolean {
     const perfil = this.auth.currentProfile();
-    return perfil === Role.COORD || perfil === Role.SOCIO;
+    return perfil === Role.COORD || perfil === Role.EDUCADOR;
   }
 
   jaViu(): boolean {

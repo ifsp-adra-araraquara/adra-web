@@ -2,9 +2,11 @@ import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } 
 import { Router } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../../core/auth.service';
 import { ResponsavelService } from '../../../core/responsavel.service';
 import { ResponsavelResponseDTO } from '../../../shared/models/responsavel/ResponsavelResponseDTO';
 import { AssistidoVinculadoDTO } from '../../../shared/models/responsavel/AssistidoVinculadoDTO';
+import { Role } from '../../../shared/enum/role.enum';
 import { StatusGeral } from '../../../shared/enum/StatusGeral';
 import { Avatar } from '../../../shared/components/avatar/avatar';
 import { Badge } from '../../../shared/components/badge/badge';
@@ -34,6 +36,12 @@ type FiltroContato = 'todos' | 'sem-telefone' | 'sem-email' | 'sem-vinculo';
 export class Responsaveis implements OnInit {
   private responsavelService = inject(ResponsavelService);
   private router = inject(Router);
+  private auth = inject(AuthService);
+
+  readonly podeEditar = computed(() => {
+    const perfil = this.auth.currentProfile();
+    return perfil === Role.COORD || perfil === Role.ASSISTENTE;
+  });
 
   protected readonly StatusGeral = StatusGeral;
 
@@ -173,10 +181,11 @@ export class Responsaveis implements OnInit {
   }
 
   /** Menu ">" da linha. Editar só por aqui: a visualização (linha/"Ver") é só leitura. */
-  readonly acoesResponsavel: ActionMenuItem[] = [
-    { id: 'ver', label: 'Ver responsável', icon: 'eye' },
-    { id: 'editar', label: 'Editar', icon: 'edit' },
-  ];
+  readonly acoesResponsavel = computed<ActionMenuItem[]>(() => {
+    const ver: ActionMenuItem = { id: 'ver', label: 'Ver responsável', icon: 'eye' };
+    const editar: ActionMenuItem = { id: 'editar', label: 'Editar', icon: 'edit' };
+    return this.podeEditar() ? [ver, editar] : [ver];
+  });
 
   executarAcao(acao: string, responsavel: ResponsavelResponseDTO): void {
     if (acao === 'ver') {

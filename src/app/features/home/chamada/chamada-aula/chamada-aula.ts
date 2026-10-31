@@ -119,7 +119,7 @@ export class ChamadaAula {
       case SituacaoAula.PENDENTE:
         return `A chamada abre no dia da aula (${dataBr(aula.dataAula)}).`;
     }
-    if (this.perfil() === Role.SOCIO && !ehAulaDeHoje(aula.dataAula)) {
+    if (this.perfil() === Role.EDUCADOR && !ehAulaDeHoje(aula.dataAula)) {
       return 'A chamada só pode ser feita ou corrigida no dia da aula. Peça à coordenação se precisar alterar.';
     }
     if (!this.realizada() && !podeEditarChamada(this.perfil())) {

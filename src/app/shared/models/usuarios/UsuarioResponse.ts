@@ -9,6 +9,7 @@ export interface UsuarioResponse {
   cargoFuncao: string | null;
   telefone: string | null;
   ativo: boolean;
+  administrador: boolean;
   ultimoLogin: string | null;
   criadoEm: string | null;
   atualizadoEm: string | null;

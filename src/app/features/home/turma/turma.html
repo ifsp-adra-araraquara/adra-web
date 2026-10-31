@@ -100,7 +100,7 @@
     [turmaId]="turmaAulasSelecionada()?.turmaId ?? 0"
     [nomeTurma]="turmaAulasSelecionada()?.nomeTurma ?? ''"
     [aberto]="turmaAulasSelecionada() !== null"
-    [permiteAbrirAula]="ehSociopedagogico()"
+    [permiteAbrirAula]="ehEducadorSocial()"
     (fechar)="fecharAulasDaTurma()">
   </app-aulas-turma-modal>
 
@@ -145,17 +145,17 @@
           Ver aulas
         </button>
 
-        <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); abrirModalVincularAlunos(turma)">
-          <app-icon name="user-plus" />
-          Vincular alunos
-        </button>
-
-        <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); abrirModalCriarAulas(turma)">
-          <app-icon name="book-plus" />
-          Criar várias aulas
-        </button>
-
         @if (isCoordenador()) {
+          <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); abrirModalVincularAlunos(turma)">
+            <app-icon name="user-plus" />
+            Vincular alunos
+          </button>
+
+          <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); abrirModalCriarAulas(turma)">
+            <app-icon name="book-plus" />
+            Criar várias aulas
+          </button>
+
           <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); abrirModalNovaAula(turma)">
             <app-icon name="calendar-plus" />
             Nova aula (avulsa)

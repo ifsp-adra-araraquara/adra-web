@@ -49,15 +49,17 @@ export class AuthService {
   private usuarioLogado = signal<UsuarioResponse | null>(null);
 
   private dashTypeMap: Record<Role, DashboardType | null> = {
-    [Role.ADMIN]: null,
     [Role.COORD]: DashboardType.COORDENADOR,
-    [Role.SOCIO]: DashboardType.SOCIOPEDAGOGICO,
+    [Role.ASSISTENTE]: null,
+    [Role.EDUCADOR]: DashboardType.EDUCADOR_SOCIAL,
     [Role.OFICINEIRO]: null,
   };
 
   currentProfile = computed<Role | null>(() => this.usuarioLogado()?.nivelPermissao ?? null);
 
   currentUserResponse = computed<UsuarioResponse | null>(() => this.usuarioLogado());
+
+  ehAdministrador = computed(() => this.usuarioLogado()?.administrador ?? false);
 
   modulos = computed<ModuloDTO[]>(() => this.usuarioLogado()?.modulos ?? []);
 

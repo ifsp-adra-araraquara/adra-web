@@ -1,6 +1,5 @@
 export enum DashboardType {
-    ADMINISTRADOR = 'admin',
     COORDENADOR = 'coord',
-    SOCIOPEDAGOGICO = 'socio',
+    EDUCADOR_SOCIAL = 'educador',
     OFICINEIRO = 'ofici'
 }

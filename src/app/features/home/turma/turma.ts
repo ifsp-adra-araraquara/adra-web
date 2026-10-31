@@ -76,8 +76,8 @@ export class Turmas implements OnInit {
    * nem tentamos chamá-lo pra esse perfil - CA acordado com o usuário).
    */
   isCoordenador = computed(() => this.authService.currentProfile() === Role.COORD);
-  /** Só Sociopedagógico abre a aula pra tomar chamada a partir daqui (mesma regra que já existia na extinta aba "Aulas"). */
-  ehSociopedagogico = computed(() => this.authService.currentProfile() === Role.SOCIO);
+  /** Só o Educador Social abre a aula pra tomar chamada a partir daqui (mesma regra que já existia na extinta aba "Aulas"). */
+  ehEducadorSocial = computed(() => this.authService.currentProfile() === Role.EDUCADOR);
 
   turnoOptions: SelectOption<string>[] = this.turnosDisponiveis.map(t => ({
     value: t,
