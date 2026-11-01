@@ -353,6 +353,13 @@
       >
         Chamadas
       </button>
+      <button
+        class="tab"
+        [class.active]="abaVerAssistido() === 'disc'"
+        (click)="trocarAbaVerAssistido('disc')"
+      >
+        Disciplinar
+      </button>
       @if (podeEditarCadastro()) {
       <button
         class="tab"
@@ -907,6 +914,14 @@
           </ul>
         }
       }
+    }
+
+    <!-- ==================== ABA: DISCIPLINAR ==================== -->
+    @if (abaVerAssistido() === 'disc') {
+      <app-ficha-disciplinar-assistido
+        [assistidoId]="assistidoSelecionado()!.assistidoId"
+        [nome]="assistidoSelecionado()!.nomeCompleto"
+      />
     }
 
     <!-- ==================== ABA: TURMAS (histórico turma_aluno) ==================== -->

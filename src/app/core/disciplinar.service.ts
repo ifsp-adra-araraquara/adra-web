@@ -12,6 +12,7 @@ import {
   RegistroDisciplinarDTO,
   RegistroDisciplinarRequestDTO,
   SinalizacaoDisciplinarDTO,
+  ZerarContagemRequestDTO,
 } from '../shared/models/disciplinar/Disciplinar';
 
 /** FT-04: sistema disciplinar (ocorrência → advertência → suspensão, mais uniforme). */
@@ -91,6 +92,13 @@ export class DisciplinarService {
   arquivar(registroId: number, motivo: string): Promise<RegistroDisciplinarDTO> {
     return firstValueFrom(
       this.http.patch<RegistroDisciplinarDTO>(`${this.api}/disciplinar/${registroId}/arquivar`, { motivo }),
+    );
+  }
+
+  /** FT-24: só o Coordenador. Arquiva os registros ativos e devolve a ficha atualizada. */
+  zerarContagem(assistidoId: number, dto: ZerarContagemRequestDTO): Promise<FichaDisciplinarDTO> {
+    return firstValueFrom(
+      this.http.post<FichaDisciplinarDTO>(`${this.api}/assistidos/${assistidoId}/disciplinar/zerar`, dto),
     );
   }
 
