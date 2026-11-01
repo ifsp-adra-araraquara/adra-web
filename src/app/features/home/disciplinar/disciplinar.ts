@@ -16,7 +16,12 @@ import {
   RegistroDisciplinarDTO,
 } from '../../../shared/models/disciplinar/Disciplinar';
 import { hojeISO } from '../../../shared/utils/aula.util';
-import { dataBr, pendenciaDoRegistro, rotuloSequencia } from '../../../shared/utils/disciplinar.util';
+import {
+  dataBr,
+  nivelRecomendado,
+  pendenciaDoRegistro,
+  rotuloSequencia,
+} from '../../../shared/utils/disciplinar.util';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
 import { ActionMenu, ActionMenuItem } from '../../../shared/components/action-menu/action-menu';
 import { Avatar } from '../../../shared/components/avatar/avatar';
@@ -27,6 +32,7 @@ import { Input } from '../../../shared/components/input/input';
 import { Modal } from '../../../shared/components/modal/modal';
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { RegistroDisciplinarModal } from '../../../shared/components/registro-disciplinar-modal/registro-disciplinar-modal';
+import { RecomendacaoDisciplinarModal } from '../../../shared/components/recomendacao-disciplinar-modal/recomendacao-disciplinar-modal';
 
 type Aba = 'registros' | 'motivos';
 type AcaoRegistro = 'ficha' | 'documento' | 'devolvido' | 'periodo' | 'resolver' | 'arquivar';
@@ -39,7 +45,7 @@ type AcaoRegistro = 'ficha' | 'documento' | 'devolvido' | 'periodo' | 'resolver'
  */
 @Component({
   selector: 'app-disciplinar',
-  imports: [FormsModule, NgTemplateOutlet, ActionMenu, Avatar, Badge, Button, Icon, Input, Modal, Select, RegistroDisciplinarModal],
+  imports: [FormsModule, NgTemplateOutlet, ActionMenu, Avatar, Badge, Button, Icon, Input, Modal, Select, RegistroDisciplinarModal, RecomendacaoDisciplinarModal],
   templateUrl: './disciplinar.html',
   styleUrl: './disciplinar.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -64,6 +70,10 @@ export class Disciplinar implements OnInit {
 
   // ---- Pendências (cartões do topo) ----
   readonly pendencias = signal<PendenciasDisciplinaresDTO | null>(null);
+  readonly totalRecomendacoes = computed(() => {
+    const p = this.pendencias();
+    return p ? p.recomendacoesAdvertencia + p.recomendacoesSuspensao : 0;
+  });
 
   // ---- Lista ----
   readonly registros = signal<RegistroDisciplinarDTO[]>([]);
@@ -72,6 +82,7 @@ export class Disciplinar implements OnInit {
   readonly termoBusca = signal('');
   readonly filtroNivel = signal<NivelDisciplinar | ''>('');
   readonly somentePendencias = signal(false);
+  readonly somenteRecomendacoes = signal(false);
   readonly incluirArquivados = signal(false);
   readonly pagina = signal(0);
   readonly totalPaginas = signal(0);
@@ -80,7 +91,12 @@ export class Disciplinar implements OnInit {
   readonly temAnterior = computed(() => this.pagina() > 0);
   readonly temProxima = computed(() => this.pagina() < this.totalPaginas() - 1);
   readonly temFiltros = computed(
-    () => !!this.termoBusca().trim() || !!this.filtroNivel() || this.somentePendencias() || this.incluirArquivados(),
+    () =>
+      !!this.termoBusca().trim() ||
+      !!this.filtroNivel() ||
+      this.somentePendencias() ||
+      this.somenteRecomendacoes() ||
+      this.incluirArquivados(),
   );
   private buscaTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -91,6 +107,9 @@ export class Disciplinar implements OnInit {
 
   // ---- Registrar ----
   readonly mostrarRegistro = signal(false);
+
+  // ---- Gerar pela recomendação (FT-22) ----
+  readonly recomendacaoEmAcao = signal<RegistroDisciplinarDTO[]>([]);
 
   // ---- Ações sobre um registro ----
   readonly registroEmAcao = signal<RegistroDisciplinarDTO | null>(null);
@@ -110,6 +129,7 @@ export class Disciplinar implements OnInit {
       case 'periodo':
         return 'Período da suspensão';
       case 'resolver':
+        if (this.ehRecomendacao(this.registroEmAcao())) return 'Dispensar recomendação';
         return this.registroEmAcao()?.consequencia === 'RETORNO_COM_RESPONSAVEL'
           ? 'Conversa com o responsável'
           : 'Passeio perdido';
@@ -166,6 +186,11 @@ export class Disciplinar implements OnInit {
     this.recarregar();
   }
 
+  alternarRecomendacoes(): void {
+    this.somenteRecomendacoes.update((v) => !v);
+    this.recarregar();
+  }
+
   alternarArquivados(): void {
     this.incluirArquivados.update((v) => !v);
     this.recarregar();
@@ -175,6 +200,7 @@ export class Disciplinar implements OnInit {
     this.termoBusca.set('');
     this.filtroNivel.set('');
     this.somentePendencias.set(false);
+    this.somenteRecomendacoes.set(false);
     this.incluirArquivados.set(false);
     this.recarregar();
   }
@@ -209,6 +235,7 @@ export class Disciplinar implements OnInit {
         busca: this.termoBusca(),
         nivel: this.filtroNivel() || null,
         somentePendencias: this.somentePendencias(),
+        somenteRecomendacoes: this.somenteRecomendacoes(),
         incluirArquivados: this.incluirArquivados(),
         pagina: this.pagina(),
         tamanho: this.tamanho,
@@ -244,7 +271,11 @@ export class Disciplinar implements OnInit {
     if (r.nivel === NivelDisciplinar.SUSPENSAO) {
       itens.push({ id: 'periodo', label: 'Ajustar período da suspensão', icon: 'calendar' });
     }
-    if (r.consequenciaPendente) {
+    const nivelAGerar = nivelRecomendado(r.consequencia);
+    if (r.consequenciaPendente && nivelAGerar) {
+      itens.push({ id: 'gerar', label: `Gerar ${NIVEIS_DISCIPLINARES[nivelAGerar].rotulo.toLowerCase()}`, icon: 'flag' });
+      itens.push({ id: 'resolver', label: 'Dispensar recomendação', icon: 'check-square' });
+    } else if (r.consequenciaPendente) {
       itens.push({
         id: 'resolver',
         label: r.consequencia === 'RETORNO_COM_RESPONSAVEL' ? 'Registrar conversa com responsável' : 'Registrar passeio perdido',
@@ -256,6 +287,10 @@ export class Disciplinar implements OnInit {
   }
 
   executarAcao(acao: string, r: RegistroDisciplinarDTO): void {
+    if (acao === 'gerar') {
+      this.recomendacaoEmAcao.set([r]);
+      return;
+    }
     switch (acao as AcaoRegistro) {
       case 'ficha':
         this.router.navigate(['/assistidos'], { queryParams: { assistidoId: r.assistidoId } });
@@ -277,6 +312,10 @@ export class Disciplinar implements OnInit {
     this.acaoInicio.set(r.suspensaoInicio ?? this.hoje);
     this.acaoFim.set(r.suspensaoFim ?? this.hoje);
     this.acaoAberta.set(acao);
+  }
+
+  ehRecomendacao(r: RegistroDisciplinarDTO | null): boolean {
+    return !!r && nivelRecomendado(r.consequencia) !== null;
   }
 
   fecharAcao(): void {

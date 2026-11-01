@@ -52,7 +52,7 @@
         <p class="paragrafo">
           Comunicamos que o(a) atendido(a) <b>{{ r.nomeAssistido }}</b> recebeu <b>advertência escrita</b> em
           {{ dataBr(r.dataRegistro) }},
-          @if (r.origem === 'PROGRESSAO') {
+          @if (r.origem === 'RECOMENDACAO') {
             por ter completado <b>três ocorrências</b> registradas no Livro de Ocorrências.
           } @else {
             pelo seguinte motivo: <b>{{ r.motivo }}</b>.
@@ -71,7 +71,7 @@
           Comunicamos que o(a) atendido(a) <b>{{ r.nomeAssistido }}</b> está <b>suspenso(a)</b> das atividades do
           projeto de <b>{{ dataBr(r.suspensaoInicio) }}</b> a <b>{{ dataBr(r.suspensaoFim) }}</b>, podendo retornar
           em <b>{{ dataRetorno() }}</b>,
-          @if (r.origem === 'PROGRESSAO') {
+          @if (r.origem === 'RECOMENDACAO') {
             por ter completado <b>três advertências escritas</b>.
           } @else {
             pelo seguinte motivo: <b>{{ r.motivo }}</b>.

@@ -1,0 +1,77 @@
+@for (r of atual(); track r.registroId) {
+  <app-modal [open]="true" title="Recomendação da Cartilha" [subtitle]="r.nomeAssistido" size="sm" (closed)="proxima()">
+    <div modal-icon class="mh-ico ico-amber">
+      <app-icon name="alert-triangle" />
+    </div>
+
+    @if (erro()) {
+      <div class="notice notice-error" role="alert">{{ erro() }}</div>
+    }
+
+    <p class="recomendacao-texto">{{ texto(r) }}</p>
+
+    @if (!ehCoordenador()) {
+      <p class="hint">A coordenação foi avisada.</p>
+    } @else if (!podeGerar()) {
+      <p class="hint">Registre na tela Disciplinar quando for resolvido.</p>
+    }
+
+    @if (formAberto()) {
+      <app-input
+        label="Data"
+        type="date"
+        [max]="hoje"
+        [required]="true"
+        [ngModel]="data()"
+        (ngModelChange)="onData($event)"
+      />
+      @if (ehSuspensao()) {
+        <div class="form-row">
+          <app-input
+            label="Suspenso de"
+            type="date"
+            [ngModel]="suspensaoInicio()"
+            (ngModelChange)="suspensaoInicio.set($event)"
+          />
+          <app-input
+            label="Até"
+            type="date"
+            [min]="suspensaoInicio()"
+            [ngModel]="suspensaoFim()"
+            (ngModelChange)="suspensaoFim.set($event)"
+          />
+        </div>
+      }
+      <div class="field">
+        <label for="recomendacao-descricao">Descrição</label>
+        <textarea
+          id="recomendacao-descricao"
+          rows="3"
+          [ngModel]="descricao()"
+          (ngModelChange)="descricao.set($event)"
+          [attr.aria-invalid]="erroCampos() ? true : null"
+          [attr.aria-describedby]="erroCampos() ? 'recomendacao-erro' : null"
+        ></textarea>
+      </div>
+      @if (erroCampos(); as msg) {
+        <p id="recomendacao-erro" class="app-input-error" role="alert">{{ msg }}</p>
+      }
+    }
+
+    @if (restantes() > 0) {
+      <p class="hint fila">Mais {{ restantes() }} {{ restantes() === 1 ? 'recomendação' : 'recomendações' }} depois desta.</p>
+    }
+
+    <ng-template #footer>
+      @if (podeGerar() && formAberto()) {
+        <app-button variant="secondary" (click)="formAberto.set(false)">Voltar</app-button>
+        <app-button [loading]="salvando()" (click)="gerar(r)">Gerar {{ rotuloGerar() }}</app-button>
+      } @else if (podeGerar()) {
+        <app-button variant="secondary" (click)="proxima()">Agora não</app-button>
+        <app-button (click)="abrirFormulario(r)">Gerar {{ rotuloGerar() }} agora</app-button>
+      } @else {
+        <app-button (click)="proxima()">Entendi</app-button>
+      }
+    </ng-template>
+  </app-modal>
+}

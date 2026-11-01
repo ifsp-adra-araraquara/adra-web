@@ -9,6 +9,7 @@ import {
   model,
   output,
   signal,
+  untracked,
 } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -18,12 +19,16 @@ import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/auth.service';
 import { DisciplinarService } from '../../../core/disciplinar.service';
 import { NIVEIS_DISCIPLINARES, NivelDisciplinar, ORDEM_NIVEIS } from '../../enum/NivelDisciplinar';
-import { MotivoDisciplinarDTO, RegistroDisciplinarDTO } from '../../models/disciplinar/Disciplinar';
+import {
+  MotivoDisciplinarDTO,
+  RegistroCriadoDTO,
+  RegistroDisciplinarDTO,
+} from '../../models/disciplinar/Disciplinar';
 import { Role } from '../../enum/role.enum';
 import { AssistidoResponseDTO } from '../../models/assistido/AssistidoResponseDTO';
 import { PaginaResponse } from '../../models/PaginaResponse';
 import { hojeISO } from '../../utils/aula.util';
-import { dataBr, rotuloSequencia } from '../../utils/disciplinar.util';
+import { dataBr, rotuloSequencia, somarDias } from '../../utils/disciplinar.util';
 import { mensagemErro } from '../../utils/erro-http.util';
 import { Modal } from '../modal/modal';
 import { Button } from '../button/button';
@@ -32,6 +37,7 @@ import { Icon } from '../icon/icon';
 import { Badge } from '../badge/badge';
 import { Avatar } from '../avatar/avatar';
 import { calcularIdade } from '../../utils/idade.util';
+import { RecomendacaoDisciplinarModal } from '../recomendacao-disciplinar-modal/recomendacao-disciplinar-modal';
 
 export interface AssistidoSelecionado {
   assistidoId: number;
@@ -47,16 +53,16 @@ const TAMANHO_LISTA = 5;
 const DIAS_SUSPENSAO_PADRAO = 3;
 
 /**
- * Modal de registro disciplinar (FT-04). Reaproveitado na tela Disciplinar,
- * na ficha do assistido e na chamada — quando o assistido (e a aula) já são
- * conhecidos, vêm por input e a busca some.
+ * Modal de registro disciplinar (FT-04/FT-22). Quando o atendido (e a aula)
+ * já são conhecidos, vêm por input e a busca some; sem input, a busca permite
+ * escolher vários atendidos para o mesmo fato (um registro por atendido).
  *
- * Depois de salvar, mostra o que aconteceu (inclusive a progressão:
- * "a 3ª ocorrência gerou uma advertência") e oferece imprimir o documento.
+ * Depois de salvar, mostra o que foi registrado, oferece imprimir o documento
+ * e abre o modal de recomendação para cada atendido que chegou a 3 do nível.
  */
 @Component({
   selector: 'app-registro-disciplinar-modal',
-  imports: [FormsModule, Modal, Button, Input, Icon, Badge, Avatar],
+  imports: [FormsModule, Modal, Button, Input, Icon, Badge, Avatar, RecomendacaoDisciplinarModal],
   templateUrl: './registro-disciplinar-modal.html',
   styleUrl: './registro-disciplinar-modal.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -73,7 +79,7 @@ export class RegistroDisciplinarModal {
   assistido = input<AssistidoSelecionado | null>(null);
   /** Aula em que aconteceu, quando registrado pela chamada. */
   aulaId = input<number | null>(null);
-  salvo = output<RegistroDisciplinarDTO[]>();
+  salvo = output<RegistroCriadoDTO[]>();
 
   readonly NIVEIS = NIVEIS_DISCIPLINARES;
   readonly dataBr = dataBr;
@@ -95,7 +101,7 @@ export class RegistroDisciplinarModal {
   readonly termoBusca = signal('');
   readonly resultadosBusca = signal<AssistidoSelecionado[]>([]);
   readonly buscando = signal(false);
-  readonly assistidoEscolhido = signal<AssistidoSelecionado | null>(null);
+  readonly escolhidos = signal<AssistidoSelecionado[]>([]);
   private buscaTimer: ReturnType<typeof setTimeout> | null = null;
 
   // Formulário
@@ -103,7 +109,7 @@ export class RegistroDisciplinarModal {
   readonly data = signal(this.hoje);
   readonly descricao = signal('');
   readonly suspensaoInicio = signal(this.hoje);
-  readonly suspensaoFim = signal(this.somarDias(this.hoje, DIAS_SUSPENSAO_PADRAO - 1));
+  readonly suspensaoFim = signal(somarDias(this.hoje, DIAS_SUSPENSAO_PADRAO - 1));
 
   readonly salvando = signal(false);
   readonly erro = signal<string | null>(null);
@@ -111,24 +117,36 @@ export class RegistroDisciplinarModal {
   readonly erroData = signal<string | null>(null);
   readonly erroDescricao = signal<string | null>(null);
   readonly erroSuspensao = signal<string | null>(null);
-  readonly resultado = signal<RegistroDisciplinarDTO[] | null>(null);
+  readonly resultado = signal<RegistroCriadoDTO[] | null>(null);
 
-  readonly assistidoAtual = computed(() => this.assistido() ?? this.assistidoEscolhido());
+  readonly assistidosAtuais = computed(() => {
+    const doInput = this.assistido();
+    return doInput ? [doInput] : this.escolhidos();
+  });
+  readonly varios = computed(() => this.assistidosAtuais().length > 1);
+  readonly subtitulo = computed(() => {
+    const atuais = this.assistidosAtuais();
+    return atuais.length === 1 ? atuais[0].nomeCompleto : atuais.length > 1 ? `${atuais.length} atendidos` : '';
+  });
   readonly motivoSelecionado = computed(() => this.motivos().find((m) => m.motivoId === this.motivoId()) ?? null);
   readonly nivelSelecionado = computed(() => this.motivoSelecionado()?.nivel ?? null);
   readonly ehSuspensao = computed(() => this.nivelSelecionado() === NivelDisciplinar.SUSPENSAO);
 
-  /** O registro lançado (1º) e os gerados pela progressão (demais). */
-  readonly registroPrincipal = computed(() => this.resultado()?.[0] ?? null);
-  readonly gerados = computed(() => this.resultado()?.slice(1) ?? []);
-  readonly comDocumento = computed(() => (this.resultado() ?? []).filter((r) => r.documentoStatus !== null));
+  readonly registrados = computed(() => (this.resultado() ?? []).map((c) => c.registro));
+  readonly comDocumento = computed(() => this.registrados().filter((r) => r.documentoStatus !== null));
+  readonly recomendacoes = computed(() =>
+    (this.resultado() ?? []).flatMap((c) => (c.recomendacao ? [c.recomendacao] : [])),
+  );
 
   constructor() {
     // Sempre que abre: limpa o estado e carrega os motivos ativos.
     effect(() => {
       if (this.open()) {
-        this.reiniciar();
-        this.carregarMotivos();
+        // untracked: a chegada dos motivos não pode reabrir (e limpar) o formulário.
+        untracked(() => {
+          this.reiniciar();
+          this.carregarMotivos();
+        });
       }
     });
     this.destroyRef.onDestroy(() => this.buscaTimer && clearTimeout(this.buscaTimer));
@@ -149,13 +167,17 @@ export class RegistroDisciplinarModal {
   }
 
   escolherAssistido(a: AssistidoSelecionado): void {
-    this.assistidoEscolhido.set(a);
+    if (!this.estaEscolhido(a)) this.escolhidos.update((lista) => [...lista, a]);
     this.resultadosBusca.set([]);
     this.termoBusca.set('');
   }
 
-  trocarAssistido(): void {
-    this.assistidoEscolhido.set(null);
+  removerAssistido(a: AssistidoSelecionado): void {
+    this.escolhidos.update((lista) => lista.filter((e) => e.assistidoId !== a.assistidoId));
+  }
+
+  estaEscolhido(a: AssistidoSelecionado): boolean {
+    return this.escolhidos().some((e) => e.assistidoId === a.assistidoId);
   }
 
   descricaoAssistido(a: AssistidoSelecionado): string {
@@ -167,13 +189,13 @@ export class RegistroDisciplinarModal {
     this.data.set(valor);
     // Acompanha a data do fato enquanto a pessoa não mexeu no período.
     this.suspensaoInicio.set(valor);
-    this.suspensaoFim.set(this.somarDias(valor, DIAS_SUSPENSAO_PADRAO - 1));
+    this.suspensaoFim.set(somarDias(valor, DIAS_SUSPENSAO_PADRAO - 1));
   }
 
   async registrar(): Promise<void> {
-    const assistido = this.assistidoAtual();
-    if (!assistido) {
-      this.erro.set('Escolha o assistido.');
+    const atendidos = this.assistidosAtuais();
+    if (atendidos.length === 0) {
+      this.erro.set('Escolha ao menos um atendido.');
       return;
     }
     if (!this.validar()) {
@@ -184,14 +206,23 @@ export class RegistroDisciplinarModal {
     this.salvando.set(true);
     this.erro.set(null);
     try {
-      const criados = await this.disciplinarService.registrar(assistido.assistidoId, {
-        motivoId: this.motivoId()!,
-        data: this.data(),
-        descricao: this.descricao().trim(),
-        aulaId: this.aulaId(),
-        suspensaoInicio: this.ehSuspensao() ? this.suspensaoInicio() : null,
-        suspensaoFim: this.ehSuspensao() ? this.suspensaoFim() : null,
-      });
+      const criados = this.varios()
+        ? await this.disciplinarService.registrarVarios({
+            assistidoIds: atendidos.map((a) => a.assistidoId),
+            motivoId: this.motivoId()!,
+            data: this.data(),
+            descricao: this.descricao().trim(),
+          })
+        : [
+            await this.disciplinarService.registrar(atendidos[0].assistidoId, {
+              motivoId: this.motivoId()!,
+              data: this.data(),
+              descricao: this.descricao().trim(),
+              aulaId: this.aulaId(),
+              suspensaoInicio: this.ehSuspensao() ? this.suspensaoInicio() : null,
+              suspensaoFim: this.ehSuspensao() ? this.suspensaoFim() : null,
+            }),
+          ];
       this.resultado.set(criados);
       this.salvo.emit(criados);
     } catch (e) {
@@ -201,16 +232,21 @@ export class RegistroDisciplinarModal {
     }
   }
 
-  /** "Registrar outro" mantém o assistido escolhido (vários fatos do mesmo aluno). */
+  /** "Registrar outro" mantém os atendidos escolhidos (vários fatos dos mesmos atendidos). */
   registrarOutro(): void {
-    const escolhido = this.assistidoEscolhido();
+    const escolhidos = this.escolhidos();
     this.reiniciar();
-    this.assistidoEscolhido.set(escolhido);
+    this.escolhidos.set(escolhidos);
   }
 
   imprimir(registro: RegistroDisciplinarDTO): void {
     this.fechar();
     this.router.navigate(['/disciplinar/documento', registro.registroId]);
+  }
+
+  /** A advertência/suspensão gerada pelo modal de recomendação também conta como salvo (a tela recarrega). */
+  aoGerarPelaRecomendacao(criado: RegistroCriadoDTO): void {
+    this.salvo.emit([criado]);
   }
 
   fechar(): void {
@@ -229,7 +265,7 @@ export class RegistroDisciplinarModal {
     );
     this.erroDescricao.set(!this.descricao().trim() ? 'Descreva o que aconteceu.' : null);
     this.erroSuspensao.set(
-      !this.ehSuspensao()
+      !this.ehSuspensao() || this.varios()
         ? null
         : !this.suspensaoInicio() || !this.suspensaoFim()
           ? 'Informe o período da suspensão.'
@@ -241,14 +277,14 @@ export class RegistroDisciplinarModal {
   }
 
   private reiniciar(): void {
-    this.assistidoEscolhido.set(null);
+    this.escolhidos.set([]);
     this.termoBusca.set('');
     this.resultadosBusca.set([]);
     this.motivoId.set(null);
     this.data.set(this.hoje);
     this.descricao.set('');
     this.suspensaoInicio.set(this.hoje);
-    this.suspensaoFim.set(this.somarDias(this.hoje, DIAS_SUSPENSAO_PADRAO - 1));
+    this.suspensaoFim.set(somarDias(this.hoje, DIAS_SUSPENSAO_PADRAO - 1));
     this.erro.set(null);
     this.erroMotivo.set(null);
     this.erroData.set(null);
@@ -287,11 +323,5 @@ export class RegistroDisciplinarModal {
     } finally {
       this.buscando.set(false);
     }
-  }
-
-  private somarDias(iso: string, dias: number): string {
-    const [a, m, d] = iso.split('-').map(Number);
-    const data = new Date(a, m - 1, d + dias);
-    return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`;
   }
 }

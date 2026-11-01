@@ -13,7 +13,7 @@ export interface InfoNivelDisciplinar {
   /** Rótulo no plural, para resumos ("3 ocorrências"). */
   plural: string;
   variant: BadgeVariant;
-  /** O que acontece na 3ª, como nos cartazes. */
+  /** O que a 3ª recomenda, como nos cartazes. */
   consequencia: string;
 }
 
@@ -23,25 +23,25 @@ export const NIVEIS_DISCIPLINARES: Record<NivelDisciplinar, InfoNivelDisciplinar
     rotulo: 'Ocorrência',
     plural: 'Ocorrências',
     variant: 'amber',
-    consequencia: 'Na 3ª, gera advertência escrita para os pais assinarem.',
+    consequencia: 'Na 3ª, recomenda advertência escrita para os pais assinarem.',
   },
   [NivelDisciplinar.ADVERTENCIA]: {
     rotulo: 'Advertência',
     plural: 'Advertências',
     variant: 'coral',
-    consequencia: 'Na 3ª, suspensão de 3 dias.',
+    consequencia: 'Na 3ª, recomenda suspensão de 3 dias.',
   },
   [NivelDisciplinar.SUSPENSAO]: {
     rotulo: 'Suspensão',
     plural: 'Suspensões',
     variant: 'red',
-    consequencia: 'Na 3ª, perde o próximo passeio.',
+    consequencia: 'Na 3ª, recomenda perder o próximo passeio.',
   },
   [NivelDisciplinar.UNIFORME]: {
     rotulo: 'Uniforme',
     plural: 'Uniforme',
     variant: 'blue',
-    consequencia: 'Na 3ª, só retorna acompanhado do responsável.',
+    consequencia: 'Na 3ª, recomenda retorno acompanhado do responsável.',
   },
 };
 
