@@ -7,6 +7,7 @@ import { PreCadastroResumoDTO, StatusPreCadastro } from '../../../shared/models/
 import { Badge } from '../../../shared/components/badge/badge';
 import { Icon } from '../../../shared/components/icon/icon';
 import { Input } from '../../../shared/components/input/input';
+import { LinkInscricao } from './link-inscricao';
 import { formatarTelefone } from '../../../shared/utils/mascara.util';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
 
@@ -29,7 +30,7 @@ export function haQuantoTempo(criadoEm: string, agora: Date): string {
 /** Inscrições enviadas pelo link público, para a Coordenação e a Assistente Social avaliarem. */
 @Component({
   selector: 'app-pre-cadastros',
-  imports: [RouterLink, Badge, Icon, Input],
+  imports: [RouterLink, Badge, Icon, Input, LinkInscricao],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="page" aria-labelledby="pc-lista-titulo">
@@ -37,6 +38,9 @@ export function haQuantoTempo(criadoEm: string, agora: Date): string {
         <div class="page-header-texto">
           <h1 id="pc-lista-titulo">Pré-cadastros</h1>
           <p class="page-intro">Inscrições enviadas pelas famílias pelo link público.</p>
+        </div>
+        <div class="page-header-acoes">
+          <app-link-inscricao />
         </div>
       </header>
 
@@ -86,6 +90,9 @@ export function haQuantoTempo(criadoEm: string, agora: Date): string {
                 }
                 <span class="item__quando">Chegou {{ haQuantoTempo(item.criadoEm) }}</span>
                 @if (item.cpfJaCadastrado) { <app-badge variant="amber" label="CPF já cadastrado" /> }
+                @if (item.anexosFaltando.length) {
+                  <app-badge variant="amber" [label]="'Faltam: ' + item.anexosFaltando.join(', ').toLocaleLowerCase('pt-BR')" />
+                }
                 @if (status() !== 'PENDENTE') { <app-badge [status]="item.status" /> }
               </div>
             </li>

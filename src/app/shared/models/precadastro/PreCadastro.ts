@@ -2,6 +2,7 @@ import { Escolaridade } from '../../enum/Escolaridade';
 import { EstadoCivil } from '../../enum/EstadoCivil';
 import { ProgramaTransferencia } from '../../enum/ProgramaTransferencia';
 import { Sexo } from '../../enum/Sexo';
+import { ArquivoResponseDTO } from '../arquivo/ArquivoResponseDTO';
 import { EnderecoDTO } from '../endereco/EnderecoDTO';
 
 /** Respostas do formulário de inscrição além das colunas (espelha PreCadastroDadosDTO da API). */
@@ -73,6 +74,15 @@ export interface PreCadastroResumoDTO {
   status: StatusPreCadastro;
   cpfJaCadastrado: boolean;
   assistidoId: number | null;
+  /** O que a família não enviou ("Foto da criança"...). Vazio depois de aprovado. */
+  anexosFaltando: string[];
+}
+
+/** Foto e documentos opcionais enviados junto com a inscrição. */
+export interface AnexosPreCadastro {
+  foto: File | null;
+  documentosCrianca: File[];
+  documentosResponsavel: File[];
 }
 
 export interface PreCadastroResponseDTO {
@@ -91,6 +101,9 @@ export interface PreCadastroResponseDTO {
   assistidoId: number | null;
   /** Atendido que já tem este CPF (só para pendentes). */
   assistidoExistenteId: number | null;
+  /** Foto e documentos enviados (até a aprovação; depois ficam no atendido e no responsável). */
+  arquivos: ArquivoResponseDTO[];
+  anexosFaltando: string[];
   revisadoPorNome: string | null;
   revisadoEm: string | null;
   criadoEm: string;

@@ -43,6 +43,15 @@
       }
     }
 
+    @if (d.anexosFaltando.length && d.status !== 'CONVERTIDO') {
+      <div class="notice notice-amber" role="status">
+        <app-icon name="alert-triangle" />
+        <span>
+          <b>A família não enviou:</b> {{ d.anexosFaltando.join(', ') }}. Peça na entrevista ou no dia do cadastro.
+        </span>
+      </div>
+    }
+
     @if (d.status === 'CONVERTIDO') {
       <div class="notice notice-info" role="status">
         <app-icon name="check" />
@@ -115,6 +124,19 @@
       }
 
       <aside class="card card-pad respostas" aria-labelledby="sec-respostas">
+        @if (d.arquivos.length) {
+          <h2 class="form-sec-title">Documentos enviados</h2>
+          <ul class="anexos" role="list">
+            @for (arquivo of d.arquivos; track arquivo.arquivoId) {
+              <li>
+                <span>{{ rotuloDoAnexo(arquivo.categoria) }}</span>
+                <app-button variant="secondary" size="sm" (click)="abrirArquivo(arquivo.arquivoId)">
+                  <app-icon name="eye" [size]="16" /> Ver <span class="sr-only">{{ rotuloDoAnexo(arquivo.categoria) }}</span>
+                </app-button>
+              </li>
+            }
+          </ul>
+        }
         <h2 id="sec-respostas" class="form-sec-title">Respostas da família</h2>
         <app-respostas-familia [detalhe]="d" />
       </aside>

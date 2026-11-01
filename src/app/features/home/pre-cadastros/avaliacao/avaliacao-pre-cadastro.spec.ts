@@ -22,6 +22,8 @@ const detalhe = {
   motivoReprovacao: null,
   assistidoId: null,
   assistidoExistenteId: null,
+  arquivos: [],
+  anexosFaltando: ['Foto da criança', 'Documento do responsável'],
   revisadoPorNome: null,
   revisadoEm: null,
   criadoEm: '2026-11-01T10:00:00Z',
@@ -77,6 +79,10 @@ describe('AvaliacaoPreCadastro', () => {
   const texto = () => (fixture.nativeElement as HTMLElement).textContent ?? '';
   const botao = (rotulo: string) =>
     [...(fixture.nativeElement as HTMLElement).querySelectorAll('button')].find((b) => b.textContent?.includes(rotulo))!;
+
+  it('avisa o que a família não enviou', () => {
+    expect(texto()).toContain('A família não enviou: Foto da criança, Documento do responsável');
+  });
 
   it('aprovar com CPF já cadastrado mostra o aviso com o link para a ficha', async () => {
     service.aprovar.mockRejectedValue(

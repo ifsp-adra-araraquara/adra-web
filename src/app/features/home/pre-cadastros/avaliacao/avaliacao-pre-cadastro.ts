@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DOCUMENT, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -7,6 +7,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { environment } from '../../../../../environments/environment';
 import { PreCadastroService } from '../../../../core/pre-cadastro.service';
+import { CategoriaArquivo } from '../../../../shared/enum/CategoriaArquivo';
 import { AssistidoRequestDTO } from '../../../../shared/models/assistido/AssistidoRequestDTO';
 import { PreCadastroResponseDTO } from '../../../../shared/models/precadastro/PreCadastro';
 import { TurmaResponseDTO } from '../../../../shared/models/turma/TurmaResponseDTO';
@@ -33,6 +34,12 @@ import { SocioeconomicoAssistidoForm } from '../../assistidos/socioeconomico/soc
 import { TermosAssistidoForm } from '../../assistidos/termos/termos-assistido';
 import { ResponsaveisPendentes } from '../../assistidos/novo/responsaveis-pendentes';
 import { RespostasFamilia } from './respostas-familia';
+
+const ROTULOS_ANEXO: Partial<Record<CategoriaArquivo, string>> = {
+  [CategoriaArquivo.FOTO_PERFIL]: 'Foto da criança',
+  [CategoriaArquivo.DOCUMENTO_IDENTIDADE]: 'Documento da criança',
+  [CategoriaArquivo.DOCUMENTO_RESPONSAVEL]: 'Documento do responsável',
+};
 
 /** Rascunho da API → responsável editável no formulário. */
 function paraResponsavelPendente(v: VinculoFamiliarComResponsavelRequestDTO): ResponsavelPendente {
@@ -81,6 +88,7 @@ export class AvaliacaoPreCadastro implements OnInit {
   private readonly service = inject(PreCadastroService);
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly document = inject(DOCUMENT);
   private readonly preCadastroId = Number(inject(ActivatedRoute).snapshot.paramMap.get('id'));
 
   protected readonly sexoOptions = SEXO_OPTIONS;
@@ -134,6 +142,22 @@ export class AvaliacaoPreCadastro implements OnInit {
 
   protected atualizar(campo: keyof AssistidoRequestDTO, valor: unknown): void {
     this.assistido.update((a) => ({ ...a, [campo]: valor }));
+  }
+
+  protected rotuloDoAnexo(categoria: CategoriaArquivo): string {
+    return ROTULOS_ANEXO[categoria] ?? 'Arquivo';
+  }
+
+  /** A janela abre antes do await: depois dele o navegador bloquearia como pop-up. */
+  protected async abrirArquivo(arquivoId: number): Promise<void> {
+    const janela = this.document.defaultView?.open('', '_blank');
+    try {
+      const { url } = await this.service.urlDoArquivo(this.preCadastroId, arquivoId);
+      if (janela) janela.location.href = url;
+    } catch (e) {
+      janela?.close();
+      this.erroAcao.set(mensagemErro(e as HttpErrorResponse, 'Não foi possível abrir o arquivo.'));
+    }
   }
 
   protected abrirFichaDoAtendido(assistidoId: number): void {

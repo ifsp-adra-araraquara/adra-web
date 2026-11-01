@@ -12,6 +12,7 @@ import { mensagemErro } from '../../shared/utils/erro-http.util';
 import { ANO_INSCRICAO } from '../../shared/utils/termos-inscricao';
 import { CabecalhoEtapas } from './cabecalho-etapas';
 import { EtapaCrianca } from './etapas/etapa-crianca';
+import { EtapaDocumentos } from './etapas/etapa-documentos';
 import { EtapaRenda } from './etapas/etapa-renda';
 import { EtapaResponsaveis } from './etapas/etapa-responsaveis';
 import { EtapaRevisao } from './etapas/etapa-revisao';
@@ -37,6 +38,7 @@ import { ChaveEtapa, ETAPAS, aplicarCondicionais, criarFormularioPreCadastro, pa
     EtapaResponsaveis,
     EtapaRenda,
     EtapaSaudeAutorizacoes,
+    EtapaDocumentos,
     EtapaRevisao,
   ],
   templateUrl: './pre-cadastro.html',
@@ -60,6 +62,16 @@ export class PreCadastro {
   protected readonly protocolo = signal<number | null>(null);
   protected readonly erroEnvio = signal<string | null>(null);
 
+  /** Opcionais e fora do FormGroup (são arquivos). */
+  protected readonly foto = signal<File | null>(null);
+  protected readonly documentosCrianca = signal<File[]>([]);
+  protected readonly documentosResponsavel = signal<File[]>([]);
+  protected readonly anexos = computed(() => ({
+    foto: this.foto(),
+    documentosCrianca: this.documentosCrianca(),
+    documentosResponsavel: this.documentosResponsavel(),
+  }));
+
   private readonly tituloEtapa = viewChild<ElementRef<HTMLElement>>('tituloEtapa');
   private readonly corpoEtapa = viewChild<ElementRef<HTMLElement>>('corpoEtapa');
 
@@ -72,6 +84,10 @@ export class PreCadastro {
     const chave = this.etapa().chave;
     if (chave === 'revisao') {
       this.enviar();
+      return;
+    }
+    if (chave === 'documentos') {
+      this.mostrarEtapa(this.indice() + 1);
       return;
     }
     const grupo = this.form.controls[chave];
@@ -95,6 +111,9 @@ export class PreCadastro {
   protected fazerOutraInscricao(): void {
     this.form.reset();
     aplicarCondicionais(this.form);
+    this.foto.set(null);
+    this.documentosCrianca.set([]);
+    this.documentosResponsavel.set([]);
     this.enviado.set(false);
     this.protocolo.set(null);
     this.mostrarEtapa(0);
@@ -115,7 +134,7 @@ export class PreCadastro {
     this.erroEnvio.set(null);
     this.enviando.set(true);
     try {
-      this.protocolo.set(await this.service.registrarPublico(paraPayload(this.form)));
+      this.protocolo.set(await this.service.registrarPublico(paraPayload(this.form), this.anexos()));
       this.enviado.set(true);
       this.form.markAsPristine();
       this.rolarAoTopo();
