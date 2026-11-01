@@ -60,6 +60,7 @@ import { DadosComplementaresAssistidoForm, SEXO_OPTIONS } from './dados-compleme
 import { DadosComplementaresResponsavelForm } from '../responsaveis/dados-complementares/dados-complementares-responsavel';
 import { SocioeconomicoAssistidoForm } from './socioeconomico/socioeconomico-assistido';
 import { TermosAssistidoForm } from './termos/termos-assistido';
+import { FichaDisciplinarAssistido } from './ficha-disciplinar/ficha-disciplinar-assistido';
 import { ElegibilidadeDTO } from '../../../shared/models/assistido/ElegibilidadeDTO';
 import {
   PROGRAMA_TRANSFERENCIA_LABELS,
@@ -80,7 +81,7 @@ import {
 @Component({
   selector: 'app-assistidos',
   standalone: true,
-  imports: [ActionMenu, TooltipDirective, Icon, CommonModule, FormsModule, Select, Input, Button, Modal, Badge, AulasTurmaModal, FotoPerfil, Avatar, UploadDocumento, ListaDocumentos, DadosComplementaresAssistidoForm, DadosComplementaresResponsavelForm, SocioeconomicoAssistidoForm, TermosAssistidoForm],
+  imports: [ActionMenu, TooltipDirective, Icon, CommonModule, FormsModule, Select, Input, Button, Modal, Badge, AulasTurmaModal, FotoPerfil, Avatar, UploadDocumento, ListaDocumentos, DadosComplementaresAssistidoForm, DadosComplementaresResponsavelForm, SocioeconomicoAssistidoForm, TermosAssistidoForm, FichaDisciplinarAssistido],
   templateUrl: './assistidos.html',
   styleUrl: './assistidos.css',
 })
@@ -147,9 +148,9 @@ export class Assistidos implements OnInit {
   assistidoSelecionadoStatus = signal<AssistidoResponseDTO | null>(null);
   novoStatusDesejado = signal<StatusGeral>(StatusGeral.INATIVO);
 
-  abaVerAssistido = signal<'dados' | 'fam' | 'perm' | 'cham' | 'turmas'>('dados');
+  abaVerAssistido = signal<'dados' | 'fam' | 'perm' | 'cham' | 'disc' | 'turmas'>('dados');
 
-  trocarAbaVerAssistido(aba: 'dados' | 'fam' | 'perm' | 'cham' | 'turmas') {
+  trocarAbaVerAssistido(aba: 'dados' | 'fam' | 'perm' | 'cham' | 'disc' | 'turmas') {
     this.abaVerAssistido.set(aba);
 
     // Carrega o histórico de turmas só na primeira vez que a aba é aberta.

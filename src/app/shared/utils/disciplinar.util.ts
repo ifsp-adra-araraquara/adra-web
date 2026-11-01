@@ -1,5 +1,5 @@
 import { NIVEIS_DISCIPLINARES, NivelDisciplinar } from '../enum/NivelDisciplinar';
-import { RegistroDisciplinarDTO } from '../models/disciplinar/Disciplinar';
+import { RegistroDisciplinarDTO, ResumoDisciplinarDTO } from '../models/disciplinar/Disciplinar';
 
 /** "3ª ocorrência", "1ª advertência", "2ª ocorrência de uniforme". */
 export function rotuloSequencia(r: Pick<RegistroDisciplinarDTO, 'sequencia' | 'nivel'>): string {
@@ -21,4 +21,33 @@ export function pendenciaDoRegistro(r: RegistroDisciplinarDTO): string | null {
   if (r.consequenciaPendente && r.consequencia === 'PERDE_PROXIMO_PASSEIO') return 'Perde o próximo passeio';
   if (r.documentoStatus === 'PENDENTE_ASSINATURA') return 'Documento a assinar';
   return null;
+}
+
+/** Registros ativos de um nível, lidos do resumo da ficha. */
+export function ativosDoNivel(resumo: ResumoDisciplinarDTO, nivel: NivelDisciplinar): number {
+  switch (nivel) {
+    case NivelDisciplinar.OCORRENCIA:
+      return resumo.ocorrenciasAtivas;
+    case NivelDisciplinar.ADVERTENCIA:
+      return resumo.advertenciasAtivas;
+    case NivelDisciplinar.SUSPENSAO:
+      return resumo.suspensoesAtivas;
+    case NivelDisciplinar.UNIFORME:
+      return resumo.uniformeAtivas;
+  }
+}
+
+/** "4 ocorrências e 1 advertência" — os ativos de um nível ou, sem nível, de todos. */
+export function descreverQuantidades(resumo: ResumoDisciplinarDTO, nivel: NivelDisciplinar | null): string {
+  const niveis = nivel ? [nivel] : (Object.values(NivelDisciplinar) as NivelDisciplinar[]);
+  const partes = niveis
+    .map((n) => ({ n, quantidade: ativosDoNivel(resumo, n) }))
+    .filter((p) => p.quantidade > 0)
+    .map(({ n, quantidade }) => {
+      if (n === NivelDisciplinar.UNIFORME) return `${quantidade} de uniforme`;
+      const info = NIVEIS_DISCIPLINARES[n];
+      return `${quantidade} ${(quantidade === 1 ? info.rotulo : info.plural).toLowerCase()}`;
+    });
+  if (partes.length <= 1) return partes[0] ?? 'nenhum registro ativo';
+  return `${partes.slice(0, -1).join(', ')} e ${partes[partes.length - 1]}`;
 }
