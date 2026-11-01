@@ -44,7 +44,10 @@
               @case ('responsaveis') { <app-etapa-responsaveis [grupo]="form.controls.responsaveis" [tentativa]="tentativas()" /> }
               @case ('renda') { <app-etapa-renda [grupo]="form.controls.renda" [tentativa]="tentativas()" /> }
               @case ('saude') { <app-etapa-saude-autorizacoes [grupo]="form.controls.saude" [tentativa]="tentativas()" /> }
-              @case ('revisao') { <app-etapa-revisao [form]="form" (editar)="editar($event)" /> }
+              @case ('documentos') {
+                <app-etapa-documentos [(foto)]="foto" [(documentosCrianca)]="documentosCrianca" [(documentosResponsavel)]="documentosResponsavel" />
+              }
+              @case ('revisao') { <app-etapa-revisao [form]="form" [anexos]="anexos()" (editar)="editar($event)" /> }
             }
           </div>
 

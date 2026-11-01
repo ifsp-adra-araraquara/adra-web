@@ -14,7 +14,7 @@ export const ESTADO_CIVIL_OUTRO = 'OUTRO';
 
 const TELEFONE = /^\d{10,11}$/;
 
-export type ChaveEtapa = 'termos' | 'crianca' | 'responsaveis' | 'renda' | 'saude' | 'revisao';
+export type ChaveEtapa = 'termos' | 'crianca' | 'responsaveis' | 'renda' | 'saude' | 'documentos' | 'revisao';
 
 export const ETAPAS: { chave: ChaveEtapa; titulo: string }[] = [
   { chave: 'termos', titulo: 'Termos' },
@@ -22,6 +22,7 @@ export const ETAPAS: { chave: ChaveEtapa; titulo: string }[] = [
   { chave: 'responsaveis', titulo: 'Responsáveis' },
   { chave: 'renda', titulo: 'Renda da família' },
   { chave: 'saude', titulo: 'Saúde e autorizações' },
+  { chave: 'documentos', titulo: 'Documentos e foto' },
   { chave: 'revisao', titulo: 'Revisão' },
 ];
 

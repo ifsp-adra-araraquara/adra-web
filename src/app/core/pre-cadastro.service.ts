@@ -3,21 +3,28 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
+  AnexosPreCadastro,
   PreCadastroRequestDTO,
   PreCadastroResponseDTO,
   PreCadastroResumoDTO,
   StatusPreCadastro,
 } from '../shared/models/precadastro/PreCadastro';
 import { AssistidoRequestDTO } from '../shared/models/assistido/AssistidoRequestDTO';
+import { UrlArquivoDTO } from '../shared/models/arquivo/UrlArquivoDTO';
 
 @Injectable({ providedIn: 'root' })
 export class PreCadastroService {
   private readonly http = inject(HttpClient);
   private readonly api = `${environment.apiUrl}/api/pre-cadastro`;
 
-  /** Devolve o número de protocolo (id do pré-cadastro). */
-  async registrarPublico(dto: PreCadastroRequestDTO): Promise<number | null> {
-    const resposta = await firstValueFrom(this.http.post<{ preCadastroId: number | null }>(this.api, dto));
+  /** Multipart: "dados" em JSON + foto e documentos opcionais. Devolve o protocolo (id do pré-cadastro). */
+  async registrarPublico(dto: PreCadastroRequestDTO, anexos: AnexosPreCadastro): Promise<number | null> {
+    const corpo = new FormData();
+    corpo.append('dados', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
+    if (anexos.foto) corpo.append('foto', anexos.foto);
+    anexos.documentosCrianca.forEach((arquivo) => corpo.append('documentosCrianca', arquivo));
+    anexos.documentosResponsavel.forEach((arquivo) => corpo.append('documentosResponsavel', arquivo));
+    const resposta = await firstValueFrom(this.http.post<{ preCadastroId: number | null }>(this.api, corpo));
     return resposta?.preCadastroId ?? null;
   }
 
@@ -27,6 +34,10 @@ export class PreCadastroService {
 
   buscar(preCadastroId: number): Promise<PreCadastroResponseDTO> {
     return firstValueFrom(this.http.get<PreCadastroResponseDTO>(`${this.api}/${preCadastroId}`));
+  }
+
+  urlDoArquivo(preCadastroId: number, arquivoId: number): Promise<UrlArquivoDTO> {
+    return firstValueFrom(this.http.get<UrlArquivoDTO>(`${this.api}/${preCadastroId}/arquivos/${arquivoId}/url`));
   }
 
   rascunhoAssistido(preCadastroId: number): Promise<AssistidoRequestDTO> {

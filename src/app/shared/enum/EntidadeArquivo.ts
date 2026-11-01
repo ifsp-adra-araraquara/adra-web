@@ -4,4 +4,5 @@ export enum EntidadeArquivo {
   RESPONSAVEL = 'RESPONSAVEL',
   USUARIO = 'USUARIO',
   AULA = 'AULA',
+  PRE_CADASTRO = 'PRE_CADASTRO',
 }

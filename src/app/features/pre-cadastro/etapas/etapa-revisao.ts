@@ -3,7 +3,22 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import { Button } from '../../../shared/components/button/button';
 import { Icon } from '../../../shared/components/icon/icon';
 import { ChaveEtapa, FormularioPreCadastro, paraPayload } from '../pre-cadastro-form.util';
-import { secoesRevisao } from '../resumo-inscricao';
+import { SecaoRevisao, secoesRevisao } from '../resumo-inscricao';
+import { AnexosPreCadastro } from '../../../shared/models/precadastro/PreCadastro';
+
+const enviado = (quantidade: number) => (quantidade ? `Enviado (${quantidade})` : 'Não enviado — levar na entrevista');
+
+function secaoDocumentos(anexos: AnexosPreCadastro): SecaoRevisao {
+  return {
+    chave: 'documentos',
+    titulo: 'Documentos e foto',
+    itens: [
+      { rotulo: 'Foto da criança', valor: anexos.foto ? 'Enviada' : 'Não enviada — levar na entrevista' },
+      { rotulo: 'Documento da criança', valor: enviado(anexos.documentosCrianca.length) },
+      { rotulo: 'Documento do responsável', valor: enviado(anexos.documentosResponsavel.length) },
+    ],
+  };
+}
 
 @Component({
   selector: 'app-etapa-revisao',
@@ -43,7 +58,11 @@ import { secoesRevisao } from '../resumo-inscricao';
 })
 export class EtapaRevisao {
   form = input.required<FormularioPreCadastro>();
+  anexos = input.required<AnexosPreCadastro>();
   editar = output<ChaveEtapa>();
 
-  protected readonly secoes = computed(() => secoesRevisao(paraPayload(this.form())));
+  protected readonly secoes = computed(() => [
+    ...secoesRevisao(paraPayload(this.form())),
+    secaoDocumentos(this.anexos()),
+  ]);
 }
