@@ -1,148 +1,150 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+
 import { PreCadastroService } from '../../core/pre-cadastro.service';
+import { BrandLogo } from '../../shared/components/brand-logo/brand-logo';
 import { Button } from '../../shared/components/button/button';
-import { Input } from '../../shared/components/input/input';
+import { Icon } from '../../shared/components/icon/icon';
 import { mensagemErro } from '../../shared/utils/erro-http.util';
+import { ANO_INSCRICAO } from '../../shared/utils/termos-inscricao';
+import { CabecalhoEtapas } from './cabecalho-etapas';
+import { EtapaCrianca } from './etapas/etapa-crianca';
+import { EtapaRenda } from './etapas/etapa-renda';
+import { EtapaResponsaveis } from './etapas/etapa-responsaveis';
+import { EtapaRevisao } from './etapas/etapa-revisao';
+import { EtapaSaudeAutorizacoes } from './etapas/etapa-saude-autorizacoes';
+import { EtapaTermos } from './etapas/etapa-termos';
+import { ChaveEtapa, ETAPAS, aplicarCondicionais, criarFormularioPreCadastro, paraPayload } from './pre-cadastro-form.util';
 
 /**
- * Link público (sem login) para a família de um novo assistido ou
- * pretendente preencher. Grava num rascunho isolado — a equipe revisa e
- * confirma o cadastro de verdade depois (ver "Pré-cadastros").
+ * Link público (sem login) da inscrição: substitui o Google Forms. A página
+ * guarda o formulário inteiro e a etapa atual; cada etapa só desenha os seus
+ * campos. Nada fica salvo no navegador (celular pode ser compartilhado).
  */
 @Component({
   selector: 'app-pre-cadastro',
-  imports: [ReactiveFormsModule, Button, Input],
+  imports: [
+    ReactiveFormsModule,
+    BrandLogo,
+    Button,
+    Icon,
+    CabecalhoEtapas,
+    EtapaTermos,
+    EtapaCrianca,
+    EtapaResponsaveis,
+    EtapaRenda,
+    EtapaSaudeAutorizacoes,
+    EtapaRevisao,
+  ],
+  templateUrl: './pre-cadastro.html',
+  styleUrl: './pre-cadastro.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="pc-pagina">
-      <div class="pc-cartao">
-        @if (enviado()) {
-          <div class="pc-sucesso" role="status">
-            <h1>Recebemos seu pré-cadastro!</h1>
-            <p>Nossa equipe vai entrar em contato em breve. Obrigado.</p>
-          </div>
-        } @else {
-          <h1>Pré-cadastro — ADRA</h1>
-          <p class="pc-intro">
-            Preencha os dados da criança, adolescente ou pretendente. Nossa equipe revisa e entra em contato
-            para dar continuidade ao cadastro.
-          </p>
-
-          @if (erro()) {
-            <div class="notice notice-error" role="alert">{{ erro() }}</div>
-          }
-
-          <form [formGroup]="form" (ngSubmit)="enviar()" class="pc-form">
-            <app-input
-              label="Nome completo (criança/adolescente)"
-              formControlName="nomeCompleto"
-              [required]="true"
-              [errorMessage]="erroCampo('nomeCompleto')"
-            />
-            <app-input label="Data de nascimento" type="date" formControlName="dataNascimento" />
-            <app-input
-              label="Nome do responsável"
-              formControlName="responsavelNome"
-              [required]="true"
-              [errorMessage]="erroCampo('responsavelNome')"
-            />
-            <app-input label="Telefone do responsável" mask="telefone" formControlName="responsavelTelefone" />
-            <app-input label="Endereço" formControlName="endereco" />
-
-            <div class="field">
-              <label for="pc-observacao">Observação (opcional)</label>
-              <textarea id="pc-observacao" rows="3" formControlName="observacao"></textarea>
-            </div>
-
-            <!-- Honeypot: invisível para gente, só robô preenche. -->
-            <div class="pc-honeypot" aria-hidden="true">
-              <label for="pc-site">Não preencha este campo</label>
-              <input id="pc-site" type="text" formControlName="site" tabindex="-1" autocomplete="off" />
-            </div>
-
-            <app-button [loading]="enviando()" type="submit">Enviar pré-cadastro</app-button>
-          </form>
-        }
-      </div>
-    </div>
-  `,
-  styles: `
-    .pc-pagina {
-      min-height: 100dvh;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 24px 16px;
-      background: var(--gray-50, #f6f7f8);
-    }
-    .pc-cartao {
-      width: 100%;
-      max-width: 520px;
-      background: #fff;
-      border: 1px solid var(--gray-100, #ececee);
-      border-radius: var(--radius-lg, 16px);
-      box-shadow: var(--shadow, 0 2px 8px rgba(0, 0, 0, 0.06));
-      padding: 24px;
-      margin-top: 24px;
-    }
-    h1 { font-size: 22px; margin: 0 0 8px; }
-    .pc-intro { color: var(--gray-600, #4d5459); margin: 0 0 20px; font-size: 14px; }
-    .pc-form { display: flex; flex-direction: column; gap: 14px; }
-    .pc-honeypot { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
-    .pc-sucesso { text-align: center; padding: 24px 0; }
-    @media (min-width: 720px) {
-      .pc-cartao { padding: 32px; margin-top: 48px; }
-    }
-  `,
+  host: { '(window:beforeunload)': 'avisarAntesDeSair($event)' },
 })
 export class PreCadastro {
-  private readonly fb = inject(FormBuilder);
   private readonly service = inject(PreCadastroService);
+  private readonly document = inject(DOCUMENT);
 
-  readonly enviando = signal(false);
-  readonly enviado = signal(false);
-  readonly erro = signal<string | null>(null);
+  protected readonly ANO = ANO_INSCRICAO;
+  protected readonly etapas = ETAPAS;
+  protected readonly form = criarFormularioPreCadastro(inject(FormBuilder));
 
-  readonly form = this.fb.nonNullable.group({
-    nomeCompleto: ['', [Validators.required, Validators.maxLength(180)]],
-    dataNascimento: [''],
-    responsavelNome: ['', [Validators.required, Validators.maxLength(180)]],
-    responsavelTelefone: [''],
-    endereco: [''],
-    observacao: [''],
-    site: [''],
-  });
+  protected readonly indice = signal(0);
+  protected readonly etapa = computed(() => ETAPAS[this.indice()]);
+  protected readonly tentativas = signal(0);
+  protected readonly enviando = signal(false);
+  protected readonly enviado = signal(false);
+  protected readonly protocolo = signal<number | null>(null);
+  protected readonly erroEnvio = signal<string | null>(null);
 
-  erroCampo(campo: 'nomeCompleto' | 'responsavelNome'): string | null {
-    const controle = this.form.controls[campo];
-    return controle.touched && controle.errors?.['required'] ? 'Obrigatório' : null;
+  private readonly tituloEtapa = viewChild<ElementRef<HTMLElement>>('tituloEtapa');
+  private readonly corpoEtapa = viewChild<ElementRef<HTMLElement>>('corpoEtapa');
+
+  constructor() {
+    aplicarCondicionais(this.form);
+    this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => aplicarCondicionais(this.form));
   }
 
-  async enviar(): Promise<void> {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+  protected avancar(): void {
+    const chave = this.etapa().chave;
+    if (chave === 'revisao') {
+      this.enviar();
       return;
     }
-    this.erro.set(null);
+    const grupo = this.form.controls[chave];
+    grupo.markAllAsTouched();
+    this.tentativas.update((n) => n + 1);
+    if (grupo.invalid) {
+      this.focarPrimeiroErro();
+      return;
+    }
+    this.mostrarEtapa(this.indice() + 1);
+  }
+
+  protected voltar(): void {
+    this.mostrarEtapa(this.indice() - 1);
+  }
+
+  protected editar(chave: ChaveEtapa): void {
+    this.mostrarEtapa(ETAPAS.findIndex((e) => e.chave === chave));
+  }
+
+  protected fazerOutraInscricao(): void {
+    this.form.reset();
+    aplicarCondicionais(this.form);
+    this.enviado.set(false);
+    this.protocolo.set(null);
+    this.mostrarEtapa(0);
+  }
+
+  protected avisarAntesDeSair(evento: BeforeUnloadEvent): void {
+    if (this.form.dirty && !this.enviado()) {
+      evento.preventDefault();
+    }
+  }
+
+  private async enviar(): Promise<void> {
+    if (this.enviando()) return;
+    if (this.form.invalid) {
+      this.erroEnvio.set('Há respostas faltando. Use "Editar" na seção para completar.');
+      return;
+    }
+    this.erroEnvio.set(null);
     this.enviando.set(true);
     try {
-      const valor = this.form.getRawValue();
-      await this.service.registrarPublico({
-        nomeCompleto: valor.nomeCompleto.trim(),
-        dataNascimento: valor.dataNascimento || null,
-        responsavelNome: valor.responsavelNome.trim(),
-        responsavelTelefone: valor.responsavelTelefone || null,
-        endereco: valor.endereco || null,
-        observacao: valor.observacao || null,
-        site: valor.site,
-      });
+      this.protocolo.set(await this.service.registrarPublico(paraPayload(this.form)));
       this.enviado.set(true);
+      this.form.markAsPristine();
+      this.rolarAoTopo();
     } catch (e) {
-      this.erro.set(mensagemErro(e as HttpErrorResponse, 'Não foi possível enviar. Tente novamente.'));
+      this.erroEnvio.set(mensagemErro(e as HttpErrorResponse, 'Não foi possível enviar agora. Confira a internet e tente de novo.'));
+      this.rolarAoTopo();
     } finally {
       this.enviando.set(false);
     }
+  }
+
+  /** Troca de etapa: volta ao topo e leva o foco ao título (o leitor de tela anuncia a etapa nova). */
+  private mostrarEtapa(indice: number): void {
+    this.indice.set(indice);
+    this.erroEnvio.set(null);
+    this.rolarAoTopo();
+    setTimeout(() => this.tituloEtapa()?.nativeElement.focus());
+  }
+
+  private focarPrimeiroErro(): void {
+    setTimeout(() => {
+      const campo = this.corpoEtapa()?.nativeElement.querySelector<HTMLElement>(
+        '[aria-invalid="true"], .campo-invalido input',
+      );
+      campo?.focus();
+    });
+  }
+
+  private rolarAoTopo(): void {
+    this.document.defaultView?.scrollTo({ top: 0 });
   }
 }

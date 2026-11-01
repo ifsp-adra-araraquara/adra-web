@@ -1,0 +1,104 @@
+@let f = ficha();
+<h1 class="titulo">{{ FICHA.titulo }}</h1>
+<p class="aviso">{{ FICHA.aviso }}</p>
+
+<section class="secao">
+  <h2>1. Criança / adolescente</h2>
+  <table>
+    <tr><th scope="row">Nome completo</th><td colspan="3">{{ texto(f.crianca.nome) }}</td></tr>
+    <tr>
+      <th scope="row">Nascimento</th><td>{{ data(f.crianca.nascimento) }}</td>
+      <th scope="row">CPF</th><td>{{ cpf(f.crianca.cpf) }}</td>
+    </tr>
+    <tr><th scope="row">Sexo</th><td colspan="3">{{ texto(f.crianca.sexo) }}</td></tr>
+  </table>
+</section>
+
+<section class="secao">
+  <h2>2. Responsáveis</h2>
+  @for (item of pessoas(); track item.titulo) {
+    <table class="pessoa">
+      <caption>{{ item.titulo }}</caption>
+      <tr><th scope="row">Nome completo</th><td colspan="3">{{ texto(item.pessoa?.nome) }}</td></tr>
+      <tr>
+        <th scope="row">Nascimento</th><td>{{ data(item.pessoa?.nascimento) }}</td>
+        <th scope="row">CPF</th><td>{{ cpf(item.pessoa?.cpf) }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Parentesco</th><td>{{ texto(item.pessoa?.parentesco) }}</td>
+        <th scope="row">Telefone</th><td>{{ telefone(item.pessoa?.telefone) }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Escolaridade</th><td>{{ texto(item.pessoa?.escolaridade) }}</td>
+        <th scope="row">Estado civil</th><td>{{ texto(item.pessoa?.estadoCivil) }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Profissão</th><td>{{ texto(item.pessoa?.profissao) }}</td>
+        <th scope="row">Renda</th><td>{{ moeda(item.pessoa?.renda) }}</td>
+      </tr>
+    </table>
+  }
+</section>
+
+<section class="secao">
+  <h2>3. Endereço</h2>
+  <table>
+    <tr><th scope="row">Rua, número e bairro</th><td>{{ endereco(f.endereco) }}</td></tr>
+    <tr><th scope="row">Ponto de referência</th><td>{{ texto(f.endereco?.pontoReferencia) }}</td></tr>
+  </table>
+</section>
+
+<section class="secao">
+  <h2>4. Renda e programas de transferência</h2>
+  <table>
+    <tr>
+      <th scope="row">Renda familiar</th><td>{{ moeda(f.rendaFamiliar) }}</td>
+      <th scope="row">NIS / CadÚnico</th><td>{{ texto(f.nis) }}</td>
+    </tr>
+    <tr>
+      <th scope="row">Recebe programa?</th><td>{{ simNao(f.recebePrograma) }}</td>
+      <th scope="row">Quais</th><td>{{ f.programas.join(', ') }}</td>
+    </tr>
+  </table>
+</section>
+
+<section class="secao">
+  <h2>5. Saúde</h2>
+  <table>
+    <tr><th scope="row">Problema de saúde?</th><td>{{ simNao(f.possuiProblemaSaude) }}</td></tr>
+    <tr><th scope="row">Qual</th><td>{{ texto(f.problemaSaude) }}</td></tr>
+    <tr><th scope="row">Contato em caso de adoecimento</th><td>{{ texto(f.contatoEmergencia) }}</td></tr>
+  </table>
+</section>
+
+<section class="secao">
+  <h2>6. Autorizações</h2>
+  <table>
+    <tr><th scope="row">Eventos, passeios e viagens</th><td>{{ simNao(f.eventosPasseios) }}</td></tr>
+    <tr><th scope="row">Pode ir embora sozinho(a)</th><td>{{ simNao(f.irEmboraSozinho) }}</td></tr>
+    <tr><th scope="row">Quem vem buscar</th><td>{{ texto(f.quemBusca) }}</td></tr>
+  </table>
+</section>
+
+<section class="secao termos">
+  <h2>7. Declarações</h2>
+  @for (termo of termos(); track termo.texto.titulo) {
+    <div class="termo">
+      <h3>{{ termo.texto.titulo }}</h3>
+      @for (paragrafo of termo.texto.paragrafos; track $index) {
+        <p>{{ paragrafo }}</p>
+      }
+      <p class="marcas">
+        <span>{{ termo.aceito === true ? '☒' : '☐' }} Aceito</span>
+        <span>{{ termo.aceito === false ? '☒' : '☐' }} Não aceito</span>
+      </p>
+    </div>
+  }
+</section>
+
+<p class="data">{{ dataPorExtenso }}</p>
+
+<div class="assinaturas">
+  <div class="assinatura"><span class="linha"></span>Responsável legal</div>
+  <div class="assinatura"><span class="linha"></span>Assistente Social</div>
+</div>
