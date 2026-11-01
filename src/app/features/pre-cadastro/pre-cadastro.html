@@ -1,0 +1,72 @@
+<div class="pc">
+  <header class="pc-topo">
+    <div class="pc-topo__conteudo">
+      <app-brand-logo variant="white" [size]="40" [markOnly]="true" />
+      <div>
+        <p class="pc-topo__titulo">Inscrição {{ ANO }}</p>
+        <p class="pc-topo__sub">ADRA Araraquara</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="pc-corpo">
+    <div class="pc-cartao">
+      @if (enviado()) {
+        <div class="pc-sucesso" role="status">
+          <span class="pc-sucesso__icone" aria-hidden="true"><app-icon name="check" [size]="32" /></span>
+          <h1>Inscrição recebida!</h1>
+          @if (protocolo()) {
+            <p class="pc-protocolo">Protocolo nº <b>{{ protocolo() }}</b></p>
+          }
+          <p>
+            A Assistente Social da ADRA vai analisar a inscrição e entrar em contato pelo telefone informado.
+            Guarde o número do protocolo.
+          </p>
+          <app-button variant="secondary" [block]="true" (click)="fazerOutraInscricao()">Fazer outra inscrição</app-button>
+        </div>
+      } @else {
+        <app-cabecalho-etapas [atual]="indice()" [total]="etapas.length" />
+
+        <form [formGroup]="form" (ngSubmit)="avancar()" novalidate>
+          <h1 class="pc-etapa-titulo" tabindex="-1" #tituloEtapa>{{ etapa().titulo }}</h1>
+
+          @if (erroEnvio()) {
+            <div class="notice notice-error" role="alert">
+              <app-icon name="alert-circle" />
+              <span>{{ erroEnvio() }}</span>
+            </div>
+          }
+
+          <div #corpoEtapa class="pc-etapa">
+            @switch (etapa().chave) {
+              @case ('termos') { <app-etapa-termos [grupo]="form.controls.termos" [tentativa]="tentativas()" /> }
+              @case ('crianca') { <app-etapa-crianca [grupo]="form.controls.crianca" [tentativa]="tentativas()" /> }
+              @case ('responsaveis') { <app-etapa-responsaveis [grupo]="form.controls.responsaveis" [tentativa]="tentativas()" /> }
+              @case ('renda') { <app-etapa-renda [grupo]="form.controls.renda" [tentativa]="tentativas()" /> }
+              @case ('saude') { <app-etapa-saude-autorizacoes [grupo]="form.controls.saude" [tentativa]="tentativas()" /> }
+              @case ('documentos') {
+                <app-etapa-documentos [(foto)]="foto" [(documentosCrianca)]="documentosCrianca" [(documentosResponsavel)]="documentosResponsavel" />
+              }
+              @case ('revisao') { <app-etapa-revisao [form]="form" [anexos]="anexos()" (editar)="editar($event)" /> }
+            }
+          </div>
+
+          <!-- Honeypot: invisível para gente, só robô preenche. -->
+          <div class="pc-honeypot" aria-hidden="true">
+            <label for="pc-site">Não preencha este campo</label>
+            <input id="pc-site" type="text" formControlName="site" tabindex="-1" autocomplete="off" />
+          </div>
+
+          <div class="pc-acoes">
+            @if (indice() > 0) {
+              <app-button variant="secondary" size="lg" (click)="voltar()">Voltar</app-button>
+            }
+            <app-button type="submit" size="lg" [loading]="enviando()">
+              {{ etapa().chave === 'revisao' ? 'Enviar inscrição' : 'Continuar' }}
+            </app-button>
+          </div>
+        </form>
+      }
+    </div>
+  </main>
+</div>

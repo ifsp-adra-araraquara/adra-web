@@ -144,41 +144,7 @@
     <section class="card card-pad bloco" aria-labelledby="sec-familia">
       <h2 id="sec-familia" class="form-sec-title">Núcleo familiar</h2>
 
-      @if (responsaveis().length === 0) {
-        <p class="vazio">Nenhum responsável ainda. Adicione pelo menos um.</p>
-      } @else {
-        <ul class="resp-lista" role="list">
-          @for (r of responsaveis(); track r.cpf; let i = $index) {
-            <li class="resp-card">
-              <div class="resp-card__topo">
-                <div>
-                  <span class="cell-name">{{ r.nomeCompleto }}</span>
-                  <span class="cell-sub">{{ r.parentesco || 'Parentesco não informado' }} · CPF {{ formatarCpf(r.cpf) }}</span>
-                </div>
-                <div class="resp-card__acoes">
-                  <button type="button" class="btn-icon" [attr.aria-label]="'Editar ' + r.nomeCompleto" appTooltip="Editar" (click)="editarResponsavel(i)">
-                    <app-icon name="edit" />
-                  </button>
-                  <button type="button" class="btn-icon" [attr.aria-label]="'Remover ' + r.nomeCompleto" appTooltip="Remover" (click)="removerResponsavel(i)">
-                    <app-icon name="trash" />
-                  </button>
-                </div>
-              </div>
-              <div class="resp-card__selos">
-                @if (r.responsavelId) { <app-badge variant="gray" label="Já cadastrado" /> }
-                @if (r.responsavelPrincipal) { <app-badge variant="blue" label="Principal" /> }
-                @if (r.contatoEmergencia) { <app-badge variant="green" label="Emergência" /> }
-                @if (r.autorizadoRetirada) { <app-badge variant="amber" label="Pode retirar" /> }
-                @if (r.telefone) { <span class="cell-sub">{{ formatarTelefone(r.telefone) }}</span> }
-              </div>
-            </li>
-          }
-        </ul>
-      }
-
-      <app-button variant="secondary" size="sm" (click)="adicionarResponsavel()">
-        <app-icon name="plus" [size]="16" /> Adicionar responsável
-      </app-button>
+      <app-responsaveis-pendentes [(responsaveis)]="responsaveis" (responsaveisChange)="erroSalvar.set(null)" />
     </section>
 
     <section class="card card-pad bloco" aria-labelledby="sec-socio">
@@ -209,10 +175,3 @@
     </div>
   }
 </section>
-
-<app-responsavel-vinculo-modal
-  [(open)]="modalResponsavel"
-  [inicial]="responsavelEmEdicao()"
-  [cpfsUsados]="cpfsUsados()"
-  (confirmado)="responsavelConfirmado($event)"
-/>

@@ -2,6 +2,8 @@
 export enum CategoriaArquivo {
   FOTO_PERFIL = 'FOTO_PERFIL',
   DOCUMENTO_IDENTIDADE = 'DOCUMENTO_IDENTIDADE',
+  /** Pré-cadastro: documento do responsável (vira DOCUMENTO_IDENTIDADE dele na aprovação). */
+  DOCUMENTO_RESPONSAVEL = 'DOCUMENTO_RESPONSAVEL',
   DECLARACAO_RESIDENCIA = 'DECLARACAO_RESIDENCIA',
   MATERIAL_AULA = 'MATERIAL_AULA',
   /** FT-04: advertência, suspensão ou comunicado de uniforme assinado pelos pais (dono ASSISTIDO). */

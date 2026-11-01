@@ -1,0 +1,7 @@
+.obrigatorio { color: var(--red-600); }
+.bloco { border: 1px solid var(--borda); border-radius: var(--radius); padding: 16px; margin: 0 0 16px; min-width: 0; }
+.bloco legend { padding: 0 6px; font-size: 15px; font-weight: 600; color: var(--gray-800); }
+.dica { margin: 0 0 12px; font-size: 13px; color: var(--gray-600); }
+app-button { margin-bottom: 16px; }
+.check { font-size: 14px; color: var(--gray-800); min-height: 44px; align-items: center; }
+textarea { width: 100%; }

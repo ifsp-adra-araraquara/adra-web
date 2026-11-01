@@ -856,6 +856,11 @@ export class Assistidos implements OnInit {
     { campo: 'cienteFrequenciaObrigatoria', titulo: 'Ciente da frequência obrigatória', descricao: 'A família sabe que a frequência é acompanhada pela equipe.' },
   ];
 
+  /** FT-26: ficha de cadastro social para imprimir e assinar. */
+  imprimirFichaSocial(assistidoId: number): void {
+    this.router.navigate(['/assistidos', assistidoId, 'ficha-social']);
+  }
+
   fecharModalVisualizarAssistido(): void {
     this.editandoSocioeconomico.set(false);
     this.mostrarModalVisualizar.set(false);

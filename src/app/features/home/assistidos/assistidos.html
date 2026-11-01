@@ -321,6 +321,11 @@
         {{ calcularIdade(assistidoSelecionado()!.dataNascimento) }} anos ·
         <app-badge [status]="assistidoSelecionado()!.status" />
       </p>
+      @if (podeEditarCadastro()) {
+        <app-button variant="secondary" size="sm" (click)="imprimirFichaSocial(assistidoSelecionado()!.assistidoId)">
+          <app-icon name="file-text" [size]="16" /> Imprimir ficha social
+        </app-button>
+      }
     </div>
 
     <!-- ABAS -->

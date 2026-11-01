@@ -1,0 +1,56 @@
+:host { display: block; }
+
+.pc { min-height: 100dvh; background: var(--gray-50); }
+
+.pc-topo { background: var(--color-brand); color: #fff; }
+.pc-topo__conteudo {
+  display: flex; align-items: center; gap: 12px;
+  max-width: 640px; margin: 0 auto; padding: 14px 16px;
+}
+.pc-topo__titulo { margin: 0; font-size: 17px; font-weight: 600; line-height: 1.2; }
+.pc-topo__sub { margin: 2px 0 0; font-size: 13px; opacity: .9; }
+
+.pc-corpo { padding: 16px 16px calc(120px + env(safe-area-inset-bottom)); }
+.pc-cartao {
+  max-width: 640px; margin: 0 auto; padding: 20px 16px;
+  background: #fff; border: 1px solid var(--gray-100); border-radius: var(--radius-lg); box-shadow: var(--shadow);
+}
+
+.pc-etapa-titulo { margin: 12px 0 18px; font-size: 22px; font-weight: 600; color: var(--gray-800); outline: none; }
+.pc-etapa { animation: entrar .2s var(--ease); }
+@keyframes entrar { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.pc-honeypot { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+/* Celular: ações sempre à mão, fixas no rodapé. */
+.pc-acoes {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+  display: flex; gap: 10px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: #fff; border-top: 1px solid var(--borda); box-shadow: 0 -4px 12px color-mix(in srgb, var(--gray-800) 6%, transparent);
+}
+.pc-acoes app-button { flex: 1; }
+.pc-acoes ::ng-deep .app-button { width: 100%; min-height: 48px; }
+
+.pc-sucesso { text-align: center; padding: 16px 0; }
+.pc-sucesso__icone {
+  display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px;
+  border-radius: 50%; background: var(--color-brand-soft); color: var(--color-brand); margin-bottom: 12px;
+}
+.pc-sucesso h1 { margin: 0 0 8px; font-size: 24px; font-weight: 600; }
+.pc-sucesso p { margin: 0 0 16px; font-size: 15px; line-height: 1.55; color: var(--gray-600); }
+.pc-protocolo { font-size: 17px !important; color: var(--gray-800) !important; }
+
+@media (min-width: 720px) {
+  .pc-corpo { padding: 32px 16px 48px; }
+  .pc-cartao { padding: 32px; }
+  .pc-acoes {
+    position: static; padding: 20px 0 0; margin-top: 8px;
+    border-top: 1px solid var(--gray-100); box-shadow: none; justify-content: flex-end;
+  }
+  .pc-acoes app-button { flex: 0 0 auto; }
+  .pc-acoes ::ng-deep .app-button { min-width: 160px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pc-etapa { animation: none; }
+}

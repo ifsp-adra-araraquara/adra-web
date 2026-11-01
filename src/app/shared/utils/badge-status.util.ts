@@ -33,6 +33,10 @@ const BADGE_STATUS_MAP: Record<string, BadgeStatusInfo> = {
   [StatusChamada.LANCADA]: { label: 'Lançada', variant: 'green' },
   // StatusChamada.PENDENTE e SituacaoAula.PENDENTE são o mesmo literal 'PENDENTE' —
   // já coberto pela entrada de SituacaoAula.PENDENTE acima.
+
+  // Pré-cadastro (o PENDENTE dele também usa a entrada acima).
+  CONVERTIDO: { label: 'Aprovado', variant: 'green' },
+  DESCARTADO: { label: 'Reprovado', variant: 'coral' },
 };
 
 export function resolveBadgeStatus(
