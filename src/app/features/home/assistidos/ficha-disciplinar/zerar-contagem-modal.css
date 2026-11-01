@@ -1,0 +1,23 @@
+.escopo { border: 0; margin: 0 0 12px; padding: 0; }
+.escopo-legenda { display: block; font-size: 13px; font-weight: 500; margin-bottom: 8px; color: var(--rotulo); padding: 0; }
+.segmentos { display: flex; flex-wrap: wrap; gap: 8px; }
+.segmento {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1.5px solid var(--campo-borda);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-800);
+  cursor: pointer;
+}
+.segmento input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.segmento:has(input:focus-visible) { outline: 3px solid var(--color-brand-soft); outline-offset: 2px; }
+.segmento.ativo { background: var(--color-brand-soft); border-color: var(--color-brand); color: var(--color-adra-green-600); font-weight: 600; }
+.resumo { margin: 10px 0 0; font-size: 14px; }
+.explicacao { font-size: 14px; color: var(--gray-600); margin: 0 0 16px; }
+.ciencia { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; font-size: 14px; cursor: pointer; }
+.ciencia input { width: 20px; height: 20px; margin-top: 1px; flex: none; }

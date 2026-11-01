@@ -1,0 +1,60 @@
+@if (erro()) {
+  <div class="notice notice-error" role="alert">{{ erro() }}</div>
+}
+@if (sucesso()) {
+  <div class="notice notice-sucesso" role="status"><app-icon name="check" /><span>{{ sucesso() }}</span></div>
+}
+
+@if (carregando() && !ficha()) {
+  <p class="muted">Carregando registros…</p>
+} @else if (ficha(); as f) {
+  <div class="disc-topo">
+    <ul class="contadores" role="list" aria-label="Registros ativos">
+      @for (nivel of ORDEM_NIVEIS; track nivel) {
+        <li class="contador">
+          <span class="contador-valor">{{ ativosDoNivel(f.resumo, nivel) }}</span>
+          <span class="contador-rotulo">{{ NIVEIS[nivel].plural }}</span>
+        </li>
+      }
+    </ul>
+    @if (ehCoordenador() && temAtivos()) {
+      <app-button variant="danger" size="sm" (click)="mostrarZerar.set(true)">
+        <app-icon name="rotate-ccw" [size]="16" /> Zerar contagem
+      </app-button>
+    }
+  </div>
+
+  @if (f.resumo.suspensoAte) {
+    <p class="suspenso">Suspenso até {{ dataBr(f.resumo.suspensoAte) }}</p>
+  }
+
+  @if (f.registros.length === 0) {
+    <p class="muted">Nenhum registro disciplinar.</p>
+  } @else {
+    <ul class="historico" role="list" aria-label="Histórico disciplinar">
+      @for (r of f.registros; track r.registroId) {
+        <li class="registro" [class.arquivado]="r.arquivado">
+          <div class="registro-linha">
+            <app-badge [variant]="NIVEIS[r.nivel].variant" [label]="NIVEIS[r.nivel].rotulo" />
+            <span class="registro-seq">{{ rotuloSequencia(r) }}</span>
+            <span class="registro-data">{{ dataBr(r.dataRegistro) }}</span>
+          </div>
+          <span class="registro-motivo">{{ r.motivo }}</span>
+          @if (r.arquivado) {
+            <span class="registro-arquivado">
+              Arquivado em {{ dataBr(r.arquivadoEm) }}@if (r.arquivadoPorNome) { por {{ r.arquivadoPorNome }}}@if (r.arquivadoMotivo) { — {{ r.arquivadoMotivo }}}
+            </span>
+          }
+        </li>
+      }
+    </ul>
+  }
+
+  <app-zerar-contagem-modal
+    [(open)]="mostrarZerar"
+    [assistidoId]="assistidoId()"
+    [nome]="nome()"
+    [resumo]="f.resumo"
+    (zerado)="aoZerar($event)"
+  />
+}

@@ -107,3 +107,9 @@ export interface FiltroRegistrosDisciplinares {
   pagina?: number;
   tamanho?: number;
 }
+
+/** FT-24: sem nível, zera todos os níveis. */
+export interface ZerarContagemRequestDTO {
+  motivo: string;
+  nivel: NivelDisciplinar | null;
+}
