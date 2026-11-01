@@ -3,8 +3,8 @@
     <div class="page-header-texto">
       <h1>Disciplinar</h1>
       <p class="page-intro">
-        Ocorrências, advertências e suspensões. A cada 3 registros do mesmo nível, o sistema aplica a consequência
-        do regulamento.
+        Ocorrências, advertências e suspensões. A cada 3 registros do mesmo nível, o sistema recomenda o próximo
+        passo do regulamento e a coordenação decide.
       </p>
     </div>
 
@@ -20,6 +20,11 @@
   <!-- ================= O QUE PRECISA DE ATENÇÃO ================= -->
   @if (pendencias(); as p) {
     <div class="pendencias" role="group" aria-label="Pendências">
+      <button type="button" class="pendencia" [class.ativa]="totalRecomendacoes() > 0" (click)="alternarRecomendacoes()">
+        <span class="pendencia-ico ico-amber"><app-icon name="flag" /></span>
+        <span class="pendencia-valor">{{ totalRecomendacoes() }}</span>
+        <span class="pendencia-rotulo">Recomendações pendentes</span>
+      </button>
       <button type="button" class="pendencia" [class.ativa]="p.assistidosSuspensosHoje > 0" (click)="alternarPendencias()">
         <span class="pendencia-ico ico-red"><app-icon name="alert-circle" /></span>
         <span class="pendencia-valor">{{ p.assistidosSuspensosHoje }}</span>
@@ -83,6 +88,10 @@
               (click)="alternarPendencias()">
         Só pendências
       </button>
+      <button type="button" class="chip" [class.ativo]="somenteRecomendacoes()" [attr.aria-pressed]="somenteRecomendacoes()"
+              (click)="alternarRecomendacoes()">
+        Recomendações pendentes
+      </button>
       <button type="button" class="chip" [class.ativo]="incluirArquivados()" [attr.aria-pressed]="incluirArquivados()"
               (click)="alternarArquivados()">
         Mostrar arquivados
@@ -140,7 +149,7 @@
                     <span class="cell-sub">{{ rotuloSequencia(r) }}</span>
                   </td>
                   <td>
-                    <span class="motivo" [class.automatico]="r.origem === 'PROGRESSAO'">{{ r.motivo }}</span>
+                    <span class="motivo" [class.automatico]="r.origem === 'RECOMENDACAO'">{{ r.motivo }}</span>
                     @if (r.suspensaoInicio && r.suspensaoFim) {
                       <span class="cell-sub">{{ dataBr(r.suspensaoInicio) }} a {{ dataBr(r.suspensaoFim) }}</span>
                     }
@@ -180,7 +189,7 @@
             </div>
             <div class="cartao-meio">
               <app-badge [variant]="NIVEIS[r.nivel].variant" [label]="NIVEIS[r.nivel].rotulo" />
-              <span class="motivo" [class.automatico]="r.origem === 'PROGRESSAO'">{{ r.motivo }}</span>
+              <span class="motivo" [class.automatico]="r.origem === 'RECOMENDACAO'">{{ r.motivo }}</span>
             </div>
             @if (r.suspensaoInicio && r.suspensaoFim) {
               <span class="periodo">Suspenso de {{ dataBr(r.suspensaoInicio) }} a {{ dataBr(r.suspensaoFim) }}</span>
@@ -271,6 +280,9 @@
 <!-- ================= MODAL: REGISTRAR ================= -->
 <app-registro-disciplinar-modal [(open)]="mostrarRegistro" (salvo)="aoRegistrar()" />
 
+<!-- ================= MODAL: GERAR PELA RECOMENDAÇÃO ================= -->
+<app-recomendacao-disciplinar-modal [recomendacoes]="recomendacaoEmAcao()" (gerado)="aoRegistrar()" />
+
 <!-- ================= MODAL: AÇÕES DO REGISTRO ================= -->
 @if (acaoAberta(); as acao) {
   <app-modal [open]="true" [title]="tituloAcao()" [subtitle]="registroEmAcao()?.nomeAssistido ?? ''" size="sm"
@@ -303,7 +315,13 @@
         <app-input label="Data" type="date" [max]="hoje" [ngModel]="acaoData()" (ngModelChange)="acaoData.set($event)" />
         <div class="field">
           <label for="acao-texto">
-            {{ registroEmAcao()?.consequencia === 'RETORNO_COM_RESPONSAVEL' ? 'Quem compareceu e o que foi combinado' : 'Qual passeio foi perdido' }}
+            {{
+              ehRecomendacao(registroEmAcao())
+                ? 'Por que a recomendação foi dispensada'
+                : registroEmAcao()?.consequencia === 'RETORNO_COM_RESPONSAVEL'
+                  ? 'Quem compareceu e o que foi combinado'
+                  : 'Qual passeio foi perdido'
+            }}
           </label>
           <textarea id="acao-texto" rows="3" [ngModel]="acaoTexto()" (ngModelChange)="acaoTexto.set($event)"></textarea>
         </div>
