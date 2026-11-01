@@ -1,0 +1,35 @@
+.avaliacao { max-width: 1200px; margin: 0 auto; }
+
+.selos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.link-ficha { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; }
+.link {
+  margin-left: 4px; padding: 4px 0; border: none; background: none; cursor: pointer;
+  color: inherit; font: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 2px;
+}
+
+.dica-topo { margin: 0 0 12px; font-size: 14px; color: var(--gray-600); }
+.dica { margin: 0 0 12px; font-size: 13px; color: var(--gray-600); }
+.obrigatorio { color: var(--red-600); }
+.bloco { margin-bottom: 16px; }
+
+textarea { width: 100%; min-height: 80px; resize: vertical; font-family: inherit; }
+
+.colunas { display: grid; gap: 16px; align-items: start; }
+.respostas { margin-bottom: 16px; }
+
+@media (min-width: 1100px) {
+  .colunas { grid-template-columns: minmax(0, 1fr) 360px; }
+  .colunas--leitura { grid-template-columns: minmax(0, 720px); }
+  .respostas { position: sticky; top: calc(var(--topbar-h) + 16px); max-height: calc(100dvh - var(--topbar-h) - 120px); overflow-y: auto; }
+}
+
+/* Ações sempre alcançáveis: barra presa ao rodapé enquanto o formulário rola. */
+.rodape {
+  position: sticky; bottom: 0; z-index: 5;
+  margin: 0 -4px; padding: 12px 4px calc(12px + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, #fff 94%, transparent);
+  border-top: 1px solid var(--borda);
+  backdrop-filter: blur(6px);
+}
+.rodape .notice { margin-bottom: 10px; }
+.acoes { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }

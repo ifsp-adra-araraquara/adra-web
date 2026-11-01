@@ -124,6 +124,27 @@ export const routes: Routes = [
         canActivate: [roleGuard],
       },
       {
+        path: 'pre-cadastros/:id',
+        loadComponent: () =>
+          import('./features/home/pre-cadastros/avaliacao/avaliacao-pre-cadastro').then((m) => m.AvaliacaoPreCadastro),
+        data: { roles: [Role.COORD, Role.ASSISTENTE] },
+        canActivate: [roleGuard],
+      },
+      {
+        path: 'pre-cadastros/:id/ficha',
+        loadComponent: () =>
+          import('./features/home/ficha-cadastro-social/ficha-pre-cadastro').then((m) => m.FichaPreCadastro),
+        data: { roles: [Role.COORD, Role.ASSISTENTE] },
+        canActivate: [roleGuard],
+      },
+      {
+        path: 'assistidos/:id/ficha-social',
+        loadComponent: () =>
+          import('./features/home/ficha-cadastro-social/ficha-assistido').then((m) => m.FichaAssistido),
+        data: { roles: [Role.COORD, Role.ASSISTENTE] },
+        canActivate: [roleGuard],
+      },
+      {
         path: 'disciplinar',
         loadComponent: () => import('./features/home/disciplinar/disciplinar').then((m) => m.Disciplinar),
         data: { roles: [Role.COORD, Role.ASSISTENTE, Role.EDUCADOR] },

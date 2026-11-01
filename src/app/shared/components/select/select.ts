@@ -30,6 +30,10 @@ export class Select implements ControlValueAccessor {
   disabled = input<boolean>(false);
   id = input<string>('');
   name = input<string>('');
+  /** Marca o campo como inválido para leitores de tela (a mensagem fica com o pai). */
+  invalido = input<boolean>(false);
+  /** id do elemento com a mensagem de erro. */
+  descritoPor = input<string>('');
 
   protected formDisabled = signal(false);
   protected effectiveDisabled = computed(() => this.disabled() || this.formDisabled());

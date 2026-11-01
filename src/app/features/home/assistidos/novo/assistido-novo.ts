@@ -17,11 +17,10 @@ import { Select, SelectOption } from '../../../../shared/components/select/selec
 import { Button } from '../../../../shared/components/button/button';
 import { Icon } from '../../../../shared/components/icon/icon';
 import { Badge } from '../../../../shared/components/badge/badge';
-import { TooltipDirective } from '../../../../shared/components/tooltip/tooltip';
 import { FotoPerfil } from '../../../../shared/components/foto-perfil/foto-perfil';
 import { UploadDocumento } from '../../../../shared/components/upload-documento/upload-documento';
 import { cpfValido, formatarCpf } from '../../../../shared/validators/cpf.validator';
-import { formatarMoeda, formatarTelefone } from '../../../../shared/utils/mascara.util';
+import { formatarMoeda } from '../../../../shared/utils/mascara.util';
 import { mensagemErro } from '../../../../shared/utils/erro-http.util';
 import { DadosComplementaresAssistidoForm, SEXO_OPTIONS } from '../dados-complementares/dados-complementares-assistido';
 import { SocioeconomicoAssistidoForm } from '../socioeconomico/socioeconomico-assistido';
@@ -34,7 +33,7 @@ import {
   ResponsavelPendente,
   validarDadosComplementares,
 } from '../assistido-form.util';
-import { ResponsavelVinculoModal } from './responsavel-vinculo-modal';
+import { ResponsaveisPendentes } from './responsaveis-pendentes';
 
 /**
  * Cadastro de assistido em página própria (antes era um modal).
@@ -55,13 +54,12 @@ import { ResponsavelVinculoModal } from './responsavel-vinculo-modal';
     Button,
     Icon,
     Badge,
-    TooltipDirective,
     FotoPerfil,
     UploadDocumento,
     DadosComplementaresAssistidoForm,
     SocioeconomicoAssistidoForm,
     TermosAssistidoForm,
-    ResponsavelVinculoModal,
+    ResponsaveisPendentes,
   ],
   templateUrl: './assistido-novo.html',
   styleUrl: './assistido-novo.css',
@@ -76,7 +74,6 @@ export class AssistidoNovo implements OnInit {
   private readonly apiTurmas = `${environment.apiUrl}/api/turmas`;
 
   readonly formatarCpf = formatarCpf;
-  readonly formatarTelefone = formatarTelefone;
   readonly sexoOptions = SEXO_OPTIONS;
 
   /* ---------------- Etapa 1: CPF ---------------- */
@@ -100,20 +97,6 @@ export class AssistidoNovo implements OnInit {
   tentouSalvar = signal(false);
   salvando = signal(false);
   erroSalvar = signal<string | null>(null);
-
-  /* Modal de responsável */
-  modalResponsavel = signal(false);
-  /** Índice em `responsaveis` sendo editado; null = incluindo. */
-  indiceEmEdicao = signal<number | null>(null);
-  responsavelEmEdicao = computed(() => {
-    const i = this.indiceEmEdicao();
-    return i == null ? null : (this.responsaveis()[i] ?? null);
-  });
-  cpfsUsados = computed(() =>
-    this.responsaveis()
-      .filter((_, i) => i !== this.indiceEmEdicao())
-      .map((r) => r.cpf),
-  );
 
   turmaOptions = computed<SelectOption<number | null>[]>(() => [
     { value: null, label: 'Sem turma' },
@@ -224,44 +207,6 @@ export class AssistidoNovo implements OnInit {
         this.alertaDuplicidade.set(false);
       }
     }, 400);
-  }
-
-  /* ---------------- Responsáveis ---------------- */
-
-  adicionarResponsavel(): void {
-    this.indiceEmEdicao.set(null);
-    this.modalResponsavel.set(true);
-  }
-
-  editarResponsavel(indice: number): void {
-    this.indiceEmEdicao.set(indice);
-    this.modalResponsavel.set(true);
-  }
-
-  removerResponsavel(indice: number): void {
-    let lista = this.responsaveis().filter((_, i) => i !== indice);
-    // sempre sobra um principal
-    if (lista.length > 0 && !lista.some((r) => r.responsavelPrincipal)) {
-      lista = lista.map((r, i) => (i === 0 ? { ...r, responsavelPrincipal: true } : r));
-    }
-    this.responsaveis.set(lista);
-  }
-
-  /** Volta do modal: inclui ou substitui, mantendo um único principal (o primeiro vira principal). */
-  responsavelConfirmado(responsavel: ResponsavelPendente): void {
-    const indice = this.indiceEmEdicao();
-    const outros = this.responsaveis().filter((_, i) => i !== indice);
-    const principal = responsavel.responsavelPrincipal || !outros.some((r) => r.responsavelPrincipal);
-    const novo = { ...responsavel, responsavelPrincipal: principal };
-
-    this.responsaveis.update((lista) => {
-      const ajustada = responsavel.responsavelPrincipal
-        ? lista.map((r) => ({ ...r, responsavelPrincipal: false }))
-        : lista;
-      return indice == null ? [...ajustada, novo] : ajustada.map((r, i) => (i === indice ? novo : r));
-    });
-    this.indiceEmEdicao.set(null);
-    if (this.erroSalvar()) this.erroSalvar.set(null);
   }
 
   /* ---------------- Salvar ---------------- */

@@ -3,6 +3,8 @@
   [attr.name]="name() || null"
   [disabled]="effectiveDisabled()"
   [value]="selectedIndex()"
+  [attr.aria-invalid]="invalido() ? 'true' : null"
+  [attr.aria-describedby]="descritoPor() || null"
   (change)="handleChange($event)"
   (blur)="handleBlur()"
   class="select"
