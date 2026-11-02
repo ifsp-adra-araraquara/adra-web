@@ -116,6 +116,14 @@
           <p class="muted">Nenhum registro disciplinar ainda.</p>
         }
       </div>
+    } @else if (somenteRecomendacoes()) {
+      <app-recomendacoes-pendentes
+        [class.recarregando]="carregando()"
+        [registros]="registros()"
+        [podeAgir]="ehCoordenador()"
+        (gerar)="executarAcao('gerar', $event)"
+        (dispensar)="executarAcao('resolver', $event)"
+      />
     } @else {
       <!-- Notebook/desktop: tabela -->
       <div class="card lista-tabela" [class.recarregando]="carregando()">

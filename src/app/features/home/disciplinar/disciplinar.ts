@@ -33,6 +33,7 @@ import { Modal } from '../../../shared/components/modal/modal';
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { RegistroDisciplinarModal } from '../../../shared/components/registro-disciplinar-modal/registro-disciplinar-modal';
 import { RecomendacaoDisciplinarModal } from '../../../shared/components/recomendacao-disciplinar-modal/recomendacao-disciplinar-modal';
+import { RecomendacoesPendentes } from './recomendacoes-pendentes/recomendacoes-pendentes';
 
 type Aba = 'registros' | 'motivos';
 type AcaoRegistro = 'ficha' | 'documento' | 'devolvido' | 'periodo' | 'resolver' | 'arquivar';
@@ -45,7 +46,7 @@ type AcaoRegistro = 'ficha' | 'documento' | 'devolvido' | 'periodo' | 'resolver'
  */
 @Component({
   selector: 'app-disciplinar',
-  imports: [FormsModule, NgTemplateOutlet, ActionMenu, Avatar, Badge, Button, Icon, Input, Modal, Select, RegistroDisciplinarModal, RecomendacaoDisciplinarModal],
+  imports: [FormsModule, NgTemplateOutlet, ActionMenu, Avatar, Badge, Button, Icon, Input, Modal, Select, RegistroDisciplinarModal, RecomendacaoDisciplinarModal, RecomendacoesPendentes],
   templateUrl: './disciplinar.html',
   styleUrl: './disciplinar.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

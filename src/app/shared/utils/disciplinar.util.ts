@@ -26,6 +26,14 @@ export function nivelRecomendado(consequencia: ConsequenciaDisciplinar | null): 
   return null;
 }
 
+/** "Lucas Martins chegou a 3 ocorrências ativas. A Cartilha recomenda advertência escrita." */
+export function textoRecomendacao(r: RegistroDisciplinarDTO): string {
+  const nivel =
+    r.nivel === NivelDisciplinar.UNIFORME ? 'ocorrências de uniforme' : NIVEIS_DISCIPLINARES[r.nivel].plural.toLowerCase();
+  const acao = r.consequencia ? ACAO_RECOMENDADA[r.consequencia] : '';
+  return `${r.nomeAssistido} chegou a ${r.sequencia} ${nivel} ativas. A Cartilha recomenda ${acao}.`;
+}
+
 /** yyyy-MM-dd + n dias, sem passar por fuso. */
 export function somarDias(iso: string, dias: number): string {
   const [a, m, d] = iso.split('-').map(Number);
