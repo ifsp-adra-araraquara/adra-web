@@ -291,6 +291,9 @@
 <!-- ================= MODAL: GERAR PELA RECOMENDAÇÃO ================= -->
 <app-recomendacao-disciplinar-modal [recomendacoes]="recomendacaoEmAcao()" (gerado)="aoRegistrar()" />
 
+<!-- ================= MODAL: ANEXAR ASSINADO ================= -->
+<app-anexar-assinado-modal [(open)]="mostrarAnexar" [registro]="registroAnexando()" (salvo)="aoRegistrar()" />
+
 <!-- ================= MODAL: AÇÕES DO REGISTRO ================= -->
 @if (acaoAberta(); as acao) {
   <app-modal [open]="true" [title]="tituloAcao()" [subtitle]="registroEmAcao()?.nomeAssistido ?? ''" size="sm"
@@ -304,15 +307,6 @@
     }
 
     @switch (acao) {
-      @case ('devolvido') {
-        <p>Confirme que o documento voltou assinado pelo responsável.</p>
-        <div class="field">
-          <label for="arquivo-assinado">Foto ou PDF do documento assinado (opcional)</label>
-          <input id="arquivo-assinado" class="input" type="file" accept="image/*,application/pdf"
-                 capture="environment" (change)="onArquivoAssinado($event)" />
-          <p class="hint">No celular, dá para tirar a foto direto pela câmera.</p>
-        </div>
-      }
       @case ('periodo') {
         <div class="form-row">
           <app-input label="Suspenso de" type="date" [ngModel]="acaoInicio()" (ngModelChange)="acaoInicio.set($event)" />

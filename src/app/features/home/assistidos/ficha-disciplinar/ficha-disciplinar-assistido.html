@@ -40,6 +40,25 @@
             <span class="registro-data">{{ dataBr(r.dataRegistro) }}</span>
           </div>
           <span class="registro-motivo">{{ r.motivo }}</span>
+          @if (!r.arquivado && temDocumento(r)) {
+            <div class="registro-documento">
+              @if (r.documentoStatus === 'PENDENTE_ASSINATURA') {
+                <span class="doc-situacao doc-pendente"><app-icon name="alert-triangle" [size]="14" /> Documento a assinar</span>
+              } @else if (r.documentoStatus === 'DEVOLVIDO_ASSINADO') {
+                <span class="doc-situacao doc-ok"><app-icon name="check" [size]="14" /> Assinado</span>
+              }
+              <span class="doc-acoes">
+                <app-button variant="secondary" size="sm" (click)="imprimir(r)">
+                  <app-icon name="file-text" [size]="16" /> Imprimir
+                </app-button>
+                @if (ehCoordenador() && r.documentoStatus === 'PENDENTE_ASSINATURA') {
+                  <app-button size="sm" (click)="anexar(r)">
+                    <app-icon name="check" [size]="16" /> Anexar assinado
+                  </app-button>
+                }
+              </span>
+            </div>
+          }
           @if (r.arquivado) {
             <span class="registro-arquivado">
               Arquivado em {{ dataBr(r.arquivadoEm) }}@if (r.arquivadoPorNome) { por {{ r.arquivadoPorNome }}}@if (r.arquivadoMotivo) { — {{ r.arquivadoMotivo }}}
@@ -49,6 +68,8 @@
       }
     </ul>
   }
+
+  <app-anexar-assinado-modal [(open)]="mostrarAnexar" [registro]="registroAnexando()" (salvo)="aoAnexar()" />
 
   <app-zerar-contagem-modal
     [(open)]="mostrarZerar"

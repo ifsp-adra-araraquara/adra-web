@@ -1,4 +1,5 @@
 import { NivelDisciplinar } from '../../enum/NivelDisciplinar';
+import { Sexo } from '../../enum/Sexo';
 import { PaginaResponse } from '../PaginaResponse';
 
 export type OrigemRegistroDisciplinar = 'MANUAL' | 'RECOMENDACAO';
@@ -50,6 +51,8 @@ export interface RegistroDisciplinarDTO {
   registroId: number;
   assistidoId: number;
   nomeAssistido: string;
+  /** Para o pronome do documento ("o atendido" / "a atendida"). */
+  sexoAssistido: Sexo | null;
   motivoId: number | null;
   /** Nome do motivo ou, quando gerado pela recomendação, o texto "Gerada pela 3ª ocorrência". */
   motivo: string;
