@@ -1,0 +1,46 @@
+<button
+  type="button"
+  class="sino"
+  [class.ativo]="aberto()"
+  aria-haspopup="dialog"
+  [attr.aria-expanded]="aberto()"
+  [attr.aria-label]="rotulo()"
+  (click)="alternar()"
+>
+  <app-icon name="bell" />
+  @if (total() > 0) {
+    <span class="contador" aria-hidden="true">{{ total() > 99 ? '99+' : total() }}</span>
+  }
+</button>
+
+@if (aberto()) {
+  <section class="painel" role="dialog" aria-labelledby="notificacoes-titulo">
+    <header class="painel-topo">
+      <h2 id="notificacoes-titulo">Notificações <small>· {{ total() }} para resolver</small></h2>
+      <button type="button" class="fechar" aria-label="Fechar notificações" (click)="fechar()">
+        <app-icon name="x" [size]="18" />
+      </button>
+    </header>
+
+    <div class="lista">
+      @if (grupos().length === 0) {
+        <p class="vazio"><app-icon name="check" [size]="16" /> Nenhuma pendência. Tudo em dia.</p>
+      }
+      @for (g of grupos(); track g.id) {
+        <section class="grupo" [style.--cor-grupo]="g.cor" [attr.aria-label]="g.titulo">
+          <h3 class="grupo-titulo"><span class="bolinha" aria-hidden="true"></span>{{ g.titulo }} · {{ g.avisos.length }}</h3>
+          <ul role="list">
+            @for (a of g.avisos; track $index) {
+              <li>
+                <button type="button" class="aviso" (click)="abrir(a)">
+                  <span class="aviso-texto"><b>{{ a.titulo }}</b><small>{{ a.detalhe }}</small></span>
+                  <span class="aviso-acao">{{ acao(a) }}<span class="seta" aria-hidden="true">›</span></span>
+                </button>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    </div>
+  </section>
+}

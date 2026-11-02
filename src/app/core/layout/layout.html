@@ -18,17 +18,21 @@
     </button>
     <h1>Sistema de Gestão</h1>
 
-    @if (mostrarAjudaTour()) {
-      <button
-        type="button"
-        class="help-btn"
-        aria-label="Ver tutorial guiado"
-        appTooltip="Ver tutorial"
-        (click)="abrirTutorial()"
-      >
-        <app-icon name="help-circle" />
-      </button>
-    }
+    <div class="topbar-acoes">
+      <app-notificacoes />
+
+      @if (mostrarAjudaTour()) {
+        <button
+          type="button"
+          class="help-btn"
+          aria-label="Ver tutorial guiado"
+          appTooltip="Ver tutorial"
+          (click)="abrirTutorial()"
+        >
+          <app-icon name="help-circle" />
+        </button>
+      }
+    </div>
   </header>
 
   <main class="content">
