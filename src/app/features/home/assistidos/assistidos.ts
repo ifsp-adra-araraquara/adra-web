@@ -217,19 +217,22 @@ export class Assistidos implements OnInit {
       const id = Number(params.get('turmaId'));
       this.filtroTurma.set(Number.isInteger(id) && id > 0 ? id : '');
       this.recarregarRecorte();
-      this.abrirFichaDaUrl(Number(params.get('assistidoId')));
+      this.abrirFichaDaUrl(Number(params.get('assistidoId')), params.get('aba'));
     });
   }
 
   /** Último ?assistidoId= já aberto — trocar filtros depois não reabre a ficha. */
   private assistidoIdAbertoPelaUrl: number | null = null;
 
-  /** Veio de "Alunos da turma" (clique num aluno): abre a ficha dele direto. */
-  private abrirFichaDaUrl(assistidoId: number): void {
+  /** Veio de "Alunos da turma" ou de um aviso (FT-18): abre a ficha dele direto, na aba pedida. */
+  private abrirFichaDaUrl(assistidoId: number, aba: string | null): void {
     if (!Number.isInteger(assistidoId) || assistidoId <= 0 || assistidoId === this.assistidoIdAbertoPelaUrl) return;
     this.assistidoIdAbertoPelaUrl = assistidoId;
     this.http.get<AssistidoResponseDTO>(`${this.apiAssistidos}/${assistidoId}`).subscribe({
-      next: (assistido) => this.abrirModalVisualizarAssistido(assistido),
+      next: (assistido) => {
+        this.abrirModalVisualizarAssistido(assistido);
+        if (aba === 'cham' || aba === 'disc') this.trocarAbaVerAssistido(aba);
+      },
       error: (erro) => console.error('Erro ao abrir a ficha do assistido:', erro),
     });
   }

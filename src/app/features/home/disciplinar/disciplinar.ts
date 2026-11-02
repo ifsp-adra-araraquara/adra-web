@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, injec
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { NgTemplateOutlet } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { DisciplinarService } from '../../../core/disciplinar.service';
 import { Role } from '../../../shared/enum/role.enum';
@@ -53,6 +53,7 @@ type AcaoRegistro = 'ficha' | 'documento' | 'periodo' | 'resolver' | 'arquivar';
 export class Disciplinar implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly disciplinarService = inject(DisciplinarService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -158,6 +159,7 @@ export class Disciplinar implements OnInit {
   }));
 
   ngOnInit(): void {
+    this.aplicarFiltrosDaUrl();
     this.carregarPendencias();
     this.carregar();
     this.destroyRef.onDestroy(() => this.buscaTimer && clearTimeout(this.buscaTimer));
@@ -220,6 +222,14 @@ export class Disciplinar implements OnInit {
   aoRegistrar(): void {
     this.recarregar();
     this.carregarPendencias();
+  }
+
+  /** FT-18: um aviso abre a lista já no atendido (?busca=) e no filtro (?filtro=recomendacoes|pendencias). */
+  private aplicarFiltrosDaUrl(): void {
+    const params = this.route.snapshot.queryParamMap;
+    this.termoBusca.set(params.get('busca') ?? '');
+    this.somenteRecomendacoes.set(params.get('filtro') === 'recomendacoes');
+    this.somentePendencias.set(params.get('filtro') === 'pendencias');
   }
 
   private recarregar(): void {

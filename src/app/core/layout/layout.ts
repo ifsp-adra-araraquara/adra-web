@@ -14,12 +14,13 @@ import { Sidebar } from './sidebar/sidebar';
 import { OnboardingService } from '../onboarding.service';
 import { TooltipDirective } from '../../shared/components/tooltip/tooltip';
 import { Icon } from '../../shared/components/icon/icon';
+import { Notificacoes } from '../../shared/components/notificacoes/notificacoes';
 
 const CHAVE_SIDEBAR_COLAPSADA = 'adra.sidebar.collapsed';
 
 @Component({
   selector: 'app-layout',
-  imports: [Icon, RouterOutlet, Sidebar, TooltipDirective],
+  imports: [Icon, Notificacoes, RouterOutlet, Sidebar, TooltipDirective],
   templateUrl: './layout.html',
   styleUrl: './layout.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
