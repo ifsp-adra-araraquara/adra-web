@@ -12,12 +12,18 @@ import { NivelDisciplinar } from '../../enum/NivelDisciplinar';
 import { RegistroDisciplinarDTO } from '../../models/disciplinar/Disciplinar';
 
 const motivo = { motivoId: 1, nome: 'Falar palavrão', nivel: NivelDisciplinar.OCORRENCIA, ativo: true };
-const lucas = { assistidoId: 7, nomeCompleto: 'Lucas Martins' };
-const ana = { assistidoId: 8, nomeCompleto: 'Ana Souza' };
+const lucas = { assistidoId: 7, nomeCompleto: 'Lucas Martins', totalOcorrenciasAtivas: 2 };
+const ana = { assistidoId: 8, nomeCompleto: 'Ana Souza', totalOcorrenciasAtivas: 0 };
 
 function criado(assistidoId: number) {
   return {
-    registro: { registroId: assistidoId, assistidoId, nivel: NivelDisciplinar.OCORRENCIA, sequencia: 1 } as RegistroDisciplinarDTO,
+    registro: {
+      registroId: assistidoId,
+      assistidoId,
+      nomeAssistido: assistidoId === 7 ? 'Lucas Martins' : 'Ana Souza',
+      nivel: NivelDisciplinar.OCORRENCIA,
+      sequencia: 1,
+    } as RegistroDisciplinarDTO,
     recomendacao: null,
   };
 }
@@ -48,15 +54,13 @@ describe('RegistroDisciplinarModal', () => {
     const fixture = await montar({ registrarVarios, registrar });
     const modal = fixture.componentInstance;
 
-    modal.escolherAssistido(lucas);
-    modal.escolherAssistido(ana);
-    modal.escolherAssistido(lucas); // repetido não entra de novo
+    modal.escolhidos.set([lucas, ana]);
     modal.motivoId.set(1);
     modal.descricao.set('Briga no intervalo');
     fixture.detectChanges();
 
-    expect(modal.escolhidos().length).toBe(2);
-    expect((fixture.nativeElement as HTMLElement).querySelectorAll('.escolhido-chip').length).toBe(2);
+    expect(modal.rotuloRegistrar()).toBe('Registrar para 2 atendidos');
+    expect((fixture.nativeElement as HTMLElement).querySelectorAll('.envolvido').length).toBe(2);
 
     await modal.registrar();
 
@@ -64,6 +68,7 @@ describe('RegistroDisciplinarModal', () => {
     expect(registrarVarios).toHaveBeenCalledWith(
       expect.objectContaining({ assistidoIds: [7, 8], motivoId: 1, descricao: 'Briga no intervalo' }),
     );
+    expect(modal.confirmacao()).toBe('Ocorrência registrada para Lucas M. e Ana S.');
   });
 
   it('com um atendido só, usa o registro individual', async () => {
@@ -72,7 +77,7 @@ describe('RegistroDisciplinarModal', () => {
     const fixture = await montar({ registrar, registrarVarios });
     const modal = fixture.componentInstance;
 
-    modal.escolherAssistido(lucas);
+    modal.escolhidos.set([lucas]);
     modal.motivoId.set(1);
     modal.descricao.set('Fato');
     await modal.registrar();
@@ -81,14 +86,50 @@ describe('RegistroDisciplinarModal', () => {
     expect(registrar).toHaveBeenCalledWith(7, expect.objectContaining({ motivoId: 1 }));
   });
 
-  it('remover um chip tira o atendido da lista', async () => {
-    const fixture = await montar({});
-    const modal = fixture.componentInstance;
-    modal.escolherAssistido(lucas);
-    modal.escolherAssistido(ana);
+  it('remover um envolvido tira o atendido da lista', async () => {
+    const modal = (await montar({})).componentInstance;
+    modal.escolhidos.set([lucas, ana]);
 
     modal.removerAssistido(lucas);
 
     expect(modal.escolhidos()).toEqual([ana]);
+  });
+
+  it('no celular, só avança para "O que aconteceu?" com alguém escolhido', async () => {
+    const modal = (await montar({})).componentInstance;
+    modal.largo.set(false);
+
+    modal.continuar();
+    expect(modal.passo()).toBe('quem');
+    expect(modal.erro()).toBe('Escolha ao menos um atendido.');
+
+    modal.escolhidos.set([lucas]);
+    modal.continuar();
+    expect(modal.passo()).toBe('oque');
+    expect(modal.erro()).toBeNull();
+  });
+
+  it('a prévia avisa quem vai chegar à 3ª e o que a Cartilha recomenda', async () => {
+    const modal = (await montar({})).componentInstance;
+    modal.escolhidos.set([lucas, ana]);
+    modal.motivoId.set(1);
+
+    expect(modal.previa()).toEqual([
+      { atendido: lucas, registro: '3ª ocorrência', recomendacao: 'advertência escrita' },
+      { atendido: ana, registro: '1ª ocorrência', recomendacao: null },
+    ]);
+  });
+
+  it('"Hoje" e "Ontem" escolhem a data sem abrir o calendário', async () => {
+    const modal = (await montar({})).componentInstance;
+
+    modal.escolherData(modal.ontem);
+    expect(modal.data()).toBe(modal.ontem);
+    expect(modal.outraData()).toBe(false);
+
+    modal.outraData.set(true);
+    modal.escolherData(modal.hoje);
+    expect(modal.data()).toBe(modal.hoje);
+    expect(modal.outraData()).toBe(false);
   });
 });

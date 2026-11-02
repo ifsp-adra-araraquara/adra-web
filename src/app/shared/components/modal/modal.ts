@@ -53,7 +53,8 @@ export class Modal {
 
   title = input('');
   subtitle = input('');
-  size = input<'sm' | 'md' | 'lg'>('md');
+  /** 'xl': duas colunas que rolam cada uma por si (ex.: registro rápido no notebook). */
+  size = input<'sm' | 'md' | 'lg' | 'xl'>('md');
   closeOnBackdrop = input<boolean | 'auto'>('auto');
   closeOnEscape = input(true);
 
