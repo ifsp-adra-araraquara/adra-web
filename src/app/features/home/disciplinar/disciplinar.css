@@ -11,6 +11,8 @@
   gap: 10px;
   margin-bottom: 18px;
 }
+/* FT-22: recomendações pendentes ficam em destaque, na linha toda, no celular. */
+.pendencias > .pendencia:first-child { grid-column: 1 / -1; }
 .pendencia {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -152,7 +154,8 @@ tr.arquivado td { opacity: .6; }
 }
 
 @media (min-width: 720px) {
-  .pendencias { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .pendencias { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .pendencias > .pendencia:first-child { grid-column: auto; }
   .filtros { display: flex; }
   .filtros-busca { flex: 1; }
   .filtros-select { width: 220px; flex: none; }
