@@ -193,14 +193,7 @@
 }
 
 /* ===== PAINEL "AULAS DO DIA" (clique numa célula vazia do calendário) ===== */
-.dia-aulas-lista { display: flex; flex-direction: column; gap: 10px; }
-.dia-aula-item {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 10px 12px; border: 1px solid var(--gray-100); border-radius: var(--radius-sm);
-}
-.dia-aula-info { display: flex; flex-direction: column; gap: 2px; font-size: 13.5px; }
-.dia-aula-info strong { font-size: 12px; color: var(--color-adra-green-600); }
-/* ===== Dias sem aula (férias, feriado, ponto facultativo, evento/passeio) ===== */
+/* ===== Dias sem chamada (férias, feriado, ponto facultativo, evento/passeio) ===== */
 .cal-legend--sem-aula { margin-top: 6px; align-items: center; }
 .legend-titulo { font-size: 12px; font-weight: 600; color: var(--gray-600); }
 .legend-quadro { width: 12px; height: 12px; border-radius: 3px; border: 1px solid; flex: none; }
