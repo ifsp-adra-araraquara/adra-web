@@ -1,6 +1,6 @@
 import { NivelDisciplinar } from '../enum/NivelDisciplinar';
 import { ResumoDisciplinarDTO } from '../models/disciplinar/Disciplinar';
-import { descreverQuantidades } from './disciplinar.util';
+import { descreverQuantidades, previaRegistro } from './disciplinar.util';
 
 function resumo(parcial: Partial<ResumoDisciplinarDTO>): ResumoDisciplinarDTO {
   return {
@@ -33,5 +33,38 @@ describe('descreverQuantidades', () => {
     const r = resumo({ ocorrenciasAtivas: 4, suspensoesAtivas: 1 });
     expect(descreverQuantidades(r, NivelDisciplinar.SUSPENSAO)).toBe('1 suspensão');
     expect(descreverQuantidades(r, NivelDisciplinar.ADVERTENCIA)).toBe('nenhum registro ativo');
+  });
+});
+
+describe('previaRegistro', () => {
+  it('com 2 ocorrências, a próxima é a 3ª e recomenda advertência', () => {
+    expect(previaRegistro(NivelDisciplinar.OCORRENCIA, { totalOcorrenciasAtivas: 2 })).toEqual({
+      sequencia: 3,
+      recomendacao: 'advertência escrita',
+    });
+  });
+
+  it('com 3 ocorrências, a 4ª entra sem recomendação', () => {
+    expect(previaRegistro(NivelDisciplinar.OCORRENCIA, { totalOcorrenciasAtivas: 3 })).toEqual({
+      sequencia: 4,
+      recomendacao: null,
+    });
+  });
+
+  it('advertência e suspensão usam os seus contadores', () => {
+    expect(previaRegistro(NivelDisciplinar.ADVERTENCIA, { totalAdvertenciasAtivas: 5 }).recomendacao).toBe(
+      'suspensão de 3 dias',
+    );
+    expect(previaRegistro(NivelDisciplinar.SUSPENSAO, { totalSuspensoes: 2 }).recomendacao).toBe(
+      'perder o próximo passeio',
+    );
+  });
+
+  it('uniforme e atendido sem contador ficam sem número', () => {
+    expect(previaRegistro(NivelDisciplinar.UNIFORME, { totalOcorrenciasAtivas: 2 })).toEqual({
+      sequencia: null,
+      recomendacao: null,
+    });
+    expect(previaRegistro(NivelDisciplinar.OCORRENCIA, {}).sequencia).toBeNull();
   });
 });

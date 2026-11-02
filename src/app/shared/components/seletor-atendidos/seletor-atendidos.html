@@ -1,0 +1,113 @@
+<div class="seletor">
+  <div class="seletor-topo">
+    <label class="busca">
+      <app-icon name="search" [size]="18" />
+      <input
+        #campoBusca
+        type="search"
+        class="busca-campo"
+        placeholder="Buscar pelo nome"
+        aria-label="Buscar atendido pelo nome"
+        autocomplete="off"
+        enterkeyhint="done"
+        [value]="termo()"
+        (input)="onBusca($event)"
+        (keydown.enter)="escolherPrimeiro($event)"
+      />
+    </label>
+
+    @if (grupos().length > 0) {
+      <div class="grupos" role="group" aria-label="Filtrar por grupo">
+        <button
+          type="button"
+          class="grupo"
+          [class.ativo]="grupoId() === null"
+          [attr.aria-pressed]="grupoId() === null"
+          (click)="filtrarGrupo(null)"
+        >
+          Todos os grupos
+        </button>
+        @for (g of grupos(); track g.turmaId) {
+          <button
+            type="button"
+            class="grupo"
+            [class.ativo]="grupoId() === g.turmaId"
+            [attr.aria-pressed]="grupoId() === g.turmaId"
+            (click)="filtrarGrupo(g.turmaId)"
+          >
+            {{ g.nomeTurma }}
+            @if (g.faixaEtaria) {
+              <span class="grupo-faixa">{{ g.faixaEtaria }}</span>
+            }
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  @if (erro(); as msg) {
+    <div class="estado" role="alert">
+      <p>{{ msg }}</p>
+      <button type="button" class="estado-acao" (click)="tentarDeNovo()">Tentar de novo</button>
+    </div>
+  } @else if (carregando() && itens().length === 0) {
+    <ul class="grade" role="list" aria-label="Carregando atendidos" aria-busy="true">
+      @for (i of esqueleto; track i) {
+        <li class="cartao cartao-esqueleto" aria-hidden="true">
+          <span class="esqueleto-foto"></span>
+          <span class="esqueleto-linha"></span>
+        </li>
+      }
+    </ul>
+  } @else if (itens().length === 0) {
+    <div class="estado">
+      <app-icon name="users" [size]="28" />
+      <p>
+        @if (termo().trim()) {
+          Ninguém com esse nome{{ nomeGrupo() ? ' em ' + nomeGrupo() : '' }}.
+        } @else {
+          Nenhum atendido ativo{{ nomeGrupo() ? ' em ' + nomeGrupo() : '' }}.
+        }
+      </p>
+      @if (grupoId() !== null) {
+        <button type="button" class="estado-acao" (click)="filtrarGrupo(null)">Buscar em todos os grupos</button>
+      }
+    </div>
+  } @else {
+    <ul class="grade" role="list" aria-label="Atendidos" [class.recarregando]="carregando()">
+      @for (a of itens(); track a.assistidoId) {
+        <li>
+          <button
+            type="button"
+            class="cartao"
+            [class.escolhido]="estaEscolhido(a)"
+            [attr.aria-pressed]="estaEscolhido(a)"
+            [attr.aria-label]="rotulo(a)"
+            [title]="a.nomeCompleto"
+            (click)="alternar(a)"
+          >
+            <span class="cartao-foto">
+              <app-avatar [entidadeId]="a.assistidoId" [nome]="a.nomeCompleto" [size]="56" />
+              @if (estaEscolhido(a)) {
+                <span class="selo" aria-hidden="true"><app-icon name="check" [size]="14" /></span>
+              }
+            </span>
+            <span class="cartao-nome">{{ nomeCurto(a.nomeCompleto) }}</span>
+            @if (a.idade != null) {
+              <span class="cartao-sub">{{ a.idade }} anos</span>
+            }
+          </button>
+        </li>
+      }
+    </ul>
+
+    <div #fimDaLista class="grade-fim">
+      <span>Mostrando {{ itens().length }} de {{ total() }}</span>
+      @if (temMais()) {
+        <button type="button" class="estado-acao" (click)="carregarMais()">Mostrar mais</button>
+      }
+    </div>
+  }
+
+  <p class="sr-only" aria-live="polite">{{ anuncio() }}</p>
+</div>

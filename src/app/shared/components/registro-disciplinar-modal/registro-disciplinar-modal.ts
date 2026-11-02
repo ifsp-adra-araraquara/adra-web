@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  ElementRef,
   computed,
   effect,
   inject,
@@ -10,12 +11,12 @@ import {
   output,
   signal,
   untracked,
+  viewChild,
 } from '@angular/core';
-import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
+import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
-import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/auth.service';
 import { DisciplinarService } from '../../../core/disciplinar.service';
 import { NIVEIS_DISCIPLINARES, NivelDisciplinar, ORDEM_NIVEIS } from '../../enum/NivelDisciplinar';
@@ -25,88 +26,96 @@ import {
   RegistroDisciplinarDTO,
 } from '../../models/disciplinar/Disciplinar';
 import { Role } from '../../enum/role.enum';
-import { AssistidoResponseDTO } from '../../models/assistido/AssistidoResponseDTO';
-import { PaginaResponse } from '../../models/PaginaResponse';
 import { hojeISO } from '../../utils/aula.util';
-import { dataBr, rotuloSequencia, somarDias } from '../../utils/disciplinar.util';
+import { dataBr, previaRegistro, rotuloSequencia, somarDias } from '../../utils/disciplinar.util';
 import { mensagemErro } from '../../utils/erro-http.util';
+import { nomeCurto } from '../../utils/nome.util';
 import { Modal } from '../modal/modal';
 import { Button } from '../button/button';
 import { Input } from '../input/input';
 import { Icon } from '../icon/icon';
-import { Badge } from '../badge/badge';
 import { Avatar } from '../avatar/avatar';
-import { calcularIdade } from '../../utils/idade.util';
 import { RecomendacaoDisciplinarModal } from '../recomendacao-disciplinar-modal/recomendacao-disciplinar-modal';
-
-export interface AssistidoSelecionado {
-  assistidoId: number;
-  nomeCompleto: string;
-  /** Só para exibir na lista de escolha ("11 anos · Turma A"). */
-  idade?: number | null;
-  nomeTurma?: string | null;
-}
-
-/** Quantos assistidos a busca mostra. */
-const TAMANHO_LISTA = 5;
+import { AtendidoEscolhido, SeletorAtendidos } from '../seletor-atendidos/seletor-atendidos';
 
 const DIAS_SUSPENSAO_PADRAO = 3;
+/** A partir daqui "quem" e "o quê" ficam lado a lado; abaixo, viram dois passos. */
+const MIDIA_LARGA = '(min-width: 768px)';
+
+type Passo = 'quem' | 'oque';
 
 /**
- * Modal de registro disciplinar (FT-04/FT-22). Quando o atendido (e a aula)
- * já são conhecidos, vêm por input e a busca some; sem input, a busca permite
- * escolher vários atendidos para o mesmo fato (um registro por atendido).
+ * Registro rápido de ocorrência (FT-04/FT-22). Sem atendido por input, abre
+ * a bandeja "Quem está envolvido?" (grade de rostos, um ou mais) ao lado de
+ * "O que aconteceu?"; no celular, os dois viram passos. Com atendido por
+ * input (ficha/chamada), é só o formulário.
  *
- * Depois de salvar, mostra o que foi registrado, oferece imprimir o documento
- * e abre o modal de recomendação para cada atendido que chegou a 3 do nível.
+ * Antes de salvar, a prévia mostra qual será o registro de cada atendido e
+ * se a Cartilha vai recomendar o próximo nível. Depois de salvar, mostra a
+ * confirmação, oferece imprimir os documentos e abre o modal de recomendação.
  */
 @Component({
   selector: 'app-registro-disciplinar-modal',
-  imports: [FormsModule, Modal, Button, Input, Icon, Badge, Avatar, RecomendacaoDisciplinarModal],
+  imports: [
+    FormsModule,
+    NgTemplateOutlet,
+    Modal,
+    Button,
+    Input,
+    Icon,
+    Avatar,
+    RecomendacaoDisciplinarModal,
+    SeletorAtendidos,
+  ],
   templateUrl: './registro-disciplinar-modal.html',
   styleUrl: './registro-disciplinar-modal.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RegistroDisciplinarModal {
-  private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly disciplinarService = inject(DisciplinarService);
-  private readonly destroyRef = inject(DestroyRef);
   private readonly auth = inject(AuthService);
+  private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef);
 
   open = model(false);
-  /** Quando informado, o modal já abre com o assistido escolhido (ficha/chamada). */
-  assistido = input<AssistidoSelecionado | null>(null);
+  /** Quando informado, o modal já abre com o atendido escolhido (ficha/chamada). */
+  assistido = input<AtendidoEscolhido | null>(null);
   /** Aula em que aconteceu, quando registrado pela chamada. */
   aulaId = input<number | null>(null);
   salvo = output<RegistroCriadoDTO[]>();
 
   readonly NIVEIS = NIVEIS_DISCIPLINARES;
   readonly dataBr = dataBr;
+  readonly nomeCurto = nomeCurto;
   readonly hoje = hojeISO();
+  readonly ontem = somarDias(this.hoje, -1);
 
   readonly motivos = signal<MotivoDisciplinarDTO[]>([]);
+  readonly ehCoordenador = computed(() => this.auth.currentProfile() === Role.COORD);
   private readonly niveisPermitidos = computed(() =>
     this.auth.currentProfile() === Role.EDUCADOR ? [NivelDisciplinar.OCORRENCIA] : ORDEM_NIVEIS,
   );
   readonly gruposMotivos = computed(() =>
-    this.niveisPermitidos().map((nivel) => ({
-      nivel,
-      rotulo: NIVEIS_DISCIPLINARES[nivel].rotulo,
-      motivos: this.motivos().filter((m) => m.nivel === nivel),
-    })).filter((g) => g.motivos.length > 0),
+    this.niveisPermitidos()
+      .map((nivel) => ({
+        nivel,
+        rotulo: NIVEIS_DISCIPLINARES[nivel].rotulo,
+        variant: NIVEIS_DISCIPLINARES[nivel].variant,
+        motivos: this.motivos().filter((m) => m.nivel === nivel),
+      }))
+      .filter((g) => g.motivos.length > 0),
   );
 
-  // Busca de assistido (quando não vem por input)
-  readonly termoBusca = signal('');
-  readonly resultadosBusca = signal<AssistidoSelecionado[]>([]);
-  readonly buscando = signal(false);
-  readonly escolhidos = signal<AssistidoSelecionado[]>([]);
-  private buscaTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Tela larga (iPad, notebook, PC): bandeja e formulário lado a lado. */
+  readonly largo = signal(false);
+  readonly passo = signal<Passo>('quem');
+  readonly escolhidos = signal<AtendidoEscolhido[]>([]);
 
   // Formulário
   readonly motivoId = signal<number | null>(null);
   readonly data = signal(this.hoje);
+  readonly outraData = signal(false);
   readonly descricao = signal('');
   readonly suspensaoInicio = signal(this.hoje);
   readonly suspensaoFim = signal(somarDias(this.hoje, DIAS_SUSPENSAO_PADRAO - 1));
@@ -119,24 +128,51 @@ export class RegistroDisciplinarModal {
   readonly erroSuspensao = signal<string | null>(null);
   readonly resultado = signal<RegistroCriadoDTO[] | null>(null);
 
+  /** Sem atendido por input: mostra a bandeja de rostos. */
+  readonly comBandeja = computed(() => !this.assistido());
+  readonly tamanho = computed(() => (this.comBandeja() && !this.resultado() ? 'xl' : 'md'));
   readonly assistidosAtuais = computed(() => {
     const doInput = this.assistido();
     return doInput ? [doInput] : this.escolhidos();
   });
   readonly varios = computed(() => this.assistidosAtuais().length > 1);
-  readonly subtitulo = computed(() => {
-    const atuais = this.assistidosAtuais();
-    return atuais.length === 1 ? atuais[0].nomeCompleto : atuais.length > 1 ? `${atuais.length} atendidos` : '';
-  });
+  readonly mostraQuem = computed(() => this.largo() || this.passo() === 'quem');
+  readonly mostraOque = computed(() => this.largo() || this.passo() === 'oque');
+  readonly rotuloRegistrar = computed(() =>
+    this.varios() ? `Registrar para ${this.assistidosAtuais().length} atendidos` : 'Registrar',
+  );
+
   readonly motivoSelecionado = computed(() => this.motivos().find((m) => m.motivoId === this.motivoId()) ?? null);
   readonly nivelSelecionado = computed(() => this.motivoSelecionado()?.nivel ?? null);
   readonly ehSuspensao = computed(() => this.nivelSelecionado() === NivelDisciplinar.SUSPENSAO);
+
+  /** O que cada atendido vai receber, antes de salvar. */
+  readonly previa = computed(() => {
+    const nivel = this.nivelSelecionado();
+    if (!nivel) return [];
+    return this.assistidosAtuais().map((atendido) => {
+      const { sequencia, recomendacao } = previaRegistro(nivel, atendido);
+      const registro = sequencia ? rotuloSequencia({ sequencia, nivel }) : NIVEIS_DISCIPLINARES[nivel].rotulo;
+      return { atendido, registro, recomendacao };
+    });
+  });
+  readonly previaTemRecomendacao = computed(() => this.previa().some((p) => p.recomendacao));
 
   readonly registrados = computed(() => (this.resultado() ?? []).map((c) => c.registro));
   readonly comDocumento = computed(() => this.registrados().filter((r) => r.documentoStatus !== null));
   readonly recomendacoes = computed(() =>
     (this.resultado() ?? []).flatMap((c) => (c.recomendacao ? [c.recomendacao] : [])),
   );
+  readonly confirmacao = computed(() => {
+    const registros = this.registrados();
+    if (registros.length === 0) return '';
+    const nivel = registros[0].nivel;
+    const oQue = nivel === NivelDisciplinar.UNIFORME ? 'Ocorrência de uniforme' : NIVEIS_DISCIPLINARES[nivel].rotulo;
+    const texto = `${oQue} registrada para ${listarNomes(registros.map((r) => nomeCurto(r.nomeAssistido)))}`;
+    return texto.endsWith('.') ? texto : `${texto}.`; // "Ana S." já termina em ponto
+  });
+
+  private readonly tituloOque = viewChild<ElementRef<HTMLElement>>('tituloOque');
 
   constructor() {
     // Sempre que abre: limpa o estado e carrega os motivos ativos.
@@ -149,40 +185,39 @@ export class RegistroDisciplinarModal {
         });
       }
     });
-    this.destroyRef.onDestroy(() => this.buscaTimer && clearTimeout(this.buscaTimer));
-  }
 
-  onBusca(termo: string): void {
-    this.termoBusca.set(termo);
-    if (this.buscaTimer) clearTimeout(this.buscaTimer);
-    // A lista só aparece depois que a pessoa começa a digitar.
-    const busca = termo.trim();
-    if (!busca) {
-      this.resultadosBusca.set([]);
-      this.buscando.set(false);
-      return;
+    const midia = this.document.defaultView?.matchMedia?.(MIDIA_LARGA);
+    if (midia) {
+      this.largo.set(midia.matches);
+      const aoMudar = (e: MediaQueryListEvent) => this.largo.set(e.matches);
+      midia.addEventListener('change', aoMudar);
+      this.destroyRef.onDestroy(() => midia.removeEventListener('change', aoMudar));
     }
-    this.buscando.set(true); // evita piscar "nenhum encontrado" antes da busca começar
-    this.buscaTimer = setTimeout(() => this.buscarAssistidos(busca), 300);
   }
 
-  escolherAssistido(a: AssistidoSelecionado): void {
-    if (!this.estaEscolhido(a)) this.escolhidos.update((lista) => [...lista, a]);
-    this.resultadosBusca.set([]);
-    this.termoBusca.set('');
-  }
-
-  removerAssistido(a: AssistidoSelecionado): void {
+  removerAssistido(a: AtendidoEscolhido): void {
     this.escolhidos.update((lista) => lista.filter((e) => e.assistidoId !== a.assistidoId));
   }
 
-  estaEscolhido(a: AssistidoSelecionado): boolean {
-    return this.escolhidos().some((e) => e.assistidoId === a.assistidoId);
+  /** Celular: do passo "quem" para "o quê". */
+  continuar(): void {
+    if (this.escolhidos().length === 0) {
+      this.erro.set('Escolha ao menos um atendido.');
+      return;
+    }
+    this.erro.set(null);
+    this.passo.set('oque');
+    setTimeout(() => this.tituloOque()?.nativeElement.focus());
   }
 
-  descricaoAssistido(a: AssistidoSelecionado): string {
-    const partes = [a.idade != null ? `${a.idade} anos` : null, a.nomeTurma || 'Sem turma'];
-    return partes.filter(Boolean).join(' · ');
+  voltar(): void {
+    this.erro.set(null);
+    this.passo.set('quem');
+  }
+
+  escolherData(valor: string): void {
+    this.outraData.set(false);
+    this.onData(valor);
   }
 
   onData(valor: string): void {
@@ -232,11 +267,12 @@ export class RegistroDisciplinarModal {
     }
   }
 
-  /** "Registrar outro" mantém os atendidos escolhidos (vários fatos dos mesmos atendidos). */
-  registrarOutro(): void {
+  /** "Registrar outra" mantém os atendidos escolhidos (vários fatos dos mesmos atendidos). */
+  registrarOutra(): void {
     const escolhidos = this.escolhidos();
     this.reiniciar();
     this.escolhidos.set(escolhidos);
+    if (escolhidos.length > 0) this.passo.set('oque');
   }
 
   imprimir(registro: RegistroDisciplinarDTO): void {
@@ -277,11 +313,11 @@ export class RegistroDisciplinarModal {
   }
 
   private reiniciar(): void {
+    this.passo.set('quem');
     this.escolhidos.set([]);
-    this.termoBusca.set('');
-    this.resultadosBusca.set([]);
     this.motivoId.set(null);
     this.data.set(this.hoje);
+    this.outraData.set(false);
     this.descricao.set('');
     this.suspensaoInicio.set(this.hoje);
     this.suspensaoFim.set(somarDias(this.hoje, DIAS_SUSPENSAO_PADRAO - 1));
@@ -301,27 +337,9 @@ export class RegistroDisciplinarModal {
       this.erro.set('Não foi possível carregar os motivos.');
     }
   }
+}
 
-  private async buscarAssistidos(termo: string): Promise<void> {
-    this.buscando.set(true);
-    try {
-      const params = new HttpParams().set('busca', termo).set('status', 'ATIVO').set('tamanho', TAMANHO_LISTA);
-      const pagina = await firstValueFrom(
-        this.http.get<PaginaResponse<AssistidoResponseDTO>>(`${environment.apiUrl}/api/assistidos`, { params }),
-      );
-      if (termo !== this.termoBusca().trim()) return; // a pessoa continuou digitando
-      this.resultadosBusca.set(
-        pagina.conteudo.map((a) => ({
-          assistidoId: a.assistidoId,
-          nomeCompleto: a.nomeCompleto,
-          idade: calcularIdade(a.dataNascimento),
-          nomeTurma: a.nomeTurma ?? null,
-        })),
-      );
-    } catch {
-      this.resultadosBusca.set([]);
-    } finally {
-      this.buscando.set(false);
-    }
-  }
+/** ["Lucas M.", "Pedro H.", "Ana S."] → "Lucas M., Pedro H. e Ana S." */
+function listarNomes(nomes: string[]): string {
+  return nomes.length <= 1 ? (nomes[0] ?? '') : `${nomes.slice(0, -1).join(', ')} e ${nomes[nomes.length - 1]}`;
 }

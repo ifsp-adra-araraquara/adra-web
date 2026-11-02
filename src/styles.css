@@ -524,7 +524,14 @@ tbody tr { transition: background .12s; }
   .modal-head > [modal-actions] { order: 0; width: auto; }
   .modal-body { padding: 22px 24px; max-height: 64dvh; overflow-y: auto; }
   .modal-foot { position: static; padding: 16px 24px; }
+
+  .modal-overlay:has(.modal-xl) { padding: 24px; }
+  .modal-xl { max-width: 1160px; height: min(780px, calc(100dvh - 48px)); }
 }
+
+/* xl: corpo sem padding e sem rolagem própria — o conteúdo se divide em áreas que rolam cada uma por si. */
+.modal-xl { overflow: hidden; }
+.modal-xl .modal-body { display: flex; min-height: 0; padding: 0; max-height: none; overflow: hidden; }
 
 /* ===== EXPORT PREVIEW ===== */
 .export-fields { display: flex; flex-wrap: wrap; gap: 8px; }
