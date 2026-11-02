@@ -1,5 +1,6 @@
-/** Dia da semana como o Java manda (`DayOfWeek`). */
-export type DiaSemana = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
+import { DiaSemana } from '../../enum/DiaSemana';
+
+export type { DiaSemana };
 
 export interface HorarioOficina {
   dias: DiaSemana[];

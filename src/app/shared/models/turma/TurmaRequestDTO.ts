@@ -1,4 +1,5 @@
 import { Turno } from '../../enum/Turno';
+import { DiaSemana } from '../../enum/DiaSemana';
 
 export interface TurmaRequestDTO {
   nomeTurma: string;
@@ -8,4 +9,5 @@ export interface TurmaRequestDTO {
   observacoes?: string;
   oficinaId?: number | null;
   oficineiroResponsavelId?: number | null;
+  diasDaSemana: DiaSemana[];
 }
