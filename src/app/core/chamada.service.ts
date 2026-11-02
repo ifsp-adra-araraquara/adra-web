@@ -9,6 +9,7 @@ import { PresencaRequestDTO } from '../shared/models/presenca/PresencaRequestDTO
 import { PresencaResponseDTO } from '../shared/models/presenca/PresencaResponseDTO';
 import { FrequenciaAulaDTO } from '../shared/models/presenca/FrequenciaAulaDTO';
 import { GradeMensalTurmaDTO } from '../shared/models/presenca/GradeMensalTurmaDTO';
+import { ChamadaGrupoDTO, ChamadasDoDiaDTO, PresencaChamadaRequestDTO } from '../shared/models/chamada/ChamadaGrupo';
 import { LinhaChamada, linhaChamadaDePresenca, ordenarPorNome } from '../shared/utils/chamada.util';
 
 /**
@@ -81,6 +82,33 @@ export class ChamadaService {
     );
 
     return statusAula;
+  }
+
+  /** FT-12: grupos com chamada no dia (`data` em yyyy-MM-dd). */
+  async carregarDia(data: string): Promise<ChamadasDoDiaDTO> {
+    return firstValueFrom(this.http.get<ChamadasDoDiaDTO>(`${this.api}/api/chamadas/dia`, { params: { data } }));
+  }
+
+  async carregarGrupo(turmaId: number, data: string): Promise<ChamadaGrupoDTO> {
+    return firstValueFrom(this.http.get<ChamadaGrupoDTO>(this.urlGrupo(turmaId, data)));
+  }
+
+  /** Grava a chamada inteira do grupo no dia; regravar atualiza a mesma chamada. */
+  async salvarGrupo(turmaId: number, data: string, atendidos: LinhaChamada[]): Promise<ChamadaGrupoDTO> {
+    const presencas: PresencaChamadaRequestDTO[] = atendidos.map((a) => {
+      const justificada = a.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA;
+      return {
+        assistidoId: a.assistidoId,
+        statusPresenca: a.statusPresenca!,
+        motivoFalta: justificada ? a.motivoFalta : null,
+        observacao: justificada && a.observacao?.trim() ? a.observacao.trim() : null,
+      };
+    });
+    return firstValueFrom(this.http.put<ChamadaGrupoDTO>(this.urlGrupo(turmaId, data), presencas));
+  }
+
+  private urlGrupo(turmaId: number, data: string): string {
+    return `${this.api}/api/chamadas/turma/${turmaId}/dia/${data}`;
   }
 
   /** Histórico de frequência completo de um assistido — aba "Chamadas" do cadastro. */

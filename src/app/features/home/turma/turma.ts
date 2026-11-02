@@ -9,6 +9,7 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 import { Turno, TURNOS_DISPONIVEIS } from '../../../shared/enum/Turno';
+import { DiaSemana } from '../../../shared/enum/DiaSemana';
 import { Role } from '../../../shared/enum/role.enum';
 import { ocupacaoTurma as ocupacaoTurmaUtil } from '../../../shared/utils/ocupacao.util';
 
@@ -34,6 +35,7 @@ import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 import { AulasTurmaModal } from '../aulas-turma-modal/aulas-turma-modal';
 import { AuthService } from '../../../core/auth.service';
 import { Icon } from '../../../shared/components/icon/icon';
+import { SeletorDiasSemana } from '../../../shared/components/seletor-dias-semana/seletor-dias-semana';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
 import { AlunosTurmaModal } from './alunos-turma-modal/alunos-turma-modal';
 import { HistoricoOficineiros } from '../../../shared/components/historico-oficineiros/historico-oficineiros';
@@ -42,7 +44,7 @@ import { OficineiroHistoricoDTO } from '../../../shared/models/historico/Oficine
 @Component({
   selector: 'app-turmas',
   standalone: true,
-  imports: [AlunosTurmaModal, HistoricoOficineiros, Icon, 
+  imports: [AlunosTurmaModal, HistoricoOficineiros, Icon, SeletorDiasSemana, 
     CommonModule,
     FormsModule,
     Select,
@@ -324,6 +326,7 @@ export class Turmas implements OnInit {
       observacoes: '',
       oficinaId: null,
       oficineiroResponsavelId: null,
+      diasDaSemana: [],
     };
   }
 
@@ -349,6 +352,7 @@ export class Turmas implements OnInit {
       observacoes: turma.observacoes ?? '',
       oficinaId: turma.oficinaId ?? null,
       oficineiroResponsavelId: turma.oficineiroResponsavelId ?? null,
+      diasDaSemana: turma.diasDaSemana ?? [],
     };
     this.abaAtivaForm.set('turma');
     this.erroSalvar.set(null);
@@ -359,7 +363,7 @@ export class Turmas implements OnInit {
     this.mostrarModalForm.set(false);
   }
 
-  atualizarCampoTurma(campo: keyof TurmaRequestDTO, valor: string | number | null): void {
+  atualizarCampoTurma(campo: keyof TurmaRequestDTO, valor: string | number | DiaSemana[] | null): void {
     this.formTurma = { ...this.formTurma, [campo]: valor };
     // Limpa o erro assim que o usuário mexe em algum campo, pra não ficar
     // uma mensagem de validação "presa" na tela depois que ele já corrigiu

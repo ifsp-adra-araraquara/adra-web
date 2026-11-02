@@ -1,4 +1,5 @@
 import { Turno } from '../../enum/Turno';
+import { DiaSemana } from '../../enum/DiaSemana';
 
 export interface TurmaResponseDTO {
   turmaId: number;
@@ -12,4 +13,5 @@ export interface TurmaResponseDTO {
   oficineiroResponsavelId?: number | null;
   /** Só vem preenchido em GET /api/turmas (listagem) — contagem em lote feita no backend. */
   quantidadeAlunos?: number | null;
+  diasDaSemana?: DiaSemana[];
 }

@@ -295,6 +295,12 @@
       />
     </div>
 
+    <app-seletor-dias-semana
+      label="Dias de chamada"
+      [dias]="formTurma.diasDaSemana"
+      (diasChange)="atualizarCampoTurma('diasDaSemana', $event)"
+    />
+
     <div class="field">
       <label>Observações</label>
       <textarea
