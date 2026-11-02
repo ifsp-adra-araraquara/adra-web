@@ -34,6 +34,47 @@ export function textoRecomendacao(r: RegistroDisciplinarDTO): string {
   return `${r.nomeAssistido} chegou a ${r.sequencia} ${nivel} ativas. A Cartilha recomenda ${acao}.`;
 }
 
+/** Contadores que a busca de atendidos já traz (registros ativos por nível). */
+export interface ContadoresDisciplinares {
+  totalOcorrenciasAtivas?: number | null;
+  totalAdvertenciasAtivas?: number | null;
+  totalSuspensoes?: number | null;
+}
+
+/** A cada quantos registros ativos do nível a Cartilha recomenda o próximo passo (LIMITE_PROGRESSAO no back). */
+const NIVEL_LIMITE = 3;
+
+/** Consequência que a 3ª de cada nível recomenda (espelha NivelDisciplinar.consequencia no back). */
+const CONSEQUENCIA_DO_NIVEL: Record<NivelDisciplinar, ConsequenciaDisciplinar> = {
+  [NivelDisciplinar.OCORRENCIA]: 'RECOMENDA_ADVERTENCIA',
+  [NivelDisciplinar.ADVERTENCIA]: 'RECOMENDA_SUSPENSAO',
+  [NivelDisciplinar.SUSPENSAO]: 'PERDE_PROXIMO_PASSEIO',
+  [NivelDisciplinar.UNIFORME]: 'RETORNO_COM_RESPONSAVEL',
+};
+
+export interface PreviaRegistro {
+  /** Qual será (3 → "3ª"), ou null quando a busca não traz o contador do nível (uniforme). */
+  sequencia: number | null;
+  /** O que a Cartilha recomenda se este registro completar 3, ou null. */
+  recomendacao: string | null;
+}
+
+/** Prévia do registro antes de salvar — o número oficial continua vindo do back. */
+export function previaRegistro(nivel: NivelDisciplinar, atendido: ContadoresDisciplinares): PreviaRegistro {
+  const ativos =
+    nivel === NivelDisciplinar.OCORRENCIA
+      ? atendido.totalOcorrenciasAtivas
+      : nivel === NivelDisciplinar.ADVERTENCIA
+        ? atendido.totalAdvertenciasAtivas
+        : nivel === NivelDisciplinar.SUSPENSAO
+          ? atendido.totalSuspensoes
+          : null;
+  if (ativos == null) return { sequencia: null, recomendacao: null };
+  const sequencia = ativos + 1;
+  const completaTres = sequencia % NIVEL_LIMITE === 0;
+  return { sequencia, recomendacao: completaTres ? ACAO_RECOMENDADA[CONSEQUENCIA_DO_NIVEL[nivel]] : null };
+}
+
 /** yyyy-MM-dd + n dias, sem passar por fuso. */
 export function somarDias(iso: string, dias: number): string {
   const [a, m, d] = iso.split('-').map(Number);

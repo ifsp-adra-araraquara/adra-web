@@ -1,200 +1,253 @@
 <app-modal
   [(open)]="open"
-  [title]="resultado() ? 'Registro salvo' : 'Registrar ocorrência'"
-  [subtitle]="subtitulo()"
+  [title]="resultado() ? 'Ocorrência registrada' : 'Registrar ocorrência'"
+  [subtitle]="assistido()?.nomeCompleto ?? ''"
+  [size]="tamanho()"
+  [closeOnBackdrop]="comBandeja() && !resultado() ? false : 'auto'"
   (closed)="fechar()"
 >
   <div modal-icon class="mh-ico" [class.ico-amber]="!resultado()" [class.ico-green]="resultado()">
     <app-icon [name]="resultado() ? 'check' : 'flag'" />
   </div>
 
-  @if (erro()) {
-    <div class="notice notice-error" role="alert">{{ erro() }}</div>
-  }
+  @if (open()) {
+    @if (resultado()) {
+      <!-- ================= CONFIRMAÇÃO ================= -->
+      <div class="confirmacao">
+        <span class="confirmacao-ico"><app-icon name="check" [size]="28" /></span>
+        <p class="confirmacao-titulo">{{ confirmacao() }}</p>
 
-  @if (resultado()) {
-    <!-- ================= RESULTADO: um registro por atendido ================= -->
-    <ul class="resultado" role="list">
-      @for (r of registrados(); track r.registroId) {
-        <li class="resultado-item">
-          <app-badge [variant]="NIVEIS[r.nivel].variant" [label]="NIVEIS[r.nivel].rotulo" />
-          <div class="resultado-texto">
-            <b>{{ rotuloSequencia(r) }} registrada</b>
-            <span>{{ varios() ? r.nomeAssistido + ' · ' : '' }}{{ r.motivo }}</span>
-            @if (r.suspensaoInicio && r.suspensaoFim) {
-              <span class="resultado-periodo">
-                Suspenso de {{ dataBr(r.suspensaoInicio) }} a {{ dataBr(r.suspensaoFim) }}
-              </span>
-            }
-          </div>
-        </li>
-      }
-    </ul>
-
-    @if (comDocumento().length > 0) {
-      <p class="form-sec-title">Documento para os pais assinarem</p>
-      <div class="documentos">
-        @for (r of comDocumento(); track r.registroId) {
-          <app-button variant="secondary" (click)="imprimir(r)">
-            <app-icon name="file-text" [size]="16" /> Imprimir {{ NIVEIS[r.nivel].rotulo.toLowerCase() }}
-          </app-button>
+        <ul class="resultado" role="list">
+          @for (r of registrados(); track r.registroId) {
+            <li class="resultado-item">
+              <app-avatar [entidadeId]="r.assistidoId" [nome]="r.nomeAssistido" [size]="36" />
+              <div class="resultado-texto">
+                <b>{{ r.nomeAssistido }}</b>
+                <span>{{ rotuloSequencia(r) }}: {{ r.motivo }}</span>
+                @if (r.suspensaoInicio && r.suspensaoFim) {
+                  <span class="resultado-periodo">
+                    Suspenso de {{ dataBr(r.suspensaoInicio) }} a {{ dataBr(r.suspensaoFim) }}
+                  </span>
+                }
+              </div>
+              @if (r.documentoStatus) {
+                <app-button variant="secondary" size="sm" (click)="imprimir(r)">
+                  <app-icon name="file-text" [size]="16" /> Imprimir
+                </app-button>
+              }
+            </li>
+          }
+        </ul>
+        @if (comDocumento().length > 0) {
+          <p class="hint">O documento vai para o responsável assinar e devolver.</p>
         }
       </div>
-    }
-
-    <ng-template #footer>
-      <app-button variant="secondary" (click)="registrarOutro()">Registrar outro</app-button>
-      <app-button (click)="fechar()">Concluir</app-button>
-    </ng-template>
-  } @else {
-    <!-- ================= FORMULÁRIO ================= -->
-    @if (!assistido()) {
-      <div class="field">
-        <app-input
-          label="Quem está envolvido?"
-          placeholder="Buscar atendido pelo nome…"
-          [ngModel]="termoBusca()"
-          (ngModelChange)="onBusca($event)"
-        />
-        @if (termoBusca().trim()) {
-          <div class="busca-area" [class.buscando]="buscando()" aria-live="polite">
-            @if (resultadosBusca().length > 0) {
-              <ul class="busca-resultados" role="listbox" aria-label="Atendidos" aria-multiselectable="true">
-                @for (a of resultadosBusca(); track a.assistidoId) {
-                  <li>
-                    <button
-                      type="button"
-                      role="option"
-                      [attr.aria-selected]="estaEscolhido(a)"
-                      [disabled]="estaEscolhido(a)"
-                      (click)="escolherAssistido(a)"
-                    >
-                      <app-avatar [entidadeId]="a.assistidoId" [nome]="a.nomeCompleto" [size]="36" />
-                      <span class="assistido-texto">
-                        <span class="assistido-nome">{{ a.nomeCompleto }}</span>
-                        <span class="assistido-sub">{{ descricaoAssistido(a) }}</span>
-                      </span>
-                      @if (estaEscolhido(a)) {
-                        <app-icon name="check" [size]="18" />
-                      }
-                    </button>
-                  </li>
-                }
-              </ul>
-            } @else if (buscando()) {
-              <p class="hint">Buscando…</p>
-            } @else {
-              <p class="hint">Nenhum atendido ativo encontrado.</p>
-            }
+    } @else if (comBandeja()) {
+      <!-- ================= BANDEJA + FORMULÁRIO ================= -->
+      <div class="registro">
+        @if (!largo()) {
+          <div class="progresso" role="progressbar" aria-label="Passo" aria-valuemin="1" aria-valuemax="2"
+               [attr.aria-valuenow]="passo() === 'quem' ? 1 : 2">
+            <span class="progresso-seg ativo"></span>
+            <span class="progresso-seg" [class.ativo]="passo() === 'oque'"></span>
           </div>
+        }
+
+        <section class="painel painel-quem" aria-labelledby="titulo-quem" [hidden]="!mostraQuem()">
+          <h3 id="titulo-quem" class="painel-titulo">
+            <span class="passo-num" aria-hidden="true">1</span> Quem está envolvido?
+          </h3>
+          <app-seletor-atendidos [(escolhidos)]="escolhidos" />
+        </section>
+
+        <section class="painel painel-oque" aria-labelledby="titulo-oque" [hidden]="!mostraOque()">
+          <h3 #tituloOque id="titulo-oque" class="painel-titulo" tabindex="-1">
+            <span class="passo-num" aria-hidden="true">2</span> O que aconteceu?
+          </h3>
+          <ng-container *ngTemplateOutlet="formulario" />
+        </section>
+      </div>
+    } @else {
+      <!-- ================= SÓ O FORMULÁRIO (atendido já conhecido) ================= -->
+      <ng-container *ngTemplateOutlet="formulario" />
+    }
+  }
+
+  <ng-template #footer>
+    @if (erro()) {
+      <div class="notice notice-error" role="alert">{{ erro() }}</div>
+    }
+    @if (resultado()) {
+      <app-button variant="secondary" (click)="registrarOutra()">Registrar outra</app-button>
+      <app-button (click)="fechar()">Concluir</app-button>
+    } @else if (comBandeja() && !largo() && passo() === 'quem') {
+      <span class="rodape-escolhidos" aria-hidden="true">
+        @for (e of escolhidos().slice(0, 3); track e.assistidoId) {
+          <app-avatar [entidadeId]="e.assistidoId" [nome]="e.nomeCompleto" [size]="28" />
         }
         @if (escolhidos().length > 0) {
-          <ul class="escolhidos" role="list" aria-label="Atendidos escolhidos">
-            @for (e of escolhidos(); track e.assistidoId) {
-              <li class="escolhido-chip">
-                <app-avatar [entidadeId]="e.assistidoId" [nome]="e.nomeCompleto" [size]="32" />
-                <span class="escolhido-nome">{{ e.nomeCompleto }}</span>
-                <button
-                  type="button"
-                  class="escolhido-remover"
-                  [attr.aria-label]="'Remover ' + e.nomeCompleto"
-                  (click)="removerAssistido(e)"
-                >
-                  <app-icon name="x" [size]="16" />
-                </button>
-              </li>
-            }
-          </ul>
-          @if (varios()) {
-            <p class="hint">Cada atendido recebe o seu próprio registro e o seu próprio documento.</p>
-          }
+          <span>{{ escolhidos().length }} {{ escolhidos().length === 1 ? 'escolhido' : 'escolhidos' }}</span>
+        }
+      </span>
+      <app-button (click)="continuar()">Continuar</app-button>
+    } @else {
+      @if (varios()) {
+        <p class="rodape-nota">Cada atendido recebe o seu próprio registro.</p>
+      }
+      @if (comBandeja() && !largo()) {
+        <app-button variant="secondary" (click)="voltar()">Voltar</app-button>
+      } @else {
+        <app-button variant="secondary" (click)="fechar()">Cancelar</app-button>
+      }
+      <app-button [loading]="salvando()" (click)="registrar()">{{ rotuloRegistrar() }}</app-button>
+    }
+  </ng-template>
+</app-modal>
+
+<!-- ================= FORMULÁRIO "O QUE ACONTECEU?" ================= -->
+<ng-template #formulario>
+  @if (comBandeja()) {
+    <div class="envolvidos">
+      <div class="campo-topo">
+        <span class="campo-rotulo" id="rotulo-envolvidos">Envolvidos</span>
+        @if (!largo()) {
+          <button type="button" class="link" (click)="voltar()">Alterar</button>
         }
       </div>
-    }
-
-    <fieldset class="motivo-fieldset" [attr.aria-describedby]="erroMotivo() ? 'registro-motivo-erro' : null">
-      <legend class="field-legend">Motivo</legend>
-      @for (grupo of gruposMotivos(); track grupo.nivel) {
-        <div class="motivo-grupo">
-          <span class="motivo-grupo-rotulo">{{ grupo.rotulo }}</span>
-          <div class="chips" role="group" [attr.aria-label]="grupo.rotulo">
-            @for (m of grupo.motivos; track m.motivoId) {
-              <button
-                type="button"
-                class="chip"
-                [class.ativo]="motivoId() === m.motivoId"
-                [attr.aria-pressed]="motivoId() === m.motivoId"
-                (click)="motivoId.set(m.motivoId)"
-              >
-                {{ m.nome }}
+      @if (escolhidos().length === 0) {
+        <p class="envolvidos-vazio">Escolha ao lado quem participou.</p>
+      } @else {
+        <ul class="envolvidos-lista" role="list" aria-labelledby="rotulo-envolvidos">
+          @for (e of escolhidos(); track e.assistidoId) {
+            <li class="envolvido">
+              <app-avatar [entidadeId]="e.assistidoId" [nome]="e.nomeCompleto" [size]="28" />
+              <span class="envolvido-nome" [title]="e.nomeCompleto">{{ nomeCurto(e.nomeCompleto) }}</span>
+              <button type="button" class="envolvido-remover" [attr.aria-label]="'Remover ' + e.nomeCompleto"
+                      (click)="removerAssistido(e)">
+                <app-icon name="x" [size]="16" />
               </button>
-            }
-          </div>
-        </div>
-      }
-      @if (erroMotivo(); as msg) {
-        <p id="registro-motivo-erro" class="app-input-error" role="alert">{{ msg }}</p>
-      }
-      @if (nivelSelecionado(); as nivel) {
-        <p class="nivel-dica">
-          <app-badge [variant]="NIVEIS[nivel].variant" [label]="NIVEIS[nivel].rotulo" />
-          <span>Pedir desculpas. {{ NIVEIS[nivel].consequencia }}</span>
-        </p>
-      }
-    </fieldset>
-
-    <app-input
-      label="Data"
-      type="date"
-      [max]="hoje"
-      [required]="true"
-      [errorMessage]="erroData()"
-      [ngModel]="data()"
-      (ngModelChange)="onData($event)"
-    />
-
-    @if (ehSuspensao() && varios()) {
-      <p class="hint">Com mais de um atendido, a suspensão vale por 3 dias a partir da data. Ajuste o período de cada um depois, se precisar.</p>
-    } @else if (ehSuspensao()) {
-      <div class="form-row">
-        <app-input
-          label="Suspenso de"
-          type="date"
-          [errorMessage]="erroSuspensao()"
-          [ngModel]="suspensaoInicio()"
-          (ngModelChange)="suspensaoInicio.set($event)"
-        />
-        <app-input
-          label="Até"
-          type="date"
-          [min]="suspensaoInicio()"
-          [ngModel]="suspensaoFim()"
-          (ngModelChange)="suspensaoFim.set($event)"
-        />
-      </div>
-    }
-
-    <div class="field">
-      <label for="registro-descricao">O que aconteceu</label>
-      <textarea
-        id="registro-descricao"
-        rows="4"
-        placeholder="Descreva o fato com objetividade (onde, com quem, o que foi dito/feito)."
-        [ngModel]="descricao()"
-        (ngModelChange)="descricao.set($event)"
-        [attr.aria-invalid]="erroDescricao() ? true : null"
-        [attr.aria-describedby]="erroDescricao() ? 'registro-descricao-erro' : null"
-      ></textarea>
-      @if (erroDescricao(); as msg) {
-        <p id="registro-descricao-erro" class="app-input-error" role="alert">{{ msg }}</p>
+            </li>
+          }
+        </ul>
       }
     </div>
-
-    <ng-template #footer>
-      <app-button variant="secondary" (click)="fechar()">Cancelar</app-button>
-      <app-button [loading]="salvando()" (click)="registrar()">Registrar</app-button>
-    </ng-template>
   }
-</app-modal>
+
+  <fieldset class="campo" [attr.aria-describedby]="erroMotivo() ? 'registro-motivo-erro' : null">
+    <legend class="campo-rotulo">Motivo</legend>
+    @for (grupo of gruposMotivos(); track grupo.nivel) {
+      <div class="motivo-grupo">
+        <span class="motivo-nivel"><span class="nivel-ponto" [attr.data-variant]="grupo.variant"></span>{{ grupo.rotulo }}</span>
+        <div class="chips" role="group" [attr.aria-label]="grupo.rotulo">
+          @for (m of grupo.motivos; track m.motivoId) {
+            <button
+              type="button"
+              class="chip"
+              [class.ativo]="motivoId() === m.motivoId"
+              [attr.aria-pressed]="motivoId() === m.motivoId"
+              (click)="motivoId.set(m.motivoId)"
+            >
+              {{ m.nome }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+    @if (erroMotivo(); as msg) {
+      <p id="registro-motivo-erro" class="app-input-error" role="alert">{{ msg }}</p>
+    }
+  </fieldset>
+
+  <fieldset class="campo">
+    <legend class="campo-rotulo">Quando</legend>
+    <div class="chips" role="group" aria-label="Quando aconteceu">
+      <button type="button" class="chip" [class.ativo]="!outraData() && data() === hoje"
+              [attr.aria-pressed]="!outraData() && data() === hoje" (click)="escolherData(hoje)">Hoje</button>
+      <button type="button" class="chip" [class.ativo]="!outraData() && data() === ontem"
+              [attr.aria-pressed]="!outraData() && data() === ontem" (click)="escolherData(ontem)">Ontem</button>
+      <button type="button" class="chip" [class.ativo]="outraData() || (data() !== hoje && data() !== ontem)"
+              [attr.aria-pressed]="outraData() || (data() !== hoje && data() !== ontem)"
+              (click)="outraData.set(true)">Outra data</button>
+    </div>
+    @if (outraData() || (data() !== hoje && data() !== ontem)) {
+      <app-input
+        label="Data do fato"
+        type="date"
+        [max]="hoje"
+        [required]="true"
+        [errorMessage]="erroData()"
+        [ngModel]="data()"
+        (ngModelChange)="onData($event)"
+      />
+    } @else if (erroData(); as msg) {
+      <p class="app-input-error" role="alert">{{ msg }}</p>
+    }
+  </fieldset>
+
+  @if (ehSuspensao() && varios()) {
+    <p class="hint">Com mais de um atendido, a suspensão vale por 3 dias a partir da data. Ajuste o período de cada um depois, se precisar.</p>
+  } @else if (ehSuspensao()) {
+    <div class="form-row">
+      <app-input
+        label="Suspenso de"
+        type="date"
+        [errorMessage]="erroSuspensao()"
+        [ngModel]="suspensaoInicio()"
+        (ngModelChange)="suspensaoInicio.set($event)"
+      />
+      <app-input
+        label="Até"
+        type="date"
+        [min]="suspensaoInicio()"
+        [ngModel]="suspensaoFim()"
+        (ngModelChange)="suspensaoFim.set($event)"
+      />
+    </div>
+  }
+
+  <div class="campo">
+    <label class="campo-rotulo" for="registro-descricao">Descrição do fato</label>
+    <p id="registro-descricao-dica" class="campo-dica">Descreva só o fato, sem julgamentos. Este texto pode ir na carta para a família.</p>
+    <textarea
+      id="registro-descricao"
+      rows="4"
+      class="descricao"
+      placeholder="Onde, com quem, o que foi dito ou feito."
+      [ngModel]="descricao()"
+      (ngModelChange)="descricao.set($event)"
+      [attr.aria-invalid]="erroDescricao() ? true : null"
+      [attr.aria-describedby]="erroDescricao() ? 'registro-descricao-dica registro-descricao-erro' : 'registro-descricao-dica'"
+    ></textarea>
+    @if (erroDescricao(); as msg) {
+      <p id="registro-descricao-erro" class="app-input-error" role="alert">{{ msg }}</p>
+    }
+  </div>
+
+  @if (previa().length > 0) {
+    <section class="previa" aria-labelledby="previa-titulo">
+      <p id="previa-titulo" class="previa-titulo">Ao registrar</p>
+      <ul class="previa-lista" role="list">
+        @for (p of previa(); track p.atendido.assistidoId) {
+          <li class="previa-item">
+            <span class="previa-linha">
+              <span class="previa-nome">{{ nomeCurto(p.atendido.nomeCompleto) }}</span>
+              <span class="previa-registro">{{ p.registro }}</span>
+            </span>
+            @if (p.recomendacao) {
+              <span class="previa-recomendacao">
+                <app-icon name="flag" [size]="14" /> A Cartilha recomenda {{ p.recomendacao }}
+              </span>
+            }
+          </li>
+        }
+      </ul>
+      @if (previaTemRecomendacao()) {
+        <p class="previa-nota">
+          {{ ehCoordenador() ? 'Depois de salvar, você decide se gera agora.' : 'A coordenação vai ser avisada para decidir.' }}
+        </p>
+      }
+    </section>
+  }
+</ng-template>
 
 <app-recomendacao-disciplinar-modal [recomendacoes]="recomendacoes()" (gerado)="aoGerarPelaRecomendacao($event)" />
