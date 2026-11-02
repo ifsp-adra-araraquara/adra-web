@@ -2,6 +2,7 @@ import { Role } from '../enum/role.enum';
 import { MotivoFalta } from '../enum/MotivoFalta';
 import { StatusPresenca } from '../enum/StatusPresenca';
 import { AutorizadoRetiradaDTO, PresencaHistoricoDTO, PresencaResponseDTO } from '../models/presenca/PresencaResponseDTO';
+import { AtendidoChamadaDTO } from '../models/chamada/ChamadaGrupo';
 
 /**
  * Lógica de chamada compartilhada entre `AulaModal` (shared/components) e
@@ -39,6 +40,28 @@ export interface LinhaChamada {
   aulasPrevistas?: number | null;
   /** Quem pode buscar o aluno (vazio = ninguém marcado como autorizado). */
   autorizadosRetirada?: AutorizadoRetiradaDTO[];
+}
+
+/** Linha da chamada do grupo no dia (FT-12). O histórico vem por data de chamada, não por aula. */
+export function linhaChamadaDeAtendido(a: AtendidoChamadaDTO): LinhaChamada {
+  return {
+    assistidoId: a.assistidoId,
+    nomeCompleto: a.nomeCompleto,
+    podeIrEmboraSozinho: a.podeIrEmboraSozinho,
+    dataNascimento: a.dataNascimento,
+    statusPresenca: a.statusPresenca,
+    motivoFalta: a.motivoFalta,
+    observacao: a.observacao ?? '',
+    criadoPorId: null,
+    criadoPorNome: null,
+    atualizadoPorId: null,
+    atualizadoPorNome: null,
+    criadoEm: null,
+    atualizadoEm: null,
+    historicoRecente: a.historicoRecente.map((h) => ({ dataAula: h.data, statusPresenca: h.statusPresenca })),
+    frequenciaPercentual: a.frequenciaPercentual,
+    autorizadosRetirada: a.autorizadosRetirada,
+  };
 }
 
 /** A partir de quantas faltas seguidas o roster mostra o alerta de atenção. */

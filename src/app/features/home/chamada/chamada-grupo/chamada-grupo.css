@@ -15,13 +15,10 @@
   display: block;
 }
 
-.chamada-aula { width: 100%; min-width: 0; }
-.chamada-aula.com-rodape { padding-bottom: 8px; }
+.chamada-grupo { width: 100%; min-width: 0; }
+.chamada-grupo.com-rodape { padding-bottom: 8px; }
 
 /* Três abas cabem lado a lado; em tela estreita rolam em vez de quebrar linha */
-.tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
-.tabs::-webkit-scrollbar { display: none; }
-.tab { flex: none; white-space: nowrap; }
 
 .page-header { margin-bottom: 12px; }
 .situacao { flex: none; }
@@ -126,12 +123,6 @@ textarea { width: 100%; }
 .rodape-acoes > app-button { flex: 1 1 0; min-width: 0; }
 .rodape-acoes > app-button ::ng-deep .app-button { width: 100%; white-space: nowrap; }
 
-/* ---- Detalhes ---- */
-.detalhes-lista { display: grid; gap: 14px; margin: 0 0 16px; padding: 16px; }
-.detalhes-lista dt { font-size: 12px; font-weight: 500; color: var(--gray-400); text-transform: uppercase; letter-spacing: .04em; }
-.detalhes-lista dd { margin: 2px 0 0; font-size: 14.5px; color: var(--gray-800); white-space: pre-line; overflow-wrap: anywhere; }
-.detalhes-acoes { display: flex; flex-direction: column; gap: 8px; }
-
 /* ---- Ficha do aluno ---- */
 .ficha-status { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
 .ficha-opcao {
@@ -156,10 +147,8 @@ textarea { width: 100%; }
 .alerta-texto { color: var(--amber-600); }
 
 @media (min-width: 720px) {
-  /* A partir do iPad: lista única, centralizada e com largura de leitura.
-     A grade do mês usa a largura toda (ver .larga). */
-  .chamada-aula { max-width: 880px; margin: 0 auto; }
-  .chamada-aula.larga { max-width: none; }
+  /* A partir do iPad: lista única, centralizada e com largura de leitura. */
+  .chamada-grupo { max-width: 880px; margin: 0 auto; }
 
   .rodape {
     flex-direction: row; align-items: center; justify-content: space-between;
@@ -169,7 +158,6 @@ textarea { width: 100%; }
   .contador { flex-direction: row; gap: 6px; padding: 8px 12px; font-size: 13px; }
   .contador b { font-size: 16px; }
   .rodape-acoes > app-button { flex: none; }
-  .detalhes-acoes { flex-direction: row; }
   .aluno { padding: 6px 12px 6px 16px; }
   .busca { max-width: 420px; }
 
