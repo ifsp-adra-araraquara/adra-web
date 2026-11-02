@@ -8,7 +8,6 @@ import { AulaComDetalhesResponseDTO } from '../../../shared/models/aula/AulaComD
 import { OficineiroComunicadoDTO } from '../../../shared/models/oficineiro/OficineiroComunicadoDTO';
 import { AulaArquivoDTO } from '../../../shared/models/arquivo/AulaArquivoDTO';
 import { OficineiroTurmaDTO } from '../../../shared/models/oficineiro/OficineiroTurmaDTO';
-import { OficinaResponseDTO } from '../../../shared/models/oficina/OficinaResponseDTO';
 import { AuthService } from '../../../core/auth.service';
 import { ArquivoService } from '../../../core/arquivo.service';
 import { CategoriaArquivo } from '../../../shared/enum/CategoriaArquivo';
@@ -41,9 +40,6 @@ export class Oficineiro implements OnInit {
     return ocupacaoTurmaUtil(turma.quantidadeAlunos, turma.capacidade);
   }
 
-  /** Aba "Calendário" — mesmo calendário do coordenador, mas só com as turmas do oficineiro. */
-  readonly turmaIdsPermitidos = computed<number[]>(() => this.turmas().map((t) => t.turmaId));
-
   readonly turmasFiltroOptions = computed<SelectOption<number | null>[]>(() => [
     { value: null, label: 'Todas as turmas' },
     ...this.turmas().map((turma) => ({
@@ -63,8 +59,6 @@ export class Oficineiro implements OnInit {
   readonly carregando = signal(false);
   readonly erro = signal<string | null>(null);
   readonly turmas = signal<OficineiroTurmaDTO[]>([]);
-  /** Só pra popular o filtro "Oficina" do calendário — GET /api/oficinas/minhas-oficinas/{id}. */
-  readonly oficinasProprias = signal<OficinaResponseDTO[]>([]);
   /** Aba Materiais: aulas com material, de todas as turmas do oficineiro (ou da turma filtrada). */
   readonly materiais = signal<AulaArquivoDTO[]>([]);
   readonly filtroTurmaMateriais = signal<number | null>(null);
@@ -331,7 +325,6 @@ export class Oficineiro implements OnInit {
     this.erro.set(null);
     try {
       if (aba === 'turmas') await this.carregarTurmas();
-      if (aba === 'calendario') await Promise.all([this.carregarTurmas(), this.carregarOficinasProprias()]);
       if (aba === 'materiais') await this.carregarMateriais();
       if (aba === 'comunicados') await this.carregarComunicados();
     } catch {
@@ -350,18 +343,6 @@ export class Oficineiro implements OnInit {
       ),
     );
     this.turmas.set(turmas);
-  }
-
-  /** Filtro "Oficina" da aba Calendário — só as oficinas do próprio oficineiro. */
-  private async carregarOficinasProprias(): Promise<void> {
-    const usuario = this.usuarioLogado();
-    if (!usuario) return;
-    const oficinas = await firstValueFrom(
-      this.http.get<OficinaResponseDTO[]>(
-        `${this.api}/api/oficinas/minhas-oficinas/${usuario.usuarioId}`,
-      ),
-    );
-    this.oficinasProprias.set(oficinas);
   }
 
   /** Uma chamada por turma do oficineiro (ou só a do filtro); junta e ordena da aula mais recente. */

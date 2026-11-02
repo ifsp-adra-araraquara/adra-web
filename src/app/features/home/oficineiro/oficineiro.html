@@ -65,14 +65,9 @@
   @case ('calendario') {
   <section class="panel" aria-labelledby="calendario-titulo">
     <div class="panel-header">
-      <div><h2 id="calendario-titulo">Calendário</h2><span class="subtle">Aulas das suas turmas</span></div>
+      <div><h2 id="calendario-titulo">Calendário</h2><span class="subtle">Avisos, eventos e dias sem chamada</span></div>
     </div>
-    <app-calendario-aulas
-      [turmas]="[]"
-      [oficinas]="oficinasProprias()"
-      [podeGerenciar]="false"
-      [turmaIdsPermitidos]="turmaIdsPermitidos()"
-    />
+    <app-calendario-aulas [podeGerenciar]="false" />
   </section>
   }
   @case ('materiais') {
