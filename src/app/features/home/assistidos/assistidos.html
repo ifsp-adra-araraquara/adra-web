@@ -979,7 +979,7 @@
                     <button type="button" aria-label="Ver alunos da turma" appTooltip="Ver alunos" (click)="verAlunosDaTurmaHistorico(vinculo)">
                       <app-icon name="eye" />
                     </button>
-                    <button type="button" aria-label="Ver aulas da turma" appTooltip="Ver aulas" (click)="abrirAulasHistoricoTurma(vinculo)">
+                    <button type="button" aria-label="Ver frequência do grupo" appTooltip="Ver frequência" (click)="verFrequenciaHistoricoTurma(vinculo)">
                       <app-icon name="list" />
                     </button>
                   </div>
@@ -1006,15 +1006,6 @@
     </ng-template>
   </app-modal>
 }
-
-<!-- MODAL: AULAS DA TURMA (histórico de turmas do assistido, aba "Turmas") -->
-<app-aulas-turma-modal
-  [turmaId]="turmaHistoricoAulasSelecionada()?.turmaId ?? 0"
-  [nomeTurma]="turmaHistoricoAulasSelecionada()?.nomeTurma ?? ''"
-  [aberto]="turmaHistoricoAulasSelecionada() !== null"
-  [permiteAbrirAula]="true"
-  (fechar)="fecharAulasHistoricoTurma()">
-</app-aulas-turma-modal>
 
 <!-- MODAL: EDITAR RESPONSÁVEL (aba "Família" da ficha, abre por cima dela) -->
 @if (responsavelEmEdicao(); as vinculo) {

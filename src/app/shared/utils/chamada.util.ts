@@ -1,18 +1,10 @@
 import { Role } from '../enum/role.enum';
 import { MotivoFalta } from '../enum/MotivoFalta';
 import { StatusPresenca } from '../enum/StatusPresenca';
-import { AutorizadoRetiradaDTO, PresencaHistoricoDTO, PresencaResponseDTO } from '../models/presenca/PresencaResponseDTO';
+import { AutorizadoRetiradaDTO, PresencaHistoricoDTO } from '../models/presenca/PresencaResponseDTO';
 import { AtendidoChamadaDTO } from '../models/chamada/ChamadaGrupo';
 
-/**
- * Lógica de chamada compartilhada entre `AulaModal` (shared/components) e
- * `AulaCompleta` (a página "Ver aula completa"). Antes de existir este
- * arquivo, cada componente tinha sua própria cópia — e divergiam: a
- * rastreabilidade de autoria (US-68) só foi parar no modal, e a página
- * "completa" só liberava edição pra Sociopedagógico (Coordenador, que
- * também tem permissão, ficava travado lá por engano). Ver histórico do
- * PR que introduziu este arquivo pra mais contexto.
- */
+/** Lógica de chamada do grupo no dia (lista, marcação e validação), sem estado de componente. */
 export interface LinhaChamada {
   assistidoId: number;
   nomeCompleto: string;
@@ -69,29 +61,6 @@ export const LIMIAR_FALTAS_CONSECUTIVAS = 3;
 
 /** Quantos dias a faixa visual mostra (o histórico que vem da API tem mais, pra calcular o alerta mesmo sem mostrar tudo). */
 export const DIAS_FAIXA_HISTORICO = 5;
-
-export function linhaChamadaDePresenca(p: PresencaResponseDTO): LinhaChamada {
-  return {
-    assistidoId: p.assistidoId,
-    nomeCompleto: p.nomeCompleto,
-    podeIrEmboraSozinho: p.podeIrEmboraSozinho ?? false,
-    dataNascimento: p.dataNascimento ?? null,
-    statusPresenca: p.statusPresenca,
-    motivoFalta: p.motivoFalta,
-    observacao: p.observacao ?? '',
-    criadoPorId: p.criadoPorId ?? null,
-    criadoPorNome: p.criadoPorNome ?? null,
-    atualizadoPorId: p.atualizadoPorId ?? null,
-    atualizadoPorNome: p.atualizadoPorNome ?? null,
-    criadoEm: p.criadoEm ?? null,
-    atualizadoEm: p.atualizadoEm ?? null,
-    historicoRecente: p.historicoRecente ?? [],
-    frequenciaPercentual: p.frequenciaPercentual ?? null,
-    aulasRealizadas: p.aulasRealizadas ?? null,
-    aulasPrevistas: p.aulasPrevistas ?? null,
-    autorizadosRetirada: p.autorizadosRetirada ?? [],
-  };
-}
 
 /** Faltas (não justificadas) seguidas, olhando `historicoRecente` da mais recente pra trás. */
 export function contarFaltasConsecutivas(historico: PresencaHistoricoDTO[]): number {

@@ -10,10 +10,6 @@ export function hojeISO(): string {
   return `${ano}-${mes}-${dia}`;
 }
 
-export function ehAulaDeHoje(dataAula: string): boolean {
-  return dataAula === hojeISO();
-}
-
 /**
  * Deriva a situação de abertura de uma aula a partir da data e do status
  * vindos da API. Regra: aula cancelada nunca abre; aula no futuro é
@@ -36,22 +32,6 @@ export function calcularSituacaoAula(
   }
   return SituacaoAula.DISPONIVEL;
 }
-
-/** Só é possível abrir a aula de hoje e as que já passaram — nunca as pendentes (futuras) ou canceladas. */
-export function podeAbrirAula(
-  dataAula: string,
-  statusAula: StatusAula | string | null | undefined,
-): boolean {
-  const situacao = calcularSituacaoAula(dataAula, statusAula);
-  return situacao === SituacaoAula.DISPONIVEL || situacao === SituacaoAula.FINALIZADA;
-}
-
-export const ROTULO_SITUACAO_AULA: Record<SituacaoAula, string> = {
-  [SituacaoAula.PENDENTE]: 'Pendente',
-  [SituacaoAula.DISPONIVEL]: 'Disponível',
-  [SituacaoAula.FINALIZADA]: 'Finalizada',
-  [SituacaoAula.CANCELADA]: 'Cancelada',
-};
 
 export const CLASSE_SITUACAO_AULA: Record<SituacaoAula, string> = {
   [SituacaoAula.PENDENTE]: 'situacao-pendente',

@@ -38,7 +38,6 @@ import { Button } from '../../../shared/components/button/button';
 import { cpfValido } from '../../../shared/validators/cpf.validator';
 import { Modal } from '../../../shared/components/modal/modal';
 import { Badge } from '../../../shared/components/badge/badge';
-import { AulasTurmaModal } from '../aulas-turma-modal/aulas-turma-modal';
 import { Icon } from '../../../shared/components/icon/icon';
 import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 import { ActionMenu, ActionMenuItem } from '../../../shared/components/action-menu/action-menu';
@@ -81,7 +80,7 @@ import {
 @Component({
   selector: 'app-assistidos',
   standalone: true,
-  imports: [ActionMenu, TooltipDirective, Icon, CommonModule, FormsModule, Select, Input, Button, Modal, Badge, AulasTurmaModal, FotoPerfil, Avatar, UploadDocumento, ListaDocumentos, DadosComplementaresAssistidoForm, DadosComplementaresResponsavelForm, SocioeconomicoAssistidoForm, TermosAssistidoForm, FichaDisciplinarAssistido],
+  imports: [ActionMenu, TooltipDirective, Icon, CommonModule, FormsModule, Select, Input, Button, Modal, Badge, FotoPerfil, Avatar, UploadDocumento, ListaDocumentos, DadosComplementaresAssistidoForm, DadosComplementaresResponsavelForm, SocioeconomicoAssistidoForm, TermosAssistidoForm, FichaDisciplinarAssistido],
   templateUrl: './assistidos.html',
   styleUrl: './assistidos.css',
 })
@@ -1009,15 +1008,9 @@ export class Assistidos implements OnInit {
     this.onFiltroTurmaChange(vinculo.turmaId);
   }
 
-  /** "Ver aulas" de uma turma do histórico — reaproveita <app-aulas-turma-modal>, com abertura de aula liberada (só coordenador chega aqui). */
-  turmaHistoricoAulasSelecionada = signal<VinculoTurmaAssistidoResponseDTO | null>(null);
-
-  abrirAulasHistoricoTurma(vinculo: VinculoTurmaAssistidoResponseDTO): void {
-    this.turmaHistoricoAulasSelecionada.set(vinculo);
-  }
-
-  fecharAulasHistoricoTurma(): void {
-    this.turmaHistoricoAulasSelecionada.set(null);
+  verFrequenciaHistoricoTurma(vinculo: VinculoTurmaAssistidoResponseDTO): void {
+    this.fecharModalVisualizarAssistido();
+    this.router.navigate(['/chamada/turma', vinculo.turmaId, 'grade']);
   }
 
   carregarResponsaveis(assistidoId: number): void {
