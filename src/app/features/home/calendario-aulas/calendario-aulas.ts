@@ -31,11 +31,16 @@ import { Modal } from '../../../shared/components/modal/modal';
 import { RecorrenciaAulasModal } from '../recorrencia-aulas-modal/recorrencia-aulas-modal';
 import { AulaStatusModal } from '../aula-status-modal/aula-status-modal';
 import { ExcecaoCalendarioService } from '../../../core/excecao-calendario.service';
+import { NotaCalendarioService } from '../../../core/nota-calendario.service';
 import { TIPO_EXCECAO_INFO, TipoExcecaoCalendario } from '../../../shared/enum/TipoExcecaoCalendario';
 import {
   ExcecaoCalendarioRequestDTO,
   ExcecaoCalendarioResponseDTO,
 } from '../../../shared/models/excecao/ExcecaoCalendarioDTO';
+import {
+  NotaCalendarioRequestDTO,
+  NotaCalendarioResponseDTO,
+} from '../../../shared/models/nota/NotaCalendarioDTO';
 import { Input as AppInput } from '../../../shared/components/input/input';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -61,6 +66,7 @@ type CalendarView = 'dayGridMonth' | 'timeGridWeek' | 'listWeek';
 export class CalendarioAulas implements OnInit {
   protected readonly aulaService = inject(AulaService);
   protected readonly excecaoService = inject(ExcecaoCalendarioService);
+  protected readonly notaService = inject(NotaCalendarioService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
@@ -216,7 +222,29 @@ export class CalendarioAulas implements OnInit {
     }),
   );
 
-  readonly todosEventos = computed<EventInput[]>(() => [...this.eventosExcecao(), ...this.eventosCalendario()]);
+  /** Notas/eventos globais cadastrados pela Coordenação — visíveis para todos. */
+  private readonly eventosNotas = computed<EventInput[]>(() =>
+    this.notaService.notas().map((nota) => {
+      const cores = this.CORES_STATUS['coral'];
+      const horarioCurto = nota.horario ? nota.horario.slice(0, 5) : null;
+      return {
+        id: `nota-${nota.notaId}`,
+        title: horarioCurto ? `${horarioCurto} · ${nota.titulo}` : nota.titulo,
+        start: nota.horario ? `${nota.dataNota}T${nota.horario}` : nota.dataNota,
+        allDay: !nota.horario,
+        backgroundColor: cores.bg,
+        borderColor: cores.bg,
+        textColor: cores.text,
+        extendedProps: { nota, variant: 'coral' as BadgeVariant },
+      };
+    }),
+  );
+
+  readonly todosEventos = computed<EventInput[]>(() => [
+    ...this.eventosExcecao(),
+    ...this.eventosNotas(),
+    ...this.eventosCalendario(),
+  ]);
 
   constructor() {
     effect(() => {
@@ -231,6 +259,7 @@ export class CalendarioAulas implements OnInit {
 
   ngOnInit() {
     this.excecaoService.carregar();
+    this.notaService.carregar();
     const hoje = new Date();
     const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
@@ -283,6 +312,11 @@ export class CalendarioAulas implements OnInit {
       this.diaSelecionado.set(excecao.data);
       return;
     }
+    const nota = arg.event.extendedProps['nota'] as NotaCalendarioResponseDTO | undefined;
+    if (nota) {
+      this.diaSelecionado.set(nota.dataNota);
+      return;
+    }
     if (!this.podeGerenciar()) return; // sociopedagógico só visualiza
     this.aulaSelecionada.set(arg.event.extendedProps['aula'] as AulaComDetalhesResponseDTO);
   }
@@ -318,6 +352,16 @@ export class CalendarioAulas implements OnInit {
     return [...filtradas].sort((a, b) => (a.horarioInicio ?? '').localeCompare(b.horarioInicio ?? ''));
   });
 
+  /** Notas globais do dia aberto no painel (se houver). */
+  protected readonly notasDoDiaSelecionado = computed<NotaCalendarioResponseDTO[]>(() => {
+    const dia = this.diaSelecionado();
+    if (!dia) return [];
+    return this.notaService
+      .notas()
+      .filter((n) => n.dataNota === dia)
+      .sort((a, b) => (a.horario ?? '').localeCompare(b.horario ?? ''));
+  });
+
   /** Dia sem aula do dia aberto no painel (se houver). */
   protected readonly excecaoDoDiaSelecionado = computed(() => {
     const dia = this.diaSelecionado();
@@ -328,6 +372,108 @@ export class CalendarioAulas implements OnInit {
 
   private dataIso(data: Date): string {
     return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`;
+  }
+
+  /* ============================================================
+   * NOTAS GLOBAIS DO CALENDÁRIO — só Coordenador cadastra/edita/remove
+   * ============================================================ */
+  readonly mostrarNotasCalendario = signal(false);
+  readonly notaEditandoId = signal<number | null>(null);
+  readonly salvandoNota = signal(false);
+  readonly erroNota = signal<string | null>(null);
+  formNota: NotaCalendarioRequestDTO = this.notaVazia();
+
+  /** Próximas notas globais (de hoje em diante). */
+  protected readonly proximasNotas = computed(() => {
+    const hoje = this.dataIso(new Date());
+    return this.notaService.notas().filter((n) => n.dataNota >= hoje);
+  });
+
+  private notaVazia(dataNota = ''): NotaCalendarioRequestDTO {
+    return { dataNota, horario: '', titulo: '', descricao: '' };
+  }
+
+  abrirNotasCalendario(dataPredefinida?: string): void {
+    this.notaEditandoId.set(null);
+    this.formNota = this.notaVazia(dataPredefinida ?? '');
+    this.erroNota.set(null);
+    this.mostrarNotasCalendario.set(true);
+  }
+
+  abrirNovaNotaNoDia(): void {
+    const dia = this.diaSelecionado() ?? '';
+    this.diaSelecionado.set(null);
+    this.abrirNotasCalendario(dia);
+  }
+
+  editarNota(nota: NotaCalendarioResponseDTO): void {
+    this.diaSelecionado.set(null);
+    this.notaEditandoId.set(nota.notaId);
+    this.formNota = {
+      dataNota: nota.dataNota,
+      horario: nota.horario ? nota.horario.slice(0, 5) : '',
+      titulo: nota.titulo,
+      descricao: nota.descricao ?? '',
+    };
+    this.erroNota.set(null);
+    this.mostrarNotasCalendario.set(true);
+  }
+
+  cancelarEdicaoNota(): void {
+    this.notaEditandoId.set(null);
+    this.formNota = this.notaVazia();
+    this.erroNota.set(null);
+  }
+
+  atualizarCampoNota<K extends keyof NotaCalendarioRequestDTO>(campo: K, valor: NotaCalendarioRequestDTO[K]): void {
+    this.formNota = { ...this.formNota, [campo]: valor };
+  }
+
+  async salvarNota(): Promise<void> {
+    if (this.salvandoNota()) return;
+    const { dataNota, horario, titulo, descricao } = this.formNota;
+    if (!dataNota) {
+      this.erroNota.set('Informe a data da nota.');
+      return;
+    }
+    if (!titulo || !titulo.trim()) {
+      this.erroNota.set('Informe o título da nota.');
+      return;
+    }
+
+    this.salvandoNota.set(true);
+    this.erroNota.set(null);
+    try {
+      const payload: NotaCalendarioRequestDTO = {
+        dataNota,
+        horario: horario?.trim() || null,
+        titulo: titulo.trim(),
+        descricao: descricao?.trim() || null,
+      };
+      const editandoId = this.notaEditandoId();
+      if (editandoId != null) {
+        await this.notaService.atualizar(editandoId, payload);
+        this.notaEditandoId.set(null);
+      } else {
+        await this.notaService.cadastrar(payload);
+      }
+      this.formNota = this.notaVazia();
+    } catch (erro) {
+      this.erroNota.set(mensagemErro(erro as HttpErrorResponse, 'Não foi possível salvar a nota do calendário.'));
+    } finally {
+      this.salvandoNota.set(false);
+    }
+  }
+
+  async removerNota(nota: NotaCalendarioResponseDTO): Promise<void> {
+    try {
+      await this.notaService.remover(nota.notaId);
+      if (this.notaEditandoId() === nota.notaId) {
+        this.cancelarEdicaoNota();
+      }
+    } catch (erro) {
+      this.erroNota.set(mensagemErro(erro as HttpErrorResponse, 'Não foi possível remover a nota.'));
+    }
   }
 
   /* ============================================================
@@ -433,6 +579,33 @@ export class CalendarioAulas implements OnInit {
       titulo.title = arg.event.title;
       rotulo.appendChild(titulo);
       return { domNodes: [rotulo] };
+    }
+
+    const nota = arg.event.extendedProps['nota'] as NotaCalendarioResponseDTO | undefined;
+    if (nota) {
+      const variante = (arg.event.extendedProps['variant'] as BadgeVariant) ?? 'coral';
+      const wrapper = document.createElement('div');
+      wrapper.className = 'evt evt-nota';
+      wrapper.style.setProperty('--evt-accent', `var(--${variante}-400)`);
+      if (nota.horario) {
+        const hora = document.createElement('span');
+        hora.className = 'evt-hora';
+        hora.textContent = nota.horario.slice(0, 5);
+        wrapper.appendChild(hora);
+      }
+      const titulo = document.createElement('span');
+      titulo.className = 'evt-titulo';
+      titulo.textContent = nota.titulo;
+      titulo.title = nota.descricao ? `${nota.titulo} — ${nota.descricao}` : nota.titulo;
+      wrapper.appendChild(titulo);
+      if (nota.descricao) {
+        const sub = document.createElement('span');
+        sub.className = 'evt-sub';
+        sub.textContent = nota.descricao;
+        sub.title = nota.descricao;
+        wrapper.appendChild(sub);
+      }
+      return { domNodes: [wrapper] };
     }
 
     const aula = arg.event.extendedProps['aula'] as AulaComDetalhesResponseDTO | undefined;

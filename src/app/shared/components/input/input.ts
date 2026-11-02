@@ -4,7 +4,7 @@ import { formatarCpf, somenteDigitos } from '../../validators/cpf.validator';
 import { formatarTelefone, telefoneNacional } from '../../utils/mascara.util';
 import { Icon } from '../icon/icon';
 
-export type InputType = 'text' | 'number' | 'password' | 'email' | 'date';
+export type InputType = 'text' | 'number' | 'password' | 'email' | 'date' | 'time';
 export type InputMask = 'none' | 'cpf' | 'telefone';
 
 let nextInputId = 0;
