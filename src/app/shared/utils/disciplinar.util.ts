@@ -48,6 +48,11 @@ export function dataBr(iso: string | null | undefined): string {
   return `${d}/${m}/${a}`;
 }
 
+/** FT-25: tem documento para imprimir — os que vão para assinatura e o comunicado de ocorrência. */
+export function temDocumento(r: Pick<RegistroDisciplinarDTO, 'documentoStatus' | 'nivel'>): boolean {
+  return r.documentoStatus !== null || r.nivel === NivelDisciplinar.OCORRENCIA;
+}
+
 /** Texto curto do que o registro ainda espera, ou null. Ordem: o mais urgente primeiro. */
 export function pendenciaDoRegistro(r: RegistroDisciplinarDTO): string | null {
   if (r.arquivado) return null;
