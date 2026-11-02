@@ -7,7 +7,7 @@ import { NIVEIS_DISCIPLINARES, NivelDisciplinar } from '../../enum/NivelDiscipli
 import { Role } from '../../enum/role.enum';
 import { RegistroCriadoDTO, RegistroDisciplinarDTO } from '../../models/disciplinar/Disciplinar';
 import { hojeISO } from '../../utils/aula.util';
-import { ACAO_RECOMENDADA, nivelRecomendado, rotuloSequencia, somarDias } from '../../utils/disciplinar.util';
+import { nivelRecomendado, rotuloSequencia, somarDias, textoRecomendacao } from '../../utils/disciplinar.util';
 import { mensagemErro } from '../../utils/erro-http.util';
 import { Modal } from '../modal/modal';
 import { Button } from '../button/button';
@@ -66,12 +66,7 @@ export class RecomendacaoDisciplinarModal {
     });
   }
 
-  /** "Lucas Martins chegou a 3 ocorrências ativas. A Cartilha recomenda advertência escrita." */
-  texto(r: RegistroDisciplinarDTO): string {
-    const nivel = r.nivel === NivelDisciplinar.UNIFORME ? 'ocorrências de uniforme' : NIVEIS_DISCIPLINARES[r.nivel].plural.toLowerCase();
-    const acao = r.consequencia ? ACAO_RECOMENDADA[r.consequencia] : '';
-    return `${r.nomeAssistido} chegou a ${r.sequencia} ${nivel} ativas. A Cartilha recomenda ${acao}.`;
-  }
+  readonly texto = textoRecomendacao;
 
   rotuloGerar(): string {
     const nivel = this.nivelAGerar();

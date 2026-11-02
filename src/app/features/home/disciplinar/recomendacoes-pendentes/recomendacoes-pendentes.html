@@ -1,0 +1,50 @@
+<ng-template #detalhe let-r>
+  <p class="rec-texto">{{ texto(r) }}</p>
+  <p class="rec-origem">
+    <app-badge [variant]="nivel(r).variant" [label]="nivel(r).rotulo" />
+    <span>{{ r.motivo }} · {{ dataBr(r.dataRegistro) }}</span>
+  </p>
+  @if (podeAgir()) {
+    <div class="rec-acoes">
+      <app-button variant="secondary" size="sm" (click)="dispensar.emit(r)">Dispensar</app-button>
+      <app-button size="sm" (click)="gerar.emit(r)">{{ rotuloGerar(r) }}</app-button>
+    </div>
+  } @else {
+    <p class="hint">Aguardando a decisão da coordenação.</p>
+  }
+</ng-template>
+
+<div class="recomendacoes">
+  <ul class="rec-lista" role="list" aria-label="Recomendações pendentes">
+    @for (r of registros(); track r.registroId) {
+      <li class="rec-item" [class.ativo]="r.registroId === selecionado()?.registroId">
+        <button
+          type="button"
+          class="rec-escolher"
+          [attr.aria-current]="r.registroId === selecionado()?.registroId ? 'true' : null"
+          (click)="selecionar(r)"
+        >
+          <app-avatar [entidadeId]="r.assistidoId" [nome]="r.nomeAssistido" [size]="40" />
+          <span class="rec-identidade">
+            <span class="cell-name">{{ r.nomeAssistido }}</span>
+            <span class="cell-sub">{{ rotuloPendencia(r) }}</span>
+          </span>
+        </button>
+        <!-- Celular: o detalhe fica no próprio cartão -->
+        <div class="rec-detalhe-cartao">
+          <ng-container *ngTemplateOutlet="detalhe; context: { $implicit: r }" />
+        </div>
+      </li>
+    }
+  </ul>
+
+  @if (selecionado(); as r) {
+    <section class="rec-detalhe card" aria-live="polite" [attr.aria-label]="'Recomendação de ' + r.nomeAssistido">
+      <div class="rec-detalhe-topo">
+        <app-avatar [entidadeId]="r.assistidoId" [nome]="r.nomeAssistido" [size]="48" />
+        <h2 class="rec-detalhe-nome">{{ r.nomeAssistido }}</h2>
+      </div>
+      <ng-container *ngTemplateOutlet="detalhe; context: { $implicit: r }" />
+    </section>
+  }
+</div>
