@@ -23,7 +23,7 @@ import { formatarTelefone } from '../../../shared/utils/mascara.util';
 import { cliqueEmElementoInterativo } from '../../../shared/utils/clique.util';
 import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO';
 import { VinculoTurmaAssistidoResponseDTO } from '../../../shared/models/turma/VinculoTurmaAssistidoResponseDTO';
-import { FrequenciaAulaDTO } from '../../../shared/models/presenca/FrequenciaAulaDTO';
+import { FrequenciaDiaDTO } from '../../../shared/models/presenca/FrequenciaDiaDTO';
 import { PaginaResponse } from '../../../shared/models/PaginaResponse';
 import { ChamadaService } from '../../../core/chamada.service';
 
@@ -925,7 +925,7 @@ export class Assistidos implements OnInit {
 
   readonly StatusPresenca = StatusPresenca;
 
-  frequenciaAssistido = signal<FrequenciaAulaDTO[]>([]);
+  frequenciaAssistido = signal<FrequenciaDiaDTO[]>([]);
 
   carregandoFrequencia = signal(false);
 
@@ -934,7 +934,7 @@ export class Assistidos implements OnInit {
   /** Evita recarregar toda vez que a pessoa clica de novo na aba. */
   private frequenciaCarregada = false;
 
-  /** Resumo no topo da aba: total de aulas no histórico, % de presença e faltas seguidas mais recentes (sem contar justificadas). */
+  /** Resumo no topo da aba: total de chamadas no histórico, % de presença e faltas seguidas mais recentes (sem contar justificadas). */
   readonly resumoFrequencia = computed(() => {
     const lista = this.frequenciaAssistido();
     const total = lista.length;
@@ -943,7 +943,7 @@ export class Assistidos implements OnInit {
 
     let faltasConsecutivas = 0;
     for (const item of lista) {
-      // já vem ordenado da aula mais recente pra mais antiga
+      // já vem ordenado da chamada mais recente pra mais antiga
       if (item.statusPresenca !== StatusPresenca.FALTA) break;
       faltasConsecutivas++;
     }
@@ -953,9 +953,9 @@ export class Assistidos implements OnInit {
 
   /** Lista agrupada por mês (mais recente primeiro), pra não virar uma lista infinita de datas soltas. */
   readonly frequenciaAgrupada = computed(() => {
-    const grupos = new Map<string, FrequenciaAulaDTO[]>();
+    const grupos = new Map<string, FrequenciaDiaDTO[]>();
     for (const item of this.frequenciaAssistido()) {
-      const chave = item.dataAula.slice(0, 7); // YYYY-MM
+      const chave = item.data.slice(0, 7); // YYYY-MM
       const grupo = grupos.get(chave);
       if (grupo) {
         grupo.push(item);
@@ -1087,8 +1087,8 @@ export class Assistidos implements OnInit {
     }
   }
 
-  editarChamada(item: FrequenciaAulaDTO): void {
-    this.router.navigate(['/chamada/aula', item.aulaId]);
+  editarChamada(item: FrequenciaDiaDTO): void {
+    this.router.navigate(['/chamada/grupo', item.turmaId, item.data]);
   }
 
   abrirEdicaoResponsavel(vinculo: VinculoFamiliarResponseDTO): void {

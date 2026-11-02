@@ -11,48 +11,81 @@
     }
   </header>
 
-  <div class="dia-barra">
-    <h2>{{ tituloDia() }}</h2>
-    <div class="dia-filtros">
-      <app-navegador-data label="Data" [data]="dataSelecionada()" (dataChange)="onDataChange($event)" />
-      @if (dataSelecionada() !== hojeISO()) {
-        <app-button variant="secondary" size="sm" (click)="onDataChange(hojeISO())">Hoje</app-button>
-      }
+  @if (ehCoordenador()) {
+    <div class="tabs" role="tablist" aria-label="Chamadas">
+      <button type="button" class="tab" role="tab" [class.active]="aba() === 'dia'"
+              [attr.aria-selected]="aba() === 'dia'" (click)="aba.set('dia')">
+        Grupos do dia
+      </button>
+      <button type="button" class="tab" role="tab" [class.active]="aba() === 'pendentes'"
+              [attr.aria-selected]="aba() === 'pendentes'" (click)="aba.set('pendentes')">
+        Pendentes @if (pendentes().length) { <span class="count count-alerta">{{ pendentes().length }}</span> }
+      </button>
     </div>
-  </div>
-
-  @if (erro()) {
-    <div class="notice notice-error" role="alert"><app-icon name="alert-circle" /><span>{{ erro() }}</span></div>
   }
 
-  @if (dia()?.motivoSemChamada; as motivo) {
-    <div class="notice notice-info" role="status"><app-icon name="calendar" /><span>Sem chamada neste dia: {{ motivo }}.</span></div>
-  } @else {
-    <ul class="aulas" role="list" data-tour="chamada-tabela" [class.recarregando]="carregando()">
-      @for (grupo of dia()?.grupos ?? []; track grupo.turmaId) {
+  @if (aba() === 'pendentes') {
+    <p class="hint-pendentes">Dias de chamada dos últimos 60 dias que ainda estão sem lançamento, do mais recente para o mais antigo.</p>
+    <ul class="aulas" role="list">
+      @for (pendente of pendentes(); track pendente.turmaId + pendente.data) {
         <li>
-          <button type="button" class="aula" (click)="abrir(grupo)">
-            <span class="aula-hora">{{ grupo.turno ?? '—' }}</span>
+          <button type="button" class="aula" (click)="abrirPendente(pendente)">
+            <span class="aula-hora">{{ dataBr(pendente.data).slice(0, 5) }}</span>
             <span class="aula-texto">
-              <span class="aula-turma">{{ grupo.nomeTurma }}</span>
-              <span class="aula-meta">
-                {{ grupo.totalAtendidos }} atendidos
-                @if (lancadaPor(grupo); as quem) { · Lançada por {{ quem }} }
-              </span>
+              <span class="aula-turma">{{ pendente.nomeTurma }}</span>
             </span>
-            @if (grupo.status === StatusChamada.LANCADA) {
-              <app-badge variant="green" label="Lançada" />
-            } @else {
-              <app-badge variant="blue" label="Fazer chamada" />
-            }
+            <app-badge variant="amber" label="Sem chamada" />
             <app-icon name="chevron-right" class="aula-seta" />
           </button>
         </li>
       } @empty {
-        @if (!carregando() && dia()) {
-          <li class="vazio">Nenhum grupo com chamada neste dia. Confira os dias de chamada no cadastro do grupo.</li>
-        }
+        <li class="vazio">Nenhuma chamada pendente. Tudo em dia!</li>
       }
     </ul>
+  } @else {
+    <div class="dia-barra">
+      <h2>{{ tituloDia() }}</h2>
+      <div class="dia-filtros">
+        <app-navegador-data label="Data" [data]="dataSelecionada()" (dataChange)="onDataChange($event)" />
+        @if (dataSelecionada() !== hojeISO()) {
+          <app-button variant="secondary" size="sm" (click)="onDataChange(hojeISO())">Hoje</app-button>
+        }
+      </div>
+    </div>
+
+    @if (erro()) {
+      <div class="notice notice-error" role="alert"><app-icon name="alert-circle" /><span>{{ erro() }}</span></div>
+    }
+
+    @if (dia()?.motivoSemChamada; as motivo) {
+      <div class="notice notice-info" role="status"><app-icon name="calendar" /><span>Sem chamada neste dia: {{ motivo }}.</span></div>
+    } @else {
+      <ul class="aulas" role="list" data-tour="chamada-tabela" [class.recarregando]="carregando()">
+        @for (grupo of dia()?.grupos ?? []; track grupo.turmaId) {
+          <li>
+            <button type="button" class="aula" (click)="abrir(grupo)">
+              <span class="aula-hora">{{ grupo.turno ?? '—' }}</span>
+              <span class="aula-texto">
+                <span class="aula-turma">{{ grupo.nomeTurma }}</span>
+                <span class="aula-meta">
+                  {{ grupo.totalAtendidos }} atendidos
+                  @if (lancadaPor(grupo); as quem) { · Lançada por {{ quem }} }
+                </span>
+              </span>
+              @if (grupo.status === StatusChamada.LANCADA) {
+                <app-badge variant="green" label="Lançada" />
+              } @else {
+                <app-badge variant="blue" label="Fazer chamada" />
+              }
+              <app-icon name="chevron-right" class="aula-seta" />
+            </button>
+          </li>
+        } @empty {
+          @if (!carregando() && dia()) {
+            <li class="vazio">Nenhum grupo com chamada neste dia. Confira os dias de chamada no cadastro do grupo.</li>
+          }
+        }
+      </ul>
+    }
   }
 </section>

@@ -6,9 +6,9 @@ import { Icon } from '../../../shared/components/icon/icon';
 import { hojeISO } from '../../../shared/utils/aula.util';
 
 /**
- * Página da grade mensal da turma (FT-06) — a mesma `<app-grade-mensal>` da
- * aba "Grade do mês" da chamada, aberta direto por turma. O mês fica na URL
- * (`?mes=yyyy-MM`) para "voltar" de uma aula cair no mesmo mês.
+ * Página da grade mensal do grupo — a mesma `<app-grade-mensal>` da
+ * aba "Grade do mês" da chamada, aberta direto pelo grupo. O mês fica na URL
+ * (`?mes=yyyy-MM`) para "voltar" de uma chamada cair no mesmo mês.
  */
 @Component({
   selector: 'app-grade-frequencia-turma',
@@ -38,8 +38,8 @@ export class GradeFrequenciaTurma implements OnInit {
     this.router.navigate([], { relativeTo: this.route, queryParams: { mes }, replaceUrl: true });
   }
 
-  abrirAula(aulaId: number): void {
-    this.router.navigate(['/chamada/aula', aulaId]);
+  abrirDia(data: string): void {
+    this.router.navigate(['/chamada/grupo', this.turmaId(), data]);
   }
 
   voltar(): void {

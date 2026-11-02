@@ -81,8 +81,8 @@ export class RegistroDisciplinarModal {
   open = model(false);
   /** Quando informado, o modal já abre com o atendido escolhido (ficha/chamada). */
   assistido = input<AtendidoEscolhido | null>(null);
-  /** Aula em que aconteceu, quando registrado pela chamada. */
-  aulaId = input<number | null>(null);
+  /** Grupo em que aconteceu, quando registrado pela chamada. */
+  turmaId = input<number | null>(null);
   salvo = output<RegistroCriadoDTO[]>();
 
   readonly NIVEIS = NIVEIS_DISCIPLINARES;
@@ -253,7 +253,7 @@ export class RegistroDisciplinarModal {
               motivoId: this.motivoId()!,
               data: this.data(),
               descricao: this.descricao().trim(),
-              aulaId: this.aulaId(),
+              turmaId: this.turmaId(),
               suspensaoInicio: this.ehSuspensao() ? this.suspensaoInicio() : null,
               suspensaoFim: this.ehSuspensao() ? this.suspensaoFim() : null,
             }),

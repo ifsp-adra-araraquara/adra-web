@@ -26,7 +26,7 @@
 } @else if (erro()) {
   <div class="notice notice-error" role="alert"><app-icon name="alert-circle" /><span>{{ erro() }}</span></div>
 } @else if (colunas().length === 0) {
-  <p class="feedback">Nenhuma aula desta turma em {{ tituloMes() }}.</p>
+  <p class="feedback">Nenhum dia de chamada deste grupo em {{ tituloMes() }}.</p>
 } @else {
   <p class="dica-rolar">Arraste a grade para o lado para ver todos os dias. Toque no dia para abrir a chamada.</p>
   <div class="grade-wrap" [class.recarregando]="carregando()" role="region" tabindex="0" [attr.aria-label]="'Frequência de ' + tituloMes()">
@@ -93,7 +93,7 @@
             </td>
           </tr>
         } @empty {
-          <tr><td [attr.colspan]="colunas().length + 6" class="empty">Nenhum aluno nesta turma em {{ tituloMes() }}.</td></tr>
+          <tr><td [attr.colspan]="colunas().length + 6" class="empty">Nenhum atendido neste grupo em {{ tituloMes() }}.</td></tr>
         }
       </tbody>
     </table>

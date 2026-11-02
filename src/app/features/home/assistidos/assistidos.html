@@ -271,7 +271,7 @@
         class="freq"
         [class]="classeFrequencia(a.frequenciaPercentual)"
         role="img"
-        [attr.aria-label]="'Frequência de ' + a.frequenciaPercentual + '% em ' + a.totalAulas + ' aulas'"
+        [attr.aria-label]="'Frequência de ' + a.frequenciaPercentual + '% em ' + a.totalAulas + ' chamadas'"
       >
         <div class="track"><div class="fill" [style.width.%]="a.frequenciaPercentual"></div></div>
         <span class="pct">{{ a.frequenciaPercentual }}%</span>
@@ -280,7 +280,7 @@
         <span class="faltas-seguidas">{{ a.faltasConsecutivas }} faltas seguidas</span>
       }
     } @else {
-      <span class="muted">Sem aulas</span>
+      <span class="muted">Sem chamadas</span>
     }
   </ng-template>
 
@@ -891,7 +891,7 @@
         @for (grupo of frequenciaAgrupada(); track grupo.rotulo) {
           <p class="freq-mes-titulo">{{ grupo.rotulo }}</p>
           <ul class="freq-lista">
-            @for (item of grupo.itens; track item.dataAula + item.nomeTurma) {
+            @for (item of grupo.itens; track item.data + item.turmaId) {
               <li class="freq-item">
                 <span
                   class="freq-dot"
@@ -900,14 +900,14 @@
                   [class.falta]="item.statusPresenca === StatusPresenca.FALTA"
                   [class.justificada]="item.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA"
                 ></span>
-                <span class="freq-data">{{ item.dataAula | date: 'dd/MM/yyyy' }}</span>
+                <span class="freq-data">{{ item.data | date: 'dd/MM/yyyy' }}</span>
                 <span class="freq-turma">{{ item.nomeTurma }}</span>
                 <app-badge [status]="item.statusPresenca" />
                 @if (ehCoordenador()) {
                   <button
                     type="button"
                     class="btn-icon"
-                    [attr.aria-label]="'Editar chamada de ' + (item.dataAula | date: 'dd/MM/yyyy')"
+                    [attr.aria-label]="'Editar chamada de ' + (item.data | date: 'dd/MM/yyyy')"
                     appTooltip="Editar chamada"
                     (click)="editarChamada(item)"
                   >

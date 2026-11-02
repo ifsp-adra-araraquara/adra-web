@@ -51,7 +51,7 @@ export class PainelTendencia {
       atual: i === pontos.length - 1,
     }));
 
-    // Mês sem aula quebra a linha em trechos — não inventa ponto no vazio.
+    // Mês sem chamada quebra a linha em trechos — não inventa ponto no vazio.
     const trechos: (typeof nos)[] = [];
     let trecho: typeof nos = [];
     for (const n of nos) {
@@ -85,8 +85,8 @@ export class PainelTendencia {
     return {
       esquerda: (n.x / this.G().largura) * 100,
       titulo: n.titulo,
-      valor: n.percentual == null ? 'Sem aula realizada' : `${n.percentual}% de presença`,
-      aulas: n.aulas,
+      valor: n.percentual == null ? 'Sem chamada lançada' : `${n.percentual}% de presença`,
+      chamadas: n.chamadas,
     };
   });
 
@@ -94,7 +94,7 @@ export class PainelTendencia {
     () =>
       'Frequência mensal: ' +
       this.tendencia()
-        .nos.map((n) => `${n.titulo} ${n.percentual == null ? 'sem aula' : n.percentual + '%'}`)
+        .nos.map((n) => `${n.titulo} ${n.percentual == null ? 'sem chamada' : n.percentual + '%'}`)
         .join('; '),
   );
 

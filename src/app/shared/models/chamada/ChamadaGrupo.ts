@@ -49,6 +49,15 @@ export interface AtendidoChamadaDTO {
   autorizadosRetirada: AutorizadoRetiradaDTO[];
 }
 
+/** GET /api/chamadas/status — situação de cada grupo em cada dia do período. */
+export interface StatusChamadaDiaDTO {
+  turmaId: number;
+  nomeTurma: string;
+  data: string;
+  status: StatusChamada;
+  lancadaPorNome: string | null;
+}
+
 export interface PresencaChamadaRequestDTO {
   assistidoId: number;
   statusPresenca: StatusPresenca;

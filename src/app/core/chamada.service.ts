@@ -7,9 +7,14 @@ import { StatusAula } from '../shared/enum/StatusAula';
 import { StatusPresenca } from '../shared/enum/StatusPresenca';
 import { PresencaRequestDTO } from '../shared/models/presenca/PresencaRequestDTO';
 import { PresencaResponseDTO } from '../shared/models/presenca/PresencaResponseDTO';
-import { FrequenciaAulaDTO } from '../shared/models/presenca/FrequenciaAulaDTO';
+import { FrequenciaDiaDTO } from '../shared/models/presenca/FrequenciaDiaDTO';
 import { GradeMensalTurmaDTO } from '../shared/models/presenca/GradeMensalTurmaDTO';
-import { ChamadaGrupoDTO, ChamadasDoDiaDTO, PresencaChamadaRequestDTO } from '../shared/models/chamada/ChamadaGrupo';
+import {
+  ChamadaGrupoDTO,
+  ChamadasDoDiaDTO,
+  PresencaChamadaRequestDTO,
+  StatusChamadaDiaDTO,
+} from '../shared/models/chamada/ChamadaGrupo';
 import { LinhaChamada, linhaChamadaDePresenca, ordenarPorNome } from '../shared/utils/chamada.util';
 
 /**
@@ -93,6 +98,13 @@ export class ChamadaService {
     return firstValueFrom(this.http.get<ChamadaGrupoDTO>(this.urlGrupo(turmaId, data)));
   }
 
+  /** Lançadas e pendentes do período (yyyy-MM-dd, inclusive), da mais recente para a mais antiga. */
+  async carregarStatus(inicio: string, fim: string): Promise<StatusChamadaDiaDTO[]> {
+    return firstValueFrom(
+      this.http.get<StatusChamadaDiaDTO[]>(`${this.api}/api/chamadas/status`, { params: { inicio, fim } }),
+    );
+  }
+
   /** Grava a chamada inteira do grupo no dia; regravar atualiza a mesma chamada. */
   async salvarGrupo(turmaId: number, data: string, atendidos: LinhaChamada[]): Promise<ChamadaGrupoDTO> {
     const presencas: PresencaChamadaRequestDTO[] = atendidos.map((a) => {
@@ -112,9 +124,9 @@ export class ChamadaService {
   }
 
   /** Histórico de frequência completo de um assistido — aba "Chamadas" do cadastro. */
-  async carregarFrequencia(assistidoId: number): Promise<FrequenciaAulaDTO[]> {
+  async carregarFrequencia(assistidoId: number): Promise<FrequenciaDiaDTO[]> {
     return firstValueFrom(
-      this.http.get<FrequenciaAulaDTO[]>(`${this.api}/api/chamadas/assistido/${assistidoId}/frequencia`),
+      this.http.get<FrequenciaDiaDTO[]>(`${this.api}/api/chamadas/assistido/${assistidoId}/frequencia`),
     );
   }
 
