@@ -27,7 +27,7 @@ export interface RegistroDisciplinarRequestDTO {
   motivoId: number;
   data: string;
   descricao: string;
-  aulaId?: number | null;
+  turmaId?: number | null;
   suspensaoInicio?: string | null;
   suspensaoFim?: string | null;
 }
@@ -62,7 +62,7 @@ export interface RegistroDisciplinarDTO {
   sequencia: number;
   dataRegistro: string;
   descricao: string;
-  aulaId: number | null;
+  turmaId: number | null;
   suspensaoInicio: string | null;
   suspensaoFim: string | null;
   documentoStatus: StatusDocumentoDisciplinar | null;

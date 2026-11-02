@@ -1,4 +1,4 @@
-<section class="chamada-grupo" [class.com-rodape]="!!chamada()" aria-labelledby="chamada-grupo-titulo">
+<section class="chamada-grupo" [class.com-rodape]="!!chamada() && aba() === 'atendidos'" [class.larga]="aba() === 'grade'" aria-labelledby="chamada-grupo-titulo">
   <button type="button" class="btn-voltar" (click)="voltar()">
     <app-icon name="chevron-left" />
     Voltar
@@ -26,101 +26,126 @@
       </div>
     </header>
 
+    <div class="tabs" role="tablist" aria-label="Seções da chamada">
+      <button type="button" class="tab" role="tab" id="aba-atendidos" aria-controls="painel-atendidos"
+              [class.active]="aba() === 'atendidos'" [attr.aria-selected]="aba() === 'atendidos'" (click)="aba.set('atendidos')">
+        Atendidos <span class="count">{{ atendidos().length }}</span>
+      </button>
+      <button type="button" class="tab" role="tab" id="aba-grade" aria-controls="painel-grade"
+              [class.active]="aba() === 'grade'" [attr.aria-selected]="aba() === 'grade'" (click)="aba.set('grade')">
+        Grade do mês
+      </button>
+    </div>
+
     @if (erro()) {
       <div class="notice notice-error" role="alert"><app-icon name="alert-circle" /><span>{{ erro() }}</span></div>
     }
     @if (sucesso()) {
       <div class="notice notice-sucesso" role="status"><app-icon name="check" /><span>{{ sucesso() }}</span></div>
     }
-    @if (aviso(); as msg) {
-      <div class="notice notice-lock" role="status"><app-icon name="lock" /><span>{{ msg }}</span></div>
-    }
+    @if (aba() === 'grade') {
+      <div id="painel-grade" role="tabpanel" aria-labelledby="aba-grade">
+        <app-grade-mensal
+          [turmaId]="c.turmaId"
+          [mes]="mesGrade()"
+          (mesChange)="mesGrade.set($event)"
+          [dataAtual]="c.data"
+          (abrirDia)="abrirDia($event)"
+        />
+      </div>
+    } @else {
+      <div id="painel-atendidos" role="tabpanel" aria-labelledby="aba-atendidos">
+        @if (aviso(); as msg) {
+          <div class="notice notice-lock" role="status"><app-icon name="lock" /><span>{{ msg }}</span></div>
+        }
 
-    <app-aniversario-cards [alunos]="atendidos()" [dataAula]="c.data" />
+        <app-aniversario-cards [alunos]="atendidos()" [dataAula]="c.data" />
 
-    @if (atendidos().length > 6) {
-      <label class="busca">
-        <app-icon name="search" [size]="18" />
-        <span class="sr-only">Buscar atendido</span>
-        <input type="search" placeholder="Buscar atendido" [ngModel]="busca()" (ngModelChange)="busca.set($event)" />
-      </label>
-    }
+        @if (atendidos().length > 6) {
+          <label class="busca">
+            <app-icon name="search" [size]="18" />
+            <span class="sr-only">Buscar atendido</span>
+            <input type="search" placeholder="Buscar atendido" [ngModel]="busca()" (ngModelChange)="busca.set($event)" />
+          </label>
+        }
 
-    <ul class="lista" role="list" [class.recarregando]="carregando()" [class.compacta]="atendidos().length > 12">
-      @for (atendido of atendidosVisiveis(); track atendido.assistidoId) {
-        <li class="aluno">
-          <div class="aluno-linha">
-            <button type="button" class="aluno-info" (click)="abrirFicha(atendido)" [attr.aria-label]="'Ver ' + atendido.nomeCompleto">
-              <app-avatar [entidadeId]="atendido.assistidoId" [nome]="atendido.nomeCompleto" [size]="40" />
-              <span class="aluno-texto">
-                <span class="aluno-nome">{{ atendido.nomeCompleto }}</span>
-                <span class="aluno-sub">
-                  @if (mostrarStatus()) {
-                    <span class="aluno-status" [class]="classeStatus(atendido.statusPresenca)">{{ ROTULO[status(atendido)] }}</span>
-                  }
-                  @if (atendido.historicoRecente.length > 0) {
-                    <span class="faixa" [attr.aria-label]="'Últimas chamadas: ' + atendido.historicoRecente.length">
-                      @for (dia of faixaHistorico(atendido); track dia.dataAula) {
-                        <span class="bolinha" [class]="classeStatus(dia.statusPresenca)" [title]="dataBr(dia.dataAula) + ': ' + ROTULO[dia.statusPresenca]"></span>
+        <ul class="lista" role="list" [class.recarregando]="carregando()" [class.compacta]="atendidos().length > 12">
+          @for (atendido of atendidosVisiveis(); track atendido.assistidoId) {
+            <li class="aluno">
+              <div class="aluno-linha">
+                <button type="button" class="aluno-info" (click)="abrirFicha(atendido)" [attr.aria-label]="'Ver ' + atendido.nomeCompleto">
+                  <app-avatar [entidadeId]="atendido.assistidoId" [nome]="atendido.nomeCompleto" [size]="40" />
+                  <span class="aluno-texto">
+                    <span class="aluno-nome">{{ atendido.nomeCompleto }}</span>
+                    <span class="aluno-sub">
+                      @if (mostrarStatus()) {
+                        <span class="aluno-status" [class]="classeStatus(atendido.statusPresenca)">{{ ROTULO[status(atendido)] }}</span>
+                      }
+                      @if (atendido.historicoRecente.length > 0) {
+                        <span class="faixa" [attr.aria-label]="'Últimas chamadas: ' + atendido.historicoRecente.length">
+                          @for (dia of faixaHistorico(atendido); track dia.dataAula) {
+                            <span class="bolinha" [class]="classeStatus(dia.statusPresenca)" [title]="dataBr(dia.dataAula) + ': ' + ROTULO[dia.statusPresenca]"></span>
+                          }
+                        </span>
+                      }
+                      @if (aniversario(atendido); as niver) {
+                        @if (niver.tipo === 'hoje') {
+                          <app-badge variant="amber" [label]="'🎂 Aniversário hoje · ' + niver.idade + ' anos'" [plain]="true" />
+                        } @else {
+                          <span class="niver" [title]="'Faz ' + niver.idade + ' anos em ' + niver.dia">🎂 {{ niver.dia }}</span>
+                        }
+                      }
+                      @if (suspensoAte(atendido); as ate) {
+                        <app-badge variant="red" [label]="'Suspenso até ' + dataBr(ate)" [plain]="true" />
                       }
                     </span>
-                  }
-                  @if (aniversario(atendido); as niver) {
-                    @if (niver.tipo === 'hoje') {
-                      <app-badge variant="amber" [label]="'🎂 Aniversário hoje · ' + niver.idade + ' anos'" [plain]="true" />
-                    } @else {
-                      <span class="niver" [title]="'Faz ' + niver.idade + ' anos em ' + niver.dia">🎂 {{ niver.dia }}</span>
-                    }
-                  }
-                  @if (suspensoAte(atendido); as ate) {
-                    <app-badge variant="red" [label]="'Suspenso até ' + dataBr(ate)" [plain]="true" />
-                  }
-                </span>
-              </span>
-            </button>
+                  </span>
+                </button>
 
-            @if (editando()) {
-              <button type="button" class="presenca" [class]="classeStatus(atendido.statusPresenca)"
-                      [attr.aria-label]="rotuloBotao(atendido)" (click)="alternar(atendido)">
-                {{ SIGLA[status(atendido)] }}
-              </button>
-            } @else if (lancada()) {
-              <span class="presenca presenca-lida" [class]="classeStatus(atendido.statusPresenca)" [attr.aria-label]="ROTULO[status(atendido)]">
-                {{ SIGLA[status(atendido)] }}
-              </span>
-            }
-          </div>
-
-          @if (atendido.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA) {
-            @if (editando()) {
-              <div class="motivo">
-                <select class="select" [attr.aria-label]="'Motivo da falta de ' + atendido.nomeCompleto"
-                        [ngModel]="atendido.motivoFalta" (ngModelChange)="mudarMotivo(atendido.assistidoId, $event)">
-                  <option [ngValue]="null" disabled>Motivo da falta…</option>
-                  @for (opcao of motivoFaltaOptions; track opcao.value) {
-                    <option [ngValue]="opcao.value">{{ opcao.label }}</option>
-                  }
-                </select>
-                @if (atendido.motivoFalta === MotivoFalta.OUTRO) {
-                  <textarea rows="2" placeholder="Descreva o motivo (obrigatório)"
-                            [attr.aria-label]="'Descrição do motivo de ' + atendido.nomeCompleto"
-                            [ngModel]="atendido.observacao" (ngModelChange)="mudarObservacao(atendido.assistidoId, $event)"></textarea>
+                @if (editando()) {
+                  <button type="button" class="presenca" [class]="classeStatus(atendido.statusPresenca)"
+                          [attr.aria-label]="rotuloBotao(atendido)" (click)="alternar(atendido)">
+                    {{ SIGLA[status(atendido)] }}
+                  </button>
+                } @else if (lancada()) {
+                  <span class="presenca presenca-lida" [class]="classeStatus(atendido.statusPresenca)" [attr.aria-label]="ROTULO[status(atendido)]">
+                    {{ SIGLA[status(atendido)] }}
+                  </span>
                 }
               </div>
-            } @else if (atendido.motivoFalta) {
-              <p class="motivo-lido">
-                Motivo: {{ MOTIVO_FALTA_LABELS[atendido.motivoFalta] }}@if (atendido.observacao) { — {{ atendido.observacao }} }
-              </p>
-            }
+
+              @if (atendido.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA) {
+                @if (editando()) {
+                  <div class="motivo">
+                    <select class="select" [attr.aria-label]="'Motivo da falta de ' + atendido.nomeCompleto"
+                            [ngModel]="atendido.motivoFalta" (ngModelChange)="mudarMotivo(atendido.assistidoId, $event)">
+                      <option [ngValue]="null" disabled>Motivo da falta…</option>
+                      @for (opcao of motivoFaltaOptions; track opcao.value) {
+                        <option [ngValue]="opcao.value">{{ opcao.label }}</option>
+                      }
+                    </select>
+                    @if (atendido.motivoFalta === MotivoFalta.OUTRO) {
+                      <textarea rows="2" placeholder="Descreva o motivo (obrigatório)"
+                                [attr.aria-label]="'Descrição do motivo de ' + atendido.nomeCompleto"
+                                [ngModel]="atendido.observacao" (ngModelChange)="mudarObservacao(atendido.assistidoId, $event)"></textarea>
+                    }
+                  </div>
+                } @else if (atendido.motivoFalta) {
+                  <p class="motivo-lido">
+                    Motivo: {{ MOTIVO_FALTA_LABELS[atendido.motivoFalta] }}@if (atendido.observacao) { — {{ atendido.observacao }} }
+                  </p>
+                }
+              }
+            </li>
+          } @empty {
+            <li class="vazio">{{ busca() ? 'Nenhum atendido com esse nome.' : 'Nenhum atendido neste grupo nesta data.' }}</li>
           }
-        </li>
-      } @empty {
-        <li class="vazio">{{ busca() ? 'Nenhum atendido com esse nome.' : 'Nenhum atendido neste grupo nesta data.' }}</li>
-      }
-    </ul>
+        </ul>
+      </div>
+    }
 
     <!-- Rodapé fixo: contadores + ação, como no app da Quality -->
-    @if (mostrarStatus()) {
+    @if (aba() === 'atendidos' && mostrarStatus()) {
       <footer class="rodape">
         <div class="contadores" aria-live="polite">
           <span class="contador st-p"><b>{{ totalPresentes() }}</b> Presentes</span>

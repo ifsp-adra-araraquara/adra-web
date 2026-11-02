@@ -60,7 +60,7 @@ export class PainelIndicadores {
           f.percentual != null && f.percentualMesAnterior != null
             ? tendencia(f.percentual - f.percentualMesAnterior, ' p.p. vs. mês ant.', true)
             : f.percentual == null
-              ? { texto: 'sem aula realizada', tom: 'neutro', seta: '' }
+              ? { texto: 'sem chamada lançada', tom: 'neutro', seta: '' }
               : null,
       },
       {

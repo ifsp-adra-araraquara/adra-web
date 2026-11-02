@@ -32,11 +32,11 @@
       <div class="grupo">
         <h3 class="grupo-titulo"><span class="sinal sinal-alerta"></span>Chamadas atrasadas<span class="grupo-total">{{ h.chamadasPendentes.total }}</span></h3>
         <ul role="list">
-          @for (c of h.chamadasPendentes.itens; track c.aulaId) {
+          @for (c of h.chamadasPendentes.itens; track c.turmaId + c.data) {
             <li>
-              <button type="button" class="item" (click)="abrirAula(c.aulaId)">
+              <button type="button" class="item" (click)="abrirChamada(c.turmaId, c.data)">
                 <span class="data">{{ dataCurta(c.data) }}</span>
-                <span class="item-texto"><b>{{ c.turma || 'Aula' }}</b>@if (c.horario) {<small>{{ c.horario }}</small>}</span>
+                <span class="item-texto"><b>{{ c.turma || 'Grupo' }}</b></span>
                 <app-icon name="chevron-right" [size]="14" class="item-seta" />
               </button>
             </li>

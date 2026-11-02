@@ -62,8 +62,8 @@ export class PainelAtencao {
     this.router.navigate(['/assistidos'], { queryParams: { assistidoId } });
   }
 
-  abrirAula(aulaId: number): void {
-    this.router.navigate(['/chamada/aula', aulaId]);
+  abrirChamada(turmaId: number, data: string): void {
+    this.router.navigate(['/chamada/grupo', turmaId, data]);
   }
 
   abrirPendentes(): void {

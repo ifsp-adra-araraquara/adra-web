@@ -7,7 +7,7 @@ import { FREQUENCIA_MINIMA, nomeMes } from './painel.util';
 /** Turmas visíveis antes de "Ver todas". */
 const TURMAS_VISIVEIS = 8;
 
-/** FT-05 — turmas da menor para a maior frequência: alunos/vagas, aulas, pendências e frequência. */
+/** FT-05 — grupos da menor para a maior frequência: atendidos/vagas, chamadas, pendências e frequência. */
 @Component({
   selector: 'app-painel-turmas',
   imports: [Icon],

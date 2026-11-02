@@ -17,6 +17,9 @@
 
 .chamada-grupo { width: 100%; min-width: 0; }
 .chamada-grupo.com-rodape { padding-bottom: 8px; }
+.tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: none; white-space: nowrap; }
 
 /* Três abas cabem lado a lado; em tela estreita rolam em vez de quebrar linha */
 
@@ -147,8 +150,10 @@ textarea { width: 100%; }
 .alerta-texto { color: var(--amber-600); }
 
 @media (min-width: 720px) {
-  /* A partir do iPad: lista única, centralizada e com largura de leitura. */
+  /* A partir do iPad: lista única, centralizada e com largura de leitura.
+     A grade do mês usa a largura toda (ver .larga). */
   .chamada-grupo { max-width: 880px; margin: 0 auto; }
+  .chamada-grupo.larga { max-width: none; }
 
   .rodape {
     flex-direction: row; align-items: center; justify-content: space-between;

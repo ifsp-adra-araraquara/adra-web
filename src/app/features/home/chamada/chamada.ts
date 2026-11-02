@@ -4,7 +4,7 @@ import { AuthService } from '../../../core/auth.service';
 import { ChamadaService } from '../../../core/chamada.service';
 import { Role } from '../../../shared/enum/role.enum';
 import { StatusChamada } from '../../../shared/enum/StatusChamada';
-import { ChamadasDoDiaDTO, GrupoDoDiaDTO } from '../../../shared/models/chamada/ChamadaGrupo';
+import { ChamadasDoDiaDTO, GrupoDoDiaDTO, StatusChamadaDiaDTO } from '../../../shared/models/chamada/ChamadaGrupo';
 import { hojeISO } from '../../../shared/utils/aula.util';
 import { dataBr } from '../../../shared/utils/disciplinar.util';
 import { Badge } from '../../../shared/components/badge/badge';
@@ -12,10 +12,16 @@ import { Button } from '../../../shared/components/button/button';
 import { Icon } from '../../../shared/components/icon/icon';
 import { NavegadorData } from '../../../shared/components/navegador-data/navegador-data';
 
+type Aba = 'dia' | 'pendentes';
+
+/** Quantos dias para trás a aba "Pendentes" procura chamadas não feitas. */
+const DIAS_PENDENTES = 60;
+
 /**
  * FT-17 — entrada da chamada: os grupos que têm chamada no dia escolhido,
  * com o status de cada um. Tocar num grupo abre `/chamada/grupo/:turmaId/:data`.
  * Todos navegam entre os dias; quem pode editar cada dia é decidido na tela do grupo.
+ * O Coordenador também vê a aba "Pendentes": dias de chamada sem lançamento.
  */
 @Component({
   selector: 'app-chamada',
@@ -31,9 +37,12 @@ export class Chamada implements OnInit {
   private readonly router = inject(Router);
 
   readonly hojeISO = hojeISO;
+  readonly dataBr = dataBr;
   readonly StatusChamada = StatusChamada;
 
   readonly ehCoordenador = computed(() => this.auth.currentProfile() === Role.COORD);
+  readonly aba = signal<Aba>('dia');
+  readonly pendentes = signal<StatusChamadaDiaDTO[]>([]);
 
   readonly dataSelecionada = signal<string>(hojeISO());
   readonly dia = signal<ChamadasDoDiaDTO | null>(null);
@@ -53,7 +62,11 @@ export class Chamada implements OnInit {
     }
     const data = this.route.snapshot.queryParamMap.get('data');
     if (data) this.dataSelecionada.set(data);
+    // Painel do Coordenador: "Ver as pendentes" abre direto na aba.
+    if (this.ehCoordenador() && this.route.snapshot.queryParamMap.get('aba') === 'pendentes') this.aba.set('pendentes');
+
     this.carregarDia();
+    if (this.ehCoordenador()) this.carregarPendentes();
   }
 
   onDataChange(valor: string): void {
@@ -64,6 +77,10 @@ export class Chamada implements OnInit {
 
   abrir(grupo: GrupoDoDiaDTO): void {
     this.router.navigate(['/chamada/grupo', grupo.turmaId, this.dataSelecionada()]);
+  }
+
+  abrirPendente(pendente: StatusChamadaDiaDTO): void {
+    this.router.navigate(['/chamada/grupo', pendente.turmaId, pendente.data]);
   }
 
   irParaStatusChamadas(): void {
@@ -77,6 +94,18 @@ export class Chamada implements OnInit {
     return `${grupo.lancadaPorNome}${hora}`;
   }
 
+  private async carregarPendentes(): Promise<void> {
+    const [ano, mes, dia] = hojeISO().split('-').map(Number);
+    const inicio = new Date(ano, mes - 1, dia - DIAS_PENDENTES);
+    const ontem = new Date(ano, mes - 1, dia - 1);
+    try {
+      const status = await this.chamadaService.carregarStatus(paraISO(inicio), paraISO(ontem));
+      this.pendentes.set(status.filter((s) => s.status === StatusChamada.PENDENTE));
+    } catch {
+      this.pendentes.set([]);
+    }
+  }
+
   private async carregarDia(): Promise<void> {
     this.carregando.set(true);
     this.erro.set(null);
@@ -88,4 +117,8 @@ export class Chamada implements OnInit {
       this.carregando.set(false);
     }
   }
+}
+
+function paraISO(data: Date): string {
+  return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`;
 }

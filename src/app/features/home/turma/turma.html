@@ -17,15 +17,6 @@
     }
   </header>
 
-  @if (avisoPosCriacao()) {
-    <div class="notice notice-amber" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px">
-      <span>{{ avisoPosCriacao() }}</span>
-      <app-button variant="secondary" size="sm" style="flex-shrink: 0" (click)="avisoPosCriacao.set(null)">
-        Entendi
-      </app-button>
-    </div>
-  }
-
   <div class="toolbar">
     <app-input
       label="Buscar por nome da turma"
@@ -96,14 +87,6 @@
     }
   </div>
 
-  <app-aulas-turma-modal
-    [turmaId]="turmaAulasSelecionada()?.turmaId ?? 0"
-    [nomeTurma]="turmaAulasSelecionada()?.nomeTurma ?? ''"
-    [aberto]="turmaAulasSelecionada() !== null"
-    [permiteAbrirAula]="ehEducadorSocial()"
-    (fechar)="fecharAulasDaTurma()">
-  </app-aulas-turma-modal>
-
   <!-- ============================================================
        DRAWER: ABRIR TURMA (ações agrupadas, uma única entrada por linha)
        ============================================================ -->
@@ -133,32 +116,22 @@
         <p class="drawer-secao-titulo">Histórico de oficineiros</p>
         <app-historico-oficineiros recurso="turmas" [id]="turma.turmaId" />
       } @else {
-      <p class="drawer-secao-titulo">Alunos e aulas</p>
+      <p class="drawer-secao-titulo">Alunos e frequência</p>
       <div class="drawer-acoes">
         <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); verAlunos(turma)">
           <app-icon name="eye" />
           Ver alunos
         </button>
 
-        <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); abrirAulasDaTurma(turma)">
+        <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); verFrequencia(turma)">
           <app-icon name="list" />
-          Ver aulas
+          Ver frequência
         </button>
 
         @if (isCoordenador()) {
           <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); abrirModalVincularAlunos(turma)">
             <app-icon name="user-plus" />
             Vincular alunos
-          </button>
-
-          <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); abrirModalCriarAulas(turma)">
-            <app-icon name="book-plus" />
-            Criar várias aulas
-          </button>
-
-          <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); abrirModalNovaAula(turma)">
-            <app-icon name="calendar-plus" />
-            Nova aula (avulsa)
           </button>
         }
       </div>
@@ -205,356 +178,88 @@
     <app-icon name="book" />
   </div>
 
-  <div class="tabs-turma" role="tablist">
-    <button
-      type="button"
-      class="tab-btn"
-      [class.active]="abaAtivaForm() === 'turma'"
-      (click)="abaAtivaForm.set('turma')"
-    >
-      Turma
-    </button>
+  @if (erroSalvar()) {
+    <div class="notice notice-error" role="alert">{{ erroSalvar() }}</div>
+  }
 
-    @if (!turmaEmEdicao()) {
-      <button
-        type="button"
-        class="tab-btn"
-        [class.active]="abaAtivaForm() === 'aulas'"
-        (click)="abaAtivaForm.set('aulas')"
-      >
-        Aulas
-        @if (erroAulasTurma()) {
-          <span class="tab-alert">!</span>
-        }
-      </button>
-    }
+  <app-input
+    label="Nome da turma"
+    placeholder="Ex.: CJ Grupo A"
+    [ngModel]="formTurma.nomeTurma"
+    (ngModelChange)="atualizarCampoTurma('nomeTurma', $event)"
+  />
+
+  <div class="form-row">
+    <div class="field">
+      <label>Oficina</label>
+      <app-select
+        [ngModel]="formTurma.oficinaId"
+        (ngModelChange)="atualizarCampoTurma('oficinaId', $event)"
+        [placeholder]="'Selecione'"
+        [options]="oficinaOptions()"
+      />
+    </div>
+
+    <div class="field">
+      <label>Oficineiro responsável</label>
+      <app-select
+        [ngModel]="formTurma.oficineiroResponsavelId"
+        (ngModelChange)="atualizarCampoTurma('oficineiroResponsavelId', $event)"
+        [placeholder]="'Selecione'"
+        [options]="oficineiroOptions()"
+      />
+    </div>
   </div>
 
-  @if (abaAtivaForm() === 'turma') {
-    @if (erroSalvar()) {
-      <div class="notice notice-error" role="alert">{{ erroSalvar() }}</div>
-    }
-
-    <app-input
-      label="Nome da turma"
-      placeholder="Ex.: CJ Grupo A"
-      [ngModel]="formTurma.nomeTurma"
-      (ngModelChange)="atualizarCampoTurma('nomeTurma', $event)"
-    />
-
-    <div class="form-row">
-      <div class="field">
-        <label>Oficina</label>
-        <app-select
-          [ngModel]="formTurma.oficinaId"
-          (ngModelChange)="atualizarCampoTurma('oficinaId', $event)"
-          [placeholder]="'Selecione'"
-          [options]="oficinaOptions()"
-        />
-      </div>
-
-      <div class="field">
-        <label>Oficineiro responsável</label>
-        <app-select
-          [ngModel]="formTurma.oficineiroResponsavelId"
-          (ngModelChange)="atualizarCampoTurma('oficineiroResponsavelId', $event)"
-          [placeholder]="'Selecione'"
-          [options]="oficineiroOptions()"
-        />
-      </div>
-    </div>
-
-    <div class="form-row-3">
-      <div class="field">
-        <label>Turno</label>
-        <app-select
-          [ngModel]="formTurma.turno"
-          (ngModelChange)="atualizarCampoTurma('turno', $event)"
-          [placeholder]="'Selecione'"
-          [options]="turnoOptions"
-        />
-      </div>
-
-      <div class="field">
-        <label>Faixa etária</label>
-        <app-select
-          [ngModel]="formTurma.faixaEtaria"
-          (ngModelChange)="atualizarCampoTurma('faixaEtaria', $event)"
-          [placeholder]="'Selecione'"
-          [options]="faixaEtariaOptions"
-        />
-      </div>
-
-      <app-input
-        label="Capacidade"
-        type="number"
-        min="1"
-        placeholder="Ex.: 24"
-        [ngModel]="formTurma.capacidade"
-        (ngModelChange)="atualizarCampoTurma('capacidade', $event)"
-      />
-    </div>
-
-    <app-seletor-dias-semana
-      label="Dias de chamada"
-      [dias]="formTurma.diasDaSemana"
-      (diasChange)="atualizarCampoTurma('diasDaSemana', $event)"
-    />
-
+  <div class="form-row-3">
     <div class="field">
-      <label>Observações</label>
-      <textarea
-        placeholder="Informações relevantes sobre a turma"
-        [ngModel]="formTurma.observacoes"
-        (ngModelChange)="atualizarCampoTurma('observacoes', $event)"
-      ></textarea>
-    </div>
-  }
-
-  @if (abaAtivaForm() === 'aulas' && !turmaEmEdicao()) {
-    <div class="notice notice-info" style="margin-bottom: 16px">
-      Essa aba é opcional: se você não preencher nada aqui, vai ser perguntado se quer criar a
-      turma sem aulas. Se preferir, preencha tudo abaixo para já sair criando as primeiras aulas
-      dessa turma.
-    </div>
-
-    @if (erroAulasTurma()) {
-      <div class="notice notice-error" role="alert">{{ erroAulasTurma() }}</div>
-    }
-
-    <div class="form-row">
-      <app-input
-        label="Data de início"
-        type="date"
-        [ngModel]="formAulasTurma.dataInicio"
-        (ngModelChange)="atualizarCampoAulasTurma('dataInicio', $event)"
-      />
-
-      <app-input
-        label="Data de fim"
-        type="date"
-        [ngModel]="formAulasTurma.dataFim"
-        (ngModelChange)="atualizarCampoAulasTurma('dataFim', $event)"
+      <label>Turno</label>
+      <app-select
+        [ngModel]="formTurma.turno"
+        (ngModelChange)="atualizarCampoTurma('turno', $event)"
+        [placeholder]="'Selecione'"
+        [options]="turnoOptions"
       />
     </div>
 
     <div class="field">
-      <label>Dias da semana</label>
-      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px;">
-        <button
-          type="button"
-          class="btn btn-sm"
-          [class.btn-primary]="formAulasTurma.diasDaSemana.includes('MONDAY')"
-          [class.btn-ghost]="!formAulasTurma.diasDaSemana.includes('MONDAY')"
-          (click)="toggleDiaSemanaNovaTurma('MONDAY')"
-        >
-          Segunda
-        </button>
-        <button
-          type="button"
-          class="btn btn-sm"
-          [class.btn-primary]="formAulasTurma.diasDaSemana.includes('TUESDAY')"
-          [class.btn-ghost]="!formAulasTurma.diasDaSemana.includes('TUESDAY')"
-          (click)="toggleDiaSemanaNovaTurma('TUESDAY')"
-        >
-          Terça
-        </button>
-        <button
-          type="button"
-          class="btn btn-sm"
-          [class.btn-primary]="formAulasTurma.diasDaSemana.includes('WEDNESDAY')"
-          [class.btn-ghost]="!formAulasTurma.diasDaSemana.includes('WEDNESDAY')"
-          (click)="toggleDiaSemanaNovaTurma('WEDNESDAY')"
-        >
-          Quarta
-        </button>
-        <button
-          type="button"
-          class="btn btn-sm"
-          [class.btn-primary]="formAulasTurma.diasDaSemana.includes('THURSDAY')"
-          [class.btn-ghost]="!formAulasTurma.diasDaSemana.includes('THURSDAY')"
-          (click)="toggleDiaSemanaNovaTurma('THURSDAY')"
-        >
-          Quinta
-        </button>
-        <button
-          type="button"
-          class="btn btn-sm"
-          [class.btn-primary]="formAulasTurma.diasDaSemana.includes('FRIDAY')"
-          [class.btn-ghost]="!formAulasTurma.diasDaSemana.includes('FRIDAY')"
-          (click)="toggleDiaSemanaNovaTurma('FRIDAY')"
-        >
-          Sexta
-        </button>
-        <button
-          type="button"
-          class="btn btn-sm"
-          [class.btn-primary]="formAulasTurma.diasDaSemana.includes('SATURDAY')"
-          [class.btn-ghost]="!formAulasTurma.diasDaSemana.includes('SATURDAY')"
-          (click)="toggleDiaSemanaNovaTurma('SATURDAY')"
-        >
-          Sábado
-        </button>
-        <button
-          type="button"
-          class="btn btn-sm"
-          [class.btn-primary]="formAulasTurma.diasDaSemana.includes('SUNDAY')"
-          [class.btn-ghost]="!formAulasTurma.diasDaSemana.includes('SUNDAY')"
-          (click)="toggleDiaSemanaNovaTurma('SUNDAY')"
-        >
-          Domingo
-        </button>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="field">
-        <label>Horário de início</label>
-        <input
-          class="input"
-          type="time"
-          [ngModel]="formAulasTurma.horarioInicio"
-          (ngModelChange)="atualizarCampoAulasTurma('horarioInicio', $event)"
-        />
-      </div>
-
-      <div class="field">
-        <label>Horário de fim</label>
-        <input
-          class="input"
-          type="time"
-          [ngModel]="formAulasTurma.horarioFim"
-          (ngModelChange)="atualizarCampoAulasTurma('horarioFim', $event)"
-        />
-      </div>
-    </div>
-
-    <div class="field">
-      <label>As aulas vão ter título e descrição?</label>
-      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px;">
-        <button
-          type="button"
-          class="btn btn-sm"
-          [class.btn-primary]="comTituloDescricao()"
-          [class.btn-ghost]="!comTituloDescricao()"
-          (click)="definirComTituloDescricao()"
-        >
-          Com título e descrição
-        </button>
-        <button
-          type="button"
-          class="btn btn-sm"
-          [class.btn-primary]="!comTituloDescricao()"
-          [class.btn-ghost]="comTituloDescricao()"
-          (click)="definirSemTituloDescricao()"
-        >
-          Sem título e descrição
-        </button>
-      </div>
-      @if (!comTituloDescricao()) {
-        <p class="muted" style="font-size: 12px; margin-top: 6px">
-          As aulas serão criadas sem título nem descrição. O oficineiro responsável vai definir o
-          título ao abrir a aula pela primeira vez.
-        </p>
-      }
+      <label>Faixa etária</label>
+      <app-select
+        [ngModel]="formTurma.faixaEtaria"
+        (ngModelChange)="atualizarCampoTurma('faixaEtaria', $event)"
+        [placeholder]="'Selecione'"
+        [options]="faixaEtariaOptions"
+      />
     </div>
 
     <app-input
-      [label]="'Título' + (comTituloDescricao() ? ' (opcional)' : '')"
-      placeholder="Ex.: Aula de introdução"
-      [disabled]="!comTituloDescricao()"
-      [ngModel]="formAulasTurma.titulo"
-      (ngModelChange)="atualizarCampoAulasTurma('titulo', $event)"
+      label="Capacidade"
+      type="number"
+      min="1"
+      placeholder="Ex.: 24"
+      [ngModel]="formTurma.capacidade"
+      (ngModelChange)="atualizarCampoTurma('capacidade', $event)"
     />
+  </div>
 
-    <div class="field">
-      <label>Descrição {{ comTituloDescricao() ? '(opcional)' : '' }}</label>
-      <textarea
-        placeholder="Descrição das aulas"
-        [disabled]="!comTituloDescricao()"
-        [ngModel]="formAulasTurma.descricao"
-        (ngModelChange)="atualizarCampoAulasTurma('descricao', $event)"
-        rows="3"
-      ></textarea>
-    </div>
+  <app-seletor-dias-semana
+    label="Dias de chamada"
+    [dias]="formTurma.diasDaSemana"
+    (diasChange)="atualizarCampoTurma('diasDaSemana', $event)"
+  />
 
-    <div class="field">
-      <label>Conteúdo previsto (opcional)</label>
-      <textarea
-        placeholder="Conteúdo que será abordado"
-        [ngModel]="formAulasTurma.conteudoPrevisto"
-        (ngModelChange)="atualizarCampoAulasTurma('conteudoPrevisto', $event)"
-        rows="3"
-      ></textarea>
-    </div>
-
-    <div class="field">
-      <label>Objetivos (opcional)</label>
-      <textarea
-        placeholder="Objetivos das aulas"
-        [ngModel]="formAulasTurma.objetivos"
-        (ngModelChange)="atualizarCampoAulasTurma('objetivos', $event)"
-        rows="3"
-      ></textarea>
-    </div>
-
-    <div class="field">
-      <label>Recursos necessários (opcional)</label>
-      <textarea
-        placeholder="Materiais e recursos necessários"
-        [ngModel]="formAulasTurma.recursosNecessarios"
-        (ngModelChange)="atualizarCampoAulasTurma('recursosNecessarios', $event)"
-        rows="3"
-      ></textarea>
-    </div>
-
-    <div class="field">
-      <label>Observações (opcional)</label>
-      <textarea
-        placeholder="Observações adicionais"
-        [ngModel]="formAulasTurma.observacoes"
-        (ngModelChange)="atualizarCampoAulasTurma('observacoes', $event)"
-        rows="3"
-      ></textarea>
-    </div>
-  }
+  <div class="field">
+    <label>Observações</label>
+    <textarea
+      placeholder="Informações relevantes sobre a turma"
+      [ngModel]="formTurma.observacoes"
+      (ngModelChange)="atualizarCampoTurma('observacoes', $event)"
+    ></textarea>
+  </div>
 
   <ng-template #footer>
     <app-button variant="secondary" (click)="fecharModalForm()">Cancelar</app-button>
     <app-button [loading]="salvando()" (click)="salvarTurma()">Salvar turma</app-button>
-  </ng-template>
-</app-modal>
-
-<!-- ============================================================
-     MODAL: CONFIRMAR CRIAÇÃO SEM AULAS
-     ============================================================ -->
-<app-modal
-  [(open)]="mostrarConfirmacaoSemAulas"
-  title="Criar turma sem aulas?"
-  [closeOnBackdrop]="false"
-  [closeOnEscape]="false"
-  (closed)="cancelarCriarSemAulas()"
->
-  <div modal-icon class="mh-ico ico-coral">
-    <app-icon name="alert-triangle" />
-  </div>
-
-  <p>
-    Você não preencheu a aba <strong>"Aulas"</strong>. Tem certeza que deseja criar a turma
-    <strong>"{{ formTurma.nomeTurma }}"</strong> sem nenhuma aula cadastrada?
-  </p>
-  <p class="muted" style="font-size: 13px">
-    Você pode criar as aulas depois, a qualquer momento, pela ação "Criar várias aulas" na lista
-    de turmas.
-  </p>
-
-  <ng-template #footer>
-    <app-button variant="secondary" (click)="cancelarCriarSemAulas()">
-      Cancelar, voltar pra aba Aulas
-    </app-button>
-    <app-button (click)="confirmarCriarSemAulas()">
-      Criar sem aulas
-    </app-button>
   </ng-template>
 </app-modal>
 
@@ -610,328 +315,6 @@
         Reativar turma
       </app-button>
     }
-  </ng-template>
-</app-modal>
-
-<!-- ============================================================
-     MODAL: CRIAR VÁRIAS AULAS
-     ============================================================ -->
-<app-modal
-  [(open)]="mostrarModalCriarAulas"
-  title="Criar várias aulas"
-  size="lg"
-  (closed)="fecharModalCriarAulas()"
->
-  <div modal-icon class="mh-ico ico-blue">
-    <app-icon name="book-plus" />
-  </div>
-
-  @if (erroSalvarAulas()) {
-    <div class="notice notice-error" role="alert">{{ erroSalvarAulas() }}</div>
-  }
-
-  <app-input label="Turma ID" [ngModel]="formCriarAulas.turmaId" [disabled]="true" />
-
-  <div class="form-row">
-    <app-input
-      label="Data de início"
-      type="date"
-      [ngModel]="formCriarAulas.dataInicio"
-      (ngModelChange)="atualizarCampoCriarAulas('dataInicio', $event)"
-    />
-
-    <app-input
-      label="Data de fim"
-      type="date"
-      [ngModel]="formCriarAulas.dataFim"
-      (ngModelChange)="atualizarCampoCriarAulas('dataFim', $event)"
-    />
-  </div>
-
-  <div class="field">
-    <label>Dias da semana</label>
-    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px;">
-      <button
-        type="button"
-        class="btn btn-sm"
-        [class.btn-primary]="formCriarAulas.diasDaSemana.includes('MONDAY')"
-        [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('MONDAY')"
-        (click)="toggleDiaSemana('MONDAY')"
-      >
-        Segunda
-      </button>
-      <button
-        type="button"
-        class="btn btn-sm"
-        [class.btn-primary]="formCriarAulas.diasDaSemana.includes('TUESDAY')"
-        [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('TUESDAY')"
-        (click)="toggleDiaSemana('TUESDAY')"
-      >
-        Terça
-      </button>
-      <button
-        type="button"
-        class="btn btn-sm"
-        [class.btn-primary]="formCriarAulas.diasDaSemana.includes('WEDNESDAY')"
-        [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('WEDNESDAY')"
-        (click)="toggleDiaSemana('WEDNESDAY')"
-      >
-        Quarta
-      </button>
-      <button
-        type="button"
-        class="btn btn-sm"
-        [class.btn-primary]="formCriarAulas.diasDaSemana.includes('THURSDAY')"
-        [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('THURSDAY')"
-        (click)="toggleDiaSemana('THURSDAY')"
-      >
-        Quinta
-      </button>
-      <button
-        type="button"
-        class="btn btn-sm"
-        [class.btn-primary]="formCriarAulas.diasDaSemana.includes('FRIDAY')"
-        [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('FRIDAY')"
-        (click)="toggleDiaSemana('FRIDAY')"
-      >
-        Sexta
-      </button>
-      <button
-        type="button"
-        class="btn btn-sm"
-        [class.btn-primary]="formCriarAulas.diasDaSemana.includes('SATURDAY')"
-        [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('SATURDAY')"
-        (click)="toggleDiaSemana('SATURDAY')"
-      >
-        Sábado
-      </button>
-      <button
-        type="button"
-        class="btn btn-sm"
-        [class.btn-primary]="formCriarAulas.diasDaSemana.includes('SUNDAY')"
-        [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('SUNDAY')"
-        (click)="toggleDiaSemana('SUNDAY')"
-      >
-        Domingo
-      </button>
-    </div>
-  </div>
-
-  <div class="form-row">
-    <div class="field">
-      <label>Horário de início</label>
-      <input
-        class="input"
-        type="time"
-        [ngModel]="formCriarAulas.horarioInicio"
-        (ngModelChange)="atualizarCampoCriarAulas('horarioInicio', $event)"
-      />
-    </div>
-
-    <div class="field">
-      <label>Horário de fim</label>
-      <input
-        class="input"
-        type="time"
-        [ngModel]="formCriarAulas.horarioFim"
-        (ngModelChange)="atualizarCampoCriarAulas('horarioFim', $event)"
-      />
-    </div>
-  </div>
-
-  <app-input
-    label="Título (opcional)"
-    placeholder="Ex.: Aula de introdução"
-    [maxLength]="150"
-    [ngModel]="formCriarAulas.titulo"
-    (ngModelChange)="atualizarCampoCriarAulas('titulo', $event)"
-  />
-
-  <div class="field">
-    <label>Descrição (opcional)</label>
-    <textarea
-      placeholder="Descrição das aulas"
-      [ngModel]="formCriarAulas.descricao"
-      (ngModelChange)="atualizarCampoCriarAulas('descricao', $event)"
-      rows="3"
-    ></textarea>
-  </div>
-
-  <div class="field">
-    <label>Conteúdo previsto (opcional)</label>
-    <textarea
-      placeholder="Conteúdo que será abordado"
-      [ngModel]="formCriarAulas.conteudoPrevisto"
-      (ngModelChange)="atualizarCampoCriarAulas('conteudoPrevisto', $event)"
-      rows="3"
-    ></textarea>
-  </div>
-
-  <div class="field">
-    <label>Objetivos (opcional)</label>
-    <textarea
-      placeholder="Objetivos das aulas"
-      [ngModel]="formCriarAulas.objetivos"
-      (ngModelChange)="atualizarCampoCriarAulas('objetivos', $event)"
-      rows="3"
-    ></textarea>
-  </div>
-
-  <div class="field">
-    <label>Recursos necessários (opcional)</label>
-    <textarea
-      placeholder="Materiais e recursos necessários"
-      [ngModel]="formCriarAulas.recursosNecessarios"
-      (ngModelChange)="atualizarCampoCriarAulas('recursosNecessarios', $event)"
-      rows="3"
-    ></textarea>
-  </div>
-
-  <div class="field">
-    <label>Observações (opcional)</label>
-    <textarea
-      placeholder="Observações adicionais"
-      [ngModel]="formCriarAulas.observacoes"
-      (ngModelChange)="atualizarCampoCriarAulas('observacoes', $event)"
-      rows="3"
-    ></textarea>
-  </div>
-
-  <ng-template #footer>
-    <app-button variant="secondary" (click)="fecharModalCriarAulas()">Cancelar</app-button>
-    <app-button [loading]="salvandoAulas()" (click)="salvarCriarAulas()">Criar aulas</app-button>
-  </ng-template>
-</app-modal>
-
-<!-- ============================================================
-     MODAL: NOVA AULA (AVULSA) - Coordenador
-     ============================================================ -->
-<app-modal
-  [(open)]="mostrarModalNovaAula"
-  [title]="'Nova aula — ' + (turmaNovaAula()?.nomeTurma ?? '')"
-  size="lg"
-  (closed)="fecharModalNovaAula()"
->
-  <div modal-icon class="mh-ico ico-green">
-    <app-icon name="calendar-plus" />
-  </div>
-
-  @if (erroSalvarNovaAula()) {
-    <div class="notice notice-error" role="alert">{{ erroSalvarNovaAula() }}</div>
-  }
-
-  <div class="form-row">
-    <app-input
-      label="Data da aula"
-      type="date"
-      [required]="true"
-      [(ngModel)]="formNovaAula.dataAula"
-    />
-
-    <div class="field">
-      <label>Status</label>
-      <app-select
-        [(ngModel)]="formNovaAula.statusAula"
-        [options]="statusAulaOptions"
-      />
-    </div>
-  </div>
-
-  <div class="form-row">
-    <div class="field">
-      <label>Horário de início</label>
-      <input
-        class="input"
-        type="time"
-        [(ngModel)]="formNovaAula.horarioInicio"
-      />
-    </div>
-
-    <div class="field">
-      <label>Horário de término</label>
-      <input
-        class="input"
-        type="time"
-        [(ngModel)]="formNovaAula.horarioFim"
-      />
-    </div>
-  </div>
-
-  <app-input
-    label="Título (opcional)"
-    [(ngModel)]="formNovaAula.titulo"
-    placeholder="Ex.: Aula Inaugural ou Reposição"
-  />
-
-  <div class="field">
-    <label>Descrição (opcional)</label>
-    <textarea
-      placeholder="Descrição da aula"
-      [(ngModel)]="formNovaAula.descricao"
-      rows="2"
-    ></textarea>
-  </div>
-
-  <div class="form-row">
-    <div class="field">
-      <label>Conteúdo previsto (opcional)</label>
-      <textarea
-        placeholder="Conteúdo planejado para a aula"
-        [(ngModel)]="formNovaAula.conteudoPrevisto"
-        rows="2"
-      ></textarea>
-    </div>
-
-    <div class="field">
-      <label>Conteúdo ministrado (opcional)</label>
-      <textarea
-        placeholder="Conteúdo que foi ministrado na aula"
-        [(ngModel)]="formNovaAula.conteudoMinistrado"
-        rows="2"
-      ></textarea>
-    </div>
-  </div>
-
-  <div class="form-row">
-    <div class="field">
-      <label>Objetivos (opcional)</label>
-      <textarea
-        placeholder="Objetivos pedagógicos"
-        [(ngModel)]="formNovaAula.objetivos"
-        rows="2"
-      ></textarea>
-    </div>
-
-    <div class="field">
-      <label>Recursos necessários (opcional)</label>
-      <textarea
-        placeholder="Materiais e recursos necessários"
-        [(ngModel)]="formNovaAula.recursosNecessarios"
-        rows="2"
-      ></textarea>
-    </div>
-  </div>
-
-  <div class="field">
-    <label>Observações (opcional)</label>
-    <textarea
-      placeholder="Observações adicionais"
-      [(ngModel)]="formNovaAula.observacoes"
-      rows="2"
-    ></textarea>
-  </div>
-
-  <ng-template #footer>
-    <app-button variant="secondary" [disabled]="salvandoNovaAula()" (click)="fecharModalNovaAula()">
-      Cancelar
-    </app-button>
-    <app-button
-      [loading]="salvandoNovaAula()"
-      [disabled]="!formNovaAula.dataAula"
-      (click)="salvarNovaAula()"
-    >
-      Salvar aula
-    </app-button>
   </ng-template>
 </app-modal>
 

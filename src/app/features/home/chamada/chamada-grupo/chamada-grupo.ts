@@ -38,6 +38,7 @@ import { Badge } from '../../../../shared/components/badge/badge';
 import { Button } from '../../../../shared/components/button/button';
 import { Icon } from '../../../../shared/components/icon/icon';
 import { Modal } from '../../../../shared/components/modal/modal';
+import { GradeMensal } from '../../../../shared/components/grade-mensal/grade-mensal';
 
 /**
  * FT-17 — chamada de um grupo num dia (`/chamada/grupo/:turmaId/:data`), no modelo
@@ -48,7 +49,7 @@ import { Modal } from '../../../../shared/components/modal/modal';
  */
 @Component({
   selector: 'app-chamada-grupo',
-  imports: [FormsModule, AniversarioCards, Avatar, Badge, Button, Icon, Modal],
+  imports: [FormsModule, AniversarioCards, Avatar, Badge, Button, Icon, Modal, GradeMensal],
   templateUrl: './chamada-grupo.html',
   styleUrl: './chamada-grupo.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -77,6 +78,9 @@ export class ChamadaGrupo {
   readonly sucesso = signal<string | null>(null);
   readonly salvando = signal(false);
   readonly busca = signal('');
+  readonly aba = signal<'atendidos' | 'grade'>('atendidos');
+  /** Mês mostrado na aba "Grade do mês" — começa no mês da chamada aberta. */
+  readonly mesGrade = signal('');
   /** "Atualizar chamada": reabre a edição de uma chamada já salva. */
   readonly atualizando = signal(false);
   private readonly sinalizacoes = signal<ReadonlyMap<number, SinalizacaoDisciplinarDTO>>(new Map());
@@ -121,6 +125,8 @@ export class ChamadaGrupo {
       const turmaId = Number(params.get('turmaId'));
       const data = params.get('data') ?? '';
       this.busca.set('');
+      this.aba.set('atendidos');
+      this.mesGrade.set(data.slice(0, 7));
       this.atualizando.set(false);
       this.sucesso.set(null);
       this.fichaId.set(null);
@@ -276,6 +282,12 @@ export class ChamadaGrupo {
     } finally {
       this.salvando.set(false);
     }
+  }
+
+  /** Tocar num dia da grade abre a chamada daquele dia, na mesma tela. */
+  abrirDia(data: string): void {
+    const chamada = this.chamada();
+    if (chamada) this.router.navigate(['/chamada/grupo', chamada.turmaId, data]);
   }
 
   voltar(): void {

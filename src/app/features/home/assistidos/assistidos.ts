@@ -23,7 +23,7 @@ import { formatarTelefone } from '../../../shared/utils/mascara.util';
 import { cliqueEmElementoInterativo } from '../../../shared/utils/clique.util';
 import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO';
 import { VinculoTurmaAssistidoResponseDTO } from '../../../shared/models/turma/VinculoTurmaAssistidoResponseDTO';
-import { FrequenciaAulaDTO } from '../../../shared/models/presenca/FrequenciaAulaDTO';
+import { FrequenciaDiaDTO } from '../../../shared/models/presenca/FrequenciaDiaDTO';
 import { PaginaResponse } from '../../../shared/models/PaginaResponse';
 import { ChamadaService } from '../../../core/chamada.service';
 
@@ -38,7 +38,6 @@ import { Button } from '../../../shared/components/button/button';
 import { cpfValido } from '../../../shared/validators/cpf.validator';
 import { Modal } from '../../../shared/components/modal/modal';
 import { Badge } from '../../../shared/components/badge/badge';
-import { AulasTurmaModal } from '../aulas-turma-modal/aulas-turma-modal';
 import { Icon } from '../../../shared/components/icon/icon';
 import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 import { ActionMenu, ActionMenuItem } from '../../../shared/components/action-menu/action-menu';
@@ -81,7 +80,7 @@ import {
 @Component({
   selector: 'app-assistidos',
   standalone: true,
-  imports: [ActionMenu, TooltipDirective, Icon, CommonModule, FormsModule, Select, Input, Button, Modal, Badge, AulasTurmaModal, FotoPerfil, Avatar, UploadDocumento, ListaDocumentos, DadosComplementaresAssistidoForm, DadosComplementaresResponsavelForm, SocioeconomicoAssistidoForm, TermosAssistidoForm, FichaDisciplinarAssistido],
+  imports: [ActionMenu, TooltipDirective, Icon, CommonModule, FormsModule, Select, Input, Button, Modal, Badge, FotoPerfil, Avatar, UploadDocumento, ListaDocumentos, DadosComplementaresAssistidoForm, DadosComplementaresResponsavelForm, SocioeconomicoAssistidoForm, TermosAssistidoForm, FichaDisciplinarAssistido],
   templateUrl: './assistidos.html',
   styleUrl: './assistidos.css',
 })
@@ -925,7 +924,7 @@ export class Assistidos implements OnInit {
 
   readonly StatusPresenca = StatusPresenca;
 
-  frequenciaAssistido = signal<FrequenciaAulaDTO[]>([]);
+  frequenciaAssistido = signal<FrequenciaDiaDTO[]>([]);
 
   carregandoFrequencia = signal(false);
 
@@ -934,7 +933,7 @@ export class Assistidos implements OnInit {
   /** Evita recarregar toda vez que a pessoa clica de novo na aba. */
   private frequenciaCarregada = false;
 
-  /** Resumo no topo da aba: total de aulas no histórico, % de presença e faltas seguidas mais recentes (sem contar justificadas). */
+  /** Resumo no topo da aba: total de chamadas no histórico, % de presença e faltas seguidas mais recentes (sem contar justificadas). */
   readonly resumoFrequencia = computed(() => {
     const lista = this.frequenciaAssistido();
     const total = lista.length;
@@ -943,7 +942,7 @@ export class Assistidos implements OnInit {
 
     let faltasConsecutivas = 0;
     for (const item of lista) {
-      // já vem ordenado da aula mais recente pra mais antiga
+      // já vem ordenado da chamada mais recente pra mais antiga
       if (item.statusPresenca !== StatusPresenca.FALTA) break;
       faltasConsecutivas++;
     }
@@ -953,9 +952,9 @@ export class Assistidos implements OnInit {
 
   /** Lista agrupada por mês (mais recente primeiro), pra não virar uma lista infinita de datas soltas. */
   readonly frequenciaAgrupada = computed(() => {
-    const grupos = new Map<string, FrequenciaAulaDTO[]>();
+    const grupos = new Map<string, FrequenciaDiaDTO[]>();
     for (const item of this.frequenciaAssistido()) {
-      const chave = item.dataAula.slice(0, 7); // YYYY-MM
+      const chave = item.data.slice(0, 7); // YYYY-MM
       const grupo = grupos.get(chave);
       if (grupo) {
         grupo.push(item);
@@ -1009,15 +1008,9 @@ export class Assistidos implements OnInit {
     this.onFiltroTurmaChange(vinculo.turmaId);
   }
 
-  /** "Ver aulas" de uma turma do histórico — reaproveita <app-aulas-turma-modal>, com abertura de aula liberada (só coordenador chega aqui). */
-  turmaHistoricoAulasSelecionada = signal<VinculoTurmaAssistidoResponseDTO | null>(null);
-
-  abrirAulasHistoricoTurma(vinculo: VinculoTurmaAssistidoResponseDTO): void {
-    this.turmaHistoricoAulasSelecionada.set(vinculo);
-  }
-
-  fecharAulasHistoricoTurma(): void {
-    this.turmaHistoricoAulasSelecionada.set(null);
+  verFrequenciaHistoricoTurma(vinculo: VinculoTurmaAssistidoResponseDTO): void {
+    this.fecharModalVisualizarAssistido();
+    this.router.navigate(['/chamada/turma', vinculo.turmaId, 'grade']);
   }
 
   carregarResponsaveis(assistidoId: number): void {
@@ -1087,8 +1080,8 @@ export class Assistidos implements OnInit {
     }
   }
 
-  editarChamada(item: FrequenciaAulaDTO): void {
-    this.router.navigate(['/chamada/aula', item.aulaId]);
+  editarChamada(item: FrequenciaDiaDTO): void {
+    this.router.navigate(['/chamada/grupo', item.turmaId, item.data]);
   }
 
   abrirEdicaoResponsavel(vinculo: VinculoFamiliarResponseDTO): void {

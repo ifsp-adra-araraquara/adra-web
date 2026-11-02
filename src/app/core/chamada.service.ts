@@ -2,87 +2,22 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { AulaService } from './aula.service';
-import { StatusAula } from '../shared/enum/StatusAula';
 import { StatusPresenca } from '../shared/enum/StatusPresenca';
-import { PresencaRequestDTO } from '../shared/models/presenca/PresencaRequestDTO';
-import { PresencaResponseDTO } from '../shared/models/presenca/PresencaResponseDTO';
-import { FrequenciaAulaDTO } from '../shared/models/presenca/FrequenciaAulaDTO';
+import { FrequenciaDiaDTO } from '../shared/models/presenca/FrequenciaDiaDTO';
 import { GradeMensalTurmaDTO } from '../shared/models/presenca/GradeMensalTurmaDTO';
-import { ChamadaGrupoDTO, ChamadasDoDiaDTO, PresencaChamadaRequestDTO } from '../shared/models/chamada/ChamadaGrupo';
-import { LinhaChamada, linhaChamadaDePresenca, ordenarPorNome } from '../shared/utils/chamada.util';
+import {
+  ChamadaGrupoDTO,
+  ChamadasDoDiaDTO,
+  PresencaChamadaRequestDTO,
+  StatusChamadaDiaDTO,
+} from '../shared/models/chamada/ChamadaGrupo';
+import { LinhaChamada } from '../shared/utils/chamada.util';
 
-/**
- * Única fonte de dado/escrita de chamada, usada tanto por `AulaModal`
- * quanto por `AulaCompleta` — ver `shared/utils/chamada.util.ts` pro porquê
- * disso existir.
- */
+/** Única fonte de dado/escrita de chamada (por grupo e dia). */
 @Injectable({ providedIn: 'root' })
 export class ChamadaService {
   private readonly http = inject(HttpClient);
-  private readonly aulaService = inject(AulaService);
   private readonly api = environment.apiUrl;
-
-  /**
-   * Fonte única do roster: GET /api/chamadas/aula/{id} já devolve, por
-   * assistido elegível na data da aula (CA-70.1/70.2 — filtro de desligados
-   * feito no back), o status de presença inferido/lançado. Não busca em
-   * /api/assistidos (isso duplicaria a fonte de roster com um filtro por
-   * status ATUAL do assistido, que quebra a chamada de aulas passadas assim
-   * que alguém é desligado — ver CA-70.2).
-   */
-  async carregarRoster(aulaId: number): Promise<LinhaChamada[]> {
-    const presencas = await firstValueFrom(
-      this.http.get<PresencaResponseDTO[]>(`${this.api}/api/chamadas/aula/${aulaId}`),
-    );
-    return ordenarPorNome(presencas.map(linhaChamadaDePresenca));
-  }
-
-  /**
-   * Marca a aula como REALIZADA (se ainda não estiver) e grava as
-   * presenças. Retorna o `statusAula` resultante pro chamador atualizar seu
-   * próprio modelo local (campo simples no modal, signal na página).
-   *
-   * CA-65.3: o back só aceita lançar chamada em aula REALIZADA — e é a
-   * própria chamada que marca a aula como realizada, então isso precisa
-   * rodar ANTES do POST de presenças (senão o back rejeita).
-   *
-   * Marca via PATCH /api/aulas/{id} (AulaService.atualizarStatus) em vez do
-   * PUT de /api/aulas/{id}: esse PUT é @PreAuthorize hasRole('COORDENADOR')
-   * e o sociopedagógico (quem também faz chamada) tomava 403 nele. O PATCH
-   * já é liberado pros dois perfis (ver AulaController).
-   */
-  async salvar(
-    aulaId: number,
-    statusAulaAtual: StatusAula,
-    alunos: LinhaChamada[],
-  ): Promise<StatusAula> {
-    let statusAula = statusAulaAtual;
-
-    if (statusAula !== StatusAula.REALIZADA) {
-      const atualizada = await firstValueFrom(
-        this.aulaService.atualizarStatus(aulaId, StatusAula.REALIZADA),
-      );
-      statusAula = atualizada.statusAula;
-    }
-
-    const presencas: PresencaRequestDTO[] = alunos.map((a) => ({
-      aulaId,
-      assistidoId: a.assistidoId,
-      statusPresenca: a.statusPresenca!,
-      motivoFalta: a.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA ? a.motivoFalta : null,
-      observacao:
-        a.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA && a.observacao?.trim()
-          ? a.observacao.trim()
-          : null,
-    }));
-
-    await firstValueFrom(
-      this.http.post<PresencaResponseDTO[]>(`${this.api}/api/chamadas/aula/${aulaId}`, presencas),
-    );
-
-    return statusAula;
-  }
 
   /** FT-12: grupos com chamada no dia (`data` em yyyy-MM-dd). */
   async carregarDia(data: string): Promise<ChamadasDoDiaDTO> {
@@ -91,6 +26,13 @@ export class ChamadaService {
 
   async carregarGrupo(turmaId: number, data: string): Promise<ChamadaGrupoDTO> {
     return firstValueFrom(this.http.get<ChamadaGrupoDTO>(this.urlGrupo(turmaId, data)));
+  }
+
+  /** Lançadas e pendentes do período (yyyy-MM-dd, inclusive), da mais recente para a mais antiga. */
+  async carregarStatus(inicio: string, fim: string): Promise<StatusChamadaDiaDTO[]> {
+    return firstValueFrom(
+      this.http.get<StatusChamadaDiaDTO[]>(`${this.api}/api/chamadas/status`, { params: { inicio, fim } }),
+    );
   }
 
   /** Grava a chamada inteira do grupo no dia; regravar atualiza a mesma chamada. */
@@ -112,9 +54,9 @@ export class ChamadaService {
   }
 
   /** Histórico de frequência completo de um assistido — aba "Chamadas" do cadastro. */
-  async carregarFrequencia(assistidoId: number): Promise<FrequenciaAulaDTO[]> {
+  async carregarFrequencia(assistidoId: number): Promise<FrequenciaDiaDTO[]> {
     return firstValueFrom(
-      this.http.get<FrequenciaAulaDTO[]>(`${this.api}/api/chamadas/assistido/${assistidoId}/frequencia`),
+      this.http.get<FrequenciaDiaDTO[]>(`${this.api}/api/chamadas/assistido/${assistidoId}/frequencia`),
     );
   }
 

@@ -2,13 +2,12 @@
   <header class="page-header">
     <p class="eyebrow">Área do oficineiro</p>
     <h1 id="oficineiro-titulo">Minhas atividades</h1>
-    <p class="page-intro">Consulte suas turmas, registre aulas e acompanhe materiais e comunicados vinculados a elas.</p>
+    <p class="page-intro">Consulte suas turmas e acompanhe materiais e comunicados vinculados a elas.</p>
   </header>
 
   <nav class="tabs" role="tablist" aria-label="Módulos do oficineiro">
     @for (item of [
     { id: 'turmas', label: 'Turmas' },
-    { id: 'aulas', label: 'Aulas' },
     { id: 'calendario', label: 'Calendário' },
     { id: 'materiais', label: 'Materiais' },
     { id: 'comunicados', label: 'Comunicados' }
@@ -54,9 +53,6 @@
               <button type="button" aria-label="Ver alunos da turma" appTooltip="Ver alunos" (click)="abrirTurma(turma)">
                 <app-icon name="eye" />
               </button>
-              <button type="button" aria-label="Ver aulas da turma" appTooltip="Ver aulas" (click)="abrirAulasDaTurma(turma)">
-                <app-icon name="list" />
-              </button>
             </div>
           </td>
         </tr>
@@ -64,107 +60,6 @@
         </tbody>
       </table>
     </div>
-  </section>
-  }
-  @case ('aulas') {
-  <section class="panel" aria-labelledby="aulas-titulo">
-    <div class="panel-header">
-      <div><h2 id="aulas-titulo">Aulas</h2><span class="subtle">Planos de aula das suas turmas</span><p class="hint">Só é possível abrir aulas de hoje ou já passadas.</p></div>
-      <div style="display: flex; gap: 8px; align-items: center;">
-        <label for="filtro-turma-aulas" class="sr-only">Filtrar por turma</label>
-        <app-select
-          id="filtro-turma-aulas"
-          [ngModel]="filtroTurmaId()"
-          (ngModelChange)="onFiltroTurmaChange($event)"
-          [options]="turmasFiltroOptions()"
-        />
-      </div>
-    </div>
-    <!-- Atalho: aula de hoje (ou a próxima, se hoje não tiver) -->
-    <div class="hoje-bloco">
-      @if (aulasDeHoje().length) {
-        <p class="hoje-titulo"><span class="tag-hoje">Hoje</span> {{ aulasDeHoje().length === 1 ? 'Sua aula de hoje' : 'Suas aulas de hoje' }}</p>
-        <div class="hoje-cards">
-          @for (aula of aulasDeHoje(); track aula.aulaId) {
-          <article class="hoje-card">
-            <div class="hoje-card__info">
-              <strong>{{ aula.titulo || 'Aula sem título' }}</strong>
-              <span class="subtle">{{ horario(aula) }} · {{ aula.nomeTurma || '-' }} · {{ aula.quantidadeAlunos ?? 0 }} alunos</span>
-            </div>
-            <app-badge [status]="situacaoAula(aula)" />
-            <app-button size="sm" [disabled]="!podeAbrir(aula)" (click)="abrirAula(aula)">Ir para a aula</app-button>
-          </article>
-          }
-        </div>
-      } @else if (proximaAula(); as prox) {
-        <p class="hoje-vazio">Você não tem aula hoje. Próxima: <strong>{{ dataCurta(prox.dataAula) }}</strong>, {{ horario(prox) }} · {{ prox.nomeTurma || '-' }}{{ prox.titulo ? ' · ' + prox.titulo : '' }}</p>
-      } @else {
-        <p class="hoje-vazio">Você não tem aula hoje.</p>
-      }
-    </div>
-
-    <!-- Filtro por situação -->
-    <div class="filtro-situacao" role="group" aria-label="Filtrar aulas por status">
-      @for (op of opcoesSituacao(); track op.rotulo) {
-      <button
-        type="button"
-        class="chip-situacao"
-        [class.ativo]="filtroSituacao() === op.valor"
-        [attr.aria-pressed]="filtroSituacao() === op.valor"
-        (click)="selecionarSituacao(op.valor)"
-      >{{ op.rotulo }} <span class="chip-total">{{ op.total }}</span></button>
-      }
-    </div>
-
-    <div class="table-wrap" role="region" tabindex="0" aria-label="Aulas">
-      <table class="aulas-table-principal">
-        <thead>
-        <tr>
-          <th>Data</th>
-          <th>Horário</th>
-          <th>Turma</th>
-          <th>Alunos</th>
-          <th>Título</th>
-          <th>Conteúdo previsto</th>
-          <th>Status</th>
-        </tr>
-        </thead>
-        <tbody>
-        @for (aula of aulasVisiveis(); track aula.aulaId) {
-        <tr
-          [class.linha-hoje]="ehHoje(aula)"
-          [class.linha-bloqueada]="!podeAbrir(aula)"
-          [attr.title]="podeAbrir(aula) ? 'Abrir aula' : 'Só é possível abrir aulas de hoje ou já passadas'"
-          (click)="abrirAula(aula)"
-          [attr.tabindex]="podeAbrir(aula) ? 0 : null"
-          (keydown.enter)="abrirAula(aula)"
-        >
-          <td>{{ dataCurta(aula.dataAula) }} @if (ehHoje(aula)) { <span class="tag-hoje">Hoje</span> }</td>
-          <td>{{ horario(aula) }}</td>
-          <td>{{ aula.nomeTurma || '-' }}</td>
-          <td>{{ aula.quantidadeAlunos ?? '-' }}</td>
-          <td class="celula-texto" [attr.title]="aula.titulo || null">{{ aula.titulo || '-' }}</td>
-          <td class="celula-texto" [attr.title]="aula.conteudoPrevisto || null">{{ aula.conteudoPrevisto || '-' }}</td>
-          <td><app-badge [status]="situacaoAula(aula)" /></td>
-        </tr>
-        } @empty {
-        <tr><td colspan="7" class="empty">
-          @if (filtroSituacao()) { Nenhuma aula com este status. }
-          @else if (filtroTurmaId()) { Nenhuma aula cadastrada para esta turma. }
-          @else { Nenhuma aula cadastrada para suas turmas. }
-        </td></tr>
-        }
-        </tbody>
-      </table>
-    </div>
-    @if (aulasFiltradas().length) {
-    <div class="rodape-aulas">
-      <span class="subtle">Mostrando {{ aulasVisiveis().length }} de {{ aulasFiltradas().length }} aulas</span>
-      @if (aulasVisiveis().length < aulasFiltradas().length) {
-      <app-button variant="secondary" size="sm" (click)="mostrarMaisAulas()">Mostrar mais</app-button>
-      }
-    </div>
-    }
   </section>
   }
   @case ('calendario') {
@@ -262,36 +157,6 @@
     }
   </app-modal>
 
-  @if (mostrarFormularioAula()) {
-  <app-modal [open]="true" title="Nova aula" size="lg" (closed)="fecharFormularioAula()">
-      <div class="dialog-body">
-        <div class="form-row">
-        <label>Turma<app-select [(ngModel)]="aulaForm.turmaId" [options]="turmasFormOptions()" /></label>
-        <app-input label="Data" type="date" [(ngModel)]="aulaForm.dataAula" />
-        </div>
-        <div class="form-row">
-          <label>Horário de início<input type="time" class="input" [(ngModel)]="aulaForm.horarioInicio"></label>
-          <label>Horário de fim<input type="time" class="input" [(ngModel)]="aulaForm.horarioFim"></label>
-        </div>
-        <div class="form-row">
-          <app-input label="Título (opcional)" [(ngModel)]="aulaForm.titulo" placeholder="Ex.: Aula de introdução" />
-          <label>Status<app-select [(ngModel)]="aulaForm.statusAula" [options]="statusAulaOptions" /></label>
-        </div>
-        <label>Descrição (opcional)<textarea [(ngModel)]="aulaForm.descricao" rows="3"></textarea></label>
-        <div class="form-row">
-          <label>Conteúdo previsto (opcional)<textarea [(ngModel)]="aulaForm.conteudoPrevisto" rows="3"></textarea></label>
-          <label>Conteúdo ministrado (opcional)<textarea [(ngModel)]="aulaForm.conteudoMinistrado" rows="3"></textarea></label>
-        </div>
-        <div class="form-row">
-          <label>Objetivos (opcional)<textarea [(ngModel)]="aulaForm.objetivos" rows="3"></textarea></label>
-          <label>Recursos necessários (opcional)<textarea [(ngModel)]="aulaForm.recursosNecessarios" rows="3"></textarea></label>
-        </div>
-        <label>Observações (opcional)<textarea [(ngModel)]="aulaForm.observacoes" rows="3"></textarea></label>
-      </div>
-      <ng-template #footer><app-button variant="secondary" (click)="fecharFormularioAula()">Cancelar</app-button><app-button [loading]="salvandoAula()" (click)="salvarAula()">Salvar aula</app-button></ng-template>
-  </app-modal>
-  }
-
   @if (mostrarUploadMaterial()) {
   <app-modal [open]="true" title="Novo material" (closed)="fecharUploadMaterial()">
       <div class="dialog-body">
@@ -324,51 +189,4 @@
   </app-modal>
   }
 
-  @if (mostrarModalCriarAulas()) {
-  <app-modal [open]="true" title="Criar várias aulas" size="lg" (closed)="fecharModalCriarAulas()">
-      <div class="dialog-body">
-        @if (erroCriarAulas()) {
-        <p class="feedback error" role="alert">{{ erroCriarAulas() }}</p>
-        }
-        <div class="form-row">
-          <label>Turma<app-select [(ngModel)]="formCriarAulas.turmaId" [options]="turmasFormOptions()" /></label>
-          <app-input label="Título (opcional)" [(ngModel)]="formCriarAulas.titulo" placeholder="Ex.: Aula de introdução" />
-        </div>
-        <div class="form-row">
-          <app-input label="Data de início" type="date" [(ngModel)]="formCriarAulas.dataInicio" />
-          <app-input label="Data de fim" type="date" [(ngModel)]="formCriarAulas.dataFim" />
-        </div>
-        <div class="form-row">
-          <label>Horário de início<input type="time" class="input" [(ngModel)]="formCriarAulas.horarioInicio"></label>
-          <label>Horário de fim<input type="time" class="input" [(ngModel)]="formCriarAulas.horarioFim"></label>
-        </div>
-        <label>Dias da semana
-          <div class="dias-semana-grid">
-            <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes('MONDAY')" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('MONDAY')" (click)="toggleDiaSemana('MONDAY')">Segunda</button>
-            <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes('TUESDAY')" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('TUESDAY')" (click)="toggleDiaSemana('TUESDAY')">Terça</button>
-            <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes('WEDNESDAY')" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('WEDNESDAY')" (click)="toggleDiaSemana('WEDNESDAY')">Quarta</button>
-            <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes('THURSDAY')" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('THURSDAY')" (click)="toggleDiaSemana('THURSDAY')">Quinta</button>
-            <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes('FRIDAY')" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('FRIDAY')" (click)="toggleDiaSemana('FRIDAY')">Sexta</button>
-            <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes('SATURDAY')" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('SATURDAY')" (click)="toggleDiaSemana('SATURDAY')">Sábado</button>
-            <button type="button" class="btn btn-sm" [class.btn-primary]="formCriarAulas.diasDaSemana.includes('SUNDAY')" [class.btn-ghost]="!formCriarAulas.diasDaSemana.includes('SUNDAY')" (click)="toggleDiaSemana('SUNDAY')">Domingo</button>
-          </div>
-        </label>
-        <label>Descrição (opcional)<textarea [(ngModel)]="formCriarAulas.descricao" placeholder="Descrição das aulas" rows="3"></textarea></label>
-        <div class="form-row">
-          <label>Conteúdo previsto (opcional)<textarea [(ngModel)]="formCriarAulas.conteudoPrevisto" placeholder="Conteúdo que será abordado" rows="3"></textarea></label>
-          <label>Objetivos (opcional)<textarea [(ngModel)]="formCriarAulas.objetivos" placeholder="Objetivos das aulas" rows="3"></textarea></label>
-        </div>
-        <label>Recursos necessários (opcional)<textarea [(ngModel)]="formCriarAulas.recursosNecessarios" placeholder="Materiais e recursos necessários" rows="3"></textarea></label>
-        <label>Observações (opcional)<textarea [(ngModel)]="formCriarAulas.observacoes" placeholder="Observações adicionais" rows="3"></textarea></label>
-      </div>
-      <ng-template #footer><app-button variant="secondary" (click)="fecharModalCriarAulas()">Cancelar</app-button><app-button [loading]="salvandoCriarAulas()" (click)="salvarCriarAulas()">Criar aulas</app-button></ng-template>
-  </app-modal>
-  }
-
-  <app-aulas-turma-modal
-    [turmaId]="turmaAulasSelecionada()?.turmaId ?? 0"
-    [nomeTurma]="turmaAulasSelecionada()?.nomeTurma ?? ''"
-    [aberto]="turmaAulasSelecionada() !== null"
-    (fechar)="fecharAulasDaTurma()">
-  </app-aulas-turma-modal>
 </section>

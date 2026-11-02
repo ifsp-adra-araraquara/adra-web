@@ -7,7 +7,7 @@
   <header class="page-header">
     <div class="page-header-texto">
       <h1 id="grade-titulo">{{ nomeTurma() || 'Grade do mês' }}</h1>
-      <p class="page-intro">Frequência do mês, como na planilha. Toque no dia para abrir a chamada daquela aula.</p>
+      <p class="page-intro">Frequência do mês, como na planilha. Toque no dia para abrir a chamada dele.</p>
     </div>
   </header>
 
@@ -16,10 +16,10 @@
       [turmaId]="id"
       [mes]="mes()"
       (mesChange)="mudarMes($event)"
-      (abrirAula)="abrirAula($event)"
+      (abrirDia)="abrirDia($event)"
       (carregada)="nomeTurma.set($event.nomeTurma)"
     />
   } @else {
-    <div class="notice notice-error" role="alert"><app-icon name="alert-circle" /><span>Turma não encontrada.</span></div>
+    <div class="notice notice-error" role="alert"><app-icon name="alert-circle" /><span>Grupo não encontrado.</span></div>
   }
 </section>

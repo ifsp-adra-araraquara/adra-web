@@ -196,13 +196,6 @@ export const routes: Routes = [
         canActivate: [roleGuard],
       },
       {
-        path: 'aulas/:aulaId/completa',
-        loadComponent: () =>
-          import('./features/home/aula-completa/aula-completa').then((m) => m.AulaCompleta),
-        data: { roles: [Role.COORD, Role.ASSISTENTE, Role.EDUCADOR, Role.OFICINEIRO] },
-        canActivate: [roleGuard],
-      },
-      {
         path: 'materiais',
         loadComponent: () => import('./features/home/materiais/materiais').then((m) => m.Materiais),
         data: { roles: [Role.COORD, Role.OFICINEIRO] },
