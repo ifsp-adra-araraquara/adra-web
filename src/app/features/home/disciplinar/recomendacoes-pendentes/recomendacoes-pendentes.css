@@ -1,0 +1,52 @@
+:host { display: block; }
+
+.recomendacoes { display: grid; gap: 16px; }
+
+.rec-lista { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.rec-item {
+  padding: 14px;
+  border: 1px solid var(--gray-100);
+  border-left: 4px solid var(--amber-400);
+  border-radius: var(--radius-sm);
+  background: var(--campo-bg);
+}
+.rec-escolher {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  pointer-events: none; /* no celular o cartão já mostra tudo */
+}
+.rec-escolher app-avatar { flex: none; }
+.rec-identidade { display: flex; flex-direction: column; min-width: 0; }
+.rec-identidade .cell-sub { color: var(--amber-600); font-weight: 600; }
+
+.rec-detalhe-cartao { margin-top: 10px; }
+.rec-texto { margin: 0 0 10px; font-size: 15px; line-height: 1.5; color: var(--gray-800); }
+.rec-origem { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 14px; font-size: 13px; color: var(--gray-600); }
+.rec-acoes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+
+.rec-detalhe { display: none; }
+
+/* iPad e desktop: lista + detalhe */
+@media (min-width: 720px) {
+  .recomendacoes { grid-template-columns: minmax(240px, 1fr) 2fr; align-items: start; }
+  .rec-lista { gap: 6px; }
+  .rec-item { padding: 0; border-left-width: 4px; }
+  .rec-escolher { padding: 10px 12px; min-height: 56px; border-radius: var(--radius-sm); cursor: pointer; pointer-events: auto; }
+  .rec-escolher:hover { background: var(--color-brand-soft); }
+  .rec-escolher:focus-visible { outline: 3px solid var(--color-brand); outline-offset: -3px; }
+  .rec-item.ativo { border-color: var(--color-brand); background: var(--color-brand-soft); }
+  .rec-detalhe-cartao { display: none; }
+
+  .rec-detalhe { display: block; position: sticky; top: 16px; padding: 20px; }
+  .rec-detalhe-topo { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .rec-detalhe-nome { margin: 0; font-size: 18px; color: var(--gray-800); }
+}

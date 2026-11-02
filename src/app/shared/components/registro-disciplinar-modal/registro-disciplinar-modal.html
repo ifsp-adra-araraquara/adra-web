@@ -1,7 +1,7 @@
 <app-modal
   [(open)]="open"
   [title]="resultado() ? 'Registro salvo' : 'Registrar ocorrência'"
-  [subtitle]="assistidoAtual()?.nomeCompleto ?? ''"
+  [subtitle]="subtitulo()"
   (closed)="fechar()"
 >
   <div modal-icon class="mh-ico" [class.ico-amber]="!resultado()" [class.ico-green]="resultado()">
@@ -12,20 +12,15 @@
     <div class="notice notice-error" role="alert">{{ erro() }}</div>
   }
 
-  @if (resultado(); as criados) {
-    <!-- ================= RESULTADO: o que foi registrado e o que a progressão gerou ================= -->
+  @if (resultado()) {
+    <!-- ================= RESULTADO: um registro por atendido ================= -->
     <ul class="resultado" role="list">
-      @for (r of criados; track r.registroId; let primeiro = $first) {
-        <li class="resultado-item" [class.gerado]="!primeiro">
+      @for (r of registrados(); track r.registroId) {
+        <li class="resultado-item">
           <app-badge [variant]="NIVEIS[r.nivel].variant" [label]="NIVEIS[r.nivel].rotulo" />
           <div class="resultado-texto">
-            @if (primeiro) {
-              <b>{{ rotuloSequencia(r) }} registrada</b>
-              <span>{{ r.motivo }}</span>
-            } @else {
-              <b>{{ rotuloSequencia(r) }} gerada automaticamente</b>
-              <span>{{ r.motivo }}</span>
-            }
+            <b>{{ rotuloSequencia(r) }} registrada</b>
+            <span>{{ varios() ? r.nomeAssistido + ' · ' : '' }}{{ r.motivo }}</span>
             @if (r.suspensaoInicio && r.suspensaoFim) {
               <span class="resultado-periodo">
                 Suspenso de {{ dataBr(r.suspensaoInicio) }} a {{ dataBr(r.suspensaoFim) }}
@@ -35,21 +30,6 @@
         </li>
       }
     </ul>
-
-    @for (r of criados; track r.registroId) {
-      @if (r.consequencia === 'PERDE_PROXIMO_PASSEIO') {
-        <div class="notice notice-amber" role="status">
-          <app-icon name="alert-triangle" />
-          <span>3ª suspensão: o assistido <b>perde o próximo passeio</b>. Fica pendente até a coordenação registrar.</span>
-        </div>
-      }
-      @if (r.consequencia === 'RETORNO_COM_RESPONSAVEL') {
-        <div class="notice notice-amber" role="status">
-          <app-icon name="alert-triangle" />
-          <span>3ª ocorrência de uniforme: o assistido <b>só retorna acompanhado do responsável</b>.</span>
-        </div>
-      }
-    }
 
     @if (comDocumento().length > 0) {
       <p class="form-sec-title">Documento para os pais assinarem</p>
@@ -70,35 +50,33 @@
     <!-- ================= FORMULÁRIO ================= -->
     @if (!assistido()) {
       <div class="field">
-        @if (assistidoEscolhido(); as escolhido) {
-          <label>Assistido</label>
-          <div class="assistido-escolhido">
-            <app-avatar [entidadeId]="escolhido.assistidoId" [nome]="escolhido.nomeCompleto" [size]="40" />
-            <span class="assistido-texto">
-              <span class="assistido-nome">{{ escolhido.nomeCompleto }}</span>
-              <span class="assistido-sub">{{ descricaoAssistido(escolhido) }}</span>
-            </span>
-            <button type="button" class="link" (click)="trocarAssistido()">Trocar</button>
-          </div>
-        } @else {
-          <app-input
-            label="Assistido"
-            placeholder="Buscar pelo nome…"
-            [ngModel]="termoBusca()"
-            (ngModelChange)="onBusca($event)"
-          />
-          @if (termoBusca().trim()) {
+        <app-input
+          label="Quem está envolvido?"
+          placeholder="Buscar atendido pelo nome…"
+          [ngModel]="termoBusca()"
+          (ngModelChange)="onBusca($event)"
+        />
+        @if (termoBusca().trim()) {
           <div class="busca-area" [class.buscando]="buscando()" aria-live="polite">
             @if (resultadosBusca().length > 0) {
-              <ul class="busca-resultados" role="listbox" aria-label="Assistidos">
+              <ul class="busca-resultados" role="listbox" aria-label="Atendidos" aria-multiselectable="true">
                 @for (a of resultadosBusca(); track a.assistidoId) {
                   <li>
-                    <button type="button" role="option" [attr.aria-selected]="false" (click)="escolherAssistido(a)">
+                    <button
+                      type="button"
+                      role="option"
+                      [attr.aria-selected]="estaEscolhido(a)"
+                      [disabled]="estaEscolhido(a)"
+                      (click)="escolherAssistido(a)"
+                    >
                       <app-avatar [entidadeId]="a.assistidoId" [nome]="a.nomeCompleto" [size]="36" />
                       <span class="assistido-texto">
                         <span class="assistido-nome">{{ a.nomeCompleto }}</span>
                         <span class="assistido-sub">{{ descricaoAssistido(a) }}</span>
                       </span>
+                      @if (estaEscolhido(a)) {
+                        <app-icon name="check" [size]="18" />
+                      }
                     </button>
                   </li>
                 }
@@ -106,9 +84,29 @@
             } @else if (buscando()) {
               <p class="hint">Buscando…</p>
             } @else {
-              <p class="hint">Nenhum assistido ativo encontrado.</p>
+              <p class="hint">Nenhum atendido ativo encontrado.</p>
             }
           </div>
+        }
+        @if (escolhidos().length > 0) {
+          <ul class="escolhidos" role="list" aria-label="Atendidos escolhidos">
+            @for (e of escolhidos(); track e.assistidoId) {
+              <li class="escolhido-chip">
+                <app-avatar [entidadeId]="e.assistidoId" [nome]="e.nomeCompleto" [size]="32" />
+                <span class="escolhido-nome">{{ e.nomeCompleto }}</span>
+                <button
+                  type="button"
+                  class="escolhido-remover"
+                  [attr.aria-label]="'Remover ' + e.nomeCompleto"
+                  (click)="removerAssistido(e)"
+                >
+                  <app-icon name="x" [size]="16" />
+                </button>
+              </li>
+            }
+          </ul>
+          @if (varios()) {
+            <p class="hint">Cada atendido recebe o seu próprio registro e o seu próprio documento.</p>
           }
         }
       </div>
@@ -155,7 +153,9 @@
       (ngModelChange)="onData($event)"
     />
 
-    @if (ehSuspensao()) {
+    @if (ehSuspensao() && varios()) {
+      <p class="hint">Com mais de um atendido, a suspensão vale por 3 dias a partir da data. Ajuste o período de cada um depois, se precisar.</p>
+    } @else if (ehSuspensao()) {
       <div class="form-row">
         <app-input
           label="Suspenso de"
@@ -196,3 +196,5 @@
     </ng-template>
   }
 </app-modal>
+
+<app-recomendacao-disciplinar-modal [recomendacoes]="recomendacoes()" (gerado)="aoGerarPelaRecomendacao($event)" />
