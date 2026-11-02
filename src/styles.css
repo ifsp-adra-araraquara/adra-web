@@ -65,7 +65,9 @@
   --gray-50:  #F6F7F8;
   --gray-100: #ECEEF0;
   --gray-200: #D5D9DD;
-  --gray-400: #7D848A;
+  --gray-400: #7D848A; /* só borda e ícone: 3,8:1 não basta para texto */
+  /* Texto de apoio (dicas, legendas, datas): 5,5:1 sobre branco, mínimo AA (WCAG 1.4.3). */
+  --texto-suave: #646A70;
   --gray-600: #4D5459;
   --gray-800: #1F2427;
 
@@ -127,7 +129,7 @@ button { font-family: inherit; cursor: pointer; }
 
 .serif { font-family: 'Roboto', system-ui, sans-serif; font-weight: 500; }
 .hidden { display: none !important; }
-.muted { color: var(--gray-400); }
+.muted { color: var(--texto-suave); }
 .tabular { font-variant-numeric: tabular-nums; }
 
 @keyframes rise  { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: none; } }
@@ -160,7 +162,7 @@ button { font-family: inherit; cursor: pointer; }
 textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
 .check { display: flex; align-items: flex-start; gap: 9px; font-size: 13px; color: var(--gray-600); padding: 8px 0; cursor: pointer; }
 .check input { width: 17px; height: 17px; accent-color: var(--color-adra-green-400); margin-top: 1px; flex: none; }
-.hint { font-size: 12px; color: var(--gray-400); margin-top: 5px; }
+.hint { font-size: 12px; color: var(--texto-suave); margin-top: 5px; }
 
 /* Erro por campo em .select/textarea nativos fora do app-input (mesma linguagem visual dele). */
 .select[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--red-400); background: var(--red-50); }
@@ -300,7 +302,7 @@ tbody tr:last-child td { border-bottom: none; }
 tbody tr { transition: background .12s; }
 .linha-clicavel { cursor: pointer; }
 .cell-name { font-weight: 600; color: var(--gray-800); }
-.cell-sub { font-size: 12px; color: var(--gray-400); }
+.cell-sub { font-size: 12px; color: var(--texto-suave); }
 .t-actions { display: flex; gap: 6px; }
 /* ===== BOTÕES DE ÍCONE — padrão único (ações de tabela, paginação, fechar) =====
    Sempre com <app-icon> + aria-label (+ appTooltip quando não houver texto visível).
@@ -388,7 +390,7 @@ tbody tr { transition: background .12s; }
 .barchart .col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; justify-content: flex-end; }
 .barchart .bar { width: 100%; max-width: 42px; border-radius: 7px 7px 0 0; background: linear-gradient(var(--color-adra-green-200), var(--color-adra-green-400)); position: relative; transition: height .6s var(--ease); min-height: 4px; }
 .barchart .bar::after { content: attr(data-v); position: absolute; top: -19px; left: 50%; transform: translateX(-50%); font-size: 11.5px; font-weight: 600; color: var(--gray-600); }
-.barchart .lbl { font-size: 11.5px; color: var(--gray-400); text-align: center; }
+.barchart .lbl { font-size: 11.5px; color: var(--texto-suave); text-align: center; }
 .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; }
 .legend .item { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--gray-600); }
 .legend .dot { width: 11px; height: 11px; border-radius: 3px; flex: none; }
@@ -397,7 +399,7 @@ tbody tr { transition: background .12s; }
 .donut { position: relative; width: 148px; height: 148px; flex: none; }
 .donut .center { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
 .donut .center b { font-size: 24px; font-weight: 700; display: block; line-height: 1; }
-.donut .center span { font-size: 11px; color: var(--gray-400); }
+.donut .center span { font-size: 11px; color: var(--texto-suave); }
 
 /* ===== TIMELINE ===== */
 .timeline { position: relative; padding-left: 8px; }
@@ -408,7 +410,7 @@ tbody tr { transition: background .12s; }
 .tl-body { flex: 1; padding-top: 1px; }
 .tl-body .t { font-size: 13.5px; font-weight: 500; }
 .tl-body .t b { font-weight: 600; }
-.tl-body .when { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+.tl-body .when { font-size: 12px; color: var(--texto-suave); margin-top: 2px; }
 
 /* ===== OFICINA / TURMA CARDS ===== */
 .oficina-card { background: #fff; border: 1px solid var(--borda); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-card); transition: box-shadow .18s, transform .18s; }
@@ -422,7 +424,7 @@ tbody tr { transition: background .12s; }
 .card-add {
   border: 2px dashed var(--gray-200); border-radius: var(--radius); background: transparent;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-  min-height: 230px; color: var(--gray-400); transition: .16s; padding: 20px;
+  min-height: 230px; color: var(--texto-suave); transition: .16s; padding: 20px;
 }
 .card-add:hover { border-color: var(--color-adra-green-400); color: var(--color-adra-green-400); background: var(--color-adra-green-50); }
 .card-add svg { width: 30px; height: 30px; }
@@ -442,7 +444,7 @@ tbody tr { transition: background .12s; }
 .flow .step .n { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
 .flow .step .ti { font-size: 14.5px; font-weight: 600; margin: 4px 0; }
 .flow .step .d { font-size: 12.5px; color: var(--gray-600); }
-.flow .arrow { display: grid; place-items: center; padding: 0 10px; color: var(--gray-400); font-size: 12px; text-align: center; }
+.flow .arrow { display: grid; place-items: center; padding: 0 10px; color: var(--texto-suave); font-size: 12px; text-align: center; }
 .flow .arrow svg { width: 22px; height: 22px; }
 .flow .arrow small { display: block; font-size: 10px; }
 
@@ -453,7 +455,7 @@ tbody tr { transition: background .12s; }
 .prn-panel.locked .card-pad { opacity: .62; }
 .prn-head { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--gray-100); }
 .prn-head .tag { margin-left: auto; }
-.lock-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--gray-400); padding: 10px 18px; }
+.lock-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--texto-suave); padding: 10px 18px; }
 .lock-row svg { width: 15px; height: 15px; }
 
 /* ===== RBAC MATRIX ===== */
@@ -482,7 +484,7 @@ tbody tr { transition: background .12s; }
 .notif .nbody .nt { font-size: 13.5px; font-weight: 500; }
 .notif .nbody .nt b { font-weight: 600; }
 .notif .nbody .nd { font-size: 12.5px; color: var(--gray-600); margin-top: 2px; }
-.notif .nbody .nw { font-size: 11.5px; color: var(--gray-400); margin-top: 4px; }
+.notif .nbody .nw { font-size: 11.5px; color: var(--texto-suave); margin-top: 4px; }
 .notif .unread-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--color-adra-green-400); flex: none; margin-top: 6px; }
 
 /* ===== MODAL ===== */
@@ -603,7 +605,7 @@ tbody tr { transition: background .12s; }
 .login-sub { color: var(--gray-800); font-size: 17px; font-weight: 600; margin: 22px 0 8px; }
 .login-desc { color: var(--gray-600); font-size: 13.5px; line-height: 1.5; margin: 0 0 22px; }
 .login-erro { color: #c0392b; font-size: 13px; margin: 0 0 12px; }
-.login-foot { text-align: center; font-size: 12px; color: var(--gray-400); margin-top: 30px; }
+.login-foot { text-align: center; font-size: 12px; color: var(--texto-suave); margin-top: 30px; }
 .login-foot a {
   display: inline-flex; align-items: center; min-height: 44px;
   color: var(--color-adra-green-600); text-decoration: none; font-weight: 500;
@@ -672,7 +674,7 @@ tbody tr { transition: background .12s; }
 }
 .adra-tour-popover .driver-popover-close-btn {
   top: 2px; right: 2px;
-  color: var(--gray-400);
+  color: var(--texto-suave);
   font-size: 16px;
 }
 .adra-tour-popover .driver-popover-close-btn:hover,
@@ -683,7 +685,7 @@ tbody tr { transition: background .12s; }
   margin-top: 16px;
 }
 .adra-tour-popover .driver-popover-progress-text {
-  color: var(--gray-400);
+  color: var(--texto-suave);
   font-size: 12px;
 }
 .adra-tour-popover .driver-popover-footer-btn {
@@ -733,4 +735,18 @@ tbody tr { transition: background .12s; }
   .main { margin: 0 !important; min-height: 0 !important; }
   .content { padding: 0 !important; }
   body { background: #fff !important; }
+}
+
+/* ===== ACESSIBILIDADE ===== */
+/* O diálogo recebe o foco ao abrir só para o leitor de tela anunciar o título; não precisa de contorno. */
+.modal:focus, .drawer:focus { outline: none; }
+
+/* Quem pede menos movimento no sistema não vê animações de entrada nem efeitos contínuos. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -1,7 +1,10 @@
 @if (open()) {
   <div class="drawer-overlay open" role="presentation" (click)="onBackdropClick()">
     <div
+      #dialogo
       class="drawer"
+      tabindex="-1"
+      (keydown)="onKeydown($event)"
       role="dialog"
       aria-modal="true"
       [attr.aria-labelledby]="titleId"

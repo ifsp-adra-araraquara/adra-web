@@ -6,7 +6,10 @@
     (click)="onBackdropClick($event)"
   >
     <div
+      #dialogo
       class="modal"
+      tabindex="-1"
+      (keydown)="onKeydown($event)"
       [class.modal-sm]="size() === 'sm'"
       [class.modal-lg]="size() === 'lg'"
       [class.modal-xl]="size() === 'xl'"

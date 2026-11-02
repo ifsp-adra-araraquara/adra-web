@@ -8,9 +8,13 @@ import {
   input,
   model,
   output,
+  effect,
+  untracked,
+  viewChild,
 } from '@angular/core';
 import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import { Icon } from '../icon/icon';
+import { focarAoAbrir, prenderTab } from '../../utils/foco.util';
 
 /** Acima disso, clicar fora não fecha o modal (modo 'auto'). */
 const MAXIMO_CAMPOS_FECHAR_CLICANDO_FORA = 5;
@@ -68,6 +72,35 @@ export class Modal {
 
   /** Rodapé opcional — projetado via `<ng-template #footer>` no conteúdo do modal. */
   footerTemplate = contentChild<TemplateRef<unknown>>('footer');
+
+  /** Diálogo aberto; recebe o foco ao abrir e prende o Tab (WCAG 2.4.3). */
+  private readonly dialogo = viewChild<ElementRef<HTMLElement>>('dialogo');
+  /** Quem tinha o foco antes de abrir — recebe o foco de volta ao fechar. */
+  private origemFoco: HTMLElement | null = null;
+
+  constructor() {
+    effect(() => {
+      const aberto = this.open();
+      untracked(() => {
+        if (aberto) {
+          this.origemFoco = this.document.activeElement as HTMLElement | null;
+          setTimeout(() => {
+            const dialogo = this.dialogo()?.nativeElement;
+            if (dialogo) focarAoAbrir(dialogo);
+          });
+        } else if (this.origemFoco) {
+          const origem = this.origemFoco;
+          this.origemFoco = null;
+          if (origem.isConnected) origem.focus();
+        }
+      });
+    });
+  }
+
+  protected onKeydown(evento: KeyboardEvent): void {
+    const dialogo = this.dialogo()?.nativeElement;
+    if (dialogo) prenderTab(evento, dialogo);
+  }
 
   /** Só conta como "clique fora" se o botão também foi pressionado fora (evita fechar ao arrastar seleção de texto). */
   private pressionouNoFundo = false;
