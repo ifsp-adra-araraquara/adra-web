@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 import { EnderecoDTO } from '../../../shared/models/endereco/EnderecoDTO';
 import { formatarEndereco } from '../../../shared/utils/endereco.util';
-import { INSTITUICAO } from '../../../shared/utils/instituicao';
+import { dataPorExtenso } from '../../../shared/utils/data-por-extenso.util';
+import { hojeISO } from '../../../shared/utils/aula.util';
 import { formatarMoeda, formatarTelefone } from '../../../shared/utils/mascara.util';
 import { ANO_INSCRICAO, TERMO_IMAGEM, TERMO_LGPD } from '../../../shared/utils/termos-inscricao';
 import { formatarCpf } from '../../../shared/validators/cpf.validator';
@@ -14,7 +15,6 @@ export const FICHA_PROVISORIA = {
   aviso: 'Modelo provisório — será trocado pelo modelo de ficha socioeconômica da ADRA.',
 };
 
-const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 
 /** Documento A4 da ficha de cadastro social, para a família e a Assistente Social assinarem (FT-26). */
 @Component({
@@ -28,10 +28,7 @@ export class FichaCadastroSocialDocumento {
 
   protected readonly FICHA = FICHA_PROVISORIA;
 
-  protected readonly dataPorExtenso = (() => {
-    const hoje = new Date();
-    return `${INSTITUICAO.cidade}, ${hoje.getDate()} de ${MESES[hoje.getMonth()]} de ${hoje.getFullYear()}.`;
-  })();
+  protected readonly dataPorExtenso = dataPorExtenso(hojeISO());
 
   protected texto(valor: string | null | undefined): string {
     return valor?.trim() ?? '';

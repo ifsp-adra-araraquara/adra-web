@@ -16,3 +16,9 @@
 .registro-data { font-size: 13px; color: var(--gray-600); margin-left: auto; }
 .registro-motivo { font-size: 14px; }
 .registro-arquivado { font-size: 12.5px; color: var(--gray-600); }
+
+.registro-documento { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
+.doc-situacao { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 600; }
+.doc-pendente { color: var(--amber-600); }
+.doc-ok { color: var(--color-adra-green-600); }
+.doc-acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }

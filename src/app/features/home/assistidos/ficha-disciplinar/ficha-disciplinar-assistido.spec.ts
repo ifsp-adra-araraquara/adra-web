@@ -20,6 +20,14 @@ const registro = {
   arquivado: false,
 } as RegistroDisciplinarDTO;
 
+const advertenciaPendente = {
+  ...registro,
+  registroId: 2,
+  nivel: NivelDisciplinar.ADVERTENCIA,
+  motivo: 'Agressão',
+  documentoStatus: 'PENDENTE_ASSINATURA',
+} as RegistroDisciplinarDTO;
+
 const ficha: FichaDisciplinarDTO = {
   resumo: {
     ocorrenciasAtivas: 1,
@@ -35,7 +43,7 @@ const ficha: FichaDisciplinarDTO = {
     perdeProximoPasseio: false,
     documentosPendentes: 0,
   },
-  registros: [registro],
+  registros: [advertenciaPendente, registro],
 };
 
 async function montar(perfil: Role): Promise<ComponentFixture<FichaDisciplinarAssistido>> {
@@ -68,5 +76,18 @@ describe('FichaDisciplinarAssistido', () => {
 
   it('esconde "Zerar contagem" dos outros perfis', async () => {
     expect(temBotaoZerar(await montar(Role.EDUCADOR))).toBe(false);
+  });
+
+  it('FT-25: Coordenador imprime e anexa o assinado de documento pendente', async () => {
+    const texto = (await montar(Role.COORD)).nativeElement.textContent as string;
+    expect(texto).toContain('Documento a assinar');
+    expect(texto).toContain('Imprimir');
+    expect(texto).toContain('Anexar assinado');
+  });
+
+  it('FT-25: Educador Social só imprime', async () => {
+    const texto = (await montar(Role.EDUCADOR)).nativeElement.textContent as string;
+    expect(texto).toContain('Imprimir');
+    expect(texto).not.toContain('Anexar assinado');
   });
 });
