@@ -47,8 +47,8 @@ export class Sidebar {
     PRE_CADASTRO: 'Gestão',
     ASSISTIDOS: 'Gestão',
     RESPONSAVEIS: 'Gestão',
-    OFICINAS: 'Gestão',
     TURMAS: 'Gestão',
+    OFICINAS: 'Gestão',
     CHAMADA: 'Pedagógico',
     DISCIPLINAR: 'Pedagógico',
     MATERIAIS: 'Pedagógico',
@@ -95,6 +95,7 @@ export class Sidebar {
    */
   private readonly rotulosOverride: Record<string, string> = {
     DASHBOARD: 'Calendário',
+    TURMAS: 'Grupos',
   };
 
   navAgrupado = computed(() => {

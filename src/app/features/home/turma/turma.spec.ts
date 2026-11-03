@@ -23,6 +23,7 @@ describe('Turmas', () => {
     capacidade: 24,
     ativo: true,
     observacoes: '',
+    oficinaIds: [],
   };
 
   /** ngOnInit dispara carregarTurmas() + carregarOficinas() juntos — mocka ambos. */

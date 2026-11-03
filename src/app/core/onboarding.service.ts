@@ -93,7 +93,7 @@ export class OnboardingService {
           popover: {
             title: 'Bem-vindo(a) ao Sistema de Gestão ADRA',
             description:
-              'Um tour rápido pela jornada principal do dia a dia: Turmas → abrir uma turma → Chamada.',
+              'Um tour rápido pela jornada principal do dia a dia: Grupos → abrir um grupo → Chamada.',
           },
         },
         {
@@ -109,9 +109,9 @@ export class OnboardingService {
         {
           element: '[data-tour="turmas-tabela"]',
           popover: {
-            title: 'Turmas',
+            title: 'Grupos',
             description:
-              'Cada linha é uma turma. Clique no ícone "→" ("Abrir turma") pra ver alunos, aulas e as demais ações dela num só lugar.',
+              'Cada linha é um grupo. Clique no ícone "→" ("Abrir grupo") pra ver alunos, oficinas e as demais ações dele num só lugar.',
             side: 'top',
           },
         },

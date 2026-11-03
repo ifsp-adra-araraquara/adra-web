@@ -4,20 +4,22 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { AulaComDetalhesResponseDTO } from '../../../shared/models/aula/AulaComDetalhesResponseDTO';
 import { OficineiroComunicadoDTO } from '../../../shared/models/oficineiro/OficineiroComunicadoDTO';
-import { AulaArquivoDTO } from '../../../shared/models/arquivo/AulaArquivoDTO';
 import { OficineiroTurmaDTO } from '../../../shared/models/oficineiro/OficineiroTurmaDTO';
 import { AuthService } from '../../../core/auth.service';
 import { ArquivoService } from '../../../core/arquivo.service';
+import { SemanarioService } from '../../../core/semanario.service';
+import { SemanarioResponseDTO } from '../../../shared/models/semanario/SemanarioResponseDTO';
+import { TabelaSemanarios } from '../../../shared/components/tabela-semanarios/tabela-semanarios';
+import { OficinaResponseDTO } from '../../../shared/models/oficina/OficinaResponseDTO';
+import { rotuloSemana, segundaDaSemana, semanasAoRedor } from '../../../shared/utils/semana.util';
 import { CategoriaArquivo } from '../../../shared/enum/CategoriaArquivo';
 import { EntidadeArquivo } from '../../../shared/enum/EntidadeArquivo';
 import { PaginaResponse } from '../../../shared/models/PaginaResponse';
 import { AssistidoResponseDTO } from '../../../shared/models/assistido/AssistidoResponseDTO';
-import { calcularSituacaoAula } from '../../../shared/utils/aula.util';
+import { hojeISO } from '../../../shared/utils/aula.util';
 import { ocupacaoTurma as ocupacaoTurmaUtil } from '../../../shared/utils/ocupacao.util';
 import { Select, SelectOption } from '../../../shared/components/select/select';
-import { Badge } from '../../../shared/components/badge/badge';
 import { Button } from '../../../shared/components/button/button';
 import { Modal } from '../../../shared/components/modal/modal';
 import { CalendarioAulas } from '../calendario-aulas/calendario-aulas';
@@ -25,11 +27,11 @@ import { Icon } from '../../../shared/components/icon/icon';
 import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
 
-type AbaOficineiro = 'turmas' | 'calendario' | 'materiais' | 'comunicados';
+type AbaOficineiro = 'turmas' | 'calendario' | 'semanario' | 'comunicados';
 
 @Component({
   selector: 'app-oficineiro',
-  imports: [TooltipDirective, Icon, FormsModule, Select, Badge, Button, Modal, CalendarioAulas],
+  imports: [TooltipDirective, Icon, FormsModule, Select, Button, Modal, CalendarioAulas, TabelaSemanarios],
   templateUrl: './oficineiro.html',
   styleUrl: './oficineiro.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,69 +42,84 @@ export class Oficineiro implements OnInit {
     return ocupacaoTurmaUtil(turma.quantidadeAlunos, turma.capacidade);
   }
 
-  readonly turmasFiltroOptions = computed<SelectOption<number | null>[]>(() => [
-    { value: null, label: 'Todas as turmas' },
-    ...this.turmas().map((turma) => ({
-      value: turma.turmaId,
-      label: turma.nomeOficina ? `${turma.nomeTurma} — ${turma.nomeOficina}` : turma.nomeTurma,
-    })),
-  ]);
-
   private readonly http = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
   private readonly arquivoService = inject(ArquivoService);
+  private readonly semanarioService = inject(SemanarioService);
   private readonly api = environment.apiUrl;
 
   readonly aba = signal<AbaOficineiro>('turmas');
   readonly carregando = signal(false);
   readonly erro = signal<string | null>(null);
   readonly turmas = signal<OficineiroTurmaDTO[]>([]);
-  /** Aba Materiais: aulas com material, de todas as turmas do oficineiro (ou da turma filtrada). */
-  readonly materiais = signal<AulaArquivoDTO[]>([]);
-  readonly filtroTurmaMateriais = signal<number | null>(null);
-  readonly abrindoArquivoId = signal<number | null>(null);
-  /** Exclusão em dois cliques: 1º marca, 2º confirma. */
-  readonly confirmandoExclusaoId = signal<number | null>(null);
-  readonly excluindoArquivoId = signal<number | null>(null);
+  /** Oficinas do oficineiro; as que ainda não atendem grupo também aparecem em "Minhas turmas". */
+  readonly oficinas = signal<OficinaResponseDTO[]>([]);
+  readonly oficinasSemGrupo = computed(() =>
+    this.oficinas().filter((o) => o.ativo && !this.turmas().some((t) => t.oficinaId === o.oficinaId)),
+  );
   readonly comunicados = signal<OficineiroComunicadoDTO[]>([]);
   readonly turmaSelecionada = signal<OficineiroTurmaDTO | null>(null);
   readonly mostrarAlunos = signal(false);
   readonly alunos = signal<{ assistidoId: number; nomeCompleto: string }[]>([]);
-  readonly mostrarUploadMaterial = signal(false);
-  readonly enviandoMaterial = signal(false);
+  /** Aba Semanário: os semanários das oficinas do oficineiro, o mais recente primeiro. */
+  readonly semanarios = signal<SemanarioResponseDTO[]>([]);
+  readonly sucessoSemanario = signal<string | null>(null);
+
+  // Modal "Enviar semanário": grupo (oficina + grupo), semana, plano e um PDF opcional.
+  readonly mostrarEnvioSemanario = signal(false);
+  readonly enviandoSemanario = signal(false);
+  readonly erroSemanario = signal<string | null>(null);
+  readonly grupoSemanario = signal<string | null>(null);
+  /** Segunda-feira da semana escolhida. */
+  readonly semanaSemanario = signal(segundaDaSemana(hojeISO()));
+  readonly conteudoPrevisto = signal('');
+  readonly objetivos = signal('');
+  readonly recursosNecessarios = signal('');
   readonly arquivoMaterial = signal<File | null>(null);
-  // Modal "Novo material": turma -> aula -> arquivo (o material fica vinculado à aula).
-  readonly materialTurmaId = signal<number | null>(null);
-  readonly materialAulaId = signal<number | null>(null);
-  readonly aulasDaTurmaMaterial = signal<AulaComDetalhesResponseDTO[]>([]);
-  readonly carregandoAulasMaterial = signal(false);
-  readonly erroMaterial = signal<string | null>(null);
-  readonly sucessoMaterial = signal<string | null>(null);
-  /** Espelha CategoriaArquivo.MATERIAL_AULA do back — mudou lá, mude aqui. */
+  /** Espelha CategoriaArquivo.MATERIAL_SEMANARIO do back — mudou lá, mude aqui. */
   readonly tiposMaterialAceitos = ['application/pdf'];
   readonly tamanhoMaximoMaterialBytes = 2 * 1024 * 1024;
 
-  readonly turmasMaterialOptions = computed<SelectOption<number | null>[]>(() => [
-    { value: null, label: 'Selecione a turma', disabled: true },
-    ...this.turmas().map((t) => ({ value: t.turmaId, label: t.nomeTurma })),
+  /** Cada linha de "Minhas turmas" é um grupo atendido por uma oficina; a chave junta os dois ids. */
+  readonly gruposSemanarioOptions = computed<SelectOption<string | null>[]>(() => [
+    { value: null, label: 'Selecione o grupo', disabled: true },
+    ...this.turmas()
+      .filter((t) => t.oficinaId != null)
+      .map((t) => ({ value: this.chaveGrupo(t), label: `${t.nomeTurma} — ${t.nomeOficina}` })),
   ]);
-  readonly aulasMaterialOptions = computed<SelectOption<number | null>[]>(() => {
-    const aulas = this.aulasDaTurmaMaterial();
-    const vazio = this.carregandoAulasMaterial()
-      ? 'Carregando aulas...'
-      : !this.materialTurmaId()
-        ? 'Escolha a turma primeiro'
-        : aulas.length ? 'Selecione a aula' : 'Nenhuma aula nesta turma';
-    return [
-      { value: null, label: vazio, disabled: true },
-      ...aulas.map((a) => ({ value: a.aulaId, label: this.rotuloAula(a) })),
-    ];
-  });
-  readonly podeEnviarMaterial = computed(
-    () => !!this.materialAulaId() && !!this.arquivoMaterial() && !this.enviandoMaterial(),
+  /** Grupo escolhido no modal (linha de "Minhas turmas"). */
+  private readonly grupoEscolhido = computed(() =>
+    this.turmas().find((t) => this.chaveGrupo(t) === this.grupoSemanario()) ?? null,
   );
+  /** Semanários já enviados para o grupo escolhido. */
+  private readonly semanariosDoGrupo = computed(() => {
+    const grupo = this.grupoEscolhido();
+    if (!grupo) return [];
+    return this.semanarios().filter((s) => s.oficinaId === grupo.oficinaId && s.turmaId === grupo.turmaId);
+  });
+  /** Se já existe semanário do grupo na semana escolhida, enviar atualiza ele. */
+  readonly semanarioExistente = computed(
+    () => this.semanariosDoGrupo().find((s) => s.semanaInicio === this.semanaSemanario()) ?? null,
+  );
+  readonly semanasOptions = computed<SelectOption<string>[]>(() => {
+    const atual = segundaDaSemana(hojeISO());
+    const enviadas = new Set(this.semanariosDoGrupo().map((s) => s.semanaInicio));
+    return semanasAoRedor(hojeISO(), 8, 4).map((segunda) => ({
+      value: segunda,
+      label:
+        rotuloSemana(segunda) +
+        (segunda === atual ? ' · esta semana' : '') +
+        (enviadas.has(segunda) ? ' · já enviado' : ''),
+    }));
+  });
+  readonly semanasJaEnviadas = computed(() => this.semanariosDoGrupo().map((s) => rotuloSemana(s.semanaInicio)));
+
+  readonly podeEnviarSemanario = computed(
+    () => !!this.grupoSemanario() && !!this.semanaSemanario() && !!this.conteudoPrevisto().trim() && !this.enviandoSemanario(),
+  );
+
   ngOnInit(): void {
     this.route.queryParamMap.subscribe((params) => {
       const aba = params.get('aba');
@@ -138,7 +155,7 @@ export class Oficineiro implements OnInit {
               nomeCompleto: a.nomeCompleto,
             })),
           ),
-        error: () => this.erro.set('Não foi possível carregar os alunos da turma.'),
+        error: () => this.erro.set('Não foi possível carregar os alunos do grupo.'),
       });
   }
 
@@ -148,65 +165,76 @@ export class Oficineiro implements OnInit {
     this.alunos.set([]);
   }
 
-  /** Abre o modal limpo. Garante a lista de turmas (a aba Materiais não carrega turmas). */
-  async abrirUploadMaterial(): Promise<void> {
-    this.materialTurmaId.set(null);
-    this.materialAulaId.set(null);
-    this.aulasDaTurmaMaterial.set([]);
+  /** Abre o modal limpo. Garante a lista de turmas (a aba Semanário não carrega turmas). */
+  async abrirEnvioSemanario(): Promise<void> {
+    this.grupoSemanario.set(null);
+    this.semanaSemanario.set(segundaDaSemana(hojeISO()));
+    this.conteudoPrevisto.set('');
+    this.objetivos.set('');
+    this.recursosNecessarios.set('');
     this.arquivoMaterial.set(null);
-    this.erroMaterial.set(null);
-    this.sucessoMaterial.set(null);
-    this.mostrarUploadMaterial.set(true);
-    if (!this.turmas().length) {
-      try {
-        await this.carregarTurmas();
-      } catch {
-        this.erroMaterial.set('Não foi possível carregar suas turmas.');
-      }
-    }
-  }
-
-  fecharUploadMaterial(): void {
-    this.mostrarUploadMaterial.set(false);
-  }
-
-  /** Trocou a turma: limpa a aula escolhida e busca as aulas dessa turma. */
-  async selecionarTurmaMaterial(turmaId: number | null): Promise<void> {
-    this.materialTurmaId.set(turmaId);
-    this.materialAulaId.set(null);
-    this.aulasDaTurmaMaterial.set([]);
-    if (!turmaId) return;
-    this.carregandoAulasMaterial.set(true);
+    this.erroSemanario.set(null);
+    this.sucessoSemanario.set(null);
+    this.mostrarEnvioSemanario.set(true);
     try {
-      const aulas = await firstValueFrom(
-        this.http.get<AulaComDetalhesResponseDTO[]>(`${this.api}/api/aulas/turma/${turmaId}/detalhes`),
-      );
-      if (this.materialTurmaId() !== turmaId) return; // trocou de turma no meio da busca
-      this.aulasDaTurmaMaterial.set(
-        [...aulas].sort(
-          (a, b) => b.dataAula.localeCompare(a.dataAula) || (a.horarioInicio ?? '').localeCompare(b.horarioInicio ?? ''),
-        ),
-      );
+      if (!this.turmas().length) await this.carregarTurmas();
+      await this.carregarSemanarios();
     } catch {
-      this.erroMaterial.set('Não foi possível carregar as aulas desta turma.');
-    } finally {
-      this.carregandoAulasMaterial.set(false);
+      this.erroSemanario.set('Não foi possível carregar seus grupos.');
     }
+  }
+
+  escolherGrupoSemanario(chave: string | null): void {
+    this.grupoSemanario.set(chave);
+    this.preencherComSemanarioExistente();
+  }
+
+  escolherSemanaSemanario(segunda: string): void {
+    this.semanaSemanario.set(segunda);
+    this.preencherComSemanarioExistente();
+  }
+
+  /** Semana já enviada: traz o plano para editar, em vez de começar em branco. */
+  private preencherComSemanarioExistente(): void {
+    const existente = this.semanarioExistente();
+    if (!existente) return;
+    this.conteudoPrevisto.set(existente.conteudoPrevisto);
+    this.objetivos.set(existente.objetivos ?? '');
+    this.recursosNecessarios.set(existente.recursosNecessarios ?? '');
+  }
+
+  async removerSemanario(semanario: SemanarioResponseDTO): Promise<void> {
+    this.erro.set(null);
+    this.sucessoSemanario.set(null);
+    try {
+      await this.semanarioService.remover(semanario.semanarioId);
+      this.semanarios.update((lista) => lista.filter((s) => s.semanarioId !== semanario.semanarioId));
+    } catch (e) {
+      this.erro.set(
+        e instanceof HttpErrorResponse
+          ? mensagemErro(e, 'Não foi possível remover o semanário.')
+          : 'Não foi possível remover o semanário.',
+      );
+    }
+  }
+
+  fecharEnvioSemanario(): void {
+    this.mostrarEnvioSemanario.set(false);
   }
 
   selecionarArquivo(event: Event): void {
     const input = event.target as HTMLInputElement;
     const arquivo = input.files?.[0] ?? null;
-    this.erroMaterial.set(null);
+    this.erroSemanario.set(null);
     if (!arquivo) {
       this.arquivoMaterial.set(null);
       return;
     }
     // Checagem rápida só pra dar retorno na hora — quem decide de verdade é o back.
     if (!this.tiposMaterialAceitos.includes(arquivo.type)) {
-      this.erroMaterial.set('Tipo de arquivo não permitido. Envie um PDF.');
+      this.erroSemanario.set('Tipo de arquivo não permitido. Envie um PDF.');
     } else if (arquivo.size > this.tamanhoMaximoMaterialBytes) {
-      this.erroMaterial.set('Arquivo muito grande. O limite é 2 MB.');
+      this.erroSemanario.set('Arquivo muito grande. O limite é 2 MB.');
     } else {
       this.arquivoMaterial.set(arquivo);
       return;
@@ -215,105 +243,45 @@ export class Oficineiro implements OnInit {
     input.value = '';
   }
 
-  /** POST /api/arquivos com dono AULA — o back confere se a aula é de turma deste oficineiro. */
-  async enviarMaterial(): Promise<void> {
-    const arquivo = this.arquivoMaterial();
-    const aulaId = this.materialAulaId();
-    if (!aulaId) {
-      this.erroMaterial.set('Escolha a aula para vincular o material.');
-      return;
-    }
-    if (!arquivo || this.enviandoMaterial()) return;
-    this.enviandoMaterial.set(true);
-    this.erroMaterial.set(null);
-    try {
-      await this.arquivoService.enviar(EntidadeArquivo.AULA, aulaId, CategoriaArquivo.MATERIAL_AULA, arquivo);
-      const aula = this.aulasDaTurmaMaterial().find((a) => a.aulaId === aulaId);
-      this.sucessoMaterial.set(`Material enviado para a aula ${aula ? this.rotuloAula(aula) : ''}.`);
-      this.mostrarUploadMaterial.set(false);
-      this.arquivoMaterial.set(null);
-      await this.carregarMateriais();
-    } catch (e) {
-      this.erroMaterial.set(
-        e instanceof HttpErrorResponse
-          ? mensagemErro(e, 'Não foi possível enviar o material.')
-          : 'Não foi possível enviar o material.',
-      );
-    } finally {
-      this.enviandoMaterial.set(false);
-    }
-  }
-
-  async onFiltroTurmaMateriaisChange(turmaId: number | null): Promise<void> {
-    this.filtroTurmaMateriais.set(turmaId);
-    this.erro.set(null);
-    try {
-      await this.carregarMateriais();
-    } catch {
-      this.erro.set('Não foi possível carregar os materiais.');
-    }
-  }
-
   /**
-   * URL assinada e temporária, gerada no clique. A aba abre JÁ no clique (senão o
-   * bloqueador de pop-up barra) e só depois recebe a URL — mesmo truque do lista-documentos.
+   * Envia o semanário e, se houver, o PDF como material dele. Um por grupo e semana:
+   * enviar de novo na mesma semana atualiza o plano e soma o material.
    */
-  async abrirMaterial(arquivoId: number): Promise<void> {
-    const novaJanela = window.open('', '_blank');
-    if (novaJanela) novaJanela.opener = null;
-    this.abrindoArquivoId.set(arquivoId);
+  async enviarSemanario(): Promise<void> {
+    const grupo = this.grupoEscolhido();
+    if (!grupo || grupo.oficinaId == null || !this.podeEnviarSemanario()) return;
+    this.enviandoSemanario.set(true);
+    this.erroSemanario.set(null);
     try {
-      const { url } = await this.arquivoService.gerarUrl(arquivoId);
-      if (novaJanela) novaJanela.location.href = url;
-      else window.location.href = url;
-    } catch {
-      novaJanela?.close();
-      this.erro.set('Não foi possível abrir o material.');
-    } finally {
-      this.abrindoArquivoId.set(null);
-    }
-  }
-
-  /** Exclusão lógica (excluido_em). O back só deixa o oficineiro excluir o que ELE enviou. */
-  async excluirMaterial(arquivoId: number): Promise<void> {
-    if (this.confirmandoExclusaoId() !== arquivoId) {
-      this.confirmandoExclusaoId.set(arquivoId);
-      return;
-    }
-    this.confirmandoExclusaoId.set(null);
-    this.excluindoArquivoId.set(arquivoId);
-    this.erro.set(null);
-    this.sucessoMaterial.set(null);
-    try {
-      await this.arquivoService.remover(arquivoId);
-      await this.carregarMateriais();
+      const semanario = await this.semanarioService.enviar({
+        oficinaId: grupo.oficinaId,
+        turmaId: grupo.turmaId,
+        semana: this.semanaSemanario(),
+        conteudoPrevisto: this.conteudoPrevisto(),
+        objetivos: this.objetivos(),
+        recursosNecessarios: this.recursosNecessarios(),
+      });
+      const arquivo = this.arquivoMaterial();
+      if (arquivo) {
+        await this.arquivoService.enviar(
+          EntidadeArquivo.SEMANARIO,
+          semanario.semanarioId,
+          CategoriaArquivo.MATERIAL_SEMANARIO,
+          arquivo,
+        );
+      }
+      this.sucessoSemanario.set(`Semanário da semana ${rotuloSemana(semanario.semanaInicio)} enviado para ${grupo.nomeTurma}.`);
+      this.mostrarEnvioSemanario.set(false);
+      await this.carregarSemanarios();
     } catch (e) {
-      this.erro.set(
+      this.erroSemanario.set(
         e instanceof HttpErrorResponse
-          ? mensagemErro(e, 'Não foi possível excluir o material.')
-          : 'Não foi possível excluir o material.',
+          ? mensagemErro(e, 'Não foi possível enviar o semanário.')
+          : 'Não foi possível enviar o semanário.',
       );
     } finally {
-      this.excluindoArquivoId.set(null);
+      this.enviandoSemanario.set(false);
     }
-  }
-
-  /** "2026-10-15" -> "15/10/2026" */
-  dataBr(data: string): string {
-    const [ano, mes, dia] = data.split('-');
-    return `${dia}/${mes}/${ano}`;
-  }
-
-  situacaoAulaMaterial(aula: AulaArquivoDTO) {
-    return calcularSituacaoAula(aula.dataAula, aula.statusAula);
-  }
-
-  /** "15/10/2026 · 07:00 – Aulas futebol" */
-  rotuloAula(aula: AulaComDetalhesResponseDTO): string {
-    const [ano, mes, dia] = aula.dataAula.split('-');
-    const hora = aula.horarioInicio ? ` · ${aula.horarioInicio.slice(0, 5)}` : '';
-    const titulo = aula.titulo?.trim() ? ` – ${aula.titulo.trim()}` : '';
-    return `${dia}/${mes}/${ano}${hora}${titulo}`;
   }
 
   tamanhoLegivel(bytes: number): string {
@@ -325,7 +293,7 @@ export class Oficineiro implements OnInit {
     this.erro.set(null);
     try {
       if (aba === 'turmas') await this.carregarTurmas();
-      if (aba === 'materiais') await this.carregarMateriais();
+      if (aba === 'semanario') await this.carregarSemanarios();
       if (aba === 'comunicados') await this.carregarComunicados();
     } catch {
       this.erro.set('Não foi possível carregar esta área.');
@@ -343,15 +311,18 @@ export class Oficineiro implements OnInit {
       ),
     );
     this.turmas.set(turmas);
+    const oficinas = await firstValueFrom(
+      this.http.get<OficinaResponseDTO[]>(`${this.api}/api/oficinas/minhas-oficinas/${usuario.usuarioId}`),
+    );
+    this.oficinas.set(oficinas);
   }
 
-  /** Uma chamada por turma do oficineiro (ou só a do filtro); junta e ordena da aula mais recente. */
-  private async carregarMateriais(): Promise<void> {
-    if (!this.turmas().length) await this.carregarTurmas();
-    const filtro = this.filtroTurmaMateriais();
-    const turmaIds = filtro ? [filtro] : this.turmas().map((t) => t.turmaId);
-    const porTurma = await Promise.all(turmaIds.map((id) => this.arquivoService.listarMateriaisPorTurma(id)));
-    this.materiais.set(porTurma.flat().sort((a, b) => b.dataAula.localeCompare(a.dataAula)));
+  private async carregarSemanarios(): Promise<void> {
+    this.semanarios.set(await this.semanarioService.listarMeus());
+  }
+
+  private chaveGrupo(turma: OficineiroTurmaDTO): string {
+    return `${turma.oficinaId}-${turma.turmaId}`;
   }
 
   private async carregarComunicados(): Promise<void> {
@@ -369,7 +340,7 @@ export class Oficineiro implements OnInit {
     return (
       valor === 'turmas' ||
       valor === 'calendario' ||
-      valor === 'materiais' ||
+      valor === 'semanario' ||
       valor === 'comunicados'
     );
   }

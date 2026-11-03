@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -17,7 +17,6 @@ import { TurmaRequestDTO } from '../../../shared/models/turma/TurmaRequestDTO';
 import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO';
 import { TurmaStatusRequestDTO } from '../../../shared/models/turma/TurmaStatusRequestDTO';
 import { OficinaResponseDTO } from '../../../shared/models/oficina/OficinaResponseDTO';
-import { UsuarioResponse } from '../../../shared/models/usuarios/UsuarioResponse';
 import { AssistidoResponseDTO } from '../../../shared/models/assistido/AssistidoResponseDTO';
 import { PaginaResponse } from '../../../shared/models/PaginaResponse';
 import { Select, SelectOption } from '../../../shared/components/select/select';
@@ -30,15 +29,16 @@ import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 import { AuthService } from '../../../core/auth.service';
 import { Icon } from '../../../shared/components/icon/icon';
 import { SeletorDiasSemana } from '../../../shared/components/seletor-dias-semana/seletor-dias-semana';
+import { SeletorMultiplo } from '../../../shared/components/seletor-multiplo/seletor-multiplo';
+import { ListaBadges } from '../../../shared/components/lista-badges/lista-badges';
+import { HistoricoOficineiros } from '../../../shared/components/historico-oficineiros/historico-oficineiros';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
 import { AlunosTurmaModal } from './alunos-turma-modal/alunos-turma-modal';
-import { HistoricoOficineiros } from '../../../shared/components/historico-oficineiros/historico-oficineiros';
-import { OficineiroHistoricoDTO } from '../../../shared/models/historico/OficineiroHistoricoDTO';
 
 @Component({
   selector: 'app-turmas',
   standalone: true,
-  imports: [AlunosTurmaModal, HistoricoOficineiros, Icon, SeletorDiasSemana, 
+  imports: [AlunosTurmaModal, Icon, SeletorDiasSemana, SeletorMultiplo, ListaBadges, HistoricoOficineiros, 
     CommonModule,
     FormsModule,
     Select,
@@ -59,7 +59,6 @@ export class Turmas implements OnInit {
 
   private readonly apiTurmas = `${environment.apiUrl}/api/turmas`;
   private readonly apiOficinas = `${environment.apiUrl}/api/oficinas`;
-  private readonly apiUsuarios = `${environment.apiUrl}/api/usuarios`;
 
   Turno = Turno;
   turnosDisponiveis = TURNOS_DISPONIVEIS;
@@ -98,8 +97,8 @@ export class Turmas implements OnInit {
   erroListar = signal<string | null>(null);
 
   readonly colunasTurmas: TableColumn<TurmaResponseDTO>[] = [
-    { key: 'nomeTurma', header: 'Nome da turma', sortable: true },
-    { key: 'oficina', header: 'Oficina', value: (t) => this.nomeOficina(t) },
+    { key: 'nomeTurma', header: 'Nome do grupo', sortable: true },
+    { key: 'oficinas', header: 'Oficinas', type: 'custom' },
     { key: 'turno', header: 'Turno', sortable: true },
     { key: 'faixaEtaria', header: 'Faixa etária', value: (t) => t.faixaEtaria || '—' },
     { key: 'ocupacao', header: 'Ocupação', align: 'center', type: 'custom', width: '160px' },
@@ -114,9 +113,14 @@ export class Turmas implements OnInit {
   /** Lookup O(1) por oficinaId — evita um `.find()` em `oficinas()` por linha a cada render da tabela. */
   private readonly oficinasPorId = computed(() => new Map(this.oficinas().map((o) => [o.oficinaId, o])));
 
-  nomeOficina(turma: TurmaResponseDTO): string {
-    if (!turma.oficinaId) return '-';
-    return this.oficinasPorId().get(turma.oficinaId)?.nomeOficina ?? '-';
+  nomesOficinas(turma: TurmaResponseDTO): string[] {
+    return turma.oficinaIds
+      .map((id) => this.oficinasPorId().get(id)?.nomeOficina)
+      .filter((nome): nome is string => !!nome);
+  }
+
+  nomeOficina(oficinaId: number): string {
+    return this.oficinasPorId().get(oficinaId)?.nomeOficina ?? 'Oficina';
   }
 
   protected readonly trackByTurmaId = (turma: TurmaResponseDTO) => turma.turmaId;
@@ -132,19 +136,6 @@ export class Turmas implements OnInit {
     this.carregarOficinas();
 
   }
-
-  /**
-   * O perfil do usuário pode chegar depois do ngOnInit (ex.: F5 direto na
-   * página) — por isso a lista de oficineiros carrega quando o perfil vira
-   * Coordenador, e não só no init (antes o select ficava vazio).
-   */
-  private oficineirosCarregados = false;
-  private readonly carregarOficineirosQuandoCoordenador = effect(() => {
-    if (this.isCoordenador() && !this.oficineirosCarregados) {
-      this.oficineirosCarregados = true;
-      this.carregarOficineirosParaSelect();
-    }
-  });
 
   /* ============================================================
    * VER ALUNOS / VER FREQUÊNCIA — absorvidos da extinta tela "Aulas"
@@ -168,13 +159,47 @@ export class Turmas implements OnInit {
    * overlays — mesma preocupação já registrada no plano pra modais aninhadas).
    */
   turmaDrawerAberta = signal<TurmaResponseDTO | null>(null);
-  /** O drawer mostra a lista de ações ou o histórico de oficineiros da turma. */
-  drawerVisao = signal<'acoes' | 'historico'>('acoes');
+  /** O drawer mostra as ações, as oficinas do grupo ou o histórico de oficineiros delas. */
+  drawerVisao = signal<'acoes' | 'oficinas' | 'historico'>('acoes');
 
   readonly abrirDrawerTurma = (turma: TurmaResponseDTO): void => {
     this.drawerVisao.set('acoes');
     this.turmaDrawerAberta.set(turma);
   };
+
+  /* ============================================================
+   * DRAWER: VER OFICINAS — escolhe as oficinas que atendem o grupo.
+   * ============================================================ */
+  oficinasDoDrawer = signal<number[]>([]);
+  salvandoOficinas = signal(false);
+  erroOficinas = signal<string | null>(null);
+
+  abrirOficinasDoGrupo(turma: TurmaResponseDTO): void {
+    this.oficinasDoDrawer.set([...turma.oficinaIds]);
+    this.erroOficinas.set(null);
+    this.drawerVisao.set('oficinas');
+  }
+
+  async salvarOficinasDoGrupo(turma: TurmaResponseDTO): Promise<void> {
+    if (this.salvandoOficinas()) return;
+    this.salvandoOficinas.set(true);
+    this.erroOficinas.set(null);
+    try {
+      const atualizada = await firstValueFrom(
+        this.http.put<TurmaResponseDTO>(`${this.apiTurmas}/${turma.turmaId}/oficinas`, {
+          oficinaIds: this.oficinasDoDrawer(),
+        }),
+      );
+      const comContagem = { ...atualizada, quantidadeAlunos: turma.quantidadeAlunos };
+      this.turmas.update((lista) => lista.map((t) => (t.turmaId === turma.turmaId ? comContagem : t)));
+      this.turmaDrawerAberta.set(comContagem);
+      this.drawerVisao.set('acoes');
+    } catch (erro: any) {
+      this.erroOficinas.set(mensagemErro(erro, 'Não foi possível salvar as oficinas do grupo.'));
+    } finally {
+      this.salvandoOficinas.set(false);
+    }
+  }
 
   fecharDrawerTurma(): void {
     this.turmaDrawerAberta.set(null);
@@ -223,61 +248,27 @@ export class Turmas implements OnInit {
       },
       error: (erro) => {
         console.error('Erro ao carregar turmas:', erro);
-        this.erroListar.set('Não foi possível carregar as turmas.');
+        this.erroListar.set('Não foi possível carregar os grupos.');
         this.carregando.set(false);
       },
     });
   }
 
   /* ============================================================
-   * OFICINAS — lista completa (nomes p/ coluna + calendário) e o
-   * recorte de ativas p/ o select de criar/editar turma.
+   * OFICINAS — lista completa, para os nomes das oficinas do grupo.
    * ============================================================ */
   oficinas = signal<OficinaResponseDTO[]>([]);
+  /** Oficinas ativas, para escolher as que atendem o grupo. */
   oficinaOptions = computed<SelectOption<number>[]>(() =>
     this.oficinas()
       .filter((o) => o.ativo)
       .map((o) => ({ value: o.oficinaId, label: o.nomeOficina })),
   );
-  oficineiroOptions = signal<SelectOption<number>[]>([]);
 
   private carregarOficinas(): void {
     this.http.get<OficinaResponseDTO[]>(this.apiOficinas).subscribe({
       next: (lista) => this.oficinas.set(lista),
       error: (erro) => console.error('Erro ao carregar oficinas:', erro),
-    });
-  }
-
-  /**
-   * O select só lista oficineiros ATIVOS. Se o atual da turma foi inativado,
-   * ele não aparece e o campo fica em branco — então busca o nome dele no
-   * histórico e inclui como opção "(inativo)", para dar pra ver e trocar.
-   */
-  private garantirOficineiroAtualNasOpcoes(turma: TurmaResponseDTO): void {
-    const atualId = turma.oficineiroResponsavelId;
-    if (atualId == null || this.oficineiroOptions().some((o) => o.value === atualId)) return;
-    this.http
-      .get<OficineiroHistoricoDTO[]>(`${this.apiTurmas}/${turma.turmaId}/oficineiros-historico`)
-      .subscribe({
-        next: (historico) => {
-          const atual = historico.find((h) => h.oficineiroId === atualId);
-          if (atual && !this.oficineiroOptions().some((o) => o.value === atualId)) {
-            this.oficineiroOptions.update((opcoes) => [
-              ...opcoes,
-              { value: atualId, label: `${atual.nomeOficineiro} (inativo)` },
-            ]);
-          }
-        },
-        error: () => {},
-      });
-  }
-
-  private carregarOficineirosParaSelect(): void {
-    this.http.get<UsuarioResponse[]>(`${this.apiUsuarios}/oficineiros`).subscribe({
-      next: (lista) => {
-        this.oficineiroOptions.set(lista.map((u) => ({ value: u.usuarioId, label: u.nomeCompleto })));
-      },
-      error: (erro) => console.error('Erro ao carregar oficineiros para seleção:', erro),
     });
   }
 
@@ -300,9 +291,8 @@ export class Turmas implements OnInit {
       faixaEtaria: '',
       capacidade: null,
       observacoes: '',
-      oficinaId: null,
-      oficineiroResponsavelId: null,
       diasDaSemana: [],
+      oficinaIds: [],
     };
   }
 
@@ -314,7 +304,6 @@ export class Turmas implements OnInit {
   }
 
   abrirModalEditarTurma(turma: TurmaResponseDTO): void {
-    this.garantirOficineiroAtualNasOpcoes(turma);
     this.turmaEmEdicao.set(turma);
     this.formTurma = {
       nomeTurma: turma.nomeTurma,
@@ -322,9 +311,8 @@ export class Turmas implements OnInit {
       faixaEtaria: turma.faixaEtaria,
       capacidade: turma.capacidade,
       observacoes: turma.observacoes ?? '',
-      oficinaId: turma.oficinaId ?? null,
-      oficineiroResponsavelId: turma.oficineiroResponsavelId ?? null,
       diasDaSemana: turma.diasDaSemana ?? [],
+      oficinaIds: [...turma.oficinaIds],
     };
     this.erroSalvar.set(null);
     this.mostrarModalForm.set(true);
@@ -334,7 +322,7 @@ export class Turmas implements OnInit {
     this.mostrarModalForm.set(false);
   }
 
-  atualizarCampoTurma(campo: keyof TurmaRequestDTO, valor: string | number | DiaSemana[] | null): void {
+  atualizarCampoTurma(campo: keyof TurmaRequestDTO, valor: string | number | DiaSemana[] | number[] | null): void {
     this.formTurma = { ...this.formTurma, [campo]: valor };
     // Limpa o erro assim que o usuário mexe em algum campo, pra não ficar
     // uma mensagem de validação "presa" na tela depois que ele já corrigiu
@@ -352,7 +340,7 @@ export class Turmas implements OnInit {
     }
 
     if (!this.formTurma.nomeTurma.trim()) {
-      this.erroSalvar.set('Informe o nome da turma.');
+      this.erroSalvar.set('Informe o nome do grupo.');
       return;
     }
 
@@ -363,16 +351,6 @@ export class Turmas implements OnInit {
 
     if (!this.formTurma.capacidade || this.formTurma.capacidade <= 0) {
       this.erroSalvar.set('Informe uma capacidade válida.');
-      return;
-    }
-
-    if (this.formTurma.oficinaId == null) {
-      this.erroSalvar.set('Selecione a oficina.');
-      return;
-    }
-
-    if (this.formTurma.oficineiroResponsavelId == null) {
-      this.erroSalvar.set('Selecione o oficineiro responsável.');
       return;
     }
 
@@ -396,7 +374,7 @@ export class Turmas implements OnInit {
     } catch (erro: any) {
       console.error('Erro ao salvar turma:', erro);
       this.erroSalvar.set(
-        mensagemErro(erro, 'Não foi possível salvar a turma. Verifique os dados e tente novamente.'),
+        mensagemErro(erro, 'Não foi possível salvar o grupo. Verifique os dados e tente novamente.'),
       );
       this.salvando.set(false);
     }

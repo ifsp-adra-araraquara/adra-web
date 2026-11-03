@@ -27,7 +27,7 @@
   @if (carregando()) {
     <p class="estado">Carregando alunos...</p>
   } @else if (erro()) {
-    <p class="estado estado--erro" role="alert">Não foi possível carregar os alunos da turma.</p>
+    <p class="estado estado--erro" role="alert">Não foi possível carregar os alunos do grupo.</p>
   } @else if (filtrados().length === 0) {
     <p class="estado">{{ busca() ? 'Nenhum aluno encontrado com esse nome.' : 'Nenhum aluno nesta turma.' }}</p>
   } @else {
