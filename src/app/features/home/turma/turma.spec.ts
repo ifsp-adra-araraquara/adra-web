@@ -86,7 +86,7 @@ describe('Turmas', () => {
 
     await component.salvarTurma();
 
-    expect(component.erroSalvar()).toBe('Informe o nome da turma.');
+    expect(component.erroSalvar()).toBe('Informe o nome do grupo.');
     httpMock.expectNone((r) => r.method === 'POST');
   });
 
