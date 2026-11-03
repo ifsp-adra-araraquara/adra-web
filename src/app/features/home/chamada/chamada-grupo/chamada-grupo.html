@@ -102,7 +102,11 @@
                   </span>
                 </button>
 
-                @if (editando()) {
+                @if (editando() && suspensoAte(atendido)) {
+                  <span class="presenca presenca-lida st-fj" [attr.aria-label]="atendido.nomeCompleto + ': falta justificada pela suspensão'">
+                    FJ
+                  </span>
+                } @else if (editando()) {
                   <button type="button" class="presenca" [class]="classeStatus(atendido.statusPresenca)"
                           [attr.aria-label]="rotuloBotao(atendido)" (click)="alternar(atendido)">
                     {{ SIGLA[status(atendido)] }}
@@ -115,20 +119,14 @@
               </div>
 
               @if (atendido.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA) {
-                @if (editando()) {
+                @if (suspensoAte(atendido)) {
+                  <p class="motivo-lido">Falta justificada pela suspensão. Para mudar, corrija a suspensão no Disciplinar.</p>
+                } @else if (editando()) {
                   <div class="motivo">
-                    <select class="select" [attr.aria-label]="'Motivo da falta de ' + atendido.nomeCompleto"
-                            [ngModel]="atendido.motivoFalta" (ngModelChange)="mudarMotivo(atendido.assistidoId, $event)">
-                      <option [ngValue]="null" disabled>Motivo da falta…</option>
-                      @for (opcao of motivoFaltaOptions; track opcao.value) {
-                        <option [ngValue]="opcao.value">{{ opcao.label }}</option>
-                      }
-                    </select>
-                    @if (atendido.motivoFalta === MotivoFalta.OUTRO) {
-                      <textarea rows="2" placeholder="Descreva o motivo (obrigatório)"
-                                [attr.aria-label]="'Descrição do motivo de ' + atendido.nomeCompleto"
-                                [ngModel]="atendido.observacao" (ngModelChange)="mudarObservacao(atendido.assistidoId, $event)"></textarea>
-                    }
+                    <p class="motivo-lido">Motivo: Atestado</p>
+                    <textarea rows="2" placeholder="Observação (opcional)"
+                              [attr.aria-label]="'Observação da falta de ' + atendido.nomeCompleto"
+                              [ngModel]="atendido.observacao" (ngModelChange)="mudarObservacao(atendido.assistidoId, $event)"></textarea>
                   </div>
                 } @else if (atendido.motivoFalta) {
                   <p class="motivo-lido">
@@ -184,7 +182,7 @@
   }
 
   @if (fichaAtendido(); as atendido) {
-    @if (editando()) {
+    @if (editando() && !suspensoAte(atendido)) {
       <div class="ficha-status" role="radiogroup" aria-label="Presença">
         @for (s of [StatusPresenca.PRESENTE, StatusPresenca.FALTA, StatusPresenca.FALTA_JUSTIFICADA]; track s) {
           <button type="button" role="radio" class="ficha-opcao" [class]="classeStatus(s)"
@@ -196,20 +194,12 @@
       </div>
       @if (atendido.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA) {
         <div class="field">
-          <label for="ficha-motivo">Motivo da falta</label>
-          <select id="ficha-motivo" class="select" [ngModel]="atendido.motivoFalta" (ngModelChange)="mudarMotivo(atendido.assistidoId, $event)">
-            <option [ngValue]="null" disabled>Selecione…</option>
-            @for (opcao of motivoFaltaOptions; track opcao.value) {
-              <option [ngValue]="opcao.value">{{ opcao.label }}</option>
-            }
-          </select>
-          @if (atendido.motivoFalta === MotivoFalta.OUTRO) {
-            <textarea rows="2" placeholder="Descreva o motivo (obrigatório)" aria-label="Descrição do motivo"
-                      [ngModel]="atendido.observacao" (ngModelChange)="mudarObservacao(atendido.assistidoId, $event)"></textarea>
-          }
+          <label for="ficha-observacao">Falta justificada por atestado · observação (opcional)</label>
+          <textarea id="ficha-observacao" rows="2"
+                    [ngModel]="atendido.observacao" (ngModelChange)="mudarObservacao(atendido.assistidoId, $event)"></textarea>
         </div>
       }
-    } @else if (mostrarStatus()) {
+    } @else if (mostrarStatus() || suspensoAte(atendido)) {
       <p class="ficha-linha"><span class="aluno-status" [class]="classeStatus(atendido.statusPresenca)">{{ ROTULO[status(atendido)] }}</span>
         @if (atendido.motivoFalta) { · {{ MOTIVO_FALTA_LABELS[atendido.motivoFalta] }} }
       </p>
