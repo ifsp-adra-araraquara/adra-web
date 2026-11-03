@@ -26,6 +26,17 @@
       (ngModelChange)="onFiltroStatusChange($event)"
       [options]="filtroStatusOptions"
     />
+
+    <div class="modo-exibicao" role="group" aria-label="Modo de exibição">
+      <button type="button" class="btn btn-sm" [class.btn-primary]="modoExibicao() === 'tabela'" [class.btn-ghost]="modoExibicao() !== 'tabela'"
+        [attr.aria-pressed]="modoExibicao() === 'tabela'" (click)="mudarModoExibicao('tabela')">
+        <app-icon name="list" [size]="16" /> Tabela
+      </button>
+      <button type="button" class="btn btn-sm" [class.btn-primary]="modoExibicao() === 'blocos'" [class.btn-ghost]="modoExibicao() !== 'blocos'"
+        [attr.aria-pressed]="modoExibicao() === 'blocos'" (click)="mudarModoExibicao('blocos')">
+        <app-icon name="grid" [size]="16" /> Blocos
+      </button>
+    </div>
   </div>
 
   @if (carregando() && oficinas().length === 0) {
@@ -34,6 +45,22 @@
     <p class="muted estado">{{ erroListar() }}</p>
   } @else if (cards().length === 0) {
     <p class="muted estado">Nenhuma oficina encontrada.</p>
+  } @else if (modoExibicao() === 'tabela') {
+    <div class="card">
+      <app-table
+        label="Oficinas"
+        [columns]="colunasOficinas"
+        [data]="cards()"
+        [trackBy]="trackByOficina"
+        [rowClick]="abrirDrawerOficina"
+      >
+        <ng-template #cell let-c let-column="column">
+          @if (column.key === 'grupos') {
+            <app-lista-badges [nomes]="c.grupos" vazio="Nenhum grupo" />
+          }
+        </ng-template>
+      </app-table>
+    </div>
   } @else {
     <ul class="grid g-3 lista-oficinas" role="list" [attr.aria-busy]="carregando()">
       @for (c of cards(); track c.oficina.oficinaId) {
@@ -45,6 +72,10 @@
 
             <div class="oficina-meta">
               <span class="m"><app-icon name="user" [size]="15" />{{ c.oficineiro }}</span>
+              <span class="m">
+                <app-icon name="grid" [size]="15" />
+                <app-lista-badges [nomes]="c.grupos" vazio="Nenhum grupo atendido" />
+              </span>
               <span class="m">
                 <app-icon name="calendar" [size]="15" />
                 @if (c.horarios.length > 0) {
@@ -67,9 +98,9 @@
             <div class="oficina-foot">
               <span class="vagas">
                 @if (c.turmasAtivas > 0) {
-                  <b>{{ c.alunos }}/{{ c.capacidade }}</b> vagas · {{ c.turmasAtivas }} {{ c.turmasAtivas === 1 ? 'turma' : 'turmas' }}
+                  <b>{{ c.alunos }}/{{ c.capacidade }}</b> vagas · {{ c.turmasAtivas }} {{ c.turmasAtivas === 1 ? 'grupo' : 'grupos' }}
                 } @else {
-                  Nenhuma turma ativa
+                  Nenhum grupo ativo
                 }
               </span>
               <app-action-menu
@@ -82,6 +113,20 @@
         </li>
       }
     </ul>
+  }
+
+  @if (oficinaDoDrawer(); as c) {
+    <app-drawer [open]="true" [title]="c.oficina.nomeOficina" [subtitle]="c.oficineiro" (closed)="oficinaDoDrawer.set(null)">
+      <p class="drawer-secao-titulo">Grupos atendidos</p>
+      <app-lista-badges [nomes]="c.grupos" vazio="Nenhum grupo atendido." />
+
+      <p class="drawer-secao-titulo">Ações</p>
+      @for (acao of acoesOficina(c.oficina); track acao.id) {
+        <app-acao-drawer [icone]="acao.icon" [perigo]="!!acao.danger" (click)="executarAcaoDoDrawer(acao.id, c.oficina)">
+          {{ acao.label }}
+        </app-acao-drawer>
+      }
+    </app-drawer>
   }
 </section>
 
@@ -133,6 +178,14 @@
       (ngModelChange)="atualizarCampoOficina('local', $event)"
     />
   </div>
+
+  <app-seletor-multiplo
+    label="Grupos atendidos"
+    textoVazio="Nenhum grupo ativo cadastrado."
+    [opcoes]="grupoOptions()"
+    [valores]="formOficina.turmaIds"
+    (valoresChange)="atualizarCampoOficina('turmaIds', $event)"
+  />
 
   @if (modoEdicao() && oficinaSendoEditada(); as oficina) {
     <p class="form-sec-title">Histórico de oficineiros</p>
@@ -212,4 +265,35 @@
     </app-button>
     <app-button [loading]="reativando()" (click)="confirmarReativacao()">Reativar</app-button>
   </ng-template>
+</app-modal>
+
+<!-- ============================================================
+     MODAL: SEMANÁRIOS DA OFICINA
+     ============================================================ -->
+<app-modal
+  [(open)]="mostrarSemanarios"
+  [title]="'Semanários — ' + (oficinaDosSemanarios()?.nomeOficina ?? '')"
+  size="lg"
+>
+  <div modal-icon class="mh-ico ico-blue">
+    <app-icon name="file-text" />
+  </div>
+
+  @if (carregandoSemanarios()) {
+    <p class="muted">Carregando…</p>
+  } @else {
+    @if (erroSemanarios()) {
+      <div class="notice notice-error" role="alert">{{ erroSemanarios() }}</div>
+    }
+    @if (semanarios().length > 0) {
+      <app-tabela-semanarios
+        [semanarios]="semanarios()"
+        [mostrarOficina]="false"
+        [podeRemover]="isCoordenador()"
+        (remover)="removerSemanario($event)"
+      />
+    } @else {
+      <p class="muted">Nenhum semanário enviado para esta oficina.</p>
+    }
+  }
 </app-modal>

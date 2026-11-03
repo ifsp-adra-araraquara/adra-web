@@ -1,17 +1,10 @@
-import { corDaOficina, horaCurta, textoHorario } from './oficina-card.util';
+import { corDaOficina, textoHorario } from './oficina-card.util';
 
 describe('oficina-card.util', () => {
-  it('junta os dias com vírgula e "e", e a hora curta', () => {
-    expect(textoHorario({ dias: ['MONDAY', 'WEDNESDAY', 'FRIDAY'], inicio: '14:00:00', turmas: 1 })).toBe(
-      'Seg, Qua e Sex · 14h',
-    );
-    expect(textoHorario({ dias: ['TUESDAY'], inicio: '09:30:00', turmas: 1 })).toBe('Ter · 9h30');
-  });
-
-  it('omite a parte que faltar', () => {
-    expect(textoHorario({ dias: [], inicio: '16:00:00', turmas: 1 })).toBe('16h');
-    expect(textoHorario({ dias: ['SATURDAY', 'SUNDAY'], inicio: null, turmas: 1 })).toBe('Sáb e Dom');
-    expect(horaCurta(null)).toBe('');
+  it('junta os dias com vírgula e "e"', () => {
+    expect(textoHorario({ dias: ['MONDAY', 'WEDNESDAY', 'FRIDAY'], turmas: 1 })).toBe('Seg, Qua e Sex');
+    expect(textoHorario({ dias: ['SATURDAY', 'SUNDAY'], turmas: 1 })).toBe('Sáb e Dom');
+    expect(textoHorario({ dias: ['TUESDAY'], turmas: 1 })).toBe('Ter');
   });
 
   it('dá a mesma cor para a mesma oficina e não repete nas 12 primeiras', () => {

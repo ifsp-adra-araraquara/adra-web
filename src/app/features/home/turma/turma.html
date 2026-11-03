@@ -1,9 +1,9 @@
 <section class="page" id="page-turmas">
   <header class="page-header">
     <div class="page-header-texto">
-      <h1>Turmas</h1>
+      <h1>Grupos</h1>
       <p class="page-intro">
-        Cada turma define turno, faixa etária e capacidade máxima. Turmas inativas ficam no histórico e não
+        Cada grupo define turno, faixa etária e capacidade máxima. Grupos inativos ficam no histórico e não
         recebem novos vínculos.
       </p>
     </div>
@@ -11,7 +11,7 @@
     @if (isCoordenador()) {
       <div class="page-header-acoes">
         <app-button size="sm" (click)="abrirModalNovaTurma()">
-          <app-icon name="plus" [size]="16" /> Nova turma
+          <app-icon name="plus" [size]="16" /> Novo grupo
         </app-button>
       </div>
     }
@@ -19,9 +19,9 @@
 
   <div class="toolbar">
     <app-input
-      label="Buscar por nome da turma"
+      label="Buscar por nome do grupo"
       [hideLabel]="true"
-      placeholder="Buscar por nome da turma…"
+      placeholder="Buscar por nome do grupo…"
       [ngModel]="filtroNome"
       (ngModelChange)="onFiltroNomeChange($event)"
     />
@@ -41,7 +41,7 @@
 
   <div class="card" data-tour="turmas-tabela">
     <div class="card-head">
-      <h3>Turmas cadastradas</h3>
+      <h3>Grupos cadastrados</h3>
     </div>
 
     @if (carregando()) {
@@ -50,7 +50,7 @@
       <p class="muted" style="padding: 20px; text-align: center">{{ erroListar() }}</p>
     } @else {
       <app-table
-        label="Turmas"
+        label="Grupos"
         [columns]="colunasTurmas"
         [data]="turmas()"
         [trackBy]="trackByTurmaId"
@@ -69,6 +69,8 @@
               <div class="track"><div class="fill" [style.width.%]="ocupacaoTurma(turma)"></div></div>
               <span class="pct">{{ turma.quantidadeAlunos ?? 0 }}/{{ turma.capacidade }}</span>
             </div>
+          } @else if (column.key === 'oficinas') {
+            <app-lista-badges [nomes]="nomesOficinas(turma)" vazio="Nenhuma oficina" />
           }
         </ng-template>
 
@@ -76,8 +78,8 @@
           <button
             type="button"
             class="btn-abrir-turma"
-            aria-label="Abrir turma"
-            appTooltip="Abrir turma"
+            aria-label="Abrir grupo"
+            appTooltip="Abrir grupo"
             (click)="abrirDrawerTurma(turma)"
           >
             <app-icon name="chevron-right" />
@@ -109,13 +111,51 @@
         <span class="pct">{{ turma.quantidadeAlunos ?? 0 }}/{{ turma.capacidade }} vagas</span>
       </div>
 
-      @if (drawerVisao() === 'historico') {
+      @if (drawerVisao() === 'oficinas') {
         <button type="button" class="drawer-voltar" (click)="drawerVisao.set('acoes')">
           <app-icon name="chevron-left" [size]="16" /> Voltar
         </button>
-        <p class="drawer-secao-titulo">Histórico de oficineiros</p>
-        <app-historico-oficineiros recurso="turmas" [id]="turma.turmaId" />
+        <p class="drawer-secao-titulo">Oficinas do grupo</p>
+        @if (isCoordenador()) {
+          @if (erroOficinas()) {
+            <div class="notice notice-error" role="alert">{{ erroOficinas() }}</div>
+          }
+          <app-seletor-multiplo
+            label="Escolha as oficinas que atendem este grupo"
+            textoVazio="Nenhuma oficina ativa cadastrada."
+            [opcoes]="oficinaOptions()"
+            [(valores)]="oficinasDoDrawer"
+          />
+          <app-button class="drawer-salvar" [loading]="salvandoOficinas()" (click)="salvarOficinasDoGrupo(turma)">
+            Salvar oficinas
+          </app-button>
+        } @else {
+          <app-lista-badges [nomes]="nomesOficinas(turma)" vazio="Nenhuma oficina atende este grupo." />
+        }
+      } @else if (drawerVisao() === 'historico') {
+        <button type="button" class="drawer-voltar" (click)="drawerVisao.set('acoes')">
+          <app-icon name="chevron-left" [size]="16" /> Voltar
+        </button>
+        @for (oficinaId of turma.oficinaIds; track oficinaId) {
+          <p class="drawer-secao-titulo">{{ nomeOficina(oficinaId) }}</p>
+          <app-historico-oficineiros recurso="oficinas" [id]="oficinaId" />
+        } @empty {
+          <p class="muted">Nenhuma oficina atende este grupo.</p>
+        }
       } @else {
+      <p class="drawer-secao-titulo">Oficinas</p>
+      <app-lista-badges [nomes]="nomesOficinas(turma)" vazio="Nenhuma oficina atende este grupo." />
+      <div class="drawer-acoes">
+        <button type="button" class="drawer-acao" (click)="abrirOficinasDoGrupo(turma)">
+          <app-icon name="layers" />
+          Ver oficinas
+        </button>
+        <button type="button" class="drawer-acao" (click)="drawerVisao.set('historico')">
+          <app-icon name="users" />
+          Histórico de oficineiros
+        </button>
+      </div>
+
       <p class="drawer-secao-titulo">Alunos e frequência</p>
       <div class="drawer-acoes">
         <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); verAlunos(turma)">
@@ -137,27 +177,19 @@
       </div>
 
       @if (isCoordenador()) {
-        <p class="drawer-secao-titulo">Turma</p>
+        <p class="drawer-secao-titulo">Grupo</p>
         <div class="drawer-acoes">
           <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); abrirModalEditarTurma(turma)">
             <app-icon name="edit" />
-            Editar turma
+            Editar grupo
           </button>
 
           <button type="button" class="drawer-acao perigo" (click)="fecharDrawerTurma(); abrirModalStatus(turma)">
             <app-icon name="power" />
-            {{ turma.ativo ? 'Inativar turma' : 'Reativar turma' }}
+            {{ turma.ativo ? 'Inativar grupo' : 'Reativar grupo' }}
           </button>
         </div>
       }
-
-      <p class="drawer-secao-titulo">Histórico</p>
-      <div class="drawer-acoes">
-        <button type="button" class="drawer-acao" (click)="drawerVisao.set('historico')">
-          <app-icon name="users" />
-          Histórico de oficineiros
-        </button>
-      </div>
       }
     </app-drawer>
   }
@@ -168,7 +200,7 @@
      ============================================================ -->
 <app-modal
   [(open)]="mostrarModalForm"
-  [title]="turmaEmEdicao() ? 'Editar turma' : 'Nova turma'"
+  [title]="turmaEmEdicao() ? 'Editar grupo' : 'Novo grupo'"
   [size]="'lg'"
   [closeOnBackdrop]="false"
   [closeOnEscape]="false"
@@ -183,33 +215,11 @@
   }
 
   <app-input
-    label="Nome da turma"
+    label="Nome do grupo"
     placeholder="Ex.: CJ Grupo A"
     [ngModel]="formTurma.nomeTurma"
     (ngModelChange)="atualizarCampoTurma('nomeTurma', $event)"
   />
-
-  <div class="form-row">
-    <div class="field">
-      <label>Oficina</label>
-      <app-select
-        [ngModel]="formTurma.oficinaId"
-        (ngModelChange)="atualizarCampoTurma('oficinaId', $event)"
-        [placeholder]="'Selecione'"
-        [options]="oficinaOptions()"
-      />
-    </div>
-
-    <div class="field">
-      <label>Oficineiro responsável</label>
-      <app-select
-        [ngModel]="formTurma.oficineiroResponsavelId"
-        (ngModelChange)="atualizarCampoTurma('oficineiroResponsavelId', $event)"
-        [placeholder]="'Selecione'"
-        [options]="oficineiroOptions()"
-      />
-    </div>
-  </div>
 
   <div class="form-row-3">
     <div class="field">
@@ -242,6 +252,14 @@
     />
   </div>
 
+  <app-seletor-multiplo
+    label="Oficinas"
+    textoVazio="Nenhuma oficina ativa cadastrada."
+    [opcoes]="oficinaOptions()"
+    [valores]="formTurma.oficinaIds"
+    (valoresChange)="atualizarCampoTurma('oficinaIds', $event)"
+  />
+
   <app-seletor-dias-semana
     label="Dias de chamada"
     [dias]="formTurma.diasDaSemana"
@@ -251,7 +269,7 @@
   <div class="field">
     <label>Observações</label>
     <textarea
-      placeholder="Informações relevantes sobre a turma"
+      placeholder="Informações relevantes sobre o grupo"
       [ngModel]="formTurma.observacoes"
       (ngModelChange)="atualizarCampoTurma('observacoes', $event)"
     ></textarea>
@@ -259,7 +277,7 @@
 
   <ng-template #footer>
     <app-button variant="secondary" (click)="fecharModalForm()">Cancelar</app-button>
-    <app-button [loading]="salvando()" (click)="salvarTurma()">Salvar turma</app-button>
+    <app-button [loading]="salvando()" (click)="salvarTurma()">Salvar grupo</app-button>
   </ng-template>
 </app-modal>
 
@@ -278,16 +296,16 @@
   <p>
     Tem certeza que deseja
     <strong>{{ turmaSelecionadaStatus()?.ativo ? 'inativar' : 'reativar' }}</strong>
-    a turma <strong>"{{ turmaSelecionadaStatus()?.nomeTurma }}"</strong>?
+    o grupo <strong>"{{ turmaSelecionadaStatus()?.nomeTurma }}"</strong>?
   </p>
 
   @if (turmaSelecionadaStatus()?.ativo) {
     <div class="notice notice-amber mt-s">
       <app-icon name="alert-circle" />
       <div>
-        <b>Impactos de inativar esta turma:</b>
+        <b>Impactos de inativar este grupo:</b>
         <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px">
-          <li><strong>Sem novos vínculos:</strong> a turma não poderá receber novos assistidos.</li>
+          <li><strong>Sem novos vínculos:</strong> o grupo não poderá receber novos assistidos.</li>
           <li><strong>Histórico preservado:</strong> vínculos já existentes continuam registrados.</li>
         </ul>
       </div>
@@ -296,9 +314,9 @@
     <div class="notice notice-info mt-s">
       <app-icon name="alert-circle" />
       <div>
-        <b>Impactos de reativar esta turma:</b>
+        <b>Impactos de reativar este grupo:</b>
         <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px">
-          <li><strong>Turma volta a ficar disponível</strong> para novos vínculos de assistidos.</li>
+          <li><strong>Grupo volta a ficar disponível</strong> para novos vínculos de assistidos.</li>
         </ul>
       </div>
     </div>
@@ -308,11 +326,11 @@
     <app-button variant="secondary" (click)="fecharModalStatus()">Cancelar</app-button>
     @if (turmaSelecionadaStatus()?.ativo) {
       <app-button variant="danger" [loading]="alterandoStatus()" (click)="confirmarAlteracaoStatus()">
-        Inativar turma
+        Inativar grupo
       </app-button>
     } @else {
       <app-button [loading]="alterandoStatus()" (click)="confirmarAlteracaoStatus()">
-        Reativar turma
+        Reativar grupo
       </app-button>
     }
   </ng-template>
@@ -332,8 +350,8 @@
   </div>
 
   <p class="page-intro" style="margin: 0 0 12px">
-    Selecione os assistidos ativos que devem ser vinculados a esta turma. Um assistido já
-    vinculado a outra turma é transferido — o vínculo anterior é encerrado automaticamente.
+    Selecione os assistidos ativos que devem ser vinculados a este grupo. Um assistido já
+    vinculado a outro grupo é transferido — o vínculo anterior é encerrado automaticamente.
   </p>
 
   @if (erroVincularAlunos()) {

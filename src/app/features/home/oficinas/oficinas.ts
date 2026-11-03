@@ -11,6 +11,16 @@ import { OficinaRequestDTO } from '../../../shared/models/oficina/OficinaRequest
 import { OficinaResponseDTO } from '../../../shared/models/oficina/OficinaResponseDTO';
 import { OficinaResumoDTO } from '../../../shared/models/oficina/OficinaResumoDTO';
 import { UsuarioResponse } from '../../../shared/models/usuarios/UsuarioResponse';
+import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO';
+import { SemanarioResponseDTO } from '../../../shared/models/semanario/SemanarioResponseDTO';
+import { SemanarioService } from '../../../core/semanario.service';
+import { TabelaSemanarios } from '../../../shared/components/tabela-semanarios/tabela-semanarios';
+import { AuthService } from '../../../core/auth.service';
+import { Role } from '../../../shared/enum/role.enum';
+import { Table, TableColumn } from '../../../shared/components/table/table';
+import { Drawer } from '../../../shared/components/drawer/drawer';
+import { ListaBadges } from '../../../shared/components/lista-badges/lista-badges';
+import { AcaoDrawer } from '../../../shared/components/acao-drawer/acao-drawer';
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Modal } from '../../../shared/components/modal/modal';
 import { Input } from '../../../shared/components/input/input';
@@ -20,22 +30,54 @@ import { Badge } from '../../../shared/components/badge/badge';
 import { ActionMenu, ActionMenuItem } from '../../../shared/components/action-menu/action-menu';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
 import { HistoricoOficineiros } from '../../../shared/components/historico-oficineiros/historico-oficineiros';
+import { SeletorMultiplo } from '../../../shared/components/seletor-multiplo/seletor-multiplo';
 import { corDaOficina, textoHorario } from './oficina-card.util';
 
 const MAX_HORARIOS = 3;
+const CHAVE_MODO_EXIBICAO = 'oficinas.modoExibicao';
+
+type ModoExibicao = 'tabela' | 'blocos';
+
+/** Tudo que a linha da tabela e o bloco mostram de uma oficina, já formatado. */
+interface CardOficina {
+  oficina: OficinaResponseDTO;
+  cor: string;
+  oficineiro: string;
+  grupos: string[];
+  horarios: string[];
+  outrosHorarios: number;
+  turmasAtivas: number;
+  alunos: number;
+  capacidade: number;
+}
+
+/** Preferência só deste navegador; sem storage (aba anônima etc.) cai no padrão. */
+function lerModoExibicao(): ModoExibicao {
+  try {
+    return localStorage.getItem(CHAVE_MODO_EXIBICAO) === 'blocos' ? 'blocos' : 'tabela';
+  } catch {
+    return 'tabela';
+  }
+}
 
 @Component({
   selector: 'app-oficinas',
   standalone: true,
-  imports: [HistoricoOficineiros, ActionMenu, Badge, Icon, CommonModule, FormsModule, Select, Modal, Input, Button],
+  imports: [HistoricoOficineiros, SeletorMultiplo, TabelaSemanarios, Table, Drawer, ListaBadges, AcaoDrawer, ActionMenu, Badge, Icon, CommonModule, FormsModule, Select, Modal, Input, Button],
   templateUrl: './oficinas.html',
   styleUrl: './oficinas.css',
 })
 export class Oficinas implements OnInit {
   private http = inject(HttpClient);
+  private semanarioService = inject(SemanarioService);
+  private authService = inject(AuthService);
+
+  /** Só a coordenação remove semanários (a API confere de novo). */
+  readonly isCoordenador = computed(() => this.authService.currentProfile() === Role.COORD);
 
   private readonly apiOficinas = `${environment.apiUrl}/api/oficinas`;
   private readonly apiUsuarios = `${environment.apiUrl}/api/usuarios`;
+  private readonly apiTurmas = `${environment.apiUrl}/api/turmas`;
 
   oficinas = signal<OficinaResponseDTO[]>([]);
   carregando = signal(false);
@@ -47,6 +89,10 @@ export class Oficinas implements OnInit {
   /** id -> nome, pra exibir o nome do oficineiro responsável no card (o back só manda o id). */
   nomesOficineiros = computed(() => new Map(this.oficineiroOptions().map((o) => [o.value, o.label])));
 
+  /** Grupos ativos, para o seletor de grupos atendidos e os nomes no card. */
+  grupoOptions = signal<SelectOption<number>[]>([]);
+  private nomesGrupos = computed(() => new Map(this.grupoOptions().map((o) => [o.value, o.label])));
+
   /**
    * Números das turmas por oficina (GET /resumo, uma chamada para todas).
    * Separado da listagem: se falhar, os cards aparecem sem esses números.
@@ -54,9 +100,10 @@ export class Oficinas implements OnInit {
   private resumoPorOficina = signal(new Map<number, OficinaResumoDTO>());
 
   /** Tudo que o card desenha, já formatado. */
-  cards = computed(() => {
+  cards = computed<CardOficina[]>(() => {
     const resumos = this.resumoPorOficina();
     const nomes = this.nomesOficineiros();
+    const nomesGrupos = this.nomesGrupos();
     return this.oficinas().map((oficina) => {
       const resumo = resumos.get(oficina.oficinaId);
       const horarios = (resumo?.horarios ?? []).map(textoHorario).filter(Boolean);
@@ -64,6 +111,7 @@ export class Oficinas implements OnInit {
         oficina,
         cor: corDaOficina(oficina.oficinaId),
         oficineiro: nomes.get(oficina.oficineiroResponsavelId ?? -1) ?? 'Sem oficineiro',
+        grupos: oficina.turmaIds.map((id) => nomesGrupos.get(id)).filter((nome): nome is string => !!nome),
         // Turmas com agendas diferentes: uma linha por agenda, até 3.
         horarios: horarios.slice(0, MAX_HORARIOS),
         outrosHorarios: Math.max(horarios.length - MAX_HORARIOS, 0),
@@ -73,6 +121,41 @@ export class Oficinas implements OnInit {
       };
     });
   });
+
+  /** Tabela (padrão) ou blocos, como o usuário escolher. */
+  readonly modoExibicao = signal<ModoExibicao>(lerModoExibicao());
+
+  readonly colunasOficinas: TableColumn<CardOficina>[] = [
+    { key: 'nome', header: 'Oficina', sortable: true, value: (c) => c.oficina.nomeOficina },
+    { key: 'oficineiro', header: 'Oficineiro', sortable: true, value: (c) => c.oficineiro },
+    { key: 'grupos', header: 'Grupos atendidos', type: 'custom' },
+    { key: 'local', header: 'Local', value: (c) => c.oficina.local || '—' },
+    { key: 'vagas', header: 'Vagas', align: 'center', value: (c) => (c.turmasAtivas > 0 ? `${c.alunos}/${c.capacidade}` : '—') },
+    { key: 'ativo', header: 'Status', type: 'badge', width: '140px', value: (c) => c.oficina.ativo },
+  ];
+
+  protected readonly trackByOficina = (c: CardOficina) => c.oficina.oficinaId;
+
+  mudarModoExibicao(modo: ModoExibicao): void {
+    this.modoExibicao.set(modo);
+    try {
+      localStorage.setItem(CHAVE_MODO_EXIBICAO, modo);
+    } catch {
+      // sem storage: vale só até recarregar a página
+    }
+  }
+
+  /** Drawer lateral da linha da tabela, com as mesmas ações do menu do bloco. */
+  readonly oficinaDoDrawer = signal<CardOficina | null>(null);
+
+  readonly abrirDrawerOficina = (card: CardOficina): void => {
+    this.oficinaDoDrawer.set(card);
+  };
+
+  executarAcaoDoDrawer(acao: string, oficina: OficinaResponseDTO): void {
+    this.oficinaDoDrawer.set(null);
+    this.executarAcaoOficina(acao, oficina);
+  }
 
   filtroNome = '';
   filtroStatus: 'todas' | 'ativas' | 'inativas' = 'ativas';
@@ -89,6 +172,15 @@ export class Oficinas implements OnInit {
     this.carregarOficinas();
     this.carregarResumo();
     this.carregarOficineirosParaSelect();
+    this.carregarGrupos();
+  }
+
+  private carregarGrupos(): void {
+    const params = new HttpParams().set('ativo', 'true');
+    this.http.get<TurmaResponseDTO[]>(this.apiTurmas, { params }).subscribe({
+      next: (lista) => this.grupoOptions.set(lista.map((t) => ({ value: t.turmaId, label: t.nomeTurma }))),
+      error: (erro) => console.error('Erro ao carregar grupos:', erro),
+    });
   }
 
   private carregarResumo(): void {
@@ -166,6 +258,7 @@ export class Oficinas implements OnInit {
       nomeOficina: '',
       oficineiroResponsavelId: null,
       local: '',
+      turmaIds: [],
     };
   }
 
@@ -184,7 +277,7 @@ export class Oficinas implements OnInit {
     this.oficinaSendoEditada.set(null);
   }
 
-  atualizarCampoOficina(campo: keyof OficinaRequestDTO, valor: string | number | null): void {
+  atualizarCampoOficina(campo: keyof OficinaRequestDTO, valor: string | number | number[] | null): void {
     this.formOficina = { ...this.formOficina, [campo]: valor };
 
     if (campo === 'nomeOficina') {
@@ -264,6 +357,7 @@ export class Oficinas implements OnInit {
       this.salvando.set(false);
       this.fecharModalForm();
       this.carregarOficinas();
+      this.carregarResumo();
     } catch (erro: any) {
       console.error('Erro ao salvar oficina:', erro);
       this.erroSalvar.set(
@@ -281,14 +375,20 @@ export class Oficinas implements OnInit {
   acoesOficina(oficina: OficinaResponseDTO): ActionMenuItem[] {
     return oficina.ativo
       ? [
+          { id: 'semanarios', label: 'Ver semanários', icon: 'file-text' },
           { id: 'editar', label: 'Editar', icon: 'edit' },
           { id: 'inativar', label: 'Inativar', icon: 'power', danger: true },
         ]
-      : [{ id: 'reativar', label: 'Reativar', icon: 'rotate-ccw' }];
+      : [
+          { id: 'semanarios', label: 'Ver semanários', icon: 'file-text' },
+          { id: 'reativar', label: 'Reativar', icon: 'rotate-ccw' },
+        ];
   }
 
   executarAcaoOficina(acao: string, oficina: OficinaResponseDTO): void {
-    if (acao === 'editar') {
+    if (acao === 'semanarios') {
+      this.abrirSemanarios(oficina);
+    } else if (acao === 'editar') {
       this.abrirModalEdicao(oficina);
     } else if (acao === 'inativar') {
       this.abrirConfirmacaoInativacao(oficina);
@@ -306,10 +406,45 @@ export class Oficinas implements OnInit {
       nomeOficina: oficina.nomeOficina,
       oficineiroResponsavelId: oficina.oficineiroResponsavelId ?? null,
       local: oficina.local ?? '',
+      turmaIds: oficina.turmaIds ?? [],
     };
     this.erroSalvar.set(null);
     this.alertaDuplicidade.set(false);
     this.mostrarModalForm.set(true);
+  }
+
+  /* ============================================================
+   * MODAL: SEMANÁRIOS DA OFICINA
+   * ============================================================ */
+  oficinaDosSemanarios = signal<OficinaResponseDTO | null>(null);
+  mostrarSemanarios = signal(false);
+  semanarios = signal<SemanarioResponseDTO[]>([]);
+  carregandoSemanarios = signal(false);
+  erroSemanarios = signal<string | null>(null);
+
+  async abrirSemanarios(oficina: OficinaResponseDTO): Promise<void> {
+    this.oficinaDosSemanarios.set(oficina);
+    this.semanarios.set([]);
+    this.erroSemanarios.set(null);
+    this.mostrarSemanarios.set(true);
+    this.carregandoSemanarios.set(true);
+    try {
+      this.semanarios.set(await this.semanarioService.listarPorOficina(oficina.oficinaId));
+    } catch {
+      this.erroSemanarios.set('Não foi possível carregar os semanários.');
+    } finally {
+      this.carregandoSemanarios.set(false);
+    }
+  }
+
+  async removerSemanario(semanario: SemanarioResponseDTO): Promise<void> {
+    this.erroSemanarios.set(null);
+    try {
+      await this.semanarioService.remover(semanario.semanarioId);
+      this.semanarios.update((lista) => lista.filter((s) => s.semanarioId !== semanario.semanarioId));
+    } catch (erro: any) {
+      this.erroSemanarios.set(mensagemErro(erro, 'Não foi possível remover o semanário.'));
+    }
   }
 
   /* ============================================================

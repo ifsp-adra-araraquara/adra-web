@@ -54,12 +54,6 @@ export class Chamada implements OnInit {
   );
 
   ngOnInit(): void {
-    // Links antigos (/chamada?aulaId=) abrem a chamada do grupo daquela aula.
-    const aulaId = Number(this.route.snapshot.queryParamMap.get('aulaId'));
-    if (Number.isInteger(aulaId) && aulaId > 0) {
-      this.router.navigate(['/chamada/aula', aulaId], { replaceUrl: true });
-      return;
-    }
     const data = this.route.snapshot.queryParamMap.get('data');
     if (data) this.dataSelecionada.set(data);
     // Painel do Coordenador: "Ver as pendentes" abre direto na aba.

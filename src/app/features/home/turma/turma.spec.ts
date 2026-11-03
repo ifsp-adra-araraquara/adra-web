@@ -23,6 +23,7 @@ describe('Turmas', () => {
     capacidade: 24,
     ativo: true,
     observacoes: '',
+    oficinaIds: [],
   };
 
   /** ngOnInit dispara carregarTurmas() + carregarOficinas() juntos — mocka ambos. */
@@ -85,7 +86,7 @@ describe('Turmas', () => {
 
     await component.salvarTurma();
 
-    expect(component.erroSalvar()).toBe('Informe o nome da turma.');
+    expect(component.erroSalvar()).toBe('Informe o nome do grupo.');
     httpMock.expectNone((r) => r.method === 'POST');
   });
 

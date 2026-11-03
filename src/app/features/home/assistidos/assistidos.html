@@ -20,8 +20,8 @@
   @if (turmaFiltroAtual(); as turmaCtx) {
     <div class="notice notice-info" style="align-items: center; justify-content: space-between" role="status">
       <span>
-        Mostrando alunos da turma <strong>{{ turmaCtx.nomeTurma }}</strong>
-        <button type="button" class="link-voltar" (click)="voltarParaTurmas()"><app-icon name="chevron-left" [size]="16" /> Voltar para Turmas</button>
+        Mostrando alunos do grupo <strong>{{ turmaCtx.nomeTurma }}</strong>
+        <button type="button" class="link-voltar" (click)="voltarParaTurmas()"><app-icon name="chevron-left" [size]="16" /> Voltar para Grupos</button>
       </span>
       <app-button variant="secondary" size="sm" (click)="removerFiltroTurma()">
         Remover filtro
@@ -76,7 +76,7 @@
 
     @if (turmas().length) {
       <div class="filtros-select">
-        <label class="sr-only" for="filtro-turma">Filtrar por turma</label>
+        <label class="sr-only" for="filtro-turma">Filtrar por grupo</label>
         <app-select
           id="filtro-turma"
           [ngModel]="filtroTurma()"
@@ -111,10 +111,10 @@
                 <th class="col-larga">CPF</th>
                 <th>Responsável</th>
                 <th class="col-larga">Contato</th>
-                <th>Turma</th>
+                <th>Grupo</th>
                 @if (turmaFiltroAtual()) {
-                  <th>Entrada na turma</th>
-                  <th>Saída da turma</th>
+                  <th>Entrada no grupo</th>
+                  <th>Saída do grupo</th>
                 }
                 <th>Frequência</th>
                 <th>Status</th>
@@ -224,12 +224,12 @@
                 </dd>
               </div>
               <div>
-                <dt>Turma</dt>
+                <dt>Grupo</dt>
                 <dd>{{ assistido.nomeTurma || 'Sem turma' }}</dd>
               </div>
               @if (turmaFiltroAtual()) {
                 <div>
-                  <dt>Na turma</dt>
+                  <dt>No grupo</dt>
                   <dd>
                     {{ assistido.dataEntradaTurma ? (assistido.dataEntradaTurma | date: 'dd/MM/yyyy') : '-' }}
                     até
@@ -371,7 +371,7 @@
         [class.active]="abaVerAssistido() === 'turmas'"
         (click)="trocarAbaVerAssistido('turmas')"
       >
-        Turmas
+        Grupos
       </button>
       }
     </div>
@@ -932,27 +932,26 @@
     <!-- ==================== ABA: TURMAS (histórico turma_aluno) ==================== -->
     @if (abaVerAssistido() === 'turmas' && podeEditarCadastro()) {
       <p class="form-sec-title">
-        Turmas
+        Grupos
         <app-button size="sm" variant="secondary" class="sec-acao" (click)="executarAcaoDaFicha('turma')">
-          <app-icon name="edit" [size]="16" /> Trocar turma
+          <app-icon name="edit" [size]="16" /> Trocar grupo
         </app-button>
       </p>
 
       @if (carregandoHistoricoTurmas()) {
-        <div class="card card-pad"><p class="muted">Carregando turmas...</p></div>
+        <div class="card card-pad"><p class="muted">Carregando grupos...</p></div>
       } @else if (erroHistoricoTurmas()) {
         <div class="notice notice-error" role="alert">{{ erroHistoricoTurmas() }}</div>
       } @else if (historicoTurmasAssistido().length === 0) {
         <div class="card card-pad">
-          <p class="muted">Este assistido nunca foi vinculado a uma turma.</p>
+          <p class="muted">Este assistido nunca foi vinculado a um grupo.</p>
         </div>
       } @else {
-        <div class="table-wrap" role="region" tabindex="0" aria-label="Histórico de turmas">
+        <div class="table-wrap" role="region" tabindex="0" aria-label="Histórico de grupos">
           <table>
             <thead>
               <tr>
-                <th>Turma</th>
-                <th>Oficina</th>
+                <th>Grupo</th>
                 <th>Data de entrada</th>
                 <th>Data de saída</th>
                 <th>Vínculo</th>
@@ -965,10 +964,9 @@
                 <td class="strong">
                   {{ vinculo.nomeTurma }}
                   @if (!vinculo.turmaAtiva) {
-                  <span class="cell-sub"> (turma inativa)</span>
+                  <span class="cell-sub"> (grupo inativo)</span>
                   }
                 </td>
-                <td>{{ vinculo.nomeOficina || '—' }}</td>
                 <td>{{ vinculo.dataEntrada | date: 'dd/MM/yyyy' }}</td>
                 <td>{{ vinculo.dataSaida ? (vinculo.dataSaida | date: 'dd/MM/yyyy') : '-' }}</td>
                 <td>
@@ -976,7 +974,7 @@
                 </td>
                 <td>
                   <div class="t-actions">
-                    <button type="button" aria-label="Ver alunos da turma" appTooltip="Ver alunos" (click)="verAlunosDaTurmaHistorico(vinculo)">
+                    <button type="button" aria-label="Ver alunos do grupo" appTooltip="Ver alunos" (click)="verAlunosDaTurmaHistorico(vinculo)">
                       <app-icon name="eye" />
                     </button>
                     <button type="button" aria-label="Ver frequência do grupo" appTooltip="Ver frequência" (click)="verFrequenciaHistoricoTurma(vinculo)">
@@ -1124,7 +1122,7 @@
         <div>
           <b>Impactos de inativar este assistido:</b>
           <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px;">
-            <li><strong>Desvinculação de Turmas:</strong> O assistido deixará de constar nas chamadas ativas e oficinas.</li>
+            <li><strong>Desvinculação de Grupos:</strong> O assistido deixará de constar nas chamadas ativas e oficinas.</li>
             <li><strong>Suspensão de Encaminhamentos:</strong> Não será possível realizar novas matrículas enquanto inativo.</li>
             <li><strong>Histórico Preservado:</strong> Ficha social, atendimentos e prontuários continuam salvos.</li>
           </ul>
@@ -1136,7 +1134,7 @@
         <div>
           <b>Impactos de reativar este assistido:</b>
           <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px;">
-            <li><strong>Retorno às Atividades:</strong> O assistido voltará ao cadastro ativo e poderá participar das turmas.</li>
+            <li><strong>Retorno às Atividades:</strong> O assistido voltará ao cadastro ativo e poderá participar dos grupos.</li>
             <li><strong>Novas Matrículas Habilitadas:</strong> Será possível agendar novos atendimentos e oficinas.</li>
             <li><strong>Prontuários Acessíveis:</strong> Todo o histórico anterior continua disponível na ficha.</li>
           </ul>
@@ -1173,7 +1171,7 @@
 
     @if (secaoEdicao() === 'turma') {
       <div class="field">
-        <label>Turma</label>
+        <label>Grupo</label>
         <app-select
           [ngModel]="formEdicaoAssistido.turmaId"
           (ngModelChange)="atualizarCampoEdicaoAssistido('turmaId', $event)"
@@ -1229,7 +1227,7 @@
         />
 
         <div class="field">
-          <label>Turma</label>
+          <label>Grupo</label>
           <app-select
             [ngModel]="formEdicaoAssistido.turmaId"
             (ngModelChange)="atualizarCampoEdicaoAssistido('turmaId', $event)"

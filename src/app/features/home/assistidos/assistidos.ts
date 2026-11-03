@@ -174,12 +174,12 @@ export class Assistidos implements OnInit {
 
   turmasAtivas = computed(() => this.turmas().filter((turma) => turma.ativo));
 
-  /** Turmas do filtro restritas à oficina escolhida (quando houver). */
+  /** Turmas do filtro restritas aos grupos atendidos pela oficina escolhida (quando houver). */
   filtroTurmaOptions = computed<SelectOption<number | ''>[]>(() => {
     const oficinaId = this.filtroOficina();
-    const turmas = oficinaId === '' ? this.turmas() : this.turmas().filter((t) => t.oficinaId === oficinaId);
+    const turmas = oficinaId === '' ? this.turmas() : this.turmas().filter((t) => t.oficinaIds.includes(oficinaId));
     return [
-      { value: '', label: 'Todas as turmas' },
+      { value: '', label: 'Todos os grupos' },
       ...turmas.map((turma) => ({ value: turma.turmaId, label: turma.nomeTurma })),
     ];
   });
@@ -190,7 +190,7 @@ export class Assistidos implements OnInit {
   ]);
 
   turmaEdicaoOptions = computed<SelectOption<number | null>[]>(() => [
-    { value: null, label: 'Sem turma' },
+    { value: null, label: 'Sem grupo' },
     ...this.turmas().map((turma) => ({ value: turma.turmaId, label: turma.nomeTurma })),
   ]);
 
@@ -309,7 +309,7 @@ export class Assistidos implements OnInit {
     this.filtroOficina.set(oficinaId);
     // turma escolhida que não pertence à nova oficina deixa de fazer sentido
     const turma = this.turmas().find((t) => t.turmaId === this.filtroTurma());
-    if (oficinaId !== '' && turma && turma.oficinaId !== oficinaId) {
+    if (oficinaId !== '' && turma && !turma.oficinaIds.includes(oficinaId)) {
       this.onFiltroTurmaChange('');
       return;
     }
@@ -915,7 +915,7 @@ export class Assistidos implements OnInit {
         },
         error: (erro) => {
           console.error('Erro ao carregar histórico de turmas:', erro);
-          this.erroHistoricoTurmas.set('Não foi possível carregar o histórico de turmas deste assistido.');
+          this.erroHistoricoTurmas.set('Não foi possível carregar o histórico de grupos deste assistido.');
           this.carregandoHistoricoTurmas.set(false);
         },
       });

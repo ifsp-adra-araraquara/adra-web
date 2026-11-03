@@ -3,7 +3,6 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { administradorGuard } from './core/guards/administrador.guard';
 import { roleGuard } from './core/guards/role.guard';
-import { chamadaDaAulaGuard } from './core/guards/chamada-da-aula.guard';
 import { Role } from './shared/enum/role.enum';
 
 export const routes: Routes = [
@@ -172,12 +171,6 @@ export const routes: Routes = [
           import('./features/home/chamada/chamada-grupo/chamada-grupo').then((m) => m.ChamadaGrupo),
         data: { roles: [Role.COORD, Role.ASSISTENTE, Role.EDUCADOR] },
         canActivate: [roleGuard],
-      },
-      {
-        path: 'chamada/aula/:aulaId',
-        children: [],
-        data: { roles: [Role.COORD, Role.ASSISTENTE, Role.EDUCADOR] },
-        canActivate: [roleGuard, chamadaDaAulaGuard],
       },
       {
         path: 'chamada/status',

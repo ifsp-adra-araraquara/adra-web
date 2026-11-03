@@ -99,7 +99,7 @@ export class AssistidoNovo implements OnInit {
   erroSalvar = signal<string | null>(null);
 
   turmaOptions = computed<SelectOption<number | null>[]>(() => [
-    { value: null, label: 'Sem turma' },
+    { value: null, label: 'Sem grupo' },
     ...this.turmas()
       .filter((t) => t.ativo)
       .map((t) => ({ value: t.turmaId, label: t.nomeTurma })),
