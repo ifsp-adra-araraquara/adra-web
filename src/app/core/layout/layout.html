@@ -1,3 +1,5 @@
+<a class="pular-conteudo" href="#conteudo" (click)="pularParaConteudo($event)">Pular para o conteúdo</a>
+
 <app-sidebar [(open)]="menuOpen" [(collapsed)]="sidebarCollapsed" />
 
 @if (menuOpen()) {
@@ -16,7 +18,7 @@
       (click)="menuOpen.set(true)">
       <app-icon name="menu" />
     </button>
-    <h1>Sistema de Gestão</h1>
+    <p class="topbar-titulo">Sistema de Gestão</p>
 
     <div class="topbar-acoes">
       <app-notificacoes />
@@ -35,7 +37,8 @@
     </div>
   </header>
 
-  <main class="content">
+  <main #conteudo id="conteudo" class="content" tabindex="-1">
     <router-outlet />
   </main>
+  <p class="sr-only" aria-live="polite">{{ anuncioTela() }}</p>
 </div>
