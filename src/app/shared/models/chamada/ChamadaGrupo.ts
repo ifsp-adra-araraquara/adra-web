@@ -47,6 +47,8 @@ export interface AtendidoChamadaDTO {
   historicoRecente: { data: string; statusPresenca: StatusPresenca }[];
   frequenciaPercentual: number | null;
   autorizadosRetirada: AutorizadoRetiradaDTO[];
+  /** FT-13: fim da suspensão que cobre o dia; a linha vem travada em FJ por Suspensão. */
+  suspensoAte: string | null;
 }
 
 /** GET /api/chamadas/status — situação de cada grupo em cada dia do período. */

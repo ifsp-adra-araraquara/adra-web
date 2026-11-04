@@ -98,6 +98,7 @@
 .motivo { display: flex; flex-direction: column; gap: 8px; margin: 2px 0 8px 52px; }
 .motivo .select { width: 100%; min-width: 0; }
 .motivo-lido { margin: 0 0 8px 52px; font-size: 12.5px; color: var(--gray-600); }
+.motivo .motivo-lido { margin: 0; }
 textarea { width: 100%; }
 
 .niver { font-weight: 500; color: var(--amber-600); white-space: nowrap; }

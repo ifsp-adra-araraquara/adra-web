@@ -8,7 +8,7 @@ import { ChamadaService } from '../../../../core/chamada.service';
 import { DisciplinarService } from '../../../../core/disciplinar.service';
 import { Role } from '../../../../shared/enum/role.enum';
 import { StatusPresenca } from '../../../../shared/enum/StatusPresenca';
-import { MotivoFalta, MOTIVO_FALTA_LABELS, MOTIVO_FALTA_OPTIONS } from '../../../../shared/enum/MotivoFalta';
+import { MotivoFalta, MOTIVO_FALTA_LABELS } from '../../../../shared/enum/MotivoFalta';
 import { ChamadaGrupoDTO } from '../../../../shared/models/chamada/ChamadaGrupo';
 import { SinalizacaoDisciplinarDTO } from '../../../../shared/models/disciplinar/Disciplinar';
 import { hojeISO } from '../../../../shared/utils/aula.util';
@@ -20,8 +20,7 @@ import {
   LIMIAR_JUSTIFICADAS_CONSECUTIVAS,
   LinhaChamada,
   ROTULO_PRESENCA,
-  SIGLA_PRESENCA,
-  atualizarMotivoFalta,
+  SIGLA_PRESENCA,
   atualizarObservacaoFalta,
   contarFaltasConsecutivas,
   contarJustificadasConsecutivas,
@@ -64,7 +63,6 @@ export class ChamadaGrupo {
 
   readonly StatusPresenca = StatusPresenca;
   readonly MotivoFalta = MotivoFalta;
-  readonly motivoFaltaOptions = MOTIVO_FALTA_OPTIONS;
   readonly MOTIVO_FALTA_LABELS = MOTIVO_FALTA_LABELS;
   readonly SIGLA = SIGLA_PRESENCA;
   readonly ROTULO = ROTULO_PRESENCA;
@@ -173,8 +171,9 @@ export class ChamadaGrupo {
     }
   }
 
+  /** FT-13: a API já manda quem está suspenso no dia; as sinalizações cobrem chamadas ainda não reabertas. */
   suspensoAte(atendido: LinhaChamada): string | null {
-    return this.sinalizacoes().get(atendido.assistidoId)?.suspensoAte ?? null;
+    return atendido.suspensoAte ?? this.sinalizacoes().get(atendido.assistidoId)?.suspensoAte ?? null;
   }
 
   /** "Niver" da planilha: selo no dia do aniversário, data discreta quando cai no mês. */
@@ -218,17 +217,13 @@ export class ChamadaGrupo {
   }
 
   alternar(atendido: LinhaChamada): void {
-    if (!this.editando()) return;
+    if (!this.editando() || this.suspensoAte(atendido)) return;
     this.definirStatus(atendido.assistidoId, proximoStatusPresenca(this.status(atendido)));
   }
 
   definirStatus(assistidoId: number, status: StatusPresenca): void {
     this.atendidos.update((lista) => marcarPresenca(lista, assistidoId, status));
     this.sucesso.set(null);
-  }
-
-  mudarMotivo(assistidoId: number, motivo: MotivoFalta): void {
-    this.atendidos.update((lista) => atualizarMotivoFalta(lista, assistidoId, motivo));
   }
 
   mudarObservacao(assistidoId: number, observacao: string): void {

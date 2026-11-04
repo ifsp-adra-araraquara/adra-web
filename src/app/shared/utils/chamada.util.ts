@@ -32,6 +32,8 @@ export interface LinhaChamada {
   aulasPrevistas?: number | null;
   /** Quem pode buscar o aluno (vazio = ninguém marcado como autorizado). */
   autorizadosRetirada?: AutorizadoRetiradaDTO[];
+  /** FT-13: suspenso no dia — fica em falta justificada por Suspensão e não é alterado na chamada. */
+  suspensoAte?: string | null;
 }
 
 /** Linha da chamada do grupo no dia (FT-12). O histórico vem por data de chamada, não por aula. */
@@ -53,6 +55,7 @@ export function linhaChamadaDeAtendido(a: AtendidoChamadaDTO): LinhaChamada {
     historicoRecente: a.historicoRecente.map((h) => ({ dataAula: h.data, statusPresenca: h.statusPresenca })),
     frequenciaPercentual: a.frequenciaPercentual,
     autorizadosRetirada: a.autorizadosRetirada,
+    suspensoAte: a.suspensoAte ?? null,
   };
 }
 
@@ -111,13 +114,15 @@ export function marcarPresenca(
   status: StatusPresenca,
 ): LinhaChamada[] {
   return alunos.map((a) => {
-    if (a.assistidoId !== assistidoId) return a;
+    // FT-13: o suspenso fica em FJ por Suspensão; corrige-se a suspensão, não a chamada.
+    if (a.assistidoId !== assistidoId || a.suspensoAte) return a;
     // Trocar pra um status que não seja falta justificada limpa o
     // motivo/observação — não faz sentido carregar isso escondido.
     if (status !== StatusPresenca.FALTA_JUSTIFICADA) {
       return { ...a, statusPresenca: status, motivoFalta: null, observacao: '' };
     }
-    return { ...a, statusPresenca: status };
+    // A falta justificada escolhida na chamada é sempre por atestado (a de suspensão vem sozinha).
+    return { ...a, statusPresenca: status, motivoFalta: a.motivoFalta ?? MotivoFalta.ATESTADO };
   });
 }
 
@@ -154,12 +159,16 @@ export function filtrarPorNome(alunos: LinhaChamada[], termo: string): LinhaCham
 }
 
 export function marcarTodosPresentes(alunos: LinhaChamada[]): LinhaChamada[] {
-  return alunos.map((a) => ({
-    ...a,
-    statusPresenca: StatusPresenca.PRESENTE,
-    motivoFalta: null,
-    observacao: '',
-  }));
+  return alunos.map((a) =>
+    a.suspensoAte
+      ? a
+      : {
+          ...a,
+          statusPresenca: StatusPresenca.PRESENTE,
+          motivoFalta: null,
+          observacao: '',
+        },
+  );
 }
 
 export function atualizarMotivoFalta(
@@ -186,7 +195,7 @@ export function atualizarObservacaoFalta(
  */
 export function validarChamada(alunos: LinhaChamada[]): string | null {
   if (alunos.some((a) => !a.statusPresenca)) {
-    return 'Marque a presença de todos os alunos antes de salvar.';
+    return 'Marque a presença de todos os atendidos antes de salvar.';
   }
 
   const semMotivo = alunos.find(
@@ -194,16 +203,6 @@ export function validarChamada(alunos: LinhaChamada[]): string | null {
   );
   if (semMotivo) {
     return `Informe o motivo da falta justificada de ${semMotivo.nomeCompleto}.`;
-  }
-
-  const outroSemObservacao = alunos.find(
-    (a) =>
-      a.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA &&
-      a.motivoFalta === MotivoFalta.OUTRO &&
-      !a.observacao?.trim(),
-  );
-  if (outroSemObservacao) {
-    return `Motivo "Outro" exige observação — preencha a de ${outroSemObservacao.nomeCompleto}.`;
   }
 
   return null;
