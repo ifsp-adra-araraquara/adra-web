@@ -31,8 +31,8 @@
     </div>
     <p class="page-intro">
       Baixe o modelo, preencha no Excel e importe o arquivo .csv, importe direto uma lista de presença (.xlsx) da
-      planilha do grupo, ou adicione os atendidos direto na grade. Em cada atendido, adicione o RG ou CPF e, se
-      quiser, a foto. Valide, corrija o que estiver marcado e cadastre. O 1º responsável de cada atendido é o
+      planilha do grupo, ou adicione os atendidos direto na grade. Em cada atendido, se quiser, adicione o RG ou CPF e
+      a foto. Valide, corrija o que estiver marcado e cadastre. O 1º responsável de cada atendido é o
       principal.
     </p>
   </header>
@@ -205,8 +205,6 @@
                           dica="Uma foto do documento ou PDF."
                           [arquivos]="linha.documentos()"
                           (arquivosChange)="trocarDocumentos(linha, $event)"
-                          [obrigatorio]="true"
-                          [invalido]="!!resultado"
                         />
                         <app-foto-perfil [arquivo]="linha.foto()" (arquivoChange)="trocarFoto(linha, $event)" />
                       </div>

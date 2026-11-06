@@ -53,15 +53,17 @@ describe('AssistidosLote', () => {
     return { indice, status: 'VALIDA', erros: [], responsaveisExistentes: {} };
   }
 
-  it('sem documento a linha fica pendente mesmo com a API aprovando', () => {
+  it('sem documento e com responsável sem CPF a linha fica válida', () => {
     adicionarIrmao('Ana Souza');
+    const [linha] = component.linhas();
+    linha.form.controls.responsaveis.controls[0].controls.cpf.setValue('');
 
     component.validar();
     httpMock.expectOne(`${api}/lote/validar`).flush([valida(0)]);
 
-    const [linha] = component.linhas();
-    expect(linha.resultado()?.status).toBe('INVALIDA');
-    expect(component.errosGerais(linha)).toEqual(['Adicione a foto do RG ou CPF do atendido.']);
+    expect(linha.form.valid).toBe(true);
+    expect(linha.resultado()?.status).toBe('VALIDA');
+    expect(component.errosGerais(linha)).toEqual([]);
   });
 
   it('cadastra uma linha por vez com documento e foto opcional, e mantém na grade a que falhou', async () => {

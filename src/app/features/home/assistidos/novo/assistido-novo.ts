@@ -25,7 +25,6 @@ import { mensagemErro } from '../../../../shared/utils/erro-http.util';
 import { DadosComplementaresAssistidoForm, SEXO_OPTIONS } from '../dados-complementares/dados-complementares-assistido';
 import { SocioeconomicoAssistidoForm } from '../socioeconomico/socioeconomico-assistido';
 import { TermosAssistidoForm } from '../termos/termos-assistido';
-import { MENSAGEM_SEM_DOCUMENTO } from '../mensagens-cadastro';
 import {
   assistidoVazio,
   paraPayloadAssistido,
@@ -94,7 +93,6 @@ export class AssistidoNovo implements OnInit {
   turmas = signal<TurmaResponseDTO[]>([]);
   limiteRendaFamiliar = signal<number | null>(null);
   alertaDuplicidade = signal(false);
-  tentouSalvar = signal(false);
   salvando = signal(false);
   erroSalvar = signal<string | null>(null);
 
@@ -213,7 +211,6 @@ export class AssistidoNovo implements OnInit {
 
   private validar(): string | null {
     const a = this.assistido();
-    if (this.documentos().length === 0) return MENSAGEM_SEM_DOCUMENTO;
     if (!a.nomeCompleto.trim() || !a.dataNascimento) return 'Preencha nome completo e data de nascimento.';
 
     const erroComplementares = validarDadosComplementares(a);
@@ -230,7 +227,6 @@ export class AssistidoNovo implements OnInit {
 
   async salvar(): Promise<void> {
     if (this.salvando()) return;
-    this.tentouSalvar.set(true);
 
     const erro = this.validar();
     if (erro) {
