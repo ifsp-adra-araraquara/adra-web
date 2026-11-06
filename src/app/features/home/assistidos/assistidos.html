@@ -518,6 +518,14 @@
           rotulo="RG ou CPF"
           vazio="Nenhum documento enviado. Para adicionar, use Editar."
         />
+
+        <p class="form-sec-title mt-s">Comprovante de endereço</p>
+        <app-lista-documentos
+          [entidadeId]="assistidoSelecionado()!.assistidoId"
+          [categoria]="CategoriaArquivo.DECLARACAO_RESIDENCIA"
+          rotulo="Comprovante de endereço"
+          vazio="Nenhum comprovante enviado."
+        />
       }
     }
 

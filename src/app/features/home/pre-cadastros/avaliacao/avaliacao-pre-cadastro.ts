@@ -39,6 +39,7 @@ const ROTULOS_ANEXO: Partial<Record<CategoriaArquivo, string>> = {
   [CategoriaArquivo.FOTO_PERFIL]: 'Foto do atendido',
   [CategoriaArquivo.DOCUMENTO_IDENTIDADE]: 'Documento do atendido',
   [CategoriaArquivo.DOCUMENTO_RESPONSAVEL]: 'Documento do responsável',
+  [CategoriaArquivo.DECLARACAO_RESIDENCIA]: 'Comprovante de endereço',
 };
 
 /** Rascunho da API → responsável editável no formulário. */

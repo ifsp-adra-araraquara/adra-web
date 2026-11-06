@@ -40,6 +40,7 @@ export interface FichaCadastroSocial {
   quemBusca: string | null;
   aceiteLgpd: boolean | null;
   autorizaUsoImagem: boolean | null;
+  cienteFrequencia: boolean | null;
 }
 
 const PREFIXO_EMERGENCIA = 'Contato de emergência: ';
@@ -114,6 +115,7 @@ export function dePreCadastro(p: PreCadastroResponseDTO): FichaCadastroSocial {
     quemBusca: a?.quemBusca ?? null,
     aceiteLgpd: termos?.aceiteLgpd ?? null,
     autorizaUsoImagem: termos?.autorizaUsoImagem ?? null,
+    cienteFrequencia: termos?.cienteFrequencia ?? null,
   };
 }
 
@@ -166,5 +168,6 @@ export function deAssistido(a: AssistidoResponseDTO, vinculos: VinculoFamiliarRe
     quemBusca: linhaDasObservacoes(a.observacoes, PREFIXO_QUEM_BUSCA),
     aceiteLgpd: a.aceiteLgpd ?? null,
     autorizaUsoImagem: a.autorizaUsoImagem ?? null,
+    cienteFrequencia: a.cienteFrequenciaObrigatoria ?? null,
   };
 }

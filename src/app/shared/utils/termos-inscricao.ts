@@ -18,6 +18,11 @@ export const TERMO_LGPD = {
   ],
 };
 
+export const TERMO_FREQUENCIA = {
+  titulo: 'Frequência obrigatória',
+  paragrafos: ['A frequência é obrigatória. O limite é de 5 faltas por mês para o atendido.'],
+};
+
 export const TERMO_IMAGEM = {
   titulo: 'Declaração – Termo de cessão de imagem',
   paragrafos: [

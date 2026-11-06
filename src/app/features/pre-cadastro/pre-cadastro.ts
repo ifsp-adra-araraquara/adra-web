@@ -65,14 +65,16 @@ export class PreCadastro {
   protected readonly erroEnvio = signal<string | null>(null);
   protected readonly tokenCaptcha = signal<string | null>(null);
 
-  /** Opcionais e fora do FormGroup (são arquivos). */
+  /** Fora do FormGroup (são arquivos). Só o comprovante é obrigatório. */
   protected readonly foto = signal<File | null>(null);
   protected readonly documentosCrianca = signal<File[]>([]);
   protected readonly documentosResponsavel = signal<File[]>([]);
+  protected readonly comprovanteEndereco = signal<File[]>([]);
   protected readonly anexos = computed(() => ({
     foto: this.foto(),
     documentosCrianca: this.documentosCrianca(),
     documentosResponsavel: this.documentosResponsavel(),
+    comprovanteEndereco: this.comprovanteEndereco(),
   }));
 
   private readonly tituloEtapa = viewChild<ElementRef<HTMLElement>>('tituloEtapa');
@@ -91,6 +93,11 @@ export class PreCadastro {
       return;
     }
     if (chave === 'documentos') {
+      if (this.comprovanteEndereco().length === 0) {
+        this.erroEnvio.set('Envie o comprovante de endereço para continuar.');
+        this.rolarAoTopo();
+        return;
+      }
       this.mostrarEtapa(this.indice() + 1);
       return;
     }
@@ -118,6 +125,7 @@ export class PreCadastro {
     this.foto.set(null);
     this.documentosCrianca.set([]);
     this.documentosResponsavel.set([]);
+    this.comprovanteEndereco.set([]);
     this.enviado.set(false);
     this.protocolo.set(null);
     this.mostrarEtapa(0);

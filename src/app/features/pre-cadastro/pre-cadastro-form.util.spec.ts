@@ -18,7 +18,7 @@ import { secoesRevisao } from './resumo-inscricao';
 function formularioPreenchido(): FormularioPreCadastro {
   const form = criarFormularioPreCadastro(TestBed.inject(FormBuilder));
   form.patchValue({
-    termos: { aceiteLgpd: true, autorizaUsoImagem: false },
+    termos: { aceiteLgpd: true, autorizaUsoImagem: false, cienteFrequencia: true },
     crianca: {
       nomeCompleto: ' Crianca Teste ',
       dataNascimento: '2016-04-12',
@@ -38,7 +38,7 @@ function formularioPreenchido(): FormularioPreCadastro {
         telefone: '16991234567',
       },
     },
-    renda: { recebe: false },
+    renda: { recebe: false, nis: '12345678901' },
     saude: {
       possuiProblema: false,
       contatoEmergenciaNome: 'Tia Teste',
@@ -52,6 +52,22 @@ function formularioPreenchido(): FormularioPreCadastro {
 }
 
 describe('pre-cadastro-form.util', () => {
+  it('NIS e regra de frequência são obrigatórios', () => {
+    const form = TestBed.inject(FormBuilder);
+    const { renda, termos } = criarFormularioPreCadastro(form).controls;
+
+    expect(renda.controls.nis.hasError('required')).toBe(true);
+    expect(termos.controls.cienteFrequencia.hasError('required')).toBe(true);
+
+    renda.controls.nis.setValue('123');
+    expect(renda.controls.nis.hasError('pattern')).toBe(true);
+
+    renda.controls.nis.setValue('12345678901');
+    termos.controls.cienteFrequencia.setValue(false);
+    expect(renda.controls.nis.valid).toBe(true);
+    expect(termos.controls.cienteFrequencia.valid).toBe(false);
+  });
+
   it('formulário completo fica válido e o "se sim, qual?" só é exigido no Sim', () => {
     const form = formularioPreenchido();
     expect(form.valid).toBe(true);

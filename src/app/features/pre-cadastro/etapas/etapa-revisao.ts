@@ -13,8 +13,9 @@ function secaoDocumentos(anexos: AnexosPreCadastro): SecaoRevisao {
     chave: 'documentos',
     titulo: 'Documentos e foto',
     itens: [
-      { rotulo: 'Foto da criança', valor: anexos.foto ? 'Enviada' : 'Não enviada — levar na entrevista' },
-      { rotulo: 'Documento da criança', valor: enviado(anexos.documentosCrianca.length) },
+      { rotulo: 'Comprovante de endereço', valor: enviado(anexos.comprovanteEndereco.length) },
+      { rotulo: 'Foto do atendido', valor: anexos.foto ? 'Enviada' : 'Não enviada — levar na entrevista' },
+      { rotulo: 'Documento do atendido', valor: enviado(anexos.documentosCrianca.length) },
       { rotulo: 'Documento do responsável', valor: enviado(anexos.documentosResponsavel.length) },
     ],
   };

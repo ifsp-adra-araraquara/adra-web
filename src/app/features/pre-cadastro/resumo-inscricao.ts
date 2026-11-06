@@ -57,6 +57,7 @@ export function secoesRevisao(p: PreCadastroRequestDTO): SecaoRevisao[] {
       itens: [
         { rotulo: 'LGPD', valor: termos.aceiteLgpd ? 'Aceito' : 'Não aceito' },
         { rotulo: 'Cessão de imagem', valor: termos.autorizaUsoImagem ? 'Aceito' : 'Não aceito' },
+        { rotulo: 'Regra de frequência', valor: termos.cienteFrequencia ? 'Aceito' : 'Não respondido' },
       ],
     },
     {

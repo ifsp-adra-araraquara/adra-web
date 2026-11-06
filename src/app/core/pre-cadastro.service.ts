@@ -25,6 +25,7 @@ export class PreCadastroService {
     if (anexos.foto) corpo.append('foto', anexos.foto);
     anexos.documentosCrianca.forEach((arquivo) => corpo.append('documentosCrianca', arquivo));
     anexos.documentosResponsavel.forEach((arquivo) => corpo.append('documentosResponsavel', arquivo));
+    anexos.comprovanteEndereco.forEach((arquivo) => corpo.append('comprovanteEndereco', arquivo));
     const resposta = await firstValueFrom(this.http.post<{ preCadastroId: number | null }>(this.api, corpo));
     return resposta?.preCadastroId ?? null;
   }
