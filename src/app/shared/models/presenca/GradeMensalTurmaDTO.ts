@@ -1,14 +1,12 @@
 import { StatusPresenca } from '../../enum/StatusPresenca';
 
 /** O que um dia da grade mensal representa — espelha `TipoColunaGrade` no back. */
-export type TipoColunaGrade = 'AULA' | 'PENDENTE' | 'FUTURA' | 'CANCELADA' | 'SEM_AULA';
+export type TipoColunaGrade = 'LANCADA' | 'PENDENTE' | 'FUTURA' | 'SEM_CHAMADA';
 
 export interface ColunaGradeDTO {
   data: string;
-  /** null em SEM_AULA (feriado/recesso não gera aula). */
-  aulaId: number | null;
   tipo: TipoColunaGrade;
-  /** Só em CANCELADA/SEM_AULA — ex.: "Passeio Lupo", "Feriado". */
+  /** Só em SEM_CHAMADA — ex.: "Passeio Lupo", "Feriado nacional". */
   rotulo: string | null;
 }
 
@@ -19,7 +17,7 @@ export interface AlunoGradeMensalDTO {
   /** Preenchidos quando o assistido foi desligado. */
   dataSaida: string | null;
   motivoSaida: string | null;
-  /** Paralelo a `GradeMensalTurmaDTO.colunas`; null onde não há chamada pro aluno. */
+  /** Paralelo a `GradeMensalTurmaDTO.colunas`; null onde não há chamada para o atendido. */
   presencas: (StatusPresenca | null)[];
 }
 

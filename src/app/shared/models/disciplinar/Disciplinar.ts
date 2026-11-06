@@ -1,11 +1,12 @@
 import { NivelDisciplinar } from '../../enum/NivelDisciplinar';
+import { Sexo } from '../../enum/Sexo';
 import { PaginaResponse } from '../PaginaResponse';
 
-export type OrigemRegistroDisciplinar = 'MANUAL' | 'PROGRESSAO';
+export type OrigemRegistroDisciplinar = 'MANUAL' | 'RECOMENDACAO';
 export type StatusDocumentoDisciplinar = 'PENDENTE_ASSINATURA' | 'DEVOLVIDO_ASSINADO';
 export type ConsequenciaDisciplinar =
-  | 'ADVERTENCIA_GERADA'
-  | 'SUSPENSAO_GERADA'
+  | 'RECOMENDA_ADVERTENCIA'
+  | 'RECOMENDA_SUSPENSAO'
   | 'PERDE_PROXIMO_PASSEIO'
   | 'RETORNO_COM_RESPONSAVEL';
 
@@ -26,7 +27,22 @@ export interface RegistroDisciplinarRequestDTO {
   motivoId: number;
   data: string;
   descricao: string;
-  aulaId?: number | null;
+  turmaId?: number | null;
+  suspensaoInicio?: string | null;
+  suspensaoFim?: string | null;
+}
+
+/** FT-22: um fato com um ou mais atendidos — um registro por atendido. */
+export interface RegistroVariosRequestDTO {
+  assistidoIds: number[];
+  motivoId: number;
+  data: string;
+  descricao: string;
+}
+
+export interface GerarPelaRecomendacaoRequestDTO {
+  data: string;
+  descricao: string;
   suspensaoInicio?: string | null;
   suspensaoFim?: string | null;
 }
@@ -35,8 +51,10 @@ export interface RegistroDisciplinarDTO {
   registroId: number;
   assistidoId: number;
   nomeAssistido: string;
+  /** Para o pronome do documento ("o atendido" / "a atendida"). */
+  sexoAssistido: Sexo | null;
   motivoId: number | null;
-  /** Nome do motivo ou o texto da progressão ("Gerada pela 3ª ocorrência"). */
+  /** Nome do motivo ou, quando gerado pela recomendação, o texto "Gerada pela 3ª ocorrência". */
   motivo: string;
   nivel: NivelDisciplinar;
   origem: OrigemRegistroDisciplinar;
@@ -44,7 +62,7 @@ export interface RegistroDisciplinarDTO {
   sequencia: number;
   dataRegistro: string;
   descricao: string;
-  aulaId: number | null;
+  turmaId: number | null;
   suspensaoInicio: string | null;
   suspensaoFim: string | null;
   documentoStatus: StatusDocumentoDisciplinar | null;
@@ -61,6 +79,12 @@ export interface RegistroDisciplinarDTO {
   registradoPorId: number;
   registradoPorNome: string;
   criadoEm: string;
+}
+
+/** Registro lançado + a recomendação pendente do atendido (registro que completou 3 do nível), se houver. */
+export interface RegistroCriadoDTO {
+  registro: RegistroDisciplinarDTO;
+  recomendacao: RegistroDisciplinarDTO | null;
 }
 
 export interface ResumoDisciplinarDTO {
@@ -88,6 +112,8 @@ export interface PendenciasDisciplinaresDTO {
   retornosComResponsavelPendentes: number;
   perdemProximoPasseio: number;
   documentosAAssinar: number;
+  recomendacoesAdvertencia: number;
+  recomendacoesSuspensao: number;
 }
 
 export interface SinalizacaoDisciplinarDTO {
@@ -103,7 +129,14 @@ export interface FiltroRegistrosDisciplinares {
   busca?: string;
   nivel?: NivelDisciplinar | null;
   somentePendencias?: boolean;
+  somenteRecomendacoes?: boolean;
   incluirArquivados?: boolean;
   pagina?: number;
   tamanho?: number;
+}
+
+/** FT-24: sem nível, zera todos os níveis. */
+export interface ZerarContagemRequestDTO {
+  motivo: string;
+  nivel: NivelDisciplinar | null;
 }

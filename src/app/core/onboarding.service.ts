@@ -9,7 +9,7 @@ const CHAVE_VISTO = 'adra.onboarding.visto';
 /**
  * Tour guiado de primeiro acesso (driver.js) cobrindo a jornada unificada
  * Turmas → abrir uma turma → Chamada do dia. Só faz sentido pra
- * Coordenador/Sociopedagógico — são os únicos perfis com acesso às duas
+ * Coordenador/Educador Social — são os únicos perfis com acesso às duas
  * telas (Oficineiro tem sua própria área consolidada em /oficineiro; Admin
  * só gerencia usuários).
  *
@@ -25,10 +25,10 @@ export class OnboardingService {
 
   private driverAtivo: Driver | null = null;
 
-  /** Só Coordenador/Sociopedagógico têm a jornada Turmas → Chamada completa mapeada. */
+  /** Só Coordenador/Educador Social têm a jornada Turmas → Chamada completa mapeada. */
   podeVerTour(): boolean {
     const perfil = this.auth.currentProfile();
-    return perfil === Role.COORD || perfil === Role.SOCIO;
+    return perfil === Role.COORD || perfil === Role.EDUCADOR;
   }
 
   jaViu(): boolean {
@@ -93,7 +93,7 @@ export class OnboardingService {
           popover: {
             title: 'Bem-vindo(a) ao Sistema de Gestão ADRA',
             description:
-              'Um tour rápido pela jornada principal do dia a dia: Turmas → abrir uma turma → Chamada.',
+              'Um tour rápido pela jornada principal do dia a dia: Grupos → abrir um grupo → Chamada.',
           },
         },
         {
@@ -109,9 +109,9 @@ export class OnboardingService {
         {
           element: '[data-tour="turmas-tabela"]',
           popover: {
-            title: 'Turmas',
+            title: 'Grupos',
             description:
-              'Cada linha é uma turma. Clique no ícone "→" ("Abrir turma") pra ver alunos, aulas e as demais ações dela num só lugar.',
+              'Cada linha é um grupo. Clique no ícone "→" ("Abrir grupo") pra ver atendidos, oficinas e as demais ações dele num só lugar.',
             side: 'top',
           },
         },

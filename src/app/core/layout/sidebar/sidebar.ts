@@ -24,6 +24,7 @@ const MODULOS_OCULTOS = new Set([
   'ACESSO',
   'NOTIFICACOES',
   'AULAS',
+  'MATERIAIS',
 ]);
 
 @Component({
@@ -43,10 +44,11 @@ export class Sidebar {
   private secoesPorModulo: Record<string, string> = {
     PAINEL: 'Principal',
     DASHBOARD: 'Principal',
+    PRE_CADASTRO: 'Gestão',
     ASSISTIDOS: 'Gestão',
     RESPONSAVEIS: 'Gestão',
-    OFICINAS: 'Gestão',
     TURMAS: 'Gestão',
+    OFICINAS: 'Gestão',
     CHAMADA: 'Pedagógico',
     DISCIPLINAR: 'Pedagógico',
     MATERIAIS: 'Pedagógico',
@@ -69,6 +71,7 @@ export class Sidebar {
     PAINEL: 'activity',
     DASHBOARD: 'calendar',
     ASSISTIDOS: 'users',
+    PRE_CADASTRO: 'user-plus',
     RESPONSAVEIS: 'user-check',
     OFICINAS: 'layers',
     TURMAS: 'grid',
@@ -92,6 +95,8 @@ export class Sidebar {
    */
   private readonly rotulosOverride: Record<string, string> = {
     DASHBOARD: 'Calendário',
+    ASSISTIDOS: 'Atendidos',
+    TURMAS: 'Grupos',
   };
 
   navAgrupado = computed(() => {
@@ -103,7 +108,7 @@ export class Sidebar {
       return true;
     });
 
-    const grupos: { secao: string; itens: { codigo: AppModule; nomeExibicao: string }[] }[] = [];
+    const grupos: { secao: string; itens: { codigo: AppModule; rota: AppModule; nomeExibicao: string }[] }[] = [];
 
     for (const secao of this.ordemSecoes) {
       const itensDaSecao = modulosDoUsuario
@@ -111,6 +116,7 @@ export class Sidebar {
         .sort((a, b) => this.ordemModulos.indexOf(a.codigo) - this.ordemModulos.indexOf(b.codigo))
         .map(m => ({
           codigo: m.codigo.toLowerCase() as AppModule,
+          rota: (m.rota?.slice(1) ?? m.codigo.toLowerCase()) as AppModule,
           nomeExibicao: this.rotulosOverride[m.codigo] ?? m.nomeExibicao,
         }));
 

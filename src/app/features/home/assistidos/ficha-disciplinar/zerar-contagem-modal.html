@@ -1,0 +1,55 @@
+<app-modal [(open)]="open" [title]="'Zerar contagem disciplinar de ' + nome()" size="sm" [closeOnBackdrop]="false">
+  <div modal-icon class="mh-ico ico-red"><app-icon name="rotate-ccw" /></div>
+
+  @if (erro()) {
+    <div class="notice notice-error" role="alert">{{ erro() }}</div>
+  }
+
+  <fieldset class="escopo">
+    <legend class="escopo-legenda">O que zerar</legend>
+    <div class="segmentos">
+      @for (opcao of opcoes(); track opcao.valor) {
+        <label class="segmento" [class.ativo]="escopo() === opcao.valor">
+          <input
+            type="radio"
+            name="escopo-zerar"
+            [value]="opcao.valor"
+            [checked]="escopo() === opcao.valor"
+            (change)="escopo.set(opcao.valor)"
+          />
+          {{ opcao.rotulo }}
+        </label>
+      }
+    </div>
+    <p class="resumo" aria-live="polite">Serão arquivados: <b>{{ descricao() }}</b>.</p>
+  </fieldset>
+
+  <p class="explicacao">
+    Os registros não são apagados: o histórico continua visível como arquivado. A contagem volta a 0 e a próxima
+    ocorrência passa a ser a 1ª. Recomendações pendentes deste atendido deixam de valer.
+  </p>
+
+  <div class="field">
+    <label for="zerar-motivo">Motivo</label>
+    <textarea
+      id="zerar-motivo"
+      rows="3"
+      required
+      placeholder="Ex.: início do ano letivo, combinado com a família"
+      [ngModel]="motivo()"
+      (ngModelChange)="motivo.set($event)"
+    ></textarea>
+  </div>
+
+  <label class="ciencia">
+    <input type="checkbox" [ngModel]="ciente()" (ngModelChange)="ciente.set($event)" />
+    <span>Estou ciente de que a contagem será zerada e que esta ação fica registrada em meu nome.</span>
+  </label>
+
+  <ng-template #footer>
+    <app-button #cancelar variant="secondary" (click)="fechar()">Cancelar</app-button>
+    <app-button variant="danger" [disabled]="!podeZerar()" [loading]="salvando()" (click)="zerar()">
+      Zerar contagem
+    </app-button>
+  </ng-template>
+</app-modal>

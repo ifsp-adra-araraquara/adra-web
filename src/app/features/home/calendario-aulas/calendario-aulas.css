@@ -193,14 +193,7 @@
 }
 
 /* ===== PAINEL "AULAS DO DIA" (clique numa célula vazia do calendário) ===== */
-.dia-aulas-lista { display: flex; flex-direction: column; gap: 10px; }
-.dia-aula-item {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 10px 12px; border: 1px solid var(--gray-100); border-radius: var(--radius-sm);
-}
-.dia-aula-info { display: flex; flex-direction: column; gap: 2px; font-size: 13.5px; }
-.dia-aula-info strong { font-size: 12px; color: var(--color-adra-green-600); }
-/* ===== Dias sem aula (férias, feriado, ponto facultativo, evento/passeio) ===== */
+/* ===== Dias sem chamada (férias, feriado, ponto facultativo, evento/passeio) ===== */
 .cal-legend--sem-aula { margin-top: 6px; align-items: center; }
 .legend-titulo { font-size: 12px; font-weight: 600; color: var(--gray-600); }
 .legend-quadro { width: 12px; height: 12px; border-radius: 3px; border: 1px solid; flex: none; }
@@ -215,3 +208,28 @@
 
 .excecoes-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
 .excecoes-lista li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border: 1px solid var(--gray-100); border-radius: 8px; }
+
+/* ===== Notas / eventos globais do calendário ===== */
+::ng-deep .evt-nota .evt-titulo { font-weight: 700; }
+
+.dia-notas-lista { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.dia-notas-lista .form-sec-title { margin-top: 0; margin-bottom: 2px; }
+.dia-nota-item {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+  padding: 10px 12px;
+  background: var(--coral-50);
+  border: 1px solid color-mix(in srgb, var(--coral-400) 30%, transparent);
+  border-left: 3px solid var(--coral-400);
+  border-radius: var(--radius-sm);
+}
+.dia-nota-info { display: flex; flex-direction: column; gap: 3px; font-size: 13.5px; color: var(--gray-800); }
+.dia-nota-cabecalho { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.dia-nota-hora {
+  font-size: 11.5px; font-weight: 700; color: var(--coral-600);
+  background: #fff; padding: 1px 6px; border-radius: 4px;
+}
+.dia-nota-desc { font-size: 12.5px; color: var(--gray-600); margin: 0; white-space: pre-wrap; }
+.dia-nota-acoes { display: flex; align-items: center; gap: 4px; flex: none; }
+.dia-nova-nota-acao { margin-bottom: 12px; }
+.nota-form-acoes { display: flex; align-items: center; gap: 8px; }
+.nota-lista-item-info { display: flex; flex-direction: column; gap: 2px; }

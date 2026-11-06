@@ -95,7 +95,7 @@ export class ResponsavelVinculoModal {
       return;
     }
     if (this.cpfsUsados().includes(cpf)) {
-      this.erro.set('Este responsável já está na lista deste assistido.');
+      this.erro.set('Este responsável já está na lista deste atendido.');
       return;
     }
 

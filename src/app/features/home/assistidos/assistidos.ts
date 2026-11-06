@@ -23,7 +23,7 @@ import { formatarTelefone } from '../../../shared/utils/mascara.util';
 import { cliqueEmElementoInterativo } from '../../../shared/utils/clique.util';
 import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO';
 import { VinculoTurmaAssistidoResponseDTO } from '../../../shared/models/turma/VinculoTurmaAssistidoResponseDTO';
-import { FrequenciaAulaDTO } from '../../../shared/models/presenca/FrequenciaAulaDTO';
+import { FrequenciaDiaDTO } from '../../../shared/models/presenca/FrequenciaDiaDTO';
 import { PaginaResponse } from '../../../shared/models/PaginaResponse';
 import { ChamadaService } from '../../../core/chamada.service';
 
@@ -38,7 +38,6 @@ import { Button } from '../../../shared/components/button/button';
 import { cpfValido } from '../../../shared/validators/cpf.validator';
 import { Modal } from '../../../shared/components/modal/modal';
 import { Badge } from '../../../shared/components/badge/badge';
-import { AulasTurmaModal } from '../aulas-turma-modal/aulas-turma-modal';
 import { Icon } from '../../../shared/components/icon/icon';
 import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 import { ActionMenu, ActionMenuItem } from '../../../shared/components/action-menu/action-menu';
@@ -60,6 +59,7 @@ import { DadosComplementaresAssistidoForm, SEXO_OPTIONS } from './dados-compleme
 import { DadosComplementaresResponsavelForm } from '../responsaveis/dados-complementares/dados-complementares-responsavel';
 import { SocioeconomicoAssistidoForm } from './socioeconomico/socioeconomico-assistido';
 import { TermosAssistidoForm } from './termos/termos-assistido';
+import { FichaDisciplinarAssistido } from './ficha-disciplinar/ficha-disciplinar-assistido';
 import { ElegibilidadeDTO } from '../../../shared/models/assistido/ElegibilidadeDTO';
 import {
   PROGRAMA_TRANSFERENCIA_LABELS,
@@ -80,7 +80,7 @@ import {
 @Component({
   selector: 'app-assistidos',
   standalone: true,
-  imports: [ActionMenu, TooltipDirective, Icon, CommonModule, FormsModule, Select, Input, Button, Modal, Badge, AulasTurmaModal, FotoPerfil, Avatar, UploadDocumento, ListaDocumentos, DadosComplementaresAssistidoForm, DadosComplementaresResponsavelForm, SocioeconomicoAssistidoForm, TermosAssistidoForm],
+  imports: [ActionMenu, TooltipDirective, Icon, CommonModule, FormsModule, Select, Input, Button, Modal, Badge, FotoPerfil, Avatar, UploadDocumento, ListaDocumentos, DadosComplementaresAssistidoForm, DadosComplementaresResponsavelForm, SocioeconomicoAssistidoForm, TermosAssistidoForm, FichaDisciplinarAssistido],
   templateUrl: './assistidos.html',
   styleUrl: './assistidos.css',
 })
@@ -108,12 +108,12 @@ export class Assistidos implements OnInit {
   readonly ehCoordenador = computed(() => this.auth.currentProfile() === Role.COORD);
   readonly podeEditarCadastro = computed(() => {
     const perfil = this.auth.currentProfile();
-    return perfil === Role.COORD || perfil === Role.SOCIO;
+    return perfil === Role.COORD || perfil === Role.ASSISTENTE;
   });
   /** Documentos pessoais (RG/CPF) — mesmos perfis que o back libera em /api/arquivos (sem oficineiro). */
   readonly podeVerDocumentos = computed(() => {
     const perfil = this.auth.currentProfile();
-    return perfil === Role.ADMIN || perfil === Role.COORD || perfil === Role.SOCIO;
+    return perfil === Role.COORD || perfil === Role.ASSISTENTE || perfil === Role.EDUCADOR;
   });
 
   /* Listagem e Paginação */
@@ -147,9 +147,9 @@ export class Assistidos implements OnInit {
   assistidoSelecionadoStatus = signal<AssistidoResponseDTO | null>(null);
   novoStatusDesejado = signal<StatusGeral>(StatusGeral.INATIVO);
 
-  abaVerAssistido = signal<'dados' | 'fam' | 'perm' | 'cham' | 'turmas'>('dados');
+  abaVerAssistido = signal<'dados' | 'fam' | 'perm' | 'cham' | 'disc' | 'turmas'>('dados');
 
-  trocarAbaVerAssistido(aba: 'dados' | 'fam' | 'perm' | 'cham' | 'turmas') {
+  trocarAbaVerAssistido(aba: 'dados' | 'fam' | 'perm' | 'cham' | 'disc' | 'turmas') {
     this.abaVerAssistido.set(aba);
 
     // Carrega o histórico de turmas só na primeira vez que a aba é aberta.
@@ -174,12 +174,12 @@ export class Assistidos implements OnInit {
 
   turmasAtivas = computed(() => this.turmas().filter((turma) => turma.ativo));
 
-  /** Turmas do filtro restritas à oficina escolhida (quando houver). */
+  /** Turmas do filtro restritas aos grupos atendidos pela oficina escolhida (quando houver). */
   filtroTurmaOptions = computed<SelectOption<number | ''>[]>(() => {
     const oficinaId = this.filtroOficina();
-    const turmas = oficinaId === '' ? this.turmas() : this.turmas().filter((t) => t.oficinaId === oficinaId);
+    const turmas = oficinaId === '' ? this.turmas() : this.turmas().filter((t) => t.oficinaIds.includes(oficinaId));
     return [
-      { value: '', label: 'Todas as turmas' },
+      { value: '', label: 'Todos os grupos' },
       ...turmas.map((turma) => ({ value: turma.turmaId, label: turma.nomeTurma })),
     ];
   });
@@ -190,7 +190,7 @@ export class Assistidos implements OnInit {
   ]);
 
   turmaEdicaoOptions = computed<SelectOption<number | null>[]>(() => [
-    { value: null, label: 'Sem turma' },
+    { value: null, label: 'Sem grupo' },
     ...this.turmas().map((turma) => ({ value: turma.turmaId, label: turma.nomeTurma })),
   ]);
 
@@ -217,24 +217,27 @@ export class Assistidos implements OnInit {
       const id = Number(params.get('turmaId'));
       this.filtroTurma.set(Number.isInteger(id) && id > 0 ? id : '');
       this.recarregarRecorte();
-      this.abrirFichaDaUrl(Number(params.get('assistidoId')));
+      this.abrirFichaDaUrl(Number(params.get('assistidoId')), params.get('aba'));
     });
   }
 
   /** Último ?assistidoId= já aberto — trocar filtros depois não reabre a ficha. */
   private assistidoIdAbertoPelaUrl: number | null = null;
 
-  /** Veio de "Alunos da turma" (clique num aluno): abre a ficha dele direto. */
-  private abrirFichaDaUrl(assistidoId: number): void {
+  /** Veio de "Alunos da turma" ou de um aviso (FT-18): abre a ficha dele direto, na aba pedida. */
+  private abrirFichaDaUrl(assistidoId: number, aba: string | null): void {
     if (!Number.isInteger(assistidoId) || assistidoId <= 0 || assistidoId === this.assistidoIdAbertoPelaUrl) return;
     this.assistidoIdAbertoPelaUrl = assistidoId;
     this.http.get<AssistidoResponseDTO>(`${this.apiAssistidos}/${assistidoId}`).subscribe({
-      next: (assistido) => this.abrirModalVisualizarAssistido(assistido),
+      next: (assistido) => {
+        this.abrirModalVisualizarAssistido(assistido);
+        if (aba === 'cham' || aba === 'disc') this.trocarAbaVerAssistido(aba);
+      },
       error: (erro) => console.error('Erro ao abrir a ficha do assistido:', erro),
     });
   }
 
-  /** Só Coordenação/Sociopedagógico listam oficinas — para os demais perfis o filtro some. */
+  /** Só Coordenação/Educador Social listam oficinas — para os demais perfis o filtro some. */
   carregarOficinas(): void {
     this.http.get<OficinaResponseDTO[]>(this.apiOficinas).subscribe({
       next: (lista) => this.oficinas.set(lista),
@@ -306,7 +309,7 @@ export class Assistidos implements OnInit {
     this.filtroOficina.set(oficinaId);
     // turma escolhida que não pertence à nova oficina deixa de fazer sentido
     const turma = this.turmas().find((t) => t.turmaId === this.filtroTurma());
-    if (oficinaId !== '' && turma && turma.oficinaId !== oficinaId) {
+    if (oficinaId !== '' && turma && !turma.oficinaIds.includes(oficinaId)) {
       this.onFiltroTurmaChange('');
       return;
     }
@@ -587,7 +590,7 @@ export class Assistidos implements OnInit {
     }
 
     if (!cpfValido(this.formEdicaoAssistido.cpf ?? '')) {
-      this.erroSalvarEdicao.set('Informe um CPF válido para o assistido.');
+      this.erroSalvarEdicao.set('Informe um CPF válido para o atendido.');
       return;
     }
 
@@ -848,12 +851,17 @@ export class Assistidos implements OnInit {
 
   /** Aba "Permissões": termos assinados no cadastro. */
   readonly termosFicha: { campo: 'aceiteLgpd' | 'autorizaUsoImagem' | 'autorizaEventosPasseios' | 'podeIrEmboraSozinho' | 'cienteFrequenciaObrigatoria'; titulo: string; descricao: string }[] = [
-    { campo: 'aceiteLgpd', titulo: 'Uso de dados (LGPD)', descricao: 'Coleta e guarda dos dados do assistido e da família para o atendimento.' },
+    { campo: 'aceiteLgpd', titulo: 'Uso de dados (LGPD)', descricao: 'Coleta e guarda dos dados do atendido e da família para o atendimento.' },
     { campo: 'autorizaUsoImagem', titulo: 'Cessão de imagem', descricao: 'Fotos e vídeos em materiais e redes sociais da ADRA.' },
     { campo: 'autorizaEventosPasseios', titulo: 'Eventos, passeios e viagens', descricao: 'Participar de atividades fora da ADRA, com a equipe.' },
     { campo: 'podeIrEmboraSozinho', titulo: 'Pode ir embora sozinho', descricao: 'Sair sozinho ao fim das atividades, sem um responsável.' },
     { campo: 'cienteFrequenciaObrigatoria', titulo: 'Ciente da frequência obrigatória', descricao: 'A família sabe que a frequência é acompanhada pela equipe.' },
   ];
+
+  /** FT-26: ficha de cadastro social para imprimir e assinar. */
+  imprimirFichaSocial(assistidoId: number): void {
+    this.router.navigate(['/assistidos', assistidoId, 'ficha-social']);
+  }
 
   fecharModalVisualizarAssistido(): void {
     this.editandoSocioeconomico.set(false);
@@ -907,7 +915,7 @@ export class Assistidos implements OnInit {
         },
         error: (erro) => {
           console.error('Erro ao carregar histórico de turmas:', erro);
-          this.erroHistoricoTurmas.set('Não foi possível carregar o histórico de turmas deste assistido.');
+          this.erroHistoricoTurmas.set('Não foi possível carregar o histórico de grupos deste atendido.');
           this.carregandoHistoricoTurmas.set(false);
         },
       });
@@ -919,7 +927,7 @@ export class Assistidos implements OnInit {
 
   readonly StatusPresenca = StatusPresenca;
 
-  frequenciaAssistido = signal<FrequenciaAulaDTO[]>([]);
+  frequenciaAssistido = signal<FrequenciaDiaDTO[]>([]);
 
   carregandoFrequencia = signal(false);
 
@@ -928,7 +936,7 @@ export class Assistidos implements OnInit {
   /** Evita recarregar toda vez que a pessoa clica de novo na aba. */
   private frequenciaCarregada = false;
 
-  /** Resumo no topo da aba: total de aulas no histórico, % de presença e faltas seguidas mais recentes (sem contar justificadas). */
+  /** Resumo no topo da aba: total de chamadas no histórico, % de presença e faltas seguidas mais recentes (sem contar justificadas). */
   readonly resumoFrequencia = computed(() => {
     const lista = this.frequenciaAssistido();
     const total = lista.length;
@@ -937,7 +945,7 @@ export class Assistidos implements OnInit {
 
     let faltasConsecutivas = 0;
     for (const item of lista) {
-      // já vem ordenado da aula mais recente pra mais antiga
+      // já vem ordenado da chamada mais recente pra mais antiga
       if (item.statusPresenca !== StatusPresenca.FALTA) break;
       faltasConsecutivas++;
     }
@@ -947,9 +955,9 @@ export class Assistidos implements OnInit {
 
   /** Lista agrupada por mês (mais recente primeiro), pra não virar uma lista infinita de datas soltas. */
   readonly frequenciaAgrupada = computed(() => {
-    const grupos = new Map<string, FrequenciaAulaDTO[]>();
+    const grupos = new Map<string, FrequenciaDiaDTO[]>();
     for (const item of this.frequenciaAssistido()) {
-      const chave = item.dataAula.slice(0, 7); // YYYY-MM
+      const chave = item.data.slice(0, 7); // YYYY-MM
       const grupo = grupos.get(chave);
       if (grupo) {
         grupo.push(item);
@@ -986,7 +994,7 @@ export class Assistidos implements OnInit {
       })
       .catch((erro) => {
         console.error('Erro ao carregar frequência:', erro);
-        this.erroFrequencia.set('Não foi possível carregar o histórico de frequência deste assistido.');
+        this.erroFrequencia.set('Não foi possível carregar o histórico de frequência deste atendido.');
       })
       .finally(() => this.carregandoFrequencia.set(false));
   }
@@ -1003,15 +1011,9 @@ export class Assistidos implements OnInit {
     this.onFiltroTurmaChange(vinculo.turmaId);
   }
 
-  /** "Ver aulas" de uma turma do histórico — reaproveita <app-aulas-turma-modal>, com abertura de aula liberada (só coordenador chega aqui). */
-  turmaHistoricoAulasSelecionada = signal<VinculoTurmaAssistidoResponseDTO | null>(null);
-
-  abrirAulasHistoricoTurma(vinculo: VinculoTurmaAssistidoResponseDTO): void {
-    this.turmaHistoricoAulasSelecionada.set(vinculo);
-  }
-
-  fecharAulasHistoricoTurma(): void {
-    this.turmaHistoricoAulasSelecionada.set(null);
+  verFrequenciaHistoricoTurma(vinculo: VinculoTurmaAssistidoResponseDTO): void {
+    this.fecharModalVisualizarAssistido();
+    this.router.navigate(['/chamada/turma', vinculo.turmaId, 'grade']);
   }
 
   carregarResponsaveis(assistidoId: number): void {
@@ -1027,7 +1029,7 @@ export class Assistidos implements OnInit {
       error: (erro) => {
         console.error('Erro ao carregar responsáveis:', erro);
 
-        this.erroResponsaveis.set('Não foi possível carregar os responsáveis deste assistido.');
+        this.erroResponsaveis.set('Não foi possível carregar os responsáveis deste atendido.');
 
         this.carregandoResponsaveis.set(false);
       },
@@ -1081,8 +1083,8 @@ export class Assistidos implements OnInit {
     }
   }
 
-  editarChamada(item: FrequenciaAulaDTO): void {
-    this.router.navigate(['/chamada/aula', item.aulaId]);
+  editarChamada(item: FrequenciaDiaDTO): void {
+    this.router.navigate(['/chamada/grupo', item.turmaId, item.data]);
   }
 
   abrirEdicaoResponsavel(vinculo: VinculoFamiliarResponseDTO): void {

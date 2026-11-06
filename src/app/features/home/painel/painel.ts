@@ -148,7 +148,7 @@ export class Painel implements OnInit {
       total,
       segmentos,
       descricao:
-        `${total} assistidos ativos: ` + segmentos.map((s) => `${s.legenda}, ${s.total}`).join('; '),
+        `${total} atendidos ativos: ` + segmentos.map((s) => `${s.legenda}, ${s.total}`).join('; '),
     };
   });
   readonly RAIO_ROSCA = RAIO_ROSCA;
@@ -185,7 +185,7 @@ export class Painel implements OnInit {
   }
 
   abrirAtividade(a: AtividadePainel): void {
-    if (a.tipo === 'CHAMADA') this.router.navigate(['/chamada/aula', a.referenciaId]);
+    if (a.tipo === 'CHAMADA' && a.detalhe) this.router.navigate(['/chamada/grupo', a.referenciaId, a.detalhe]);
     else if (a.assistidoId != null) this.abrirAssistido(a.assistidoId);
   }
 
@@ -194,11 +194,11 @@ export class Painel implements OnInit {
   textoAtividade(a: AtividadePainel): string {
     switch (a.tipo) {
       case 'CHAMADA':
-        return `Chamada lançada${a.detalhe ? ' · aula de ' + a.detalhe : ''}`;
+        return `Chamada lançada${a.detalhe ? ' · dia ' + dataCurta(a.detalhe) : ''}`;
       case 'DISCIPLINAR':
         return `${NIVEIS_DISCIPLINARES[a.detalhe as NivelDisciplinar]?.rotulo ?? 'Registro'} registrada`;
       default:
-        return 'Assistido cadastrado';
+        return 'Atendido cadastrado';
     }
   }
 

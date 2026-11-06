@@ -18,6 +18,6 @@ export class UsuarioService {
   private http = inject(HttpClient);
 
   cadastrar(usuario: NovoUsuario): Observable<UsuarioResponse> {
-    return this.http.post<UsuarioResponse>(`${environment.apiUrl}/api/usuarios`, usuario);
+    return this.http.post<UsuarioResponse>(`${environment.apiUrl}/api/usuarios`, { ...usuario, administrador: false });
   }
 }

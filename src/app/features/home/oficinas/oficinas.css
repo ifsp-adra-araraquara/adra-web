@@ -149,3 +149,21 @@
     padding: 20px;
   }
 }
+
+.modo-exibicao {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.drawer-secao-titulo {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray-400);
+  font-weight: 600;
+  margin: 18px 0 8px;
+}
+.drawer-secao-titulo:first-child {
+  margin-top: 0;
+}

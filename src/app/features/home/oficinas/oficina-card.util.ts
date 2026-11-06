@@ -34,17 +34,8 @@ export function corDaOficina(oficinaId: number): string {
   return CORES_OFICINA[(oficinaId - 1 + CORES_OFICINA.length) % CORES_OFICINA.length];
 }
 
-/** "14h", "9h30". */
-export function horaCurta(inicio: string | null): string {
-  if (!inicio) return '';
-  const [h, m] = inicio.split(':').map(Number);
-  return m ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`;
-}
-
-/** "Seg, Qua e Sex · 14h" — dias já vêm ordenados da API. */
+/** "Seg, Qua e Sex" — dias já vêm ordenados da API. */
 export function textoHorario(h: HorarioOficina): string {
   const dias = h.dias.map((d) => DIA_CURTO[d]);
-  const listaDias = dias.length > 1 ? `${dias.slice(0, -1).join(', ')} e ${dias.at(-1)}` : (dias[0] ?? '');
-  const hora = horaCurta(h.inicio);
-  return [listaDias, hora].filter(Boolean).join(' · ');
+  return dias.length > 1 ? `${dias.slice(0, -1).join(', ')} e ${dias.at(-1)}` : (dias[0] ?? '');
 }

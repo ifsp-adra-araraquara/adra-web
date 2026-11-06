@@ -201,13 +201,13 @@ export class AssistidosLote {
       return;
     }
     if (this.linhas().length + importadas.length > LIMITE_LINHAS) {
-      this.erro.set(`O lote aceita até ${LIMITE_LINHAS} assistidos. Divida o arquivo e importe em partes.`);
+      this.erro.set(`O lote aceita até ${LIMITE_LINHAS} atendidos. Divida o arquivo e importe em partes.`);
       return;
     }
 
     this.linhas.update((linhas) => [...linhas, ...importadas.map((dados) => this.criarLinha(dados))]);
     this.aviso.set(
-      `${importadas.length} assistido(s) importado(s) de ${arquivo.name}. ` +
+      `${importadas.length} atendido(s) importado(s) de ${arquivo.name}. ` +
         'Adicione o RG ou CPF de cada um e clique em Validar.',
     );
   }
@@ -230,17 +230,17 @@ export class AssistidosLote {
       return;
     }
     if (!importadas.length) {
-      this.erro.set('Nenhum assistido encontrado nessa planilha. Confira se há uma coluna "NOME".');
+      this.erro.set('Nenhum atendido encontrado nessa planilha. Confira se há uma coluna "NOME".');
       return;
     }
     if (this.linhas().length + importadas.length > LIMITE_LINHAS) {
-      this.erro.set(`O lote aceita até ${LIMITE_LINHAS} assistidos. Divida o arquivo e importe em partes.`);
+      this.erro.set(`O lote aceita até ${LIMITE_LINHAS} atendidos. Divida o arquivo e importe em partes.`);
       return;
     }
 
     this.linhas.update((linhas) => [...linhas, ...importadas.map((dados) => this.criarLinha(dados))]);
     this.aviso.set(
-      `${importadas.length} assistido(s) importado(s) de ${arquivo.name}. ` +
+      `${importadas.length} atendido(s) importado(s) de ${arquivo.name}. ` +
         'Essa planilha não tem CPF — preencha o de cada um antes de validar e cadastrar.',
     );
   }
@@ -310,8 +310,8 @@ export class AssistidosLote {
     const pendentes = this.linhas().length;
     this.aviso.set(
       pendentes
-        ? `${cadastradas} assistido(s) cadastrado(s). ${pendentes} linha(s) continuam na grade para correção.`
-        : `${cadastradas} assistido(s) cadastrado(s).`,
+        ? `${cadastradas} atendido(s) cadastrado(s). ${pendentes} linha(s) continuam na grade para correção.`
+        : `${cadastradas} atendido(s) cadastrado(s).`,
     );
   }
 
@@ -354,7 +354,7 @@ export class AssistidosLote {
 
   private errosDoCadastro(resposta: HttpErrorResponse): string[] {
     const detalhes: string[] = resposta.error?.detalhes ?? [];
-    return detalhes.length ? detalhes : [mensagemErro(resposta, 'Não foi possível cadastrar este assistido.')];
+    return detalhes.length ? detalhes : [mensagemErro(resposta, 'Não foi possível cadastrar este atendido.')];
   }
 
   // Erros "campo: mensagem" da API ficam no próprio campo; os demais vão para o quadro da linha.

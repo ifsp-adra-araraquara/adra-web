@@ -1,7 +1,7 @@
 <section class="bloco turmas" aria-labelledby="turmas-titulo">
   <header class="bloco-topo">
     <div>
-      <h2 id="turmas-titulo">Turmas</h2>
+      <h2 id="turmas-titulo">Grupos</h2>
       <p class="bloco-sub">
         Da menor para a maior frequência em {{ tituloMes() }}
         @if (turmasAbaixo() > 0) { · <span class="texto-ruim">{{ turmasAbaixo() }} abaixo de {{ FREQUENCIA_MINIMA }}%</span> }
@@ -11,16 +11,16 @@
 
   @if (dados()) {
     @if (turmas().length === 0) {
-      <p class="vazio">Nenhuma turma ativa{{ filtrado() ? ' nesta oficina' : '' }}.</p>
+      <p class="vazio">Nenhum grupo ativo{{ filtrado() ? ' nesta oficina' : '' }}.</p>
     } @else {
       <div class="tabela">
         <div class="tabela-cabeca" aria-hidden="true">
-          <span>Turma</span>
-          <span>Alunos</span>
+          <span>Grupo</span>
+          <span>Atendidos</span>
           <span>Aulas</span>
           <span class="col-freq">Frequência</span>
         </div>
-        <ul role="list" aria-label="Turmas por frequência">
+        <ul role="list" aria-label="Grupos por frequência">
         @for (t of turmasVisiveis(); track t.turmaId) {
           <li><button type="button" class="tabela-linha" (click)="abrirTurma(t.turmaId)"
                   [attr.aria-label]="t.nomeTurma + ', ' + (t.frequencia != null ? t.frequencia + '% de frequência' : 'sem chamada no mês') + '. Abrir grade do mês'">
@@ -30,10 +30,10 @@
             </span>
             <span class="cel-alunos">
               {{ t.alunos }}@if (t.capacidade) {<small>/{{ t.capacidade }}</small>}
-              <span class="rotulo-movel"> alunos</span>
+              <span class="rotulo-movel"> atendidos</span>
             </span>
             <span class="cel-aulas">
-              {{ t.aulasRealizadas }}<span class="rotulo-movel"> aulas</span>
+              {{ t.chamadasLancadas }}<span class="rotulo-movel"> chamadas</span>
               @if (t.chamadasPendentes > 0) { <span class="pendente">{{ t.chamadasPendentes }} sem chamada</span> }
             </span>
             <span class="cel-freq">
@@ -55,7 +55,7 @@
         </ul>
       </div>
       @if (turmas().length > turmasVisiveis().length) {
-        <button type="button" class="link link-mais" (click)="todasTurmas.set(true)">Ver todas as {{ turmas().length }} turmas</button>
+        <button type="button" class="link link-mais" (click)="todasTurmas.set(true)">Ver todos os {{ turmas().length }} grupos</button>
       }
     }
   } @else {

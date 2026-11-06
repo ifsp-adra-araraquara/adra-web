@@ -6,16 +6,28 @@ import { CategoriaArquivo } from '../shared/enum/CategoriaArquivo';
 import { EntidadeArquivo } from '../shared/enum/EntidadeArquivo';
 import { ArquivoResponseDTO } from '../shared/models/arquivo/ArquivoResponseDTO';
 import { UrlArquivoDTO } from '../shared/models/arquivo/UrlArquivoDTO';
-import { AulaArquivoDTO } from '../shared/models/arquivo/AulaArquivoDTO';
 
 /** Margem para não entregar uma URL assinada que expira enquanto a imagem carrega. */
 const MARGEM_EXPIRACAO_MS = 30_000;
 /** "Não tem foto" também fica em cache, pra não perguntar de novo a cada render. */
 const VALIDADE_SEM_FOTO_MS = 5 * 60_000;
+const MAXIMO_FOTOS_POR_LOTE = 100;
 
 interface EntradaCache {
   url: string | null;
   expiraEm: number;
+}
+
+interface PedidoDeFoto {
+  entidadeId: number;
+  resolver: (entrada: EntradaCache) => void;
+  rejeitar: (erro: unknown) => void;
+}
+
+function entradaDaFoto(foto: UrlArquivoDTO | undefined): EntradaCache {
+  return foto
+    ? { url: foto.url, expiraEm: new Date(foto.expiraEm).getTime() - MARGEM_EXPIRACAO_MS }
+    : { url: null, expiraEm: Date.now() + VALIDADE_SEM_FOTO_MS };
 }
 
 @Injectable({ providedIn: 'root' })
@@ -33,16 +45,12 @@ export class ArquivoService {
   readonly revisaoArquivos = signal(0);
   /** Requisições em andamento — vários avatares do mesmo dono compartilham a mesma busca. */
   private readonly emAndamento = new Map<string, Promise<string | null>>();
+  private readonly filaDeFotos = new Map<EntidadeArquivo, PedidoDeFoto[]>();
 
   listar(entidadeTipo: EntidadeArquivo, entidadeId: number, categoria?: CategoriaArquivo): Promise<ArquivoResponseDTO[]> {
     let params = new HttpParams().set('entidadeTipo', entidadeTipo).set('entidadeId', entidadeId);
     if (categoria) params = params.set('categoria', categoria);
     return firstValueFrom(this.http.get<ArquivoResponseDTO[]>(this.api, { params }));
-  }
-
-  /** GET /api/arquivos/turma/{id}/materiais — aulas da turma que têm material, com os arquivos. */
-  listarMateriaisPorTurma(turmaId: number): Promise<AulaArquivoDTO[]> {
-    return firstValueFrom(this.http.get<AulaArquivoDTO[]>(`${this.api}/turma/${turmaId}/materiais`));
   }
 
   /** POST /api/arquivos (multipart). Para FOTO_PERFIL o back substitui a foto anterior. */
@@ -78,9 +86,6 @@ export class ArquivoService {
   /**
    * URL temporária da foto de perfil, ou null se não houver (ou se o perfil
    * logado não puder ver arquivos — ex.: oficineiro recebe 403 e cai nas iniciais).
-   *
-   * Hoje são 2 chamadas por dono (listar + url). Se a listagem ficar lenta,
-   * troca-se só este método por um endpoint em lote no back.
    */
   fotoPerfilUrl(entidadeTipo: EntidadeArquivo, entidadeId: number): Promise<string | null> {
     const chave = `${entidadeTipo}:${entidadeId}`;
@@ -114,12 +119,31 @@ export class ArquivoService {
     if (notificar) this.revisaoFotos.update((v) => v + 1);
   }
 
-  private async buscarFotoPerfil(entidadeTipo: EntidadeArquivo, entidadeId: number): Promise<EntradaCache> {
-    const [foto] = await this.listar(entidadeTipo, entidadeId, CategoriaArquivo.FOTO_PERFIL);
-    if (!foto) {
-      return { url: null, expiraEm: Date.now() + VALIDADE_SEM_FOTO_MS };
+  private buscarFotoPerfil(entidadeTipo: EntidadeArquivo, entidadeId: number): Promise<EntradaCache> {
+    return new Promise((resolver, rejeitar) => {
+      if (this.filaDeFotos.size === 0) setTimeout(() => this.enviarFilaDeFotos());
+      const pedidos = this.filaDeFotos.get(entidadeTipo) ?? [];
+      this.filaDeFotos.set(entidadeTipo, [...pedidos, { entidadeId, resolver, rejeitar }]);
+    });
+  }
+
+  private enviarFilaDeFotos(): void {
+    const fila = [...this.filaDeFotos];
+    this.filaDeFotos.clear();
+    for (const [entidadeTipo, pedidos] of fila) {
+      for (let inicio = 0; inicio < pedidos.length; inicio += MAXIMO_FOTOS_POR_LOTE) {
+        this.buscarLoteDeFotos(entidadeTipo, pedidos.slice(inicio, inicio + MAXIMO_FOTOS_POR_LOTE));
+      }
     }
-    const { url, expiraEm } = await this.gerarUrl(foto.arquivoId);
-    return { url, expiraEm: new Date(expiraEm).getTime() - MARGEM_EXPIRACAO_MS };
+  }
+
+  private buscarLoteDeFotos(entidadeTipo: EntidadeArquivo, pedidos: PedidoDeFoto[]): void {
+    const params = new HttpParams()
+      .set('entidadeTipo', entidadeTipo)
+      .set('entidadeIds', pedidos.map((pedido) => pedido.entidadeId).join(','));
+    firstValueFrom(this.http.get<Record<number, UrlArquivoDTO>>(`${this.api}/fotos-perfil`, { params })).then(
+      (fotos) => pedidos.forEach((pedido) => pedido.resolver(entradaDaFoto(fotos[pedido.entidadeId]))),
+      (erro) => pedidos.forEach((pedido) => pedido.rejeitar(erro)),
+    );
   }
 }

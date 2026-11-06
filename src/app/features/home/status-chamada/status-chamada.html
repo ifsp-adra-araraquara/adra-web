@@ -7,7 +7,7 @@
     <p class="eyebrow">Pedagógico</p>
     <h1 id="status-chamada-titulo">Status das chamadas</h1>
     <p class="page-intro">
-      Aulas do período que já aconteceram e se a chamada foi lançada. Aulas canceladas, remarcadas ou futuras não entram na contagem.
+      Dias de chamada de cada grupo no período, até hoje, e se a chamada foi lançada. Feriados e dias sem atividade não entram.
     </p>
   </header>
 
@@ -15,12 +15,12 @@
     <div class="panel-header">
       <div class="filtros">
         <div class="field">
-          <label for="filtro-turma">Turma</label>
+          <label for="filtro-turma">Grupo</label>
           <app-select
             id="filtro-turma"
             name="turmaIdFiltro"
             [options]="turmasOpcoes()"
-            placeholder="Todas as turmas"
+            placeholder="Todos os grupos"
             [(ngModel)]="turmaIdFiltro"
           />
         </div>
@@ -46,16 +46,16 @@
     <p class="feedback error" role="alert">{{ erro() }}</p>
     }
 
-    <app-table label="Status das chamadas por aula" [columns]="colunas" [data]="aulas()" [trackBy]="trackAula" [pageSize]="15">
-      <ng-template #rowActions let-aula>
+    <app-table label="Status das chamadas por grupo e dia" [columns]="colunas" [data]="chamadas()" [trackBy]="trackChamada" [pageSize]="15">
+      <ng-template #rowActions let-chamada>
         <button
           type="button"
-          [class.btn-icon--primary]="aula.statusChamada === StatusChamada.PENDENTE"
-          [attr.aria-label]="aula.statusChamada === StatusChamada.PENDENTE ? 'Lançar chamada' : 'Ver chamada'"
-          [appTooltip]="aula.statusChamada === StatusChamada.PENDENTE ? 'Lançar chamada' : 'Ver chamada'"
-          (click)="abrirChamada(aula)"
+          [class.btn-icon--primary]="chamada.status === StatusChamada.PENDENTE"
+          [attr.aria-label]="chamada.status === StatusChamada.PENDENTE ? 'Lançar chamada' : 'Ver chamada'"
+          [appTooltip]="chamada.status === StatusChamada.PENDENTE ? 'Lançar chamada' : 'Ver chamada'"
+          (click)="abrirChamada(chamada)"
         >
-          <app-icon [name]="aula.statusChamada === StatusChamada.PENDENTE ? 'check-square' : 'eye'" />
+          <app-icon [name]="chamada.status === StatusChamada.PENDENTE ? 'check-square' : 'eye'" />
         </button>
       </ng-template>
     </app-table>

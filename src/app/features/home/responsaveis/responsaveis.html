@@ -2,11 +2,13 @@
   <header class="page-header">
     <div class="page-header-texto">
       <h1>Responsáveis</h1>
-      <p class="page-intro">Pais, mães e demais responsáveis vinculados aos assistidos.</p>
+      <p class="page-intro">Pais, mães e demais responsáveis vinculados aos atendidos.</p>
     </div>
-    <div class="page-header-acoes">
-      <app-button size="sm" (click)="abrirNovo()"><app-icon name="plus" [size]="16" /> Novo responsável</app-button>
-    </div>
+    @if (podeEditar()) {
+      <div class="page-header-acoes">
+        <app-button size="sm" (click)="abrirNovo()"><app-icon name="plus" [size]="16" /> Novo responsável</app-button>
+      </div>
+    }
   </header>
 
   @if (carregando()) {
@@ -50,7 +52,7 @@
                 <th>Nome</th>
                 <th>CPF</th>
                 <th>Telefone</th>
-                <th>Assistidos</th>
+                <th>Atendidos</th>
                 <th>Ações</th>
               </tr>
             </thead>
@@ -62,14 +64,14 @@
                   <td>{{ responsavel.telefone || '-' }}</td>
                   <td>
                     <span class="vinculos" [class.vinculos-zero]="!responsavel.totalAssistidos"
-                          [attr.title]="responsavel.totalAssistidos ? (responsavel.assistidosAtivos ?? 0) + ' ativo(s) de ' + responsavel.totalAssistidos : 'Sem assistido vinculado'">
+                          [attr.title]="responsavel.totalAssistidos ? (responsavel.assistidosAtivos ?? 0) + ' ativo(s) de ' + responsavel.totalAssistidos : 'Sem atendido vinculado'">
                       <app-icon name="users" [size]="14" /> {{ resumoVinculos(responsavel) }}
                     </span>
                   </td>
                   <td>
                     <app-action-menu
                       [label]="'Ações de ' + responsavel.nomeCompleto"
-                      [itens]="acoesResponsavel"
+                      [itens]="acoesResponsavel()"
                       (selecionado)="executarAcao($event, responsavel)"
                     />
                   </td>
@@ -89,14 +91,14 @@
       </div>
 
       <p class="form-sec-title">
-        Assistidos vinculados
+        Atendidos vinculados
         @if (assistidosVinculados(); as lista) { <span class="contagem-vinculos">{{ lista.length }}</span> }
       </p>
       @if (erroVinculados()) {
-        <p class="cell-sub">Não foi possível carregar os assistidos vinculados.</p>
+        <p class="cell-sub">Não foi possível carregar os atendidos vinculados.</p>
       } @else if (assistidosVinculados(); as lista) {
         @if (lista.length === 0) {
-          <p class="cell-sub vinculos-vazio">Nenhum assistido vinculado a este responsável.</p>
+          <p class="cell-sub vinculos-vazio">Nenhum atendido vinculado a este responsável.</p>
         } @else {
           <ul class="lista-vinculados" role="list">
             @for (a of lista; track a.assistidoId) {
@@ -106,7 +108,7 @@
                   <app-avatar [entidadeId]="a.assistidoId" [nome]="a.nomeCompleto" [size]="36" />
                   <span class="vinculado-texto">
                     <b>{{ a.nomeCompleto }}</b>
-                    <small>{{ a.parentesco || 'Parentesco não informado' }} · {{ a.nomeTurma || 'Sem turma' }}</small>
+                    <small>{{ a.parentesco || 'Parentesco não informado' }} · {{ a.nomeTurma || 'Sem grupo' }}</small>
                     <span class="vinculado-papeis">
                       @if (a.status !== StatusGeral.ATIVO) { <app-badge variant="gray" label="Inativo" /> }
                       @if (a.responsavelPrincipal) { <app-badge variant="green" label="Principal" /> }
@@ -121,7 +123,7 @@
           </ul>
         }
       } @else {
-        <p class="cell-sub">Carregando assistidos…</p>
+        <p class="cell-sub">Carregando atendidos…</p>
       }
 
       <p class="form-sec-title">Dados pessoais</p>

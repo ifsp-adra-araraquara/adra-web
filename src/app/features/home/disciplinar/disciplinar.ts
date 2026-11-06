@@ -2,13 +2,10 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, injec
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { NgTemplateOutlet } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
-import { ArquivoService } from '../../../core/arquivo.service';
 import { DisciplinarService } from '../../../core/disciplinar.service';
 import { Role } from '../../../shared/enum/role.enum';
-import { CategoriaArquivo } from '../../../shared/enum/CategoriaArquivo';
-import { EntidadeArquivo } from '../../../shared/enum/EntidadeArquivo';
 import { NIVEIS_DISCIPLINARES, NivelDisciplinar, ORDEM_NIVEIS } from '../../../shared/enum/NivelDisciplinar';
 import {
   MotivoDisciplinarDTO,
@@ -16,7 +13,13 @@ import {
   RegistroDisciplinarDTO,
 } from '../../../shared/models/disciplinar/Disciplinar';
 import { hojeISO } from '../../../shared/utils/aula.util';
-import { dataBr, pendenciaDoRegistro, rotuloSequencia } from '../../../shared/utils/disciplinar.util';
+import {
+  dataBr,
+  nivelRecomendado,
+  pendenciaDoRegistro,
+  rotuloSequencia,
+  temDocumento,
+} from '../../../shared/utils/disciplinar.util';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
 import { ActionMenu, ActionMenuItem } from '../../../shared/components/action-menu/action-menu';
 import { Avatar } from '../../../shared/components/avatar/avatar';
@@ -27,9 +30,12 @@ import { Input } from '../../../shared/components/input/input';
 import { Modal } from '../../../shared/components/modal/modal';
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { RegistroDisciplinarModal } from '../../../shared/components/registro-disciplinar-modal/registro-disciplinar-modal';
+import { RecomendacaoDisciplinarModal } from '../../../shared/components/recomendacao-disciplinar-modal/recomendacao-disciplinar-modal';
+import { RecomendacoesPendentes } from './recomendacoes-pendentes/recomendacoes-pendentes';
+import { AnexarAssinadoModal } from '../../../shared/components/anexar-assinado-modal/anexar-assinado-modal';
 
 type Aba = 'registros' | 'motivos';
-type AcaoRegistro = 'ficha' | 'documento' | 'devolvido' | 'periodo' | 'resolver' | 'arquivar';
+type AcaoRegistro = 'ficha' | 'documento' | 'periodo' | 'resolver' | 'arquivar';
 
 /**
  * FT-04: tela do Sistema Disciplinar. Lista geral dos registros (com as
@@ -39,7 +45,7 @@ type AcaoRegistro = 'ficha' | 'documento' | 'devolvido' | 'periodo' | 'resolver'
  */
 @Component({
   selector: 'app-disciplinar',
-  imports: [FormsModule, NgTemplateOutlet, ActionMenu, Avatar, Badge, Button, Icon, Input, Modal, Select, RegistroDisciplinarModal],
+  imports: [FormsModule, NgTemplateOutlet, ActionMenu, Avatar, Badge, Button, Icon, Input, Modal, Select, RegistroDisciplinarModal, RecomendacaoDisciplinarModal, RecomendacoesPendentes, AnexarAssinadoModal],
   templateUrl: './disciplinar.html',
   styleUrl: './disciplinar.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -47,8 +53,8 @@ type AcaoRegistro = 'ficha' | 'documento' | 'devolvido' | 'periodo' | 'resolver'
 export class Disciplinar implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly disciplinarService = inject(DisciplinarService);
-  private readonly arquivoService = inject(ArquivoService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly NIVEIS = NIVEIS_DISCIPLINARES;
@@ -59,10 +65,15 @@ export class Disciplinar implements OnInit {
   readonly hoje = hojeISO();
 
   readonly ehCoordenador = computed(() => this.auth.currentProfile() === Role.COORD);
+  readonly podeRegistrar = computed(() => this.ehCoordenador() || this.auth.currentProfile() === Role.EDUCADOR);
   readonly abaAtiva = signal<Aba>('registros');
 
   // ---- Pendências (cartões do topo) ----
   readonly pendencias = signal<PendenciasDisciplinaresDTO | null>(null);
+  readonly totalRecomendacoes = computed(() => {
+    const p = this.pendencias();
+    return p ? p.recomendacoesAdvertencia + p.recomendacoesSuspensao : 0;
+  });
 
   // ---- Lista ----
   readonly registros = signal<RegistroDisciplinarDTO[]>([]);
@@ -71,6 +82,7 @@ export class Disciplinar implements OnInit {
   readonly termoBusca = signal('');
   readonly filtroNivel = signal<NivelDisciplinar | ''>('');
   readonly somentePendencias = signal(false);
+  readonly somenteRecomendacoes = signal(false);
   readonly incluirArquivados = signal(false);
   readonly pagina = signal(0);
   readonly totalPaginas = signal(0);
@@ -79,7 +91,12 @@ export class Disciplinar implements OnInit {
   readonly temAnterior = computed(() => this.pagina() > 0);
   readonly temProxima = computed(() => this.pagina() < this.totalPaginas() - 1);
   readonly temFiltros = computed(
-    () => !!this.termoBusca().trim() || !!this.filtroNivel() || this.somentePendencias() || this.incluirArquivados(),
+    () =>
+      !!this.termoBusca().trim() ||
+      !!this.filtroNivel() ||
+      this.somentePendencias() ||
+      this.somenteRecomendacoes() ||
+      this.incluirArquivados(),
   );
   private buscaTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -91,12 +108,18 @@ export class Disciplinar implements OnInit {
   // ---- Registrar ----
   readonly mostrarRegistro = signal(false);
 
+  // ---- Gerar pela recomendação (FT-22) ----
+  readonly recomendacaoEmAcao = signal<RegistroDisciplinarDTO[]>([]);
+
+  // ---- Anexar documento assinado (FT-25) ----
+  readonly mostrarAnexar = signal(false);
+  readonly registroAnexando = signal<RegistroDisciplinarDTO | null>(null);
+
   // ---- Ações sobre um registro ----
   readonly registroEmAcao = signal<RegistroDisciplinarDTO | null>(null);
   readonly acaoAberta = signal<Exclude<AcaoRegistro, 'ficha' | 'documento'> | null>(null);
   readonly salvandoAcao = signal(false);
   readonly erroAcao = signal<string | null>(null);
-  readonly arquivoAssinado = signal<File | null>(null);
   readonly acaoData = signal(this.hoje);
   readonly acaoTexto = signal('');
   readonly acaoInicio = signal('');
@@ -104,11 +127,10 @@ export class Disciplinar implements OnInit {
 
   readonly tituloAcao = computed(() => {
     switch (this.acaoAberta()) {
-      case 'devolvido':
-        return 'Documento devolvido assinado';
       case 'periodo':
         return 'Período da suspensão';
       case 'resolver':
+        if (this.ehRecomendacao(this.registroEmAcao())) return 'Dispensar recomendação';
         return this.registroEmAcao()?.consequencia === 'RETORNO_COM_RESPONSAVEL'
           ? 'Conversa com o responsável'
           : 'Passeio perdido';
@@ -137,6 +159,7 @@ export class Disciplinar implements OnInit {
   }));
 
   ngOnInit(): void {
+    this.aplicarFiltrosDaUrl();
     this.carregarPendencias();
     this.carregar();
     this.destroyRef.onDestroy(() => this.buscaTimer && clearTimeout(this.buscaTimer));
@@ -165,6 +188,11 @@ export class Disciplinar implements OnInit {
     this.recarregar();
   }
 
+  alternarRecomendacoes(): void {
+    this.somenteRecomendacoes.update((v) => !v);
+    this.recarregar();
+  }
+
   alternarArquivados(): void {
     this.incluirArquivados.update((v) => !v);
     this.recarregar();
@@ -174,6 +202,7 @@ export class Disciplinar implements OnInit {
     this.termoBusca.set('');
     this.filtroNivel.set('');
     this.somentePendencias.set(false);
+    this.somenteRecomendacoes.set(false);
     this.incluirArquivados.set(false);
     this.recarregar();
   }
@@ -195,6 +224,14 @@ export class Disciplinar implements OnInit {
     this.carregarPendencias();
   }
 
+  /** FT-18: um aviso abre a lista já no atendido (?busca=) e no filtro (?filtro=recomendacoes|pendencias). */
+  private aplicarFiltrosDaUrl(): void {
+    const params = this.route.snapshot.queryParamMap;
+    this.termoBusca.set(params.get('busca') ?? '');
+    this.somenteRecomendacoes.set(params.get('filtro') === 'recomendacoes');
+    this.somentePendencias.set(params.get('filtro') === 'pendencias');
+  }
+
   private recarregar(): void {
     this.pagina.set(0);
     this.carregar();
@@ -208,6 +245,7 @@ export class Disciplinar implements OnInit {
         busca: this.termoBusca(),
         nivel: this.filtroNivel() || null,
         somentePendencias: this.somentePendencias(),
+        somenteRecomendacoes: this.somenteRecomendacoes(),
         incluirArquivados: this.incluirArquivados(),
         pagina: this.pagina(),
         tamanho: this.tamanho,
@@ -233,9 +271,9 @@ export class Disciplinar implements OnInit {
   // ================= Ações do registro =================
 
   acoesRegistro(r: RegistroDisciplinarDTO): ActionMenuItem[] {
-    const itens: ActionMenuItem[] = [{ id: 'ficha', label: 'Ver ficha do assistido', icon: 'user' }];
-    if (r.documentoStatus) itens.push({ id: 'documento', label: 'Imprimir documento', icon: 'file-text' });
-    if (r.arquivado) return itens;
+    const itens: ActionMenuItem[] = [{ id: 'ficha', label: 'Ver ficha do atendido', icon: 'user' }];
+    if (temDocumento(r)) itens.push({ id: 'documento', label: 'Imprimir documento', icon: 'file-text' });
+    if (r.arquivado || !this.ehCoordenador()) return itens;
 
     if (r.documentoStatus === 'PENDENTE_ASSINATURA') {
       itens.push({ id: 'devolvido', label: 'Marcar como devolvido assinado', icon: 'check' });
@@ -243,18 +281,31 @@ export class Disciplinar implements OnInit {
     if (r.nivel === NivelDisciplinar.SUSPENSAO) {
       itens.push({ id: 'periodo', label: 'Ajustar período da suspensão', icon: 'calendar' });
     }
-    if (r.consequenciaPendente) {
+    const nivelAGerar = nivelRecomendado(r.consequencia);
+    if (r.consequenciaPendente && nivelAGerar) {
+      itens.push({ id: 'gerar', label: `Gerar ${NIVEIS_DISCIPLINARES[nivelAGerar].rotulo.toLowerCase()}`, icon: 'flag' });
+      itens.push({ id: 'resolver', label: 'Dispensar recomendação', icon: 'check-square' });
+    } else if (r.consequenciaPendente) {
       itens.push({
         id: 'resolver',
         label: r.consequencia === 'RETORNO_COM_RESPONSAVEL' ? 'Registrar conversa com responsável' : 'Registrar passeio perdido',
         icon: 'check-square',
       });
     }
-    if (this.ehCoordenador()) itens.push({ id: 'arquivar', label: 'Arquivar', icon: 'folder', danger: true });
+    itens.push({ id: 'arquivar', label: 'Arquivar', icon: 'folder', danger: true });
     return itens;
   }
 
   executarAcao(acao: string, r: RegistroDisciplinarDTO): void {
+    if (acao === 'gerar') {
+      this.recomendacaoEmAcao.set([r]);
+      return;
+    }
+    if (acao === 'devolvido') {
+      this.registroAnexando.set(r);
+      this.mostrarAnexar.set(true);
+      return;
+    }
     switch (acao as AcaoRegistro) {
       case 'ficha':
         this.router.navigate(['/assistidos'], { queryParams: { assistidoId: r.assistidoId } });
@@ -270,7 +321,6 @@ export class Disciplinar implements OnInit {
   private abrirAcao(acao: Exclude<AcaoRegistro, 'ficha' | 'documento'>, r: RegistroDisciplinarDTO): void {
     this.registroEmAcao.set(r);
     this.erroAcao.set(null);
-    this.arquivoAssinado.set(null);
     this.acaoData.set(this.hoje);
     this.acaoTexto.set('');
     this.acaoInicio.set(r.suspensaoInicio ?? this.hoje);
@@ -278,14 +328,13 @@ export class Disciplinar implements OnInit {
     this.acaoAberta.set(acao);
   }
 
+  ehRecomendacao(r: RegistroDisciplinarDTO | null): boolean {
+    return !!r && nivelRecomendado(r.consequencia) !== null;
+  }
+
   fecharAcao(): void {
     this.acaoAberta.set(null);
     this.registroEmAcao.set(null);
-  }
-
-  onArquivoAssinado(evento: Event): void {
-    const arquivo = (evento.target as HTMLInputElement).files?.[0] ?? null;
-    this.arquivoAssinado.set(arquivo);
   }
 
   async confirmarAcao(): Promise<void> {
@@ -303,21 +352,6 @@ export class Disciplinar implements OnInit {
     this.erroAcao.set(null);
     try {
       switch (acao) {
-        case 'devolvido': {
-          let arquivoId: number | null = null;
-          const arquivo = this.arquivoAssinado();
-          if (arquivo) {
-            const salvo = await this.arquivoService.enviar(
-              EntidadeArquivo.ASSISTIDO,
-              r.assistidoId,
-              CategoriaArquivo.DOCUMENTO_DISCIPLINAR_ASSINADO,
-              arquivo,
-            );
-            arquivoId = salvo.arquivoId;
-          }
-          await this.disciplinarService.marcarDocumentoDevolvido(r.registroId, arquivoId);
-          break;
-        }
         case 'periodo':
           await this.disciplinarService.alterarPeriodoSuspensao(r.registroId, this.acaoInicio(), this.acaoFim());
           break;

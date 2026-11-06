@@ -9,7 +9,7 @@ export interface PainelMensalDTO {
   frequencia: {
     percentual: number | null;
     percentualMesAnterior: number | null;
-    aulasRealizadas: number;
+    chamadasLancadas: number;
     chamadasPendentes: number;
     faltas: number;
     faltasJustificadas: number;
@@ -23,7 +23,7 @@ export interface PainelMensalDTO {
     totalMesAnterior: number;
   };
   /** 6 meses, do mais antigo ao escolhido. */
-  tendencia: { mes: string; percentual: number | null; aulas: number }[];
+  tendencia: { mes: string; percentual: number | null; chamadas: number }[];
   /** Turmas ativas, da menor para a maior frequência. */
   turmas: {
     turmaId: number;
@@ -31,7 +31,7 @@ export interface PainelMensalDTO {
     nomeOficina: string | null;
     alunos: number;
     capacidade: number | null;
-    aulasRealizadas: number;
+    chamadasLancadas: number;
     chamadasPendentes: number;
     frequencia: number | null;
   }[];
@@ -46,22 +46,22 @@ export interface ListaPainel<T> {
 /** FT-05 — GET /api/painel/hoje. Independe do mês escolhido. */
 export interface PainelHojeDTO {
   hoje: string;
-  faltasSeguidas: ListaPainel<{ assistidoId: number; nome: string; turma: string | null; faltas: number; ultimaAula: string }>;
-  chamadasPendentes: ListaPainel<{ aulaId: number; data: string; horario: string | null; turma: string | null }>;
+  faltasSeguidas: ListaPainel<{ assistidoId: number; nome: string; turma: string | null; faltas: number; ultimaChamada: string }>;
+  chamadasPendentes: ListaPainel<{ turmaId: number; data: string; turma: string | null }>;
   disciplina: PendenciasDisciplinaresDTO;
   umPassoDaProgressao: ListaPainel<{ assistidoId: number; nome: string; nivel: string; registros: number }>;
   aniversariantes: { assistidoId: number; nome: string; turma: string | null; dia: string; idade: number }[];
   atividades: AtividadePainel[];
 }
 
-/** Acontecimento recente — CHAMADA (referenciaId = aula), DISCIPLINAR (= registro) ou ASSISTIDO. */
+/** Acontecimento recente — CHAMADA (referenciaId = grupo), DISCIPLINAR (= registro) ou ASSISTIDO. */
 export interface AtividadePainel {
   tipo: 'CHAMADA' | 'DISCIPLINAR' | 'ASSISTIDO';
   referenciaId: number;
   assistidoId: number | null;
   /** Turma (chamada) ou nome do assistido. */
   titulo: string;
-  /** dd/MM da aula ou nível disciplinar. */
+  /** Data da chamada (yyyy-MM-dd) ou nível disciplinar. */
   detalhe: string | null;
   quando: string | null;
 }

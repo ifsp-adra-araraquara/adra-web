@@ -1,0 +1,112 @@
+<div [formGroup]="grupo()">
+  <app-escolha-sim-nao
+    formControlName="temMae"
+    pergunta="Quem é o responsável pelo atendido?"
+    rotuloSim="A mãe"
+    rotuloNao="Outra pessoa"
+  />
+
+  @if (grupo().controls.temMae.value) {
+    <fieldset class="bloco" formGroupName="mae">
+      <legend>Mãe</legend>
+      <app-input label="Nome completo da mãe" formControlName="nomeCompleto" autocomplete="name" [required]="true" [maxLength]="180" [errorMessage]="erro('mae.nomeCompleto')" />
+      <div class="form-row">
+        <app-input label="Data de nascimento" type="date" formControlName="dataNascimento" autocomplete="bday" [required]="true" [errorMessage]="erro('mae.dataNascimento')" />
+        <app-input label="CPF da mãe" mask="cpf" placeholder="000.000.000-00" formControlName="cpf" [required]="true" [errorMessage]="erro('mae.cpf')" />
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label for="pc-mae-escolaridade">Escolaridade <span class="obrigatorio" aria-hidden="true">*</span></label>
+          <app-select id="pc-mae-escolaridade" formControlName="escolaridade" placeholder="Selecione" [options]="escolaridadeOptions" [invalido]="!!erro('mae.escolaridade')" descritoPor="pc-mae-escolaridade-erro" />
+          @if (erro('mae.escolaridade'); as mensagem) {
+            <p class="app-input-error" id="pc-mae-escolaridade-erro" role="alert">{{ mensagem }}</p>
+          }
+        </div>
+        <div class="field">
+          <label for="pc-mae-estado-civil">Estado civil <span class="obrigatorio" aria-hidden="true">*</span></label>
+          <app-select id="pc-mae-estado-civil" formControlName="estadoCivil" placeholder="Selecione" [options]="estadoCivilOptions" [invalido]="!!erro('mae.estadoCivil')" descritoPor="pc-mae-estado-civil-erro" />
+          @if (erro('mae.estadoCivil'); as mensagem) {
+            <p class="app-input-error" id="pc-mae-estado-civil-erro" role="alert">{{ mensagem }}</p>
+          }
+        </div>
+      </div>
+      @if (grupo().controls.mae.controls.estadoCivil.value === ESTADO_CIVIL_OUTRO) {
+        <app-input label="Qual estado civil?" formControlName="estadoCivilOutro" [required]="true" [maxLength]="60" [errorMessage]="erro('mae.estadoCivilOutro')" />
+      }
+      <app-input label="Profissão" formControlName="profissao" [maxLength]="120" />
+      <div class="form-row">
+        <app-input label="Renda mensal (R$)" type="number" min="0" placeholder="0,00" formControlName="renda" [required]="true" [errorMessage]="erro('mae.renda')" />
+        <app-input label="Telefone para contato" mask="telefone" autocomplete="tel" formControlName="telefone" [required]="true" [errorMessage]="erro('mae.telefone', MENSAGEM_TELEFONE)" />
+      </div>
+    </fieldset>
+  }
+
+  @if (grupo().controls.temPai.value) {
+    <fieldset class="bloco" formGroupName="pai">
+      <legend>Pai</legend>
+      <app-input label="Nome completo do pai" formControlName="nomeCompleto" [required]="true" [maxLength]="180" [errorMessage]="erro('pai.nomeCompleto')" />
+      <div class="form-row">
+        <app-input label="CPF do pai (se souber)" mask="cpf" placeholder="000.000.000-00" formControlName="cpf" [errorMessage]="erro('pai.cpf')" />
+        <app-input label="Profissão" formControlName="profissao" [maxLength]="120" />
+      </div>
+      <div class="form-row">
+        <app-input label="Renda mensal (R$)" type="number" min="0" placeholder="0,00" formControlName="renda" [required]="true" [errorMessage]="erro('pai.renda')" />
+        <app-input label="Telefone para contato" mask="telefone" formControlName="telefone" [errorMessage]="erro('pai.telefone', MENSAGEM_TELEFONE)" />
+      </div>
+      <app-button variant="secondary" size="sm" (click)="incluir('temPai', false)">
+        <app-icon name="trash" [size]="16" /> Remover dados do pai
+      </app-button>
+    </fieldset>
+  } @else {
+    <app-button variant="secondary" [block]="true" (click)="incluir('temPai', true)">
+      <app-icon name="plus" [size]="16" /> Adicionar dados do pai
+    </app-button>
+  }
+
+  @if (!grupo().controls.temMae.value || grupo().controls.temResponsavelLegal.value) {
+    <fieldset class="bloco" formGroupName="responsavelLegal">
+      <legend>Responsável legal</legend>
+      @if (!grupo().controls.temMae.value) {
+        <p class="dica">Quem cuida do atendido no lugar da mãe (ex.: avó, avô, tia, tio).</p>
+      }
+      <app-input label="Nome completo" formControlName="nomeCompleto" [required]="true" [maxLength]="180" [errorMessage]="erro('responsavelLegal.nomeCompleto')" />
+      <div class="form-row">
+        <app-input label="Parentesco" placeholder="Ex.: avó, tio" formControlName="parentesco" [required]="true" [maxLength]="60" [errorMessage]="erro('responsavelLegal.parentesco')" />
+        <app-input
+          [label]="grupo().controls.temMae.value ? 'CPF (se souber)' : 'CPF'"
+          mask="cpf"
+          placeholder="000.000.000-00"
+          formControlName="cpf"
+          [required]="!grupo().controls.temMae.value"
+          [errorMessage]="erro('responsavelLegal.cpf')"
+        />
+      </div>
+      <app-input label="Telefone para contato" mask="telefone" formControlName="telefone" [required]="true" [errorMessage]="erro('responsavelLegal.telefone', MENSAGEM_TELEFONE)" />
+      @if (grupo().controls.temMae.value) {
+        <app-button variant="secondary" size="sm" (click)="incluir('temResponsavelLegal', false)">
+          <app-icon name="trash" [size]="16" /> Remover responsável legal
+        </app-button>
+      }
+    </fieldset>
+  } @else {
+    <app-button variant="secondary" [block]="true" (click)="incluir('temResponsavelLegal', true)">
+      <app-icon name="plus" [size]="16" /> Adicionar outro responsável legal
+    </app-button>
+  }
+
+  <fieldset class="bloco" [class.campo-invalido]="!!erro('enderecoFamilia')">
+    <legend>Endereço da família</legend>
+    <label class="check">
+      <input type="checkbox" formControlName="mesmoEnderecoDaCrianca" />
+      É o mesmo endereço do atendido
+    </label>
+    @if (!grupo().controls.mesmoEnderecoDaCrianca.value) {
+      <app-endereco-form formControlName="enderecoFamilia" />
+      @if (erro('enderecoFamilia')) {
+        <p class="app-input-error" role="alert">Informe pelo menos a rua.</p>
+      }
+    }
+  </fieldset>
+
+  <app-input label="E-mail (opcional)" type="email" autocomplete="email" formControlName="email" [maxLength]="180" [errorMessage]="erro('email')" />
+</div>

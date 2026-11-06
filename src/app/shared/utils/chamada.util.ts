@@ -1,17 +1,10 @@
 import { Role } from '../enum/role.enum';
 import { MotivoFalta } from '../enum/MotivoFalta';
 import { StatusPresenca } from '../enum/StatusPresenca';
-import { AutorizadoRetiradaDTO, PresencaHistoricoDTO, PresencaResponseDTO } from '../models/presenca/PresencaResponseDTO';
+import { AutorizadoRetiradaDTO, PresencaHistoricoDTO } from '../models/presenca/PresencaResponseDTO';
+import { AtendidoChamadaDTO } from '../models/chamada/ChamadaGrupo';
 
-/**
- * Lógica de chamada compartilhada entre `AulaModal` (shared/components) e
- * `AulaCompleta` (a página "Ver aula completa"). Antes de existir este
- * arquivo, cada componente tinha sua própria cópia — e divergiam: a
- * rastreabilidade de autoria (US-68) só foi parar no modal, e a página
- * "completa" só liberava edição pra Sociopedagógico (Coordenador, que
- * também tem permissão, ficava travado lá por engano). Ver histórico do
- * PR que introduziu este arquivo pra mais contexto.
- */
+/** Lógica de chamada do grupo no dia (lista, marcação e validação), sem estado de componente. */
 export interface LinhaChamada {
   assistidoId: number;
   nomeCompleto: string;
@@ -39,6 +32,31 @@ export interface LinhaChamada {
   aulasPrevistas?: number | null;
   /** Quem pode buscar o aluno (vazio = ninguém marcado como autorizado). */
   autorizadosRetirada?: AutorizadoRetiradaDTO[];
+  /** FT-13: suspenso no dia — fica em falta justificada por Suspensão e não é alterado na chamada. */
+  suspensoAte?: string | null;
+}
+
+/** Linha da chamada do grupo no dia (FT-12). O histórico vem por data de chamada, não por aula. */
+export function linhaChamadaDeAtendido(a: AtendidoChamadaDTO): LinhaChamada {
+  return {
+    assistidoId: a.assistidoId,
+    nomeCompleto: a.nomeCompleto,
+    podeIrEmboraSozinho: a.podeIrEmboraSozinho,
+    dataNascimento: a.dataNascimento,
+    statusPresenca: a.statusPresenca,
+    motivoFalta: a.motivoFalta,
+    observacao: a.observacao ?? '',
+    criadoPorId: null,
+    criadoPorNome: null,
+    atualizadoPorId: null,
+    atualizadoPorNome: null,
+    criadoEm: null,
+    atualizadoEm: null,
+    historicoRecente: a.historicoRecente.map((h) => ({ dataAula: h.data, statusPresenca: h.statusPresenca })),
+    frequenciaPercentual: a.frequenciaPercentual,
+    autorizadosRetirada: a.autorizadosRetirada,
+    suspensoAte: a.suspensoAte ?? null,
+  };
 }
 
 /** A partir de quantas faltas seguidas o roster mostra o alerta de atenção. */
@@ -46,29 +64,6 @@ export const LIMIAR_FALTAS_CONSECUTIVAS = 3;
 
 /** Quantos dias a faixa visual mostra (o histórico que vem da API tem mais, pra calcular o alerta mesmo sem mostrar tudo). */
 export const DIAS_FAIXA_HISTORICO = 5;
-
-export function linhaChamadaDePresenca(p: PresencaResponseDTO): LinhaChamada {
-  return {
-    assistidoId: p.assistidoId,
-    nomeCompleto: p.nomeCompleto,
-    podeIrEmboraSozinho: p.podeIrEmboraSozinho ?? false,
-    dataNascimento: p.dataNascimento ?? null,
-    statusPresenca: p.statusPresenca,
-    motivoFalta: p.motivoFalta,
-    observacao: p.observacao ?? '',
-    criadoPorId: p.criadoPorId ?? null,
-    criadoPorNome: p.criadoPorNome ?? null,
-    atualizadoPorId: p.atualizadoPorId ?? null,
-    atualizadoPorNome: p.atualizadoPorNome ?? null,
-    criadoEm: p.criadoEm ?? null,
-    atualizadoEm: p.atualizadoEm ?? null,
-    historicoRecente: p.historicoRecente ?? [],
-    frequenciaPercentual: p.frequenciaPercentual ?? null,
-    aulasRealizadas: p.aulasRealizadas ?? null,
-    aulasPrevistas: p.aulasPrevistas ?? null,
-    autorizadosRetirada: p.autorizadosRetirada ?? [],
-  };
-}
 
 /** Faltas (não justificadas) seguidas, olhando `historicoRecente` da mais recente pra trás. */
 export function contarFaltasConsecutivas(historico: PresencaHistoricoDTO[]): number {
@@ -119,13 +114,15 @@ export function marcarPresenca(
   status: StatusPresenca,
 ): LinhaChamada[] {
   return alunos.map((a) => {
-    if (a.assistidoId !== assistidoId) return a;
+    // FT-13: o suspenso fica em FJ por Suspensão; corrige-se a suspensão, não a chamada.
+    if (a.assistidoId !== assistidoId || a.suspensoAte) return a;
     // Trocar pra um status que não seja falta justificada limpa o
     // motivo/observação — não faz sentido carregar isso escondido.
     if (status !== StatusPresenca.FALTA_JUSTIFICADA) {
       return { ...a, statusPresenca: status, motivoFalta: null, observacao: '' };
     }
-    return { ...a, statusPresenca: status };
+    // A falta justificada escolhida na chamada é sempre por atestado (a de suspensão vem sozinha).
+    return { ...a, statusPresenca: status, motivoFalta: a.motivoFalta ?? MotivoFalta.ATESTADO };
   });
 }
 
@@ -162,12 +159,16 @@ export function filtrarPorNome(alunos: LinhaChamada[], termo: string): LinhaCham
 }
 
 export function marcarTodosPresentes(alunos: LinhaChamada[]): LinhaChamada[] {
-  return alunos.map((a) => ({
-    ...a,
-    statusPresenca: StatusPresenca.PRESENTE,
-    motivoFalta: null,
-    observacao: '',
-  }));
+  return alunos.map((a) =>
+    a.suspensoAte
+      ? a
+      : {
+          ...a,
+          statusPresenca: StatusPresenca.PRESENTE,
+          motivoFalta: null,
+          observacao: '',
+        },
+  );
 }
 
 export function atualizarMotivoFalta(
@@ -194,7 +195,7 @@ export function atualizarObservacaoFalta(
  */
 export function validarChamada(alunos: LinhaChamada[]): string | null {
   if (alunos.some((a) => !a.statusPresenca)) {
-    return 'Marque a presença de todos os alunos antes de salvar.';
+    return 'Marque a presença de todos os atendidos antes de salvar.';
   }
 
   const semMotivo = alunos.find(
@@ -204,26 +205,16 @@ export function validarChamada(alunos: LinhaChamada[]): string | null {
     return `Informe o motivo da falta justificada de ${semMotivo.nomeCompleto}.`;
   }
 
-  const outroSemObservacao = alunos.find(
-    (a) =>
-      a.statusPresenca === StatusPresenca.FALTA_JUSTIFICADA &&
-      a.motivoFalta === MotivoFalta.OUTRO &&
-      !a.observacao?.trim(),
-  );
-  if (outroSemObservacao) {
-    return `Motivo "Outro" exige observação — preencha a de ${outroSemObservacao.nomeCompleto}.`;
-  }
-
   return null;
 }
 
 /** US-67: quem tem acesso à edição/correção de chamada (lançar ou corrigir). */
 export function podeEditarChamada(perfil: Role | null): boolean {
-  return perfil === Role.SOCIO || perfil === Role.COORD;
+  return perfil === Role.EDUCADOR || perfil === Role.COORD;
 }
 
 /**
- * CA-65.3/US-67: sociopedagógico só realiza/corrige a chamada no dia da
+ * CA-65.3/US-67: educador social só realiza/corrige a chamada no dia da
  * aula; coordenador corrige chamada de qualquer data.
  */
 export function podeCorrigirDataChamada(perfil: Role | null, aulaEhHoje: boolean): boolean {

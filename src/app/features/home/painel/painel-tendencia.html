@@ -44,7 +44,7 @@
         @if (tooltip(); as t) {
           <div class="tooltip" [style.left.%]="t.esquerda" role="status">
             <b>{{ t.valor }}</b>
-            <span>{{ t.titulo }} · {{ t.aulas }} {{ t.aulas === 1 ? 'aula' : 'aulas' }}</span>
+            <span>{{ t.titulo }} · {{ t.chamadas }} {{ t.chamadas === 1 ? 'chamada' : 'chamadas' }}</span>
           </div>
         }
       </div>
@@ -52,7 +52,7 @@
         <caption>Frequência mensal</caption>
         <tbody>
           @for (n of tendencia().nos; track n.mes) {
-            <tr><th scope="row">{{ n.titulo }}</th><td>{{ n.percentual == null ? 'sem aula' : n.percentual + '%' }}</td><td>{{ n.aulas }} aulas</td></tr>
+            <tr><th scope="row">{{ n.titulo }}</th><td>{{ n.percentual == null ? 'sem chamada' : n.percentual + '%' }}</td><td>{{ n.chamadas }} chamadas</td></tr>
           }
         </tbody>
       </table>

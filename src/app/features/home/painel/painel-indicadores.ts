@@ -38,7 +38,7 @@ export class PainelIndicadores {
         icone: 'users',
         cor: 'verde',
         valor: String(m.assistidos.ativos),
-        rotulo: 'Assistidos ativos',
+        rotulo: 'Atendidos ativos',
         tendencia: tendencia(m.assistidos.ativos - m.assistidos.ativosMesAnterior, ' este mês', true),
       },
       {
@@ -60,7 +60,7 @@ export class PainelIndicadores {
           f.percentual != null && f.percentualMesAnterior != null
             ? tendencia(f.percentual - f.percentualMesAnterior, ' p.p. vs. mês ant.', true)
             : f.percentual == null
-              ? { texto: 'sem aula realizada', tom: 'neutro', seta: '' }
+              ? { texto: 'sem chamada lançada', tom: 'neutro', seta: '' }
               : null,
       },
       {

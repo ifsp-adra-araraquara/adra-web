@@ -2,16 +2,8 @@
   <div class="cal-toolbar">
     <div class="cal-filters">
       <div class="field">
-        <label>Oficina</label>
-        <app-select [options]="oficinasOpcoes()" name="oficinaIdFiltro" [(ngModel)]="oficinaIdFiltro" />
-      </div>
-      <div class="field">
         <label>De</label>
         <input class="input" type="date" [ngModel]="dataInicioFiltro()" (ngModelChange)="irParaData($event)" name="dataInicioFiltro" />
-      </div>
-      <div class="field">
-        <label>Até</label>
-        <input class="input" type="date" [(ngModel)]="dataFimFiltro" name="dataFimFiltro" />
       </div>
     </div>
 
@@ -23,23 +15,21 @@
       </div>
       @if (podeGerenciar()) {
         <div class="cal-botoes">
-          <button type="button" class="btn btn-sm btn-ghost" (click)="abrirDiasSemAula()">Dias sem aula</button>
-          <button type="button" class="btn btn-sm" (click)="abrirRecorrencia()">Gerar aulas</button>
+          <button type="button" class="btn btn-sm btn-ghost" (click)="abrirNotasCalendario()">Notas do calendário</button>
+          <button type="button" class="btn btn-sm btn-ghost" (click)="abrirDiasSemAula()">Dias sem chamada</button>
         </div>
       }
     </div>
   </div>
 
   <div class="cal-legend">
-    @for (item of legendaStatus; track item.status) {
-      <span class="legend-chip">
-        <span class="legend-dot" [style.background]="'var(--' + item.variant + '-400)'"></span>
-        {{ item.label }}
-      </span>
-    }
+    <span class="legend-chip">
+      <span class="legend-dot" style="background: var(--coral-400)"></span>
+      Nota / evento global
+    </span>
   </div>
-  <div class="cal-legend cal-legend--sem-aula" aria-label="Dias sem aula">
-    <span class="legend-titulo">Sem aula:</span>
+  <div class="cal-legend cal-legend--sem-aula" aria-label="Dias sem chamada">
+    <span class="legend-titulo">Sem chamada:</span>
     @for (item of legendaExcecoes; track item.tipo) {
       <span class="legend-chip">
         <span class="legend-quadro" [style.background]="'var(--' + item.variant + '-50, var(--gray-100))'" [style.border-color]="'var(--' + item.variant + '-400)'"></span>
@@ -48,27 +38,11 @@
     }
   </div>
 
-  @if (aulaService.carregando()) {
-    <p class="feedback" role="status">Carregando aulas...</p>
-  }
-
   <div class="cal-card">
     <div class="cal-scroll">
       <full-calendar #calendario [options]="calendarOptions()" />
     </div>
   </div>
-
-  @if (podeGerenciar()) {
-    <app-recorrencia-aulas-modal
-      [aberto]="mostrarRecorrencia()"
-      [turmas]="turmas()"
-      (fechar)="mostrarRecorrencia.set(false)"
-      (gerado)="aoGerarAulas()"
-    />
-    @if (aulaSelecionada(); as aula) {
-      <app-aula-status-modal [aula]="aula" (fechar)="fecharModalStatus()" (salvo)="fecharModalStatus()" />
-    }
-  }
 
   <app-modal
     [open]="diaSelecionado() !== null"
@@ -82,35 +56,129 @@
         @if (excecao.descricao) {
           <span> — {{ excecao.descricao }}</span>
         }
-        <div class="muted">Dia sem aula.</div>
+        <div class="muted">Dia sem chamada.</div>
       </div>
     }
-    @if (aulasDoDiaSelecionado().length === 0) {
-      <p class="empty">Nenhuma aula neste dia.</p>
-    } @else {
-      <div class="dia-aulas-lista">
-        @for (aula of aulasDoDiaSelecionado(); track aula.aulaId) {
-          <div class="dia-aula-item">
-            <div class="dia-aula-info">
-              <strong>{{ aula.horarioInicio?.slice(0, 5) ?? '—' }}</strong>
-              <span>{{ aula.titulo ?? aula.nomeTurma ?? 'Aula' }}</span>
-              @if (aula.nomeOficineiro) {
-                <span class="muted">{{ aula.nomeOficineiro }}</span>
+    @if (notasDoDiaSelecionado().length > 0) {
+      <div class="dia-notas-lista">
+        <p class="form-sec-title">Avisos e eventos do dia</p>
+        @for (nota of notasDoDiaSelecionado(); track nota.notaId) {
+          <div class="dia-nota-item">
+            <div class="dia-nota-info">
+              <div class="dia-nota-cabecalho">
+                @if (nota.horario) {
+                  <span class="dia-nota-hora">{{ nota.horario.slice(0, 5) }}</span>
+                }
+                <strong>{{ nota.titulo }}</strong>
+              </div>
+              @if (nota.descricao) {
+                <p class="dia-nota-desc">{{ nota.descricao }}</p>
               }
             </div>
-            @if (podeIrParaChamada()) {
-              <app-button size="sm" variant="secondary" (click)="abrirChamadaDaAula(aula)">
-                Abrir chamada
-              </app-button>
+            @if (podeGerenciar()) {
+              <div class="dia-nota-acoes">
+                <button type="button" class="btn-icon" [attr.aria-label]="'Editar ' + nota.titulo" (click)="editarNota(nota)">✎</button>
+                <button type="button" class="btn-icon" [attr.aria-label]="'Remover ' + nota.titulo" (click)="removerNota(nota)">✕</button>
+              </div>
             }
           </div>
         }
       </div>
     }
+    @if (podeGerenciar()) {
+      <div class="dia-nova-nota-acao">
+        <app-button size="sm" variant="secondary" (click)="abrirNovaNotaNoDia()">
+          + Nova nota neste dia
+        </app-button>
+      </div>
+    }
+    @if (!excecaoDoDiaSelecionado() && notasDoDiaSelecionado().length === 0) {
+      <p class="empty">Nenhum evento neste dia.</p>
+    }
   </app-modal>
 
   @if (podeGerenciar()) {
-    <app-modal [(open)]="mostrarDiasSemAula" title="Dias sem aula" subtitle="Férias, feriados, ponto facultativo ou evento/passeio no lugar da aula.">
+    <app-modal
+      [(open)]="mostrarNotasCalendario"
+      [title]="notaEditandoId() ? 'Editar nota do calendário' : 'Notas do calendário'"
+      subtitle="Avisos e eventos globais visíveis no calendário para toda a equipe."
+    >
+      @if (erroNota()) {
+        <div class="notice notice-error" role="alert">{{ erroNota() }}</div>
+      }
+
+      <div class="form-row">
+        <app-input
+          label="Data"
+          type="date"
+          [ngModel]="formNota.dataNota"
+          (ngModelChange)="atualizarCampoNota('dataNota', $event)"
+        />
+        <app-input
+          label="Horário (opcional)"
+          type="time"
+          [ngModel]="formNota.horario"
+          (ngModelChange)="atualizarCampoNota('horario', $event)"
+        />
+      </div>
+
+      <app-input
+        label="Título / evento"
+        placeholder="Ex.: Reunião geral com os pais"
+        [maxLength]="120"
+        [ngModel]="formNota.titulo"
+        (ngModelChange)="atualizarCampoNota('titulo', $event)"
+      />
+
+      <app-input
+        label="Descrição (opcional)"
+        placeholder="Ex.: Auditório principal — trazer pauta assinada"
+        [maxLength]="500"
+        [ngModel]="formNota.descricao"
+        (ngModelChange)="atualizarCampoNota('descricao', $event)"
+      />
+
+      <div class="nota-form-acoes">
+        <app-button size="sm" [loading]="salvandoNota()" (click)="salvarNota()">
+          {{ notaEditandoId() ? 'Salvar alterações' : 'Adicionar nota' }}
+        </app-button>
+        @if (notaEditandoId()) {
+          <app-button size="sm" variant="secondary" (click)="cancelarEdicaoNota()">Cancelar edição</app-button>
+        }
+      </div>
+
+      <p class="form-sec-title">Próximas notas do calendário</p>
+      @if (proximasNotas().length === 0) {
+        <p class="empty">Nenhuma nota cadastrada daqui pra frente.</p>
+      } @else {
+        <ul class="excecoes-lista">
+          @for (nota of proximasNotas(); track nota.notaId) {
+            <li>
+              <div class="nota-lista-item-info">
+                <span>
+                  <strong>{{ nota.dataNota.split('-').reverse().join('/') }}</strong>
+                  @if (nota.horario) {
+                    <span> às {{ nota.horario.slice(0, 5) }}</span>
+                  }
+                  · {{ nota.titulo }}
+                </span>
+                @if (nota.descricao) {
+                  <span class="muted">{{ nota.descricao }}</span>
+                }
+              </div>
+              <div class="dia-nota-acoes">
+                <button type="button" class="btn-icon" [attr.aria-label]="'Editar ' + nota.titulo" (click)="editarNota(nota)">✎</button>
+                <button type="button" class="btn-icon" [attr.aria-label]="'Remover ' + nota.titulo" (click)="removerNota(nota)">✕</button>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </app-modal>
+  }
+
+  @if (podeGerenciar()) {
+    <app-modal [(open)]="mostrarDiasSemAula" title="Dias sem chamada" subtitle="Férias, feriados, ponto facultativo ou passeio: esses dias saem da chamada de todos os grupos.">
       @if (erroExcecao()) {
         <div class="notice notice-error" role="alert">{{ erroExcecao() }}</div>
       }
@@ -149,13 +217,11 @@
         (ngModelChange)="atualizarCampoExcecao('descricao', $event)"
       />
 
-      <p class="hint">Aulas planejadas nesses dias passam para "Cancelada".</p>
-
       <app-button size="sm" [loading]="salvandoExcecao()" (click)="salvarExcecao()">Adicionar</app-button>
 
-      <p class="form-sec-title">Próximos dias sem aula</p>
+      <p class="form-sec-title">Próximos dias sem chamada</p>
       @if (proximasExcecoes().length === 0) {
-        <p class="empty">Nenhum dia sem aula cadastrado daqui pra frente.</p>
+        <p class="empty">Nenhum dia sem chamada cadastrado daqui pra frente.</p>
       } @else {
         <ul class="excecoes-lista">
           @for (excecao of proximasExcecoes(); track excecao.excecaoId) {

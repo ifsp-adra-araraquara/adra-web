@@ -99,10 +99,10 @@ export function validarResponsavel(responsavel: { nomeCompleto: string; cpf?: st
 /** "Qual?" é obrigatório quando problema de saúde / PcD está marcado como Sim (mesma regra do back). */
 export function validarDadosComplementares(dados: AssistidoRequestDTO): string | null {
   if (dados.possuiProblemaSaude && !dados.problemaSaude?.trim()) {
-    return 'Informe qual é o problema de saúde do assistido.';
+    return 'Informe qual é o problema de saúde do atendido.';
   }
   if (dados.pcd && !dados.deficiencia?.trim()) {
-    return 'Informe qual é a deficiência do assistido.';
+    return 'Informe qual é a deficiência do atendido.';
   }
   if (dados.recebeProgramaTransferencia) {
     const programas = dados.programasTransferencia ?? [];

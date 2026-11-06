@@ -6,4 +6,5 @@ export interface UsuarioRequest {
   nivelPermissao: Role;
   cargoFuncao: string;
   telefone: string;
+  administrador: boolean;
 }

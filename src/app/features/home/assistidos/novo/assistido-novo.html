@@ -1,17 +1,17 @@
 <section class="page cadastro" aria-labelledby="cadastro-titulo">
   <button type="button" class="btn-voltar" (click)="voltar()">
     <app-icon name="chevron-left" />
-    Assistidos
+    Atendidos
   </button>
 
   <header class="page-header">
     <div class="page-header-texto">
-      <h1 id="cadastro-titulo">Novo assistido</h1>
+      <h1 id="cadastro-titulo">Novo atendido</h1>
       <p class="page-intro">
         @if (etapa() === 'cpf') {
-          Comece pelo CPF da criança: se ela já tiver cadastro, você vai direto para a ficha dela.
+          Comece pelo CPF do atendido: se ele já tiver cadastro, você vai direto para a ficha dele.
         } @else {
-          Preencha os dados e informe pelo menos um responsável. Nada é gravado até clicar em "Salvar assistido".
+          Preencha os dados e informe pelo menos um responsável. Nada é gravado até clicar em "Salvar atendido".
         }
       </p>
     </div>
@@ -22,7 +22,7 @@
     <div class="card card-pad busca-cpf">
       <form class="busca-cpf__form" (ngSubmit)="buscarCpf()">
         <app-input
-          label="CPF do assistido"
+          label="CPF do atendido"
           mask="cpf"
           placeholder="000.000.000-00"
           [required]="true"
@@ -45,7 +45,7 @@
           <dl class="existente__dados">
             <div><dt>Nome</dt><dd>{{ e.nomeCompleto }}</dd></div>
             <div><dt>Nascimento</dt><dd>{{ e.dataNascimento | date: 'dd/MM/yyyy' }}</dd></div>
-            <div><dt>Turma</dt><dd>{{ e.nomeTurma || 'Sem turma' }}</dd></div>
+            <div><dt>Grupo</dt><dd>{{ e.nomeTurma || 'Sem grupo' }}</dd></div>
             <div><dt>Situação</dt><dd><app-badge [status]="e.status" /></dd></div>
           </dl>
           <div class="acoes">
@@ -59,7 +59,7 @@
     <!-- ======================= Etapa 2: formulário ======================= -->
     @if (alertaDuplicidade()) {
       <div class="notice notice-amber">
-        Já existe um assistido com o mesmo nome e data de nascimento. O cadastro só é aceito se os dois tiverem
+        Já existe um atendido com o mesmo nome e data de nascimento. O cadastro só é aceito se os dois tiverem
         CPFs diferentes.
       </div>
     }
@@ -86,7 +86,7 @@
 
       <app-input
         label="Nome completo"
-        placeholder="Nome do assistido"
+        placeholder="Nome do atendido"
         [required]="true"
         [ngModel]="assistido().nomeCompleto"
         (ngModelChange)="atualizar('nomeCompleto', $event)"
@@ -109,7 +109,7 @@
           />
         </div>
         <div class="field">
-          <label>Turma</label>
+          <label>Grupo</label>
           <app-select
             [ngModel]="assistido().turmaId"
             (ngModelChange)="atualizar('turmaId', $event)"
@@ -144,41 +144,7 @@
     <section class="card card-pad bloco" aria-labelledby="sec-familia">
       <h2 id="sec-familia" class="form-sec-title">Núcleo familiar</h2>
 
-      @if (responsaveis().length === 0) {
-        <p class="vazio">Nenhum responsável ainda. Adicione pelo menos um.</p>
-      } @else {
-        <ul class="resp-lista" role="list">
-          @for (r of responsaveis(); track r.cpf; let i = $index) {
-            <li class="resp-card">
-              <div class="resp-card__topo">
-                <div>
-                  <span class="cell-name">{{ r.nomeCompleto }}</span>
-                  <span class="cell-sub">{{ r.parentesco || 'Parentesco não informado' }} · CPF {{ formatarCpf(r.cpf) }}</span>
-                </div>
-                <div class="resp-card__acoes">
-                  <button type="button" class="btn-icon" [attr.aria-label]="'Editar ' + r.nomeCompleto" appTooltip="Editar" (click)="editarResponsavel(i)">
-                    <app-icon name="edit" />
-                  </button>
-                  <button type="button" class="btn-icon" [attr.aria-label]="'Remover ' + r.nomeCompleto" appTooltip="Remover" (click)="removerResponsavel(i)">
-                    <app-icon name="trash" />
-                  </button>
-                </div>
-              </div>
-              <div class="resp-card__selos">
-                @if (r.responsavelId) { <app-badge variant="gray" label="Já cadastrado" /> }
-                @if (r.responsavelPrincipal) { <app-badge variant="blue" label="Principal" /> }
-                @if (r.contatoEmergencia) { <app-badge variant="green" label="Emergência" /> }
-                @if (r.autorizadoRetirada) { <app-badge variant="amber" label="Pode retirar" /> }
-                @if (r.telefone) { <span class="cell-sub">{{ formatarTelefone(r.telefone) }}</span> }
-              </div>
-            </li>
-          }
-        </ul>
-      }
-
-      <app-button variant="secondary" size="sm" (click)="adicionarResponsavel()">
-        <app-icon name="plus" [size]="16" /> Adicionar responsável
-      </app-button>
+      <app-responsaveis-pendentes [(responsaveis)]="responsaveis" (responsaveisChange)="erroSalvar.set(null)" />
     </section>
 
     <section class="card card-pad bloco" aria-labelledby="sec-socio">
@@ -203,16 +169,9 @@
       <div class="acoes">
         <app-button variant="secondary" (click)="voltar()">Cancelar</app-button>
         <app-button [loading]="salvando()" (click)="salvar()">
-          {{ salvando() ? 'Salvando...' : 'Salvar assistido' }}
+          {{ salvando() ? 'Salvando...' : 'Salvar atendido' }}
         </app-button>
       </div>
     </div>
   }
 </section>
-
-<app-responsavel-vinculo-modal
-  [(open)]="modalResponsavel"
-  [inicial]="responsavelEmEdicao()"
-  [cpfsUsados]="cpfsUsados()"
-  (confirmado)="responsavelConfirmado($event)"
-/>

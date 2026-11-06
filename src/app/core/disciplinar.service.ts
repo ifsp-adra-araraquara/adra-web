@@ -5,16 +5,20 @@ import { environment } from '../../environments/environment';
 import {
   FichaDisciplinarDTO,
   FiltroRegistrosDisciplinares,
+  GerarPelaRecomendacaoRequestDTO,
   MotivoDisciplinarDTO,
   MotivoDisciplinarRequestDTO,
   PaginaRegistrosDisciplinares,
   PendenciasDisciplinaresDTO,
+  RegistroCriadoDTO,
   RegistroDisciplinarDTO,
   RegistroDisciplinarRequestDTO,
+  RegistroVariosRequestDTO,
   SinalizacaoDisciplinarDTO,
+  ZerarContagemRequestDTO,
 } from '../shared/models/disciplinar/Disciplinar';
 
-/** FT-04: sistema disciplinar (ocorrência → advertência → suspensão, mais uniforme). */
+/** FT-04/FT-22: sistema disciplinar (a 3ª do nível recomenda o próximo; o Coordenador gera ou dispensa). */
 @Injectable({ providedIn: 'root' })
 export class DisciplinarService {
   private readonly http = inject(HttpClient);
@@ -38,6 +42,7 @@ export class DisciplinarService {
       .set('pagina', filtro.pagina ?? 0)
       .set('tamanho', filtro.tamanho ?? 20)
       .set('somentePendencias', !!filtro.somentePendencias)
+      .set('somenteRecomendacoes', !!filtro.somenteRecomendacoes)
       .set('incluirArquivados', !!filtro.incluirArquivados);
     if (filtro.busca?.trim()) params = params.set('busca', filtro.busca.trim());
     if (filtro.nivel) params = params.set('nivel', filtro.nivel);
@@ -58,10 +63,21 @@ export class DisciplinarService {
     return firstValueFrom(this.http.get<RegistroDisciplinarDTO>(`${this.api}/disciplinar/${registroId}`));
   }
 
-  /** Devolve o registro lançado e, depois, os gerados pela progressão. */
-  registrar(assistidoId: number, dto: RegistroDisciplinarRequestDTO): Promise<RegistroDisciplinarDTO[]> {
+  registrar(assistidoId: number, dto: RegistroDisciplinarRequestDTO): Promise<RegistroCriadoDTO> {
     return firstValueFrom(
-      this.http.post<RegistroDisciplinarDTO[]>(`${this.api}/assistidos/${assistidoId}/disciplinar`, dto),
+      this.http.post<RegistroCriadoDTO>(`${this.api}/assistidos/${assistidoId}/disciplinar`, dto),
+    );
+  }
+
+  /** FT-22: um registro por atendido, tudo ou nada. */
+  registrarVarios(dto: RegistroVariosRequestDTO): Promise<RegistroCriadoDTO[]> {
+    return firstValueFrom(this.http.post<RegistroCriadoDTO[]>(`${this.api}/disciplinar/registros`, dto));
+  }
+
+  /** FT-22: só o Coordenador. Gera a advertência/suspensão recomendada pelo registro. */
+  gerarPelaRecomendacao(registroId: number, dto: GerarPelaRecomendacaoRequestDTO): Promise<RegistroCriadoDTO> {
+    return firstValueFrom(
+      this.http.post<RegistroCriadoDTO>(`${this.api}/disciplinar/${registroId}/recomendacao`, dto),
     );
   }
 
@@ -91,6 +107,13 @@ export class DisciplinarService {
   arquivar(registroId: number, motivo: string): Promise<RegistroDisciplinarDTO> {
     return firstValueFrom(
       this.http.patch<RegistroDisciplinarDTO>(`${this.api}/disciplinar/${registroId}/arquivar`, { motivo }),
+    );
+  }
+
+  /** FT-24: só o Coordenador. Arquiva os registros ativos e devolve a ficha atualizada. */
+  zerarContagem(assistidoId: number, dto: ZerarContagemRequestDTO): Promise<FichaDisciplinarDTO> {
+    return firstValueFrom(
+      this.http.post<FichaDisciplinarDTO>(`${this.api}/assistidos/${assistidoId}/disciplinar/zerar`, dto),
     );
   }
 

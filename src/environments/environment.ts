@@ -13,4 +13,7 @@ export const environment = {
   supabaseUrl: import.meta.env.NG_APP_SUPABASE_URL ?? 'https://moorxvcnxesniwaaaksm.supabase.co',
   supabaseAnonKey:
     import.meta.env.NG_APP_SUPABASE_ANON_KEY ?? 'sb_publishable_ZV_APlGr2rAAQ05nYIDZRg_4UiPGXS1',
+  get turnstileSiteKey(): string {
+    return import.meta.env.NG_APP_TURNSTILE_SITE_KEY ?? '1x00000000000000000000AA';
+  },
 };

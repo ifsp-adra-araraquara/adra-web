@@ -1,0 +1,182 @@
+<section class="page avaliacao" aria-labelledby="avaliacao-titulo">
+  <a class="btn-voltar" routerLink="/pre-cadastros">
+    <app-icon name="chevron-left" />
+    Pré-cadastros
+  </a>
+
+  @if (carregando()) {
+    <div class="card card-pad"><p class="muted">Carregando…</p></div>
+  } @else if (erroCarregar()) {
+    <div class="notice notice-error" role="alert">{{ erroCarregar() }}</div>
+  } @else if (detalhe(); as d) {
+    <header class="page-header">
+      <div class="page-header-texto">
+        <h1 id="avaliacao-titulo">{{ d.nomeCompleto }}</h1>
+        <p class="page-intro">
+          @if (idade() != null) { {{ idade() }} anos · }
+          Enviado em {{ d.criadoEm | date: 'dd/MM/yyyy HH:mm' }}
+        </p>
+        <div class="selos">
+          <app-badge [status]="d.status" />
+          @if (existenteId() && pendente()) {
+            <app-badge variant="amber" label="CPF já cadastrado" />
+          }
+        </div>
+      </div>
+      <div class="page-header-acoes">
+        <a class="btn btn-ghost link-ficha" [routerLink]="['/pre-cadastros', d.preCadastroId, 'ficha']">
+          <app-icon name="file-text" [size]="16" /> Imprimir ficha
+        </a>
+      </div>
+    </header>
+
+    @if (existenteId(); as id) {
+      @if (pendente()) {
+        <div class="notice notice-amber" role="status">
+          <app-icon name="alert-circle" />
+          <span>
+            Este atendido já tem cadastro com este CPF. Não é preciso aprovar: abra a ficha e, se for o caso, reprove
+            esta inscrição.
+            <button type="button" class="link" (click)="abrirFichaDoAtendido(id)">Abrir ficha do atendido</button>
+          </span>
+        </div>
+      }
+    }
+
+    @if (d.anexosFaltando.length && d.status !== 'CONVERTIDO') {
+      <div class="notice notice-amber" role="status">
+        <app-icon name="alert-triangle" />
+        <span>
+          <b>A família não enviou:</b> {{ d.anexosFaltando.join(', ') }}. Peça na entrevista ou no dia do cadastro.
+        </span>
+      </div>
+    }
+
+    @if (d.status === 'CONVERTIDO') {
+      <div class="notice notice-info" role="status">
+        <app-icon name="check" />
+        <span>
+          Aprovado por {{ d.revisadoPorNome || 'equipe' }} em {{ d.revisadoEm | date: 'dd/MM/yyyy HH:mm' }}. O atendido foi
+          cadastrado.
+          @if (d.assistidoId) {
+            <button type="button" class="link" (click)="abrirFichaDoAtendido(d.assistidoId)">Abrir ficha do atendido</button>
+          }
+        </span>
+      </div>
+    } @else if (d.status === 'DESCARTADO') {
+      <div class="notice notice-lock" role="status">
+        <app-icon name="x" />
+        <span>
+          Reprovado por {{ d.revisadoPorNome || 'equipe' }} em {{ d.revisadoEm | date: 'dd/MM/yyyy HH:mm' }}.
+          <b>Motivo:</b> {{ d.motivoReprovacao }}
+        </span>
+      </div>
+    }
+
+    <div class="colunas" [class.colunas--leitura]="!podeAprovar()">
+      @if (podeAprovar()) {
+        <div class="formulario">
+          <p class="dica-topo">
+            O cadastro já vem preenchido com o que a família enviou. Edite o que precisar: só nome e CPF são obrigatórios.
+          </p>
+
+          <section class="card card-pad bloco" aria-labelledby="sec-dados">
+            <h2 id="sec-dados" class="form-sec-title">Dados pessoais</h2>
+            <app-input label="Nome completo" [required]="true" [ngModel]="assistido().nomeCompleto" (ngModelChange)="atualizar('nomeCompleto', $event)" />
+            <div class="form-row-3">
+              <app-input label="CPF" mask="cpf" [required]="true" [ngModel]="assistido().cpf" (ngModelChange)="atualizar('cpf', $event)" />
+              <app-input label="Data de nascimento" type="date" [ngModel]="assistido().dataNascimento" (ngModelChange)="atualizar('dataNascimento', $event)" />
+              <div class="field">
+                <label for="av-sexo">Sexo</label>
+                <app-select id="av-sexo" [options]="sexoOptions" [ngModel]="assistido().sexo ?? null" (ngModelChange)="atualizar('sexo', $event)" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="field">
+                <label for="av-turma">Grupo (opcional)</label>
+                <app-select id="av-turma" [options]="turmaOptions()" [ngModel]="assistido().turmaId ?? null" (ngModelChange)="atualizar('turmaId', $event)" />
+              </div>
+              <app-input label="Data de entrada" type="date" [ngModel]="assistido().dataEntrada" (ngModelChange)="atualizar('dataEntrada', $event)" />
+            </div>
+            <div class="field">
+              <label for="av-obs">Observações</label>
+              <textarea id="av-obs" rows="4" [ngModel]="assistido().observacoes" (ngModelChange)="atualizar('observacoes', $event)"></textarea>
+            </div>
+            <app-dados-complementares-assistido [(dados)]="assistido" [exibirSexo]="false" />
+          </section>
+
+          <section class="card card-pad bloco" aria-labelledby="sec-familia">
+            <h2 id="sec-familia" class="form-sec-title">Núcleo familiar</h2>
+            <p class="dica">Só entra como responsável quem tem CPF. Os outros contatos estão nas observações.</p>
+            <app-responsaveis-pendentes [(responsaveis)]="responsaveis" />
+          </section>
+
+          <section class="card card-pad bloco" aria-labelledby="sec-socio">
+            <h2 id="sec-socio" class="form-sec-title">Socioeconômico (família)</h2>
+            <app-socioeconomico-assistido [(dados)]="assistido" [somaRendaResponsaveis]="somaRendaResponsaveis()" />
+          </section>
+
+          <section class="card card-pad bloco" aria-labelledby="sec-termos">
+            <h2 id="sec-termos" class="form-sec-title">Termos e autorizações</h2>
+            <app-termos-assistido [(dados)]="assistido" />
+          </section>
+        </div>
+      }
+
+      <aside class="card card-pad respostas" aria-labelledby="sec-respostas">
+        @if (d.arquivos.length) {
+          <h2 class="form-sec-title">Documentos enviados</h2>
+          <ul class="anexos" role="list">
+            @for (arquivo of d.arquivos; track arquivo.arquivoId) {
+              <li>
+                <span>{{ rotuloDoAnexo(arquivo.categoria) }}</span>
+                <app-button variant="secondary" size="sm" (click)="abrirArquivo(arquivo.arquivoId)">
+                  <app-icon name="eye" [size]="16" /> Ver <span class="sr-only">{{ rotuloDoAnexo(arquivo.categoria) }}</span>
+                </app-button>
+              </li>
+            }
+          </ul>
+        }
+        <h2 id="sec-respostas" class="form-sec-title">Respostas da família</h2>
+        <app-respostas-familia [detalhe]="d" />
+      </aside>
+    </div>
+
+    @if (pendente()) {
+      <div class="rodape">
+        @if (erroAcao()) {
+          <div class="notice notice-error" role="alert">{{ erroAcao() }}</div>
+        }
+        <div class="acoes">
+          <app-button variant="danger" (click)="abrirReprovar()">Reprovar</app-button>
+          @if (podeAprovar()) {
+            <app-button [loading]="salvando()" (click)="aprovar()">Aprovar e criar cadastro</app-button>
+          }
+        </div>
+      </div>
+    }
+  }
+</section>
+
+<app-modal [(open)]="modalReprovar" title="Reprovar inscrição" size="sm">
+  <div class="field">
+    <label for="av-motivo">Motivo da reprovação <span class="obrigatorio" aria-hidden="true">*</span></label>
+    <textarea
+      id="av-motivo"
+      rows="4"
+      maxlength="1000"
+      [attr.aria-invalid]="erroMotivo() ? 'true' : null"
+      [attr.aria-describedby]="erroMotivo() ? 'av-motivo-erro' : null"
+      [ngModel]="motivo()"
+      (ngModelChange)="motivo.set($event)"
+    ></textarea>
+    @if (erroMotivo(); as mensagem) {
+      <p class="app-input-error" id="av-motivo-erro" role="alert">{{ mensagem }}</p>
+    }
+  </div>
+
+  <ng-template #footer>
+    <app-button variant="secondary" (click)="modalReprovar.set(false)">Cancelar</app-button>
+    <app-button variant="danger" [loading]="salvando()" (click)="reprovar()">Reprovar</app-button>
+  </ng-template>
+</app-modal>

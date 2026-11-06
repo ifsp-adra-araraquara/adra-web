@@ -1,6 +1,6 @@
 <section class="page" aria-labelledby="lote-titulo">
   <nav class="lote-trilha" aria-label="Trilha de navegação">
-    <a routerLink="/assistidos">Assistidos</a>
+    <a routerLink="/assistidos">Atendidos</a>
     <span aria-hidden="true">/</span>
     <span aria-current="page">Cadastro em massa</span>
   </nav>
@@ -26,13 +26,13 @@
         (change)="importarXlsx($event)"
       />
       <app-button variant="secondary" size="sm" [disabled]="linhas().length >= limite" (click)="adicionarLinha()">
-        <app-icon name="plus" [size]="16" /> Adicionar assistido
+        <app-icon name="plus" [size]="16" /> Adicionar atendido
       </app-button>
     </div>
     <p class="page-intro">
       Baixe o modelo, preencha no Excel e importe o arquivo .csv, importe direto uma lista de presença (.xlsx) da
-      planilha da turma, ou adicione os assistidos direto na grade. Em cada assistido, adicione o RG ou CPF e, se
-      quiser, a foto. Valide, corrija o que estiver marcado e cadastre. O 1º responsável de cada assistido é o
+      planilha do grupo, ou adicione os atendidos direto na grade. Em cada atendido, adicione o RG ou CPF e, se
+      quiser, a foto. Valide, corrija o que estiver marcado e cadastre. O 1º responsável de cada atendido é o
       principal.
     </p>
   </header>
@@ -46,7 +46,7 @@
 
   @if (linhas().length) {
     <div class="grid g-stats lote-resumo">
-      <app-stat-card iconClass="ico-blue" label="Assistidos na importação" value="{{ linhas().length }}">
+      <app-stat-card iconClass="ico-blue" label="Atendidos na importação" value="{{ linhas().length }}">
         <app-icon icon name="users" />
       </app-stat-card>
       <app-stat-card iconClass="ico-red" label="Com erro" value="{{ comErro() }}">
@@ -69,7 +69,7 @@
       <div class="notice notice-error lote-alerta" role="status">
         <app-icon name="alert-circle" />
         <p>
-          <b>{{ comErro() }} assistido(s) com erro.</b>
+          <b>{{ comErro() }} atendido(s) com erro.</b>
           Corrija os campos marcados em vermelho, ou remova a linha, e clique em Validar. O cadastro é liberado quando
           todos estiverem prontos.
         </p>
@@ -81,7 +81,7 @@
 
     <div class="card">
       <div class="card-head lote-card-head">
-        <div class="tabs lote-abas" role="group" aria-label="Filtrar assistidos">
+        <div class="tabs lote-abas" role="group" aria-label="Filtrar atendidos">
           <button type="button" class="tab" [class.active]="filtro() === 'todos'" [attr.aria-pressed]="filtro() === 'todos'" (click)="filtro.set('todos')">
             Todos <span class="count">{{ linhas().length }}</span>
           </button>
@@ -98,12 +98,12 @@
         </div>
       </div>
 
-      <div class="table-wrap" role="region" tabindex="0" aria-label="Assistidos do lote">
+      <div class="table-wrap" role="region" tabindex="0" aria-label="Atendidos do lote">
         <table class="lote-tabela">
           <thead>
             <tr>
               <th>#</th>
-              <th>Assistido</th>
+              <th>Atendido</th>
               <th>Nascimento</th>
               <th>CPF</th>
               <th>Responsáveis</th>
@@ -135,7 +135,7 @@
                 <td class="lote-col-nome">
                   <app-input
                     formControlName="nomeCompleto"
-                    [label]="'Nome do assistido da linha ' + numero"
+                    [label]="'Nome do atendido da linha ' + numero"
                     [hideLabel]="true"
                     [errorMessage]="mensagemCampo(linha.form.controls.nomeCompleto)"
                   />
@@ -155,7 +155,7 @@
                     formControlName="cpf"
                     mask="cpf"
                     placeholder="Opcional"
-                    [label]="'CPF do assistido da linha ' + numero"
+                    [label]="'CPF do atendido da linha ' + numero"
                     [hideLabel]="true"
                     [errorMessage]="mensagemCampo(linha.form.controls.cpf)"
                   />
@@ -324,7 +324,7 @@
               }
             } @empty {
               <tr>
-                <td colspan="7" class="muted">Nenhum assistido neste filtro.</td>
+                <td colspan="7" class="muted">Nenhum atendido neste filtro.</td>
               </tr>
             }
           </tbody>
@@ -335,7 +335,7 @@
     <div class="lote-rodape">
       <div class="lote-progresso">
         <span><b>{{ prontas() }} de {{ linhas().length }}</b> prontos para cadastro</span>
-        <progress [value]="prontas()" [max]="linhas().length" aria-label="Assistidos prontos para cadastro"></progress>
+        <progress [value]="prontas()" [max]="linhas().length" aria-label="Atendidos prontos para cadastro"></progress>
         <span class="lote-status" role="status">{{ progresso() }}</span>
       </div>
       <div class="lote-rodape-acoes">
@@ -348,13 +348,13 @@
           Validar
         </app-button>
         <app-button [disabled]="!todasProntas()" [loading]="enviando()" (click)="cadastrar()">
-          Cadastrar {{ prontas() }} assistido(s)
+          Cadastrar {{ prontas() }} atendido(s)
         </app-button>
       </div>
     </div>
   } @else {
     <div class="card card-pad muted">
-      Nenhum assistido na grade. Baixe o modelo, preencha no Excel e importe o arquivo, ou adicione os assistidos
+      Nenhum atendido na grade. Baixe o modelo, preencha no Excel e importe o arquivo, ou adicione os atendidos
       um a um.
     </div>
   }

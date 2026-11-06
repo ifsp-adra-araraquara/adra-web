@@ -1,6 +1,6 @@
 import { BadgeVariant } from '../utils/badge-status.util';
 
-/** Motivo de um dia sem aula. */
+/** Motivo de um dia sem chamada. */
 export enum TipoExcecaoCalendario {
   FERIADO = 'FERIADO',
   RECESSO = 'RECESSO',
@@ -16,5 +16,5 @@ export const TIPO_EXCECAO_INFO: Record<TipoExcecaoCalendario, { label: string; v
   [TipoExcecaoCalendario.FERIAS]: { label: 'Férias', variant: 'teal' },
   [TipoExcecaoCalendario.PONTO_FACULTATIVO]: { label: 'Ponto facultativo', variant: 'amber' },
   [TipoExcecaoCalendario.EVENTO_PASSEIO]: { label: 'Evento / passeio', variant: 'blue' },
-  [TipoExcecaoCalendario.OUTRO]: { label: 'Sem aula', variant: 'gray' },
+  [TipoExcecaoCalendario.OUTRO]: { label: 'Sem chamada', variant: 'gray' },
 };

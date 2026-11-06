@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -9,19 +9,14 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 import { Turno, TURNOS_DISPONIVEIS } from '../../../shared/enum/Turno';
+import { DiaSemana } from '../../../shared/enum/DiaSemana';
 import { Role } from '../../../shared/enum/role.enum';
 import { ocupacaoTurma as ocupacaoTurmaUtil } from '../../../shared/utils/ocupacao.util';
 
 import { TurmaRequestDTO } from '../../../shared/models/turma/TurmaRequestDTO';
 import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO';
 import { TurmaStatusRequestDTO } from '../../../shared/models/turma/TurmaStatusRequestDTO';
-import { CriacaoAulasRequestDTO, DiaDaSemana } from '../../../shared/models/aula/CriacaoAulasRequestDTO';
-import { GerarAulasResponseDTO } from '../../../shared/models/aula/GerarAulasResponseDTO';
-import { AulaRequestDTO } from '../../../shared/models/aula/AulaRequestDTO';
-import { AulaResponseDTO } from '../../../shared/models/aula/AulaResponseDTO';
-import { StatusAula } from '../../../shared/enum/StatusAula';
 import { OficinaResponseDTO } from '../../../shared/models/oficina/OficinaResponseDTO';
-import { UsuarioResponse } from '../../../shared/models/usuarios/UsuarioResponse';
 import { AssistidoResponseDTO } from '../../../shared/models/assistido/AssistidoResponseDTO';
 import { PaginaResponse } from '../../../shared/models/PaginaResponse';
 import { Select, SelectOption } from '../../../shared/components/select/select';
@@ -31,18 +26,19 @@ import { Table, TableColumn } from '../../../shared/components/table/table';
 import { Input } from '../../../shared/components/input/input';
 import { Button } from '../../../shared/components/button/button';
 import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
-import { AulasTurmaModal } from '../aulas-turma-modal/aulas-turma-modal';
 import { AuthService } from '../../../core/auth.service';
 import { Icon } from '../../../shared/components/icon/icon';
+import { SeletorDiasSemana } from '../../../shared/components/seletor-dias-semana/seletor-dias-semana';
+import { SeletorMultiplo } from '../../../shared/components/seletor-multiplo/seletor-multiplo';
+import { ListaBadges } from '../../../shared/components/lista-badges/lista-badges';
+import { HistoricoOficineiros } from '../../../shared/components/historico-oficineiros/historico-oficineiros';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
 import { AlunosTurmaModal } from './alunos-turma-modal/alunos-turma-modal';
-import { HistoricoOficineiros } from '../../../shared/components/historico-oficineiros/historico-oficineiros';
-import { OficineiroHistoricoDTO } from '../../../shared/models/historico/OficineiroHistoricoDTO';
 
 @Component({
   selector: 'app-turmas',
   standalone: true,
-  imports: [AlunosTurmaModal, HistoricoOficineiros, Icon, 
+  imports: [AlunosTurmaModal, Icon, SeletorDiasSemana, SeletorMultiplo, ListaBadges, HistoricoOficineiros, 
     CommonModule,
     FormsModule,
     Select,
@@ -52,7 +48,6 @@ import { OficineiroHistoricoDTO } from '../../../shared/models/historico/Oficine
     Input,
     Button,
     TooltipDirective,
-    AulasTurmaModal,
   ],
   templateUrl: './turma.html',
   styleUrl: './turma.css',
@@ -63,21 +58,17 @@ export class Turmas implements OnInit {
   private readonly router = inject(Router);
 
   private readonly apiTurmas = `${environment.apiUrl}/api/turmas`;
-  private readonly apiAulas = `${environment.apiUrl}/api/aulas`;
   private readonly apiOficinas = `${environment.apiUrl}/api/oficinas`;
-  private readonly apiUsuarios = `${environment.apiUrl}/api/usuarios`;
 
   Turno = Turno;
   turnosDisponiveis = TURNOS_DISPONIVEIS;
 
   /**
    * Só Coordenador pode criar/editar turma e ver o select de oficineiro
-   * (Sociopedagógico não tem acesso ao GET /api/usuarios no back, então
+   * (Educador Social não tem acesso ao GET /api/usuarios no back, então
    * nem tentamos chamá-lo pra esse perfil - CA acordado com o usuário).
    */
   isCoordenador = computed(() => this.authService.currentProfile() === Role.COORD);
-  /** Só Sociopedagógico abre a aula pra tomar chamada a partir daqui (mesma regra que já existia na extinta aba "Aulas"). */
-  ehSociopedagogico = computed(() => this.authService.currentProfile() === Role.SOCIO);
 
   turnoOptions: SelectOption<string>[] = this.turnosDisponiveis.map(t => ({
     value: t,
@@ -105,12 +96,9 @@ export class Turmas implements OnInit {
   carregando = signal(false);
   erroListar = signal<string | null>(null);
 
-  /** Aviso não-bloqueante mostrado depois de fechar o modal (ex.: turma criada mas aulas falharam). */
-  avisoPosCriacao = signal<string | null>(null);
-
   readonly colunasTurmas: TableColumn<TurmaResponseDTO>[] = [
-    { key: 'nomeTurma', header: 'Nome da turma', sortable: true },
-    { key: 'oficina', header: 'Oficina', value: (t) => this.nomeOficina(t) },
+    { key: 'nomeTurma', header: 'Nome do grupo', sortable: true },
+    { key: 'oficinas', header: 'Oficinas', type: 'custom' },
     { key: 'turno', header: 'Turno', sortable: true },
     { key: 'faixaEtaria', header: 'Faixa etária', value: (t) => t.faixaEtaria || '—' },
     { key: 'ocupacao', header: 'Ocupação', align: 'center', type: 'custom', width: '160px' },
@@ -125,9 +113,14 @@ export class Turmas implements OnInit {
   /** Lookup O(1) por oficinaId — evita um `.find()` em `oficinas()` por linha a cada render da tabela. */
   private readonly oficinasPorId = computed(() => new Map(this.oficinas().map((o) => [o.oficinaId, o])));
 
-  nomeOficina(turma: TurmaResponseDTO): string {
-    if (!turma.oficinaId) return '-';
-    return this.oficinasPorId().get(turma.oficinaId)?.nomeOficina ?? '-';
+  nomesOficinas(turma: TurmaResponseDTO): string[] {
+    return turma.oficinaIds
+      .map((id) => this.oficinasPorId().get(id)?.nomeOficina)
+      .filter((nome): nome is string => !!nome);
+  }
+
+  nomeOficina(oficinaId: number): string {
+    return this.oficinasPorId().get(oficinaId)?.nomeOficina ?? 'Oficina';
   }
 
   protected readonly trackByTurmaId = (turma: TurmaResponseDTO) => turma.turmaId;
@@ -144,24 +137,9 @@ export class Turmas implements OnInit {
 
   }
 
-  /**
-   * O perfil do usuário pode chegar depois do ngOnInit (ex.: F5 direto na
-   * página) — por isso a lista de oficineiros carrega quando o perfil vira
-   * Coordenador, e não só no init (antes o select ficava vazio).
-   */
-  private oficineirosCarregados = false;
-  private readonly carregarOficineirosQuandoCoordenador = effect(() => {
-    if (this.isCoordenador() && !this.oficineirosCarregados) {
-      this.oficineirosCarregados = true;
-      this.carregarOficineirosParaSelect();
-    }
-  });
-
   /* ============================================================
-   * VER ALUNOS / VER AULAS — absorvidos da extinta tela "Aulas"
+   * VER ALUNOS / VER FREQUÊNCIA — absorvidos da extinta tela "Aulas"
    * ============================================================ */
-  turmaAulasSelecionada = signal<TurmaResponseDTO | null>(null);
-
   /** Leva à ficha completa do assistido (cadastro, não só nome) já filtrada por essa turma. */
   /** Turma cujo modal "Alunos da turma" está aberto (null = fechado). */
   turmaAlunosModal = signal<TurmaResponseDTO | null>(null);
@@ -170,12 +148,8 @@ export class Turmas implements OnInit {
     this.turmaAlunosModal.set(turma);
   }
 
-  abrirAulasDaTurma(turma: TurmaResponseDTO): void {
-    this.turmaAulasSelecionada.set(turma);
-  }
-
-  fecharAulasDaTurma(): void {
-    this.turmaAulasSelecionada.set(null);
+  verFrequencia(turma: TurmaResponseDTO): void {
+    this.router.navigate(['/chamada/turma', turma.turmaId, 'grade']);
   }
 
   /**
@@ -185,13 +159,47 @@ export class Turmas implements OnInit {
    * overlays — mesma preocupação já registrada no plano pra modais aninhadas).
    */
   turmaDrawerAberta = signal<TurmaResponseDTO | null>(null);
-  /** O drawer mostra a lista de ações ou o histórico de oficineiros da turma. */
-  drawerVisao = signal<'acoes' | 'historico'>('acoes');
+  /** O drawer mostra as ações, as oficinas do grupo ou o histórico de oficineiros delas. */
+  drawerVisao = signal<'acoes' | 'oficinas' | 'historico'>('acoes');
 
   readonly abrirDrawerTurma = (turma: TurmaResponseDTO): void => {
     this.drawerVisao.set('acoes');
     this.turmaDrawerAberta.set(turma);
   };
+
+  /* ============================================================
+   * DRAWER: VER OFICINAS — escolhe as oficinas que atendem o grupo.
+   * ============================================================ */
+  oficinasDoDrawer = signal<number[]>([]);
+  salvandoOficinas = signal(false);
+  erroOficinas = signal<string | null>(null);
+
+  abrirOficinasDoGrupo(turma: TurmaResponseDTO): void {
+    this.oficinasDoDrawer.set([...turma.oficinaIds]);
+    this.erroOficinas.set(null);
+    this.drawerVisao.set('oficinas');
+  }
+
+  async salvarOficinasDoGrupo(turma: TurmaResponseDTO): Promise<void> {
+    if (this.salvandoOficinas()) return;
+    this.salvandoOficinas.set(true);
+    this.erroOficinas.set(null);
+    try {
+      const atualizada = await firstValueFrom(
+        this.http.put<TurmaResponseDTO>(`${this.apiTurmas}/${turma.turmaId}/oficinas`, {
+          oficinaIds: this.oficinasDoDrawer(),
+        }),
+      );
+      const comContagem = { ...atualizada, quantidadeAlunos: turma.quantidadeAlunos };
+      this.turmas.update((lista) => lista.map((t) => (t.turmaId === turma.turmaId ? comContagem : t)));
+      this.turmaDrawerAberta.set(comContagem);
+      this.drawerVisao.set('acoes');
+    } catch (erro: any) {
+      this.erroOficinas.set(mensagemErro(erro, 'Não foi possível salvar as oficinas do grupo.'));
+    } finally {
+      this.salvandoOficinas.set(false);
+    }
+  }
 
   fecharDrawerTurma(): void {
     this.turmaDrawerAberta.set(null);
@@ -240,23 +248,22 @@ export class Turmas implements OnInit {
       },
       error: (erro) => {
         console.error('Erro ao carregar turmas:', erro);
-        this.erroListar.set('Não foi possível carregar as turmas.');
+        this.erroListar.set('Não foi possível carregar os grupos.');
         this.carregando.set(false);
       },
     });
   }
 
   /* ============================================================
-   * OFICINAS — lista completa (nomes p/ coluna + calendário) e o
-   * recorte de ativas p/ o select de criar/editar turma.
+   * OFICINAS — lista completa, para os nomes das oficinas do grupo.
    * ============================================================ */
   oficinas = signal<OficinaResponseDTO[]>([]);
+  /** Oficinas ativas, para escolher as que atendem o grupo. */
   oficinaOptions = computed<SelectOption<number>[]>(() =>
     this.oficinas()
       .filter((o) => o.ativo)
       .map((o) => ({ value: o.oficinaId, label: o.nomeOficina })),
   );
-  oficineiroOptions = signal<SelectOption<number>[]>([]);
 
   private carregarOficinas(): void {
     this.http.get<OficinaResponseDTO[]>(this.apiOficinas).subscribe({
@@ -265,53 +272,15 @@ export class Turmas implements OnInit {
     });
   }
 
-  /**
-   * O select só lista oficineiros ATIVOS. Se o atual da turma foi inativado,
-   * ele não aparece e o campo fica em branco — então busca o nome dele no
-   * histórico e inclui como opção "(inativo)", para dar pra ver e trocar.
-   */
-  private garantirOficineiroAtualNasOpcoes(turma: TurmaResponseDTO): void {
-    const atualId = turma.oficineiroResponsavelId;
-    if (atualId == null || this.oficineiroOptions().some((o) => o.value === atualId)) return;
-    this.http
-      .get<OficineiroHistoricoDTO[]>(`${this.apiTurmas}/${turma.turmaId}/oficineiros-historico`)
-      .subscribe({
-        next: (historico) => {
-          const atual = historico.find((h) => h.oficineiroId === atualId);
-          if (atual && !this.oficineiroOptions().some((o) => o.value === atualId)) {
-            this.oficineiroOptions.update((opcoes) => [
-              ...opcoes,
-              { value: atualId, label: `${atual.nomeOficineiro} (inativo)` },
-            ]);
-          }
-        },
-        error: () => {},
-      });
-  }
-
-  private carregarOficineirosParaSelect(): void {
-    this.http.get<UsuarioResponse[]>(`${this.apiUsuarios}/oficineiros`).subscribe({
-      next: (lista) => {
-        this.oficineiroOptions.set(lista.map((u) => ({ value: u.usuarioId, label: u.nomeCompleto })));
-      },
-      error: (erro) => console.error('Erro ao carregar oficineiros para seleção:', erro),
-    });
-  }
-
   /* ============================================================
    * MODAL: NOVA / EDITAR TURMA (US-09 e US-11)
    * O mesmo modal atende os dois casos: se turmaEmEdicao() tiver
    * valor, é um PUT; caso contrário, é um POST.
-   *
-   * Tem duas abas: "Turma" (dados da turma + oficina/oficineiro) e
-   * "Aulas" (só na criação - mesmo modelo do "Criar várias aulas").
    * ============================================================ */
   mostrarModalForm = signal(false);
   salvando = signal(false);
   erroSalvar = signal<string | null>(null);
   turmaEmEdicao = signal<TurmaResponseDTO | null>(null);
-
-  abaAtivaForm = signal<'turma' | 'aulas'>('turma');
 
   formTurma: TurmaRequestDTO = this.turmaVazia();
 
@@ -322,24 +291,19 @@ export class Turmas implements OnInit {
       faixaEtaria: '',
       capacidade: null,
       observacoes: '',
-      oficinaId: null,
-      oficineiroResponsavelId: null,
+      diasDaSemana: [],
+      oficinaIds: [],
     };
   }
 
   abrirModalNovaTurma(): void {
     this.turmaEmEdicao.set(null);
     this.formTurma = this.turmaVazia();
-    this.formAulasTurma = this.aulasNovaTurmaVazia();
-    this.comTituloDescricao.set(true);
-    this.abaAtivaForm.set('turma');
     this.erroSalvar.set(null);
-    this.erroAulasTurma.set(null);
     this.mostrarModalForm.set(true);
   }
 
   abrirModalEditarTurma(turma: TurmaResponseDTO): void {
-    this.garantirOficineiroAtualNasOpcoes(turma);
     this.turmaEmEdicao.set(turma);
     this.formTurma = {
       nomeTurma: turma.nomeTurma,
@@ -347,10 +311,9 @@ export class Turmas implements OnInit {
       faixaEtaria: turma.faixaEtaria,
       capacidade: turma.capacidade,
       observacoes: turma.observacoes ?? '',
-      oficinaId: turma.oficinaId ?? null,
-      oficineiroResponsavelId: turma.oficineiroResponsavelId ?? null,
+      diasDaSemana: turma.diasDaSemana ?? [],
+      oficinaIds: [...turma.oficinaIds],
     };
-    this.abaAtivaForm.set('turma');
     this.erroSalvar.set(null);
     this.mostrarModalForm.set(true);
   }
@@ -359,7 +322,7 @@ export class Turmas implements OnInit {
     this.mostrarModalForm.set(false);
   }
 
-  atualizarCampoTurma(campo: keyof TurmaRequestDTO, valor: string | number | null): void {
+  atualizarCampoTurma(campo: keyof TurmaRequestDTO, valor: string | number | DiaSemana[] | number[] | null): void {
     this.formTurma = { ...this.formTurma, [campo]: valor };
     // Limpa o erro assim que o usuário mexe em algum campo, pra não ficar
     // uma mensagem de validação "presa" na tela depois que ele já corrigiu
@@ -371,197 +334,38 @@ export class Turmas implements OnInit {
     }
   }
 
-  /* ---- Aba "Aulas" do modal de nova turma ---- */
-  formAulasTurma: CriacaoAulasRequestDTO = this.aulasNovaTurmaVazia();
-  comTituloDescricao = signal(true);
-  erroAulasTurma = signal<string | null>(null);
-
-  private aulasNovaTurmaVazia(): CriacaoAulasRequestDTO {
-    return {
-      turmaId: 0,
-      dataInicio: '',
-      dataFim: '',
-      diasDaSemana: [],
-      horarioInicio: '',
-      horarioFim: '',
-      titulo: '',
-      descricao: '',
-      conteudoPrevisto: '',
-      objetivos: '',
-      recursosNecessarios: '',
-      observacoes: '',
-    };
-  }
-
-  atualizarCampoAulasTurma(campo: keyof CriacaoAulasRequestDTO, valor: any): void {
-    this.formAulasTurma = { ...this.formAulasTurma, [campo]: valor };
-    if (this.erroAulasTurma()) {
-      this.erroAulasTurma.set(null);
-    }
-  }
-
-  toggleDiaSemanaNovaTurma(dia: DiaDaSemana): void {
-    const dias = this.formAulasTurma.diasDaSemana;
-    const index = dias.indexOf(dia);
-    if (index > -1) {
-      this.formAulasTurma.diasDaSemana = dias.filter((d) => d !== dia);
-    } else {
-      this.formAulasTurma.diasDaSemana = [...dias, dia];
-    }
-  }
-
-  definirComTituloDescricao(): void {
-    this.comTituloDescricao.set(true);
-  }
-
-  definirSemTituloDescricao(): void {
-    this.comTituloDescricao.set(false);
-    this.formAulasTurma = { ...this.formAulasTurma, titulo: '', descricao: '' };
-  }
-
-  /** 'vazio' = aba não tocada; 'parcial' = faltam campos; 'completo' = pronto pra criar as aulas. */
-  private estadoAbaAulas(): 'vazio' | 'parcial' | 'completo' {
-    const f = this.formAulasTurma;
-    const algumPreenchido = !!f.dataInicio || !!f.dataFim || !!f.horarioInicio || !!f.horarioFim || f.diasDaSemana.length > 0;
-
-    if (!algumPreenchido) {
-      return 'vazio';
-    }
-
-    const completo = !!f.dataInicio && !!f.dataFim && !!f.horarioInicio && !!f.horarioFim && f.diasDaSemana.length > 0;
-    return completo ? 'completo' : 'parcial';
-  }
-
-  /* ---- Confirmação de criar turma sem aulas ---- */
-  mostrarConfirmacaoSemAulas = signal(false);
-
-  confirmarCriarSemAulas(): void {
-    this.mostrarConfirmacaoSemAulas.set(false);
-    this.executarSalvarTurma(false);
-  }
-
-  cancelarCriarSemAulas(): void {
-    this.mostrarConfirmacaoSemAulas.set(false);
-    this.abaAtivaForm.set('aulas');
-  }
-
   async salvarTurma(): Promise<void> {
     if (this.salvando()) {
       return;
     }
 
     if (!this.formTurma.nomeTurma.trim()) {
-      this.abaAtivaForm.set('turma');
-      this.erroSalvar.set('Informe o nome da turma.');
+      this.erroSalvar.set('Informe o nome do grupo.');
       return;
     }
 
     if (!this.formTurma.turno) {
-      this.abaAtivaForm.set('turma');
       this.erroSalvar.set('Selecione o turno.');
       return;
     }
 
     if (!this.formTurma.capacidade || this.formTurma.capacidade <= 0) {
-      this.abaAtivaForm.set('turma');
       this.erroSalvar.set('Informe uma capacidade válida.');
       return;
     }
 
-    if (this.formTurma.oficinaId == null) {
-      this.abaAtivaForm.set('turma');
-      this.erroSalvar.set('Selecione a oficina.');
-      return;
-    }
-
-    if (this.formTurma.oficineiroResponsavelId == null) {
-      this.abaAtivaForm.set('turma');
-      this.erroSalvar.set('Selecione o oficineiro responsável.');
-      return;
-    }
-
-    this.erroSalvar.set(null);
-
-    // Edição: não mexe em aulas, só salva os dados da turma.
-    if (this.turmaEmEdicao()) {
-      await this.executarSalvarTurma(false);
-      return;
-    }
-
-    // Criação: decide o que fazer com a aba "Aulas".
-    const estadoAulas = this.estadoAbaAulas();
-
-    if (estadoAulas === 'parcial') {
-      this.abaAtivaForm.set('aulas');
-      this.erroAulasTurma.set(
-        'Preencha todos os campos obrigatórios das aulas (datas, dias da semana e horários) ou deixe a aba "Aulas" totalmente em branco para criar a turma sem aulas.',
-      );
-      return;
-    }
-
-    if (estadoAulas === 'vazio') {
-      this.mostrarConfirmacaoSemAulas.set(true);
-      return;
-    }
-
-    await this.executarSalvarTurma(true);
-  }
-
-  private async executarSalvarTurma(comAulas: boolean): Promise<void> {
     this.salvando.set(true);
     this.erroSalvar.set(null);
-    this.erroAulasTurma.set(null);
 
     const emEdicao = this.turmaEmEdicao();
 
     try {
-      const turmaResultado = emEdicao
-        ? await firstValueFrom(
-            this.http.put<TurmaResponseDTO>(`${this.apiTurmas}/${emEdicao.turmaId}`, this.formTurma),
-          )
-        : await firstValueFrom(this.http.post<TurmaResponseDTO>(this.apiTurmas, this.formTurma));
-
-      if (comAulas) {
-        const payloadAulas: CriacaoAulasRequestDTO = {
-          ...this.formAulasTurma,
-          turmaId: turmaResultado.turmaId,
-        };
-
-        if (!this.comTituloDescricao()) {
-          delete payloadAulas.titulo;
-          delete payloadAulas.descricao;
-        }
-
-        try {
-          const resultadoAulas = await firstValueFrom(
-            this.http.post<GerarAulasResponseDTO>(`${this.apiAulas}/gerar`, payloadAulas),
-          );
-
-          if (resultadoAulas.aulasCriadas === 0) {
-            let motivo = 'nenhuma data do período informado cai nos dias da semana escolhidos';
-            if (resultadoAulas.aulasExcecaoPuladas > 0) {
-              motivo = `${resultadoAulas.aulasExcecaoPuladas} data(s) caíram em feriados ou recessos cadastrados`;
-            }
-            this.salvando.set(false);
-            this.fecharModalForm();
-            this.carregarTurmas();
-            this.avisoPosCriacao.set(
-              `A turma "${this.formTurma.nomeTurma}" foi criada, mas nenhuma aula foi gerada (${motivo}). ` +
-                'Use a ação "Criar várias aulas" na lista para tentar novamente com outro período ou dias.',
-            );
-            return;
-          }
-        } catch (erroAulas: any) {
-          console.error('Erro ao criar aulas da nova turma:', erroAulas);
-          this.salvando.set(false);
-          this.fecharModalForm();
-          this.carregarTurmas();
-          this.avisoPosCriacao.set(
-            `A turma "${this.formTurma.nomeTurma}" foi criada, mas não foi possível criar as aulas automaticamente. ` +
-              'Use a ação "Criar várias aulas" na lista para tentar novamente.',
-          );
-          return;
-        }
+      if (emEdicao) {
+        await firstValueFrom(
+          this.http.put<TurmaResponseDTO>(`${this.apiTurmas}/${emEdicao.turmaId}`, this.formTurma),
+        );
+      } else {
+        await firstValueFrom(this.http.post<TurmaResponseDTO>(this.apiTurmas, this.formTurma));
       }
 
       this.salvando.set(false);
@@ -569,9 +373,8 @@ export class Turmas implements OnInit {
       this.carregarTurmas();
     } catch (erro: any) {
       console.error('Erro ao salvar turma:', erro);
-      this.abaAtivaForm.set('turma');
       this.erroSalvar.set(
-        mensagemErro(erro, 'Não foi possível salvar a turma. Verifique os dados e tente novamente.'),
+        mensagemErro(erro, 'Não foi possível salvar o grupo. Verifique os dados e tente novamente.'),
       );
       this.salvando.set(false);
     }
@@ -585,127 +388,6 @@ export class Turmas implements OnInit {
   mostrarModalStatus = signal(false);
   turmaSelecionadaStatus = signal<TurmaResponseDTO | null>(null);
   alterandoStatus = signal(false);
-
-  /* ============================================================
-   * CRIAR VÁRIAS AULAS (ação por turma já existente, na tabela)
-   * ============================================================ */
-  mostrarModalCriarAulas = signal(false);
-  salvandoAulas = signal(false);
-  erroSalvarAulas = signal<string | null>(null);
-  formCriarAulas: CriacaoAulasRequestDTO = this.criacaoAulasVazia();
-
-  private criacaoAulasVazia(): CriacaoAulasRequestDTO {
-    return {
-      turmaId: 0,
-      dataInicio: '',
-      dataFim: '',
-      diasDaSemana: [],
-      horarioInicio: '',
-      horarioFim: '',
-      titulo: '',
-      descricao: '',
-      conteudoPrevisto: '',
-      objetivos: '',
-      recursosNecessarios: '',
-      observacoes: '',
-    };
-  }
-
-  abrirModalCriarAulas(turma: TurmaResponseDTO): void {
-    this.formCriarAulas = {
-      ...this.criacaoAulasVazia(),
-      turmaId: turma.turmaId,
-    };
-    this.erroSalvarAulas.set(null);
-    this.mostrarModalCriarAulas.set(true);
-  }
-
-  fecharModalCriarAulas(): void {
-    this.mostrarModalCriarAulas.set(false);
-  }
-
-  atualizarCampoCriarAulas(campo: keyof CriacaoAulasRequestDTO, valor: any): void {
-    this.formCriarAulas = { ...this.formCriarAulas, [campo]: valor };
-  }
-
-  toggleDiaSemana(dia: DiaDaSemana): void {
-    const dias = this.formCriarAulas.diasDaSemana;
-    const index = dias.indexOf(dia);
-    if (index > -1) {
-      this.formCriarAulas.diasDaSemana = dias.filter((d) => d !== dia);
-    } else {
-      this.formCriarAulas.diasDaSemana = [...dias, dia];
-    }
-  }
-
-  async salvarCriarAulas(): Promise<void> {
-    if (this.salvandoAulas()) {
-      return;
-    }
-
-    if (!this.formCriarAulas.turmaId) {
-      this.erroSalvarAulas.set('Selecione uma turma.');
-      return;
-    }
-
-    if (!this.formCriarAulas.dataInicio) {
-      this.erroSalvarAulas.set('Informe a data de início.');
-      return;
-    }
-
-    if (!this.formCriarAulas.dataFim) {
-      this.erroSalvarAulas.set('Informe a data de fim.');
-      return;
-    }
-
-    if (!this.formCriarAulas.diasDaSemana || this.formCriarAulas.diasDaSemana.length === 0) {
-      this.erroSalvarAulas.set('Selecione pelo menos um dia da semana.');
-      return;
-    }
-
-    if (!this.formCriarAulas.horarioInicio) {
-      this.erroSalvarAulas.set('Informe o horário de início.');
-      return;
-    }
-
-    if (!this.formCriarAulas.horarioFim) {
-      this.erroSalvarAulas.set('Informe o horário de fim.');
-      return;
-    }
-
-    this.salvandoAulas.set(true);
-    this.erroSalvarAulas.set(null);
-
-    try {
-      const resultadoAulas = await firstValueFrom(
-        this.http.post<GerarAulasResponseDTO>(`${this.apiAulas}/gerar`, this.formCriarAulas),
-      );
-      this.salvandoAulas.set(false);
-
-      if (resultadoAulas.aulasCriadas === 0) {
-        let msg = 'Nenhuma aula foi criada.';
-        if (resultadoAulas.aulasExcecaoPuladas > 0 && resultadoAulas.aulasDuplicadasPuladas > 0) {
-          msg += ` As datas calculadas caíram em feriados/recessos (${resultadoAulas.aulasExcecaoPuladas}) ou já existiam (${resultadoAulas.aulasDuplicadasPuladas}).`;
-        } else if (resultadoAulas.aulasExcecaoPuladas > 0) {
-          msg += ` Todas as datas calculadas caíram em feriados ou recessos cadastrados (${resultadoAulas.aulasExcecaoPuladas}).`;
-        } else if (resultadoAulas.aulasDuplicadasPuladas > 0) {
-          msg += ` As aulas para todas as datas já haviam sido criadas anteriormente (${resultadoAulas.aulasDuplicadasPuladas}).`;
-        } else {
-          msg += ' Nenhuma data no período informado cai nos dias da semana escolhidos.';
-        }
-        this.erroSalvarAulas.set(msg);
-        return;
-      }
-
-      this.fecharModalCriarAulas();
-    } catch (erro: any) {
-      console.error('Erro ao criar aulas:', erro);
-      this.erroSalvarAulas.set(
-        mensagemErro(erro, 'Não foi possível criar as aulas. Verifique os dados e tente novamente.'),
-      );
-      this.salvandoAulas.set(false);
-    }
-  }
 
   abrirModalStatus(turma: TurmaResponseDTO): void {
     this.turmaSelecionadaStatus.set(turma);
@@ -742,91 +424,11 @@ export class Turmas implements OnInit {
   }
 
   /* ============================================================
-   * NOVA AULA (AVULSA) — Coordenador cadastra aula individual
-   * ============================================================ */
-  mostrarModalNovaAula = signal(false);
-  salvandoNovaAula = signal(false);
-  erroSalvarNovaAula = signal<string | null>(null);
-  turmaNovaAula = signal<TurmaResponseDTO | null>(null);
-  formNovaAula: AulaRequestDTO = this.novaAulaVazia();
-
-  readonly statusAulaOptions: SelectOption[] = [
-    { value: StatusAula.PLANEJADA, label: 'Agendada' },
-    { value: StatusAula.REALIZADA, label: 'Realizada' },
-    { value: StatusAula.REMARCADA, label: 'Remarcada' },
-    { value: StatusAula.CANCELADA, label: 'Cancelada' },
-  ];
-
-  private novaAulaVazia(): AulaRequestDTO {
-    return {
-      turmaId: 0,
-      dataAula: '',
-      horarioInicio: '',
-      horarioFim: '',
-      titulo: '',
-      descricao: '',
-      conteudoPrevisto: '',
-      conteudoMinistrado: '',
-      objetivos: '',
-      recursosNecessarios: '',
-      statusAula: StatusAula.PLANEJADA,
-      observacoes: '',
-    };
-  }
-
-  abrirModalNovaAula(turma: TurmaResponseDTO): void {
-    this.turmaNovaAula.set(turma);
-    this.formNovaAula = {
-      ...this.novaAulaVazia(),
-      turmaId: turma.turmaId,
-      horarioInicio: '',
-      horarioFim: '',
-    };
-    this.erroSalvarNovaAula.set(null);
-    this.mostrarModalNovaAula.set(true);
-  }
-
-  fecharModalNovaAula(): void {
-    this.mostrarModalNovaAula.set(false);
-    this.turmaNovaAula.set(null);
-  }
-
-  async salvarNovaAula(): Promise<void> {
-    if (this.salvandoNovaAula()) return;
-
-    if (!this.formNovaAula.turmaId) {
-      this.erroSalvarNovaAula.set('Informe a turma.');
-      return;
-    }
-    if (!this.formNovaAula.dataAula) {
-      this.erroSalvarNovaAula.set('Informe a data da aula.');
-      return;
-    }
-
-    this.salvandoNovaAula.set(true);
-    this.erroSalvarNovaAula.set(null);
-
-    try {
-      await firstValueFrom(
-        this.http.post<AulaResponseDTO>(this.apiAulas, this.formNovaAula),
-      );
-      this.salvandoNovaAula.set(false);
-      this.fecharModalNovaAula();
-    } catch (erro: any) {
-      console.error('Erro ao cadastrar aula avulsa:', erro);
-      this.erroSalvarNovaAula.set(
-        mensagemErro(erro, 'Não foi possível cadastrar a aula. Verifique os dados e tente novamente.'),
-      );
-      this.salvandoNovaAula.set(false);
-    }
-  }
-
-  /* ============================================================
    * VINCULAR ALUNOS ("+"  na tabela de turmas)
    * Abre um modal pra selecionar assistidos ativos que ainda não estão
    * nessa turma e vincula todos de uma vez via POST /api/turmas/{id}/alunos
    * (cria o histórico em turma_aluno, que é o que a chamada/CA-65 usa como
-   * roster — ver PresencaService.buscarPorAula/registrarChamada no back).
+   * roster — ver ChamadaService no back).
    * ============================================================ */
   mostrarModalVincularAlunos = signal(false);
   turmaVincularAlunos = signal<TurmaResponseDTO | null>(null);
@@ -885,7 +487,7 @@ export class Turmas implements OnInit {
       );
     } catch (erro) {
       console.error('Erro ao carregar assistidos para vincular:', erro);
-      this.erroVincularAlunos.set('Não foi possível carregar os assistidos disponíveis.');
+      this.erroVincularAlunos.set('Não foi possível carregar os atendidos disponíveis.');
     } finally {
       this.carregandoCandidatos.set(false);
     }
@@ -903,7 +505,7 @@ export class Turmas implements OnInit {
     if (!turma || this.vinculandoAlunos()) return;
 
     if (assistidoIds.length === 0) {
-      this.erroVincularAlunos.set('Selecione pelo menos um assistido.');
+      this.erroVincularAlunos.set('Selecione pelo menos um atendido.');
       return;
     }
 
@@ -919,7 +521,7 @@ export class Turmas implements OnInit {
     } catch (erro: any) {
       console.error('Erro ao vincular alunos à turma:', erro);
       this.erroVincularAlunos.set(
-        mensagemErro(erro, 'Não foi possível vincular os assistidos selecionados. Tente novamente.'),
+        mensagemErro(erro, 'Não foi possível vincular os atendidos selecionados. Tente novamente.'),
       );
       this.vinculandoAlunos.set(false);
     }

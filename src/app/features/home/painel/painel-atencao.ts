@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { Router } from '@angular/router';
+import { AvisoService } from '../../../core/aviso.service';
+import { AvisoDTO } from '../../../shared/models/aviso/Aviso';
 import { PainelHojeDTO } from '../../../shared/models/painel/Painel';
 import { NIVEIS_DISCIPLINARES, NivelDisciplinar } from '../../../shared/enum/NivelDisciplinar';
+import { GRUPOS_AVISO, acaoDoAviso, agruparAvisos, rotaDoAviso } from '../../../shared/utils/aviso.util';
 import { Avatar } from '../../../shared/components/avatar/avatar';
-import { Icon, IconName } from '../../../shared/components/icon/icon';
-import { dataCurta } from './painel.util';
+import { Icon } from '../../../shared/components/icon/icon';
 
 /** O que o próximo registro do nível dispara (FT-04: a 3ª de cada nível). */
 const PROXIMO_PASSO: Record<NivelDisciplinar, string> = {
@@ -14,7 +16,10 @@ const PROXIMO_PASSO: Record<NivelDisciplinar, string> = {
   [NivelDisciplinar.UNIFORME]: 'a próxima exige o responsável',
 };
 
-/** FT-05 — "Precisa de atenção": faltas seguidas, chamadas atrasadas e pendências disciplinares. */
+/** Itens por grupo no painel; a lista inteira fica no sino. */
+const LIMITE_POR_GRUPO = 6;
+
+/** FT-18 — área Avisos do painel: Controle disciplinar primeiro, depois chamada, frequência e cadastro. */
 @Component({
   selector: 'app-painel-atencao',
   imports: [Avatar, Icon],
@@ -24,53 +29,46 @@ const PROXIMO_PASSO: Record<NivelDisciplinar, string> = {
 })
 export class PainelAtencao {
   private readonly router = inject(Router);
+  private readonly avisoService = inject(AvisoService);
 
   readonly hoje = input<PainelHojeDTO | null>(null);
   readonly erro = input<string | null>(null);
-  readonly dataCurta = dataCurta;
+  readonly acao = acaoDoAviso;
+  readonly corDisciplinar = GRUPOS_AVISO.find((g) => g.id === 'disciplinar')!.cor;
 
-  readonly pendenciasDisciplina = computed(() => {
-    const d = this.hoje()?.disciplina;
-    if (!d) return [];
-    return [
-      { valor: d.assistidosSuspensosHoje, um: 'suspenso hoje', varios: 'suspensos hoje', icone: 'flag' as IconName },
-      { valor: d.retornosComResponsavelPendentes, um: 'só retorna com responsável', varios: 'só retornam com responsável', icone: 'users' as IconName },
-      { valor: d.perdemProximoPasseio, um: 'perde o próximo passeio', varios: 'perdem o próximo passeio', icone: 'alert-circle' as IconName },
-      { valor: d.documentosAAssinar, um: 'documento sem assinatura', varios: 'documentos sem assinatura', icone: 'file-text' as IconName },
-    ]
-      .filter((p) => p.valor > 0)
-      .map((p) => ({ valor: p.valor, icone: p.icone, rotulo: p.valor === 1 ? p.um : p.varios }));
-  });
+  private readonly grupos = computed(() => agruparAvisos(this.avisoService.avisos()));
 
-  readonly totalAtencao = computed(() => {
-    const h = this.hoje();
-    if (!h) return 0;
-    return (
-      h.faltasSeguidas.total +
-      h.chamadasPendentes.total +
-      h.umPassoDaProgressao.total +
-      this.pendenciasDisciplina().reduce((s, p) => s + p.valor, 0)
-    );
-  });
+  /** "Hoje" (suspensos e retornos) também é controle disciplinar no painel do Coordenador. */
+  readonly disciplinar = computed(() =>
+    this.grupos()
+      .filter((g) => g.id === 'hoje' || g.id === 'disciplinar')
+      .flatMap((g) => g.avisos),
+  );
+
+  readonly outrosGrupos = computed(() =>
+    this.grupos()
+      .filter((g) => g.id !== 'hoje' && g.id !== 'disciplinar')
+      .map((g) => ({ id: g.id, titulo: g.titulo, cor: g.cor, total: g.avisos.length, itens: g.avisos.slice(0, LIMITE_POR_GRUPO) })),
+  );
+
+  readonly umPasso = computed(() => this.hoje()?.umPassoDaProgressao.itens ?? []);
+  readonly total = computed(() => this.avisoService.avisos().length);
 
   umPassoTexto(nivel: string, registros: number): string {
     const n = NIVEIS_DISCIPLINARES[nivel as NivelDisciplinar];
     return n ? `${registros} ${n.plural.toLowerCase()} · ${PROXIMO_PASSO[nivel as NivelDisciplinar]}` : nivel;
   }
 
+  abrir(aviso: AvisoDTO): void {
+    const rota = rotaDoAviso(aviso);
+    this.router.navigate(rota.comandos, { queryParams: rota.queryParams });
+  }
+
   abrirAssistido(assistidoId: number): void {
     this.router.navigate(['/assistidos'], { queryParams: { assistidoId } });
   }
 
-  abrirAula(aulaId: number): void {
-    this.router.navigate(['/chamada/aula', aulaId]);
-  }
-
   abrirPendentes(): void {
     this.router.navigate(['/chamada'], { queryParams: { aba: 'pendentes' } });
-  }
-
-  abrirDisciplinar(): void {
-    this.router.navigate(['/disciplinar']);
   }
 }

@@ -1,15 +1,17 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { Observable, firstValueFrom, from, throwError } from 'rxjs';
 import { switchMap, tap, catchError, filter, map } from 'rxjs/operators';
+import { isAuthRetryableFetchError } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
 import { AppModule } from '../shared/enum/module.enum';
 import { DashboardType } from '../shared/enum/dashboard-type.enum';
 import { Role } from '../shared/enum/role.enum';
 import { UsuarioResponse } from '../shared/models/usuarios/UsuarioResponse';
 import { ModuloDTO } from '../shared/models/modulo/ModuloDTO';
+import { InatividadeService } from './inatividade.service';
 import { supabase } from './supabase.client';
 
 export interface LoginResponse {
@@ -26,10 +28,16 @@ const USER_KEY = 'usuario_logado';
 // antes da pagina de redefinir/convite conseguir renderizar.
 const ROTAS_PUBLICAS_AUTH = ['/login', '/esqueci-senha', '/redefinir-senha'];
 
+function sessaoRejeitada(erro: unknown): boolean {
+  if (erro instanceof HttpErrorResponse) return erro.status === 401 || erro.status === 403;
+  return !isAuthRetryableFetchError(erro);
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private inatividade = inject(InatividadeService);
 
   private url = toSignal(
     this.router.events.pipe(
@@ -49,15 +57,17 @@ export class AuthService {
   private usuarioLogado = signal<UsuarioResponse | null>(null);
 
   private dashTypeMap: Record<Role, DashboardType | null> = {
-    [Role.ADMIN]: null,
     [Role.COORD]: DashboardType.COORDENADOR,
-    [Role.SOCIO]: DashboardType.SOCIOPEDAGOGICO,
+    [Role.ASSISTENTE]: null,
+    [Role.EDUCADOR]: DashboardType.EDUCADOR_SOCIAL,
     [Role.OFICINEIRO]: null,
   };
 
   currentProfile = computed<Role | null>(() => this.usuarioLogado()?.nivelPermissao ?? null);
 
   currentUserResponse = computed<UsuarioResponse | null>(() => this.usuarioLogado());
+
+  ehAdministrador = computed(() => this.usuarioLogado()?.administrador ?? false);
 
   modulos = computed<ModuloDTO[]>(() => this.usuarioLogado()?.modulos ?? []);
 
@@ -76,6 +86,10 @@ export class AuthService {
   }
 
   constructor() {
+    if (this.inatividade.expirou()) {
+      this.encerrarSessao();
+    }
+
     const storedUser = localStorage.getItem(USER_KEY);
     if (storedUser) {
       try {
@@ -106,7 +120,7 @@ export class AuthService {
       // fora da URL que ele acabou de abrir.
       const deveTrocar = evento === 'INITIAL_SESSION' || evento === 'TOKEN_REFRESHED';
       if (deveTrocar && sessao) {
-        this.trocarPorTokenDaAplicacao(false).subscribe({ error: () => this.logout() });
+        this.trocarPorTokenDaAplicacao(false).subscribe({ error: () => {} });
       }
     });
   }
@@ -157,10 +171,10 @@ export class AuthService {
    */
   trocarPorTokenDaAplicacao(navegarParaModuloPadrao: boolean = true): Observable<LoginResponse> {
     return from(supabase.auth.getSession()).pipe(
-      switchMap(({ data }) => {
+      switchMap(({ data, error }) => {
         const tokenSupabase = data.session?.access_token;
         if (!tokenSupabase) {
-          return throwError(() => new Error('Sessao do Supabase expirada.'));
+          return throwError(() => error ?? new Error('Sessao do Supabase expirada.'));
         }
         return this.http.post<LoginResponse>(`${environment.apiUrl}/api/auth/login`, null, {
           headers: { Authorization: `Bearer ${tokenSupabase}` }
@@ -168,13 +182,19 @@ export class AuthService {
       }),
       tap((resposta) => this.aplicarSessao(resposta, navegarParaModuloPadrao)),
       catchError((err) => {
-        this.logout();
+        if (sessaoRejeitada(err)) {
+          this.logout();
+        }
         return throwError(() => err);
       })
     );
   }
 
   private aplicarSessao(resposta: LoginResponse, navegarParaModuloPadrao: boolean = true): void {
+    if (!navegarParaModuloPadrao && !this.usuarioLogado()) {
+      return;
+    }
+
     localStorage.setItem(CHAVE_TOKEN, resposta.token);
     localStorage.setItem(USER_KEY, JSON.stringify(resposta.usuario));
 
@@ -206,10 +226,15 @@ export class AuthService {
   }
 
   logout(): void {
-    supabase.auth.signOut();
+    this.encerrarSessao();
+    this.router.navigate(['login']);
+  }
+
+  private encerrarSessao(): void {
+    supabase.auth.signOut({ scope: 'local' });
     localStorage.removeItem(CHAVE_TOKEN);
     localStorage.removeItem(USER_KEY);
+    this.inatividade.limpar();
     this.usuarioLogado.set(null);
-    this.router.navigate(['login']);
   }
 }

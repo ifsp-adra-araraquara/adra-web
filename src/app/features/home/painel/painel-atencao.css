@@ -37,3 +37,14 @@
   background: var(--amber-50); color: var(--amber-600); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums;
 }
 
+/* FT-18: avisos com a cor do grupo no hover, como no sino */
+.aviso { position: relative; transition: background .18s ease; }
+.aviso::before {
+  content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 3px;
+  background: var(--cor-grupo); opacity: 0; transform: scaleY(.4); transition: opacity .18s ease, transform .18s ease;
+}
+.aviso:hover { background: color-mix(in srgb, var(--cor-grupo) 7%, #fff); }
+.aviso:hover::before { opacity: 1; transform: scaleY(1); }
+.aviso .item-texto b { white-space: normal; font-weight: 600; }
+.aviso-acao { font-weight: 600; color: var(--color-adra-green-600); }
+

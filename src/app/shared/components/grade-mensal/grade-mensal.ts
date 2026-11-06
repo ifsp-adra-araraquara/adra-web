@@ -19,12 +19,12 @@ interface CelulaGrade {
 }
 
 /**
- * Grade mensal da turma (FT-06), no formato da planilha de chamada que a
- * instituição usava: uma "folha" por mês, uma coluna por dia de aula, uma
- * linha por aluno, com passeios/feriados como colunas sem chamada e
- * desligados marcados. Só leitura — tocar no dia emite `abrirAula`.
+ * Grade mensal do grupo, no formato da planilha de chamada que a
+ * instituição usava: uma "folha" por mês, uma coluna por dia de chamada, uma
+ * linha por atendido, com passeios/feriados como colunas sem chamada e
+ * desligados marcados. Só leitura — tocar no dia emite `abrirDia` com a data.
  *
- *   <app-grade-mensal [turmaId]="12" [(mes)]="mes" [aulaAtualId]="106" (abrirAula)="ir($event)" />
+ *   <app-grade-mensal [turmaId]="12" [(mes)]="mes" [dataAtual]="'2026-11-03'" (abrirDia)="ir($event)" />
  */
 @Component({
   selector: 'app-grade-mensal',
@@ -40,9 +40,9 @@ export class GradeMensal {
   turmaId = input.required<number>();
   /** yyyy-MM */
   mes = model(hojeISO().slice(0, 7));
-  /** Aula aberta na tela da chamada — a coluna dela fica destacada. */
-  aulaAtualId = input<number | null>(null);
-  abrirAula = output<number>();
+  /** Dia aberto na tela da chamada (yyyy-MM-dd) — a coluna dele fica destacada. */
+  dataAtual = input<string | null>(null);
+  abrirDia = output<string>();
   /** Emitido a cada mês carregado — a página da grade usa para o título (nome da turma). */
   carregada = output<GradeMensalTurmaDTO>();
 
@@ -100,20 +100,20 @@ export class GradeMensal {
   }
 
   ehAtual(coluna: ColunaGradeDTO): boolean {
-    return coluna.aulaId != null && coluna.aulaId === this.aulaAtualId();
+    return coluna.data === this.dataAtual();
   }
 
   /** Coluna sem chamada (passeio/evento/feriado) — vira uma faixa vertical com o rótulo. */
   ehColunaSemChamada(coluna: ColunaGradeDTO): boolean {
-    return coluna.tipo === 'CANCELADA' || coluna.tipo === 'SEM_AULA';
+    return coluna.tipo === 'SEM_CHAMADA';
   }
 
   podeAbrirColuna(coluna: ColunaGradeDTO): boolean {
-    return coluna.aulaId != null && (coluna.tipo === 'AULA' || coluna.tipo === 'PENDENTE') && !this.ehAtual(coluna);
+    return (coluna.tipo === 'LANCADA' || coluna.tipo === 'PENDENTE') && !this.ehAtual(coluna);
   }
 
   abrirColuna(coluna: ColunaGradeDTO): void {
-    if (this.podeAbrirColuna(coluna)) this.abrirAula.emit(coluna.aulaId!);
+    if (this.podeAbrirColuna(coluna)) this.abrirDia.emit(coluna.data);
   }
 
   rotuloCabecalho(coluna: ColunaGradeDTO): string {
@@ -134,11 +134,11 @@ export class GradeMensal {
         return { sigla: 'FJ', classe: 'justificada', titulo: 'Falta justificada' };
     }
     if (coluna.tipo === 'PENDENTE') return { sigla: '', classe: 'pendente', titulo: 'Chamada pendente' };
-    if (coluna.tipo === 'AULA') return { sigla: '·', classe: 'fora', titulo: 'Fora da turma nesta data' };
+    if (coluna.tipo === 'LANCADA') return { sigla: '·', classe: 'fora', titulo: 'Fora do grupo nesta data' };
     return { sigla: '', classe: '', titulo: '' };
   }
 
-  /** % de presença nas aulas com chamada em que o aluno estava na turma (FJ conta como ausência). */
+  /** % de presença nos dias com chamada em que o atendido estava no grupo (FJ conta como ausência). */
   private frequencia(aluno: AlunoGradeMensalDTO): number | null {
     const comChamada = aluno.presencas.filter((p) => p != null);
     if (comChamada.length === 0) return null;
@@ -155,7 +155,7 @@ export class GradeMensal {
       this.grade.set(grade);
       this.carregada.emit(grade);
     } catch {
-      this.erro.set('Não foi possível carregar a grade desta turma.');
+      this.erro.set('Não foi possível carregar a grade deste grupo.');
     } finally {
       this.carregando.set(false);
     }

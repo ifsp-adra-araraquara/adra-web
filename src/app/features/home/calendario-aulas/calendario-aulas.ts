@@ -3,45 +3,39 @@ import {
   OnInit,
   ViewChild,
   computed,
-  effect,
   inject,
   input,
   signal,
 } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { CalendarOptions, DatesSetArg, EventClickArg, EventContentArg, EventInput } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction';
 import { FullCalendarComponent, FullCalendarModule } from '@fullcalendar/angular';
-import { AulaService, FiltroListaAulas } from '../../../core/aula.service';
-import { AuthService } from '../../../core/auth.service';
-import { AulaComDetalhesResponseDTO } from '../../../shared/models/aula/AulaComDetalhesResponseDTO';
-import { OficinaResponseDTO } from '../../../shared/models/oficina/OficinaResponseDTO';
-import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO';
-import { StatusAula } from '../../../shared/enum/StatusAula';
-import { BadgeVariant, resolveBadgeStatus } from '../../../shared/utils/badge-status.util';
-import { podeEditarChamada } from '../../../shared/utils/chamada.util';
+import { BadgeVariant } from '../../../shared/utils/badge-status.util';
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Button } from '../../../shared/components/button/button';
 import { Modal } from '../../../shared/components/modal/modal';
-import { RecorrenciaAulasModal } from '../recorrencia-aulas-modal/recorrencia-aulas-modal';
-import { AulaStatusModal } from '../aula-status-modal/aula-status-modal';
 import { ExcecaoCalendarioService } from '../../../core/excecao-calendario.service';
+import { NotaCalendarioService } from '../../../core/nota-calendario.service';
 import { TIPO_EXCECAO_INFO, TipoExcecaoCalendario } from '../../../shared/enum/TipoExcecaoCalendario';
 import {
   ExcecaoCalendarioRequestDTO,
   ExcecaoCalendarioResponseDTO,
 } from '../../../shared/models/excecao/ExcecaoCalendarioDTO';
+import {
+  NotaCalendarioRequestDTO,
+  NotaCalendarioResponseDTO,
+} from '../../../shared/models/nota/NotaCalendarioDTO';
 import { Input as AppInput } from '../../../shared/components/input/input';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
 import { HttpErrorResponse } from '@angular/common/http';
 import { feriadosNacionais } from '../../../shared/utils/feriados.util';
 
-/** Dia sem aula exibido: cadastrado pela ADRA (excecaoId) ou feriado nacional calculado (excecaoId null). */
+/** Dia sem chamada exibido: cadastrado pela ADRA (excecaoId) ou feriado nacional calculado (excecaoId null). */
 interface DiaSemAula {
   data: string;
   tipo: TipoExcecaoCalendario;
@@ -54,46 +48,21 @@ type CalendarView = 'dayGridMonth' | 'timeGridWeek' | 'listWeek';
 @Component({
   selector: 'app-calendario-aulas',
   standalone: true,
-  imports: [FormsModule, Select, Button, Modal, FullCalendarModule, RecorrenciaAulasModal, AulaStatusModal, AppInput],
+  imports: [FormsModule, Select, Button, Modal, FullCalendarModule, AppInput],
   templateUrl: './calendario-aulas.html',
   styleUrl: './calendario-aulas.css',
 })
 export class CalendarioAulas implements OnInit {
-  protected readonly aulaService = inject(AulaService);
   protected readonly excecaoService = inject(ExcecaoCalendarioService);
-  private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
+  protected readonly notaService = inject(NotaCalendarioService);
 
   /** Referência ao componente do FullCalendar — necessária pra trocar de
    * visão (Mês/Semana) via API (`changeView`), já que `initialView` só
    * define a visão na primeira renderização e não reage a mudanças depois. */
   @ViewChild('calendario') private readonly calendarioRef?: FullCalendarComponent;
 
-  /** Passadas pelo pai (Aulas) — já carregadas lá, evita nova chamada. */
-  readonly turmas = input.required<TurmaResponseDTO[]>();
-  readonly oficinas = input.required<OficinaResponseDTO[]>();
-  /** Só Coordenador gera aulas e edita status; Sociopedagógico só visualiza (decisão confirmada). */
+  /** Só o Coordenador cadastra notas e dias sem chamada; os outros perfis só visualizam. */
   readonly podeGerenciar = input.required<boolean>();
-  /**
-   * Restringe os eventos mostrados às turmas desta lista (usado pelo
-   * oficineiro, que só pode ver o calendário das turmas dele). `null`
-   * (padrão) mostra tudo, como no calendário do coordenador/sociopedagógico.
-   */
-  readonly turmaIdsPermitidos = input<number[] | null>(null);
-
-  /** Filtro de oficina: "Todas as oficinas" é uma opção real (null), não placeholder desabilitado. */
-  protected readonly oficinasOpcoes = computed<SelectOption<number | null>[]>(() => [
-    { value: null, label: 'Todas as oficinas' },
-    ...this.oficinas().map((o) => ({ value: o.oficinaId, label: o.nomeOficina })),
-  ]);
-
-  /** Legenda de status na toolbar — um item por valor do enum. */
-  protected readonly legendaStatus = Object.values(StatusAula).map((status) => ({
-    status,
-    label: resolveBadgeStatus(status)?.label ?? status,
-    variant: resolveBadgeStatus(status)?.variant ?? ('gray' as BadgeVariant),
-  }));
-
   /** Mapa de variante do app-badge -> cores CSS var reais de styles.css (sem hex novo). */
   private readonly CORES_STATUS: Record<BadgeVariant, { bg: string; text: string }> = {
     green: { bg: 'var(--color-adra-green-50)', text: 'var(--color-adra-green-600)' },
@@ -105,20 +74,16 @@ export class CalendarioAulas implements OnInit {
     gray: { bg: 'var(--gray-100)', text: 'var(--gray-600)' },
   };
 
-  /** Legenda dos dias sem aula (férias, feriado, ponto facultativo, evento/passeio...). */
+  /** Legenda dos dias sem chamada (férias, feriado, ponto facultativo, evento/passeio...). */
   protected readonly legendaExcecoes = Object.values(TipoExcecaoCalendario).map((tipo) => ({
     tipo,
     ...TIPO_EXCECAO_INFO[tipo],
   }));
 
-  readonly oficinaIdFiltro = signal<number | null>(null);
   readonly dataInicioFiltro = signal<string>('');
   readonly dataFimFiltro = signal<string>('');
   private readonly isWide = inject(DOCUMENT).defaultView?.matchMedia?.('(min-width: 720px)')?.matches ?? true;
   readonly visualizacao = signal<CalendarView>(this.isWide ? 'dayGridMonth' : 'listWeek');
-
-  readonly mostrarRecorrencia = signal(false);
-  readonly aulaSelecionada = signal<AulaComDetalhesResponseDTO | null>(null);
 
   readonly calendarOptions = computed<CalendarOptions>(() => ({
     plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin],
@@ -131,39 +96,15 @@ export class CalendarioAulas implements OnInit {
     dayMaxEvents: 3,
     events: this.todosEventos(),
     eventContent: (arg: EventContentArg) => this.renderEventContent(arg),
-    eventClick: (arg: EventClickArg) => this.abrirDetalheAula(arg),
+    eventClick: (arg: EventClickArg) => this.abrirDiaDoEvento(arg),
     dayCellClassNames: (arg) => (this.excecoesPorData().has(this.dataIso(arg.date)) ? ['dia-sem-aula'] : []),
-    // Setas ‹ › / "Hoje" / troca de visão: busca as aulas do período que ficou visível.
+    // Setas ‹ › / "Hoje" / troca de visão: guarda o período que ficou visível.
     datesSet: (arg: DatesSetArg) => this.aoMudarPeriodo(arg),
     dateClick: (arg: DateClickArg) => this.abrirDiaSelecionado(arg),
   }));
 
-  readonly eventosCalendario = computed<EventInput[]>(() => {
-    const permitidas = this.turmaIdsPermitidos();
-    const aulas = permitidas
-      ? this.aulaService.aulas().filter((aula) => aula.turmaId != null && permitidas.includes(aula.turmaId))
-      : this.aulaService.aulas();
-
-    return aulas.map((aula) => {
-      const info = resolveBadgeStatus(aula.statusAula);
-      const variant = info?.variant ?? 'gray';
-      const cores = this.CORES_STATUS[variant];
-      const titulo = aula.titulo ?? aula.nomeTurma ?? 'Aula';
-      return {
-        id: String(aula.aulaId),
-        title: aula.nomeOficineiro ? `${titulo} · ${aula.nomeOficineiro}` : titulo,
-        start: aula.horarioInicio ? `${aula.dataAula}T${aula.horarioInicio}` : aula.dataAula,
-        end: aula.horarioFim ? `${aula.dataAula}T${aula.horarioFim}` : undefined,
-        backgroundColor: cores.bg,
-        borderColor: cores.bg,
-        textColor: cores.text,
-        extendedProps: { aula, variant },
-      };
-    });
-  });
-
   /**
-   * Dias sem aula do período: os cadastrados pela ADRA + feriados nacionais
+   * Dias sem chamada do período: os cadastrados pela ADRA + feriados nacionais
    * (calculados no front). Um dia cadastrado prevalece sobre o feriado.
    */
   readonly diasSemAula = computed<DiaSemAula[]>(() => {
@@ -186,10 +127,10 @@ export class CalendarioAulas implements OnInit {
     return [...cadastrados, ...nacionais];
   });
 
-  /** Data 'YYYY-MM-DD' -> dia sem aula. */
+  /** Data 'YYYY-MM-DD' -> dia sem chamada. */
   readonly excecoesPorData = computed(() => new Map(this.diasSemAula().map((d) => [d.data, d] as const)));
 
-  /** Cada dia sem aula vira um fundo colorido + um rótulo no topo do dia. */
+  /** Cada dia sem chamada vira um fundo colorido + um rótulo no topo do dia. */
   private readonly eventosExcecao = computed<EventInput[]>(() =>
     this.diasSemAula().flatMap((excecao) => {
       const info = TIPO_EXCECAO_INFO[excecao.tipo] ?? TIPO_EXCECAO_INFO[TipoExcecaoCalendario.OUTRO];
@@ -216,21 +157,32 @@ export class CalendarioAulas implements OnInit {
     }),
   );
 
-  readonly todosEventos = computed<EventInput[]>(() => [...this.eventosExcecao(), ...this.eventosCalendario()]);
-
-  constructor() {
-    effect(() => {
-      const filtro: FiltroListaAulas = {
-        oficinaId: this.oficinaIdFiltro() ?? undefined,
-        dataInicio: this.dataInicioFiltro() || undefined,
-        dataFim: this.dataFimFiltro() || undefined,
+  /** Notas/eventos globais cadastrados pela Coordenação — visíveis para todos. */
+  private readonly eventosNotas = computed<EventInput[]>(() =>
+    this.notaService.notas().map((nota) => {
+      const cores = this.CORES_STATUS['coral'];
+      const horarioCurto = nota.horario ? nota.horario.slice(0, 5) : null;
+      return {
+        id: `nota-${nota.notaId}`,
+        title: horarioCurto ? `${horarioCurto} · ${nota.titulo}` : nota.titulo,
+        start: nota.horario ? `${nota.dataNota}T${nota.horario}` : nota.dataNota,
+        allDay: !nota.horario,
+        backgroundColor: cores.bg,
+        borderColor: cores.bg,
+        textColor: cores.text,
+        extendedProps: { nota, variant: 'coral' as BadgeVariant },
       };
-      this.aulaService.listarComDetalhes(filtro).subscribe();
-    });
-  }
+    }),
+  );
+
+  readonly todosEventos = computed<EventInput[]>(() => [
+    ...this.eventosExcecao(),
+    ...this.eventosNotas(),
+  ]);
 
   ngOnInit() {
     this.excecaoService.carregar();
+    this.notaService.carregar();
     const hoje = new Date();
     const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
@@ -238,7 +190,7 @@ export class CalendarioAulas implements OnInit {
     this.dataFimFiltro.set(this.dataIso(ultimoDia));
   }
 
-  /** Período visível do calendário mudou (setas, "Hoje", Mês/Semana/Lista): recarrega as aulas dele. */
+  /** Período visível do calendário mudou (setas, "Hoje", Mês/Semana/Lista): guarda o período (anos dos feriados). */
   private aoMudarPeriodo(arg: DatesSetArg): void {
     const inicio = this.dataIso(arg.start);
     const fimExclusivo = new Date(arg.end);
@@ -262,44 +214,22 @@ export class CalendarioAulas implements OnInit {
     this.calendarioRef?.getApi().changeView(view);
   }
 
-  abrirRecorrencia() {
-    if (this.podeGerenciar()) this.mostrarRecorrencia.set(true);
-  }
-
-  aoGerarAulas() {
-    this.mostrarRecorrencia.set(false);
-    this.aulaService
-      .listarComDetalhes({
-        oficinaId: this.oficinaIdFiltro() ?? undefined,
-        dataInicio: this.dataInicioFiltro() || undefined,
-        dataFim: this.dataFimFiltro() || undefined,
-      })
-      .subscribe();
-  }
-
-  private abrirDetalheAula(arg: EventClickArg) {
+  private abrirDiaDoEvento(arg: EventClickArg) {
     const excecao = arg.event.extendedProps['excecao'] as DiaSemAula | undefined;
     if (excecao) {
       this.diaSelecionado.set(excecao.data);
       return;
     }
-    if (!this.podeGerenciar()) return; // sociopedagógico só visualiza
-    this.aulaSelecionada.set(arg.event.extendedProps['aula'] as AulaComDetalhesResponseDTO);
-  }
-
-  fecharModalStatus() {
-    this.aulaSelecionada.set(null);
+    const nota = arg.event.extendedProps['nota'] as NotaCalendarioResponseDTO | undefined;
+    if (nota) {
+      this.diaSelecionado.set(nota.dataNota);
+    }
   }
 
   /* ============================================================
-   * CLICAR NO DIA — lista as aulas daquele dia e, pra Coordenador/
-   * Sociopedagógico, linka direto pro fluxo de chamada já existente
-   * (/chamada?data=&aulaId=, o mesmo mecanismo que StatusChamadaPainel
-   * já usa). Oficineiro só visualiza (ele não tem acesso a /chamada).
+   * CLICAR NO DIA — mostra o dia sem chamada e as notas daquele dia.
    * ============================================================ */
   readonly diaSelecionado = signal<string | null>(null);
-
-  protected readonly podeIrParaChamada = computed(() => podeEditarChamada(this.auth.currentProfile()));
 
   protected readonly tituloPainelDia = computed(() => {
     const dia = this.diaSelecionado();
@@ -309,16 +239,17 @@ export class CalendarioAulas implements OnInit {
     return formatado.charAt(0).toUpperCase() + formatado.slice(1);
   });
 
-  protected readonly aulasDoDiaSelecionado = computed<AulaComDetalhesResponseDTO[]>(() => {
+  /** Notas globais do dia aberto no painel (se houver). */
+  protected readonly notasDoDiaSelecionado = computed<NotaCalendarioResponseDTO[]>(() => {
     const dia = this.diaSelecionado();
     if (!dia) return [];
-    const permitidas = this.turmaIdsPermitidos();
-    const doDia = this.aulaService.aulas().filter((a) => a.dataAula === dia);
-    const filtradas = permitidas ? doDia.filter((a) => a.turmaId != null && permitidas.includes(a.turmaId)) : doDia;
-    return [...filtradas].sort((a, b) => (a.horarioInicio ?? '').localeCompare(b.horarioInicio ?? ''));
+    return this.notaService
+      .notas()
+      .filter((n) => n.dataNota === dia)
+      .sort((a, b) => (a.horario ?? '').localeCompare(b.horario ?? ''));
   });
 
-  /** Dia sem aula do dia aberto no painel (se houver). */
+  /** Dia sem chamada do dia aberto no painel (se houver). */
   protected readonly excecaoDoDiaSelecionado = computed(() => {
     const dia = this.diaSelecionado();
     if (!dia) return null;
@@ -331,7 +262,109 @@ export class CalendarioAulas implements OnInit {
   }
 
   /* ============================================================
-   * DIAS SEM AULA — só Coordenador cadastra/remove (mesma regra do back)
+   * NOTAS GLOBAIS DO CALENDÁRIO — só Coordenador cadastra/edita/remove
+   * ============================================================ */
+  readonly mostrarNotasCalendario = signal(false);
+  readonly notaEditandoId = signal<number | null>(null);
+  readonly salvandoNota = signal(false);
+  readonly erroNota = signal<string | null>(null);
+  formNota: NotaCalendarioRequestDTO = this.notaVazia();
+
+  /** Próximas notas globais (de hoje em diante). */
+  protected readonly proximasNotas = computed(() => {
+    const hoje = this.dataIso(new Date());
+    return this.notaService.notas().filter((n) => n.dataNota >= hoje);
+  });
+
+  private notaVazia(dataNota = ''): NotaCalendarioRequestDTO {
+    return { dataNota, horario: '', titulo: '', descricao: '' };
+  }
+
+  abrirNotasCalendario(dataPredefinida?: string): void {
+    this.notaEditandoId.set(null);
+    this.formNota = this.notaVazia(dataPredefinida ?? '');
+    this.erroNota.set(null);
+    this.mostrarNotasCalendario.set(true);
+  }
+
+  abrirNovaNotaNoDia(): void {
+    const dia = this.diaSelecionado() ?? '';
+    this.diaSelecionado.set(null);
+    this.abrirNotasCalendario(dia);
+  }
+
+  editarNota(nota: NotaCalendarioResponseDTO): void {
+    this.diaSelecionado.set(null);
+    this.notaEditandoId.set(nota.notaId);
+    this.formNota = {
+      dataNota: nota.dataNota,
+      horario: nota.horario ? nota.horario.slice(0, 5) : '',
+      titulo: nota.titulo,
+      descricao: nota.descricao ?? '',
+    };
+    this.erroNota.set(null);
+    this.mostrarNotasCalendario.set(true);
+  }
+
+  cancelarEdicaoNota(): void {
+    this.notaEditandoId.set(null);
+    this.formNota = this.notaVazia();
+    this.erroNota.set(null);
+  }
+
+  atualizarCampoNota<K extends keyof NotaCalendarioRequestDTO>(campo: K, valor: NotaCalendarioRequestDTO[K]): void {
+    this.formNota = { ...this.formNota, [campo]: valor };
+  }
+
+  async salvarNota(): Promise<void> {
+    if (this.salvandoNota()) return;
+    const { dataNota, horario, titulo, descricao } = this.formNota;
+    if (!dataNota) {
+      this.erroNota.set('Informe a data da nota.');
+      return;
+    }
+    if (!titulo || !titulo.trim()) {
+      this.erroNota.set('Informe o título da nota.');
+      return;
+    }
+
+    this.salvandoNota.set(true);
+    this.erroNota.set(null);
+    try {
+      const payload: NotaCalendarioRequestDTO = {
+        dataNota,
+        horario: horario?.trim() || null,
+        titulo: titulo.trim(),
+        descricao: descricao?.trim() || null,
+      };
+      const editandoId = this.notaEditandoId();
+      if (editandoId != null) {
+        await this.notaService.atualizar(editandoId, payload);
+        this.notaEditandoId.set(null);
+      } else {
+        await this.notaService.cadastrar(payload);
+      }
+      this.formNota = this.notaVazia();
+    } catch (erro) {
+      this.erroNota.set(mensagemErro(erro as HttpErrorResponse, 'Não foi possível salvar a nota do calendário.'));
+    } finally {
+      this.salvandoNota.set(false);
+    }
+  }
+
+  async removerNota(nota: NotaCalendarioResponseDTO): Promise<void> {
+    try {
+      await this.notaService.remover(nota.notaId);
+      if (this.notaEditandoId() === nota.notaId) {
+        this.cancelarEdicaoNota();
+      }
+    } catch (erro) {
+      this.erroNota.set(mensagemErro(erro as HttpErrorResponse, 'Não foi possível remover a nota.'));
+    }
+  }
+
+  /* ============================================================
+   * DIAS SEM CHAMADA — só Coordenador cadastra/remove (mesma regra do back)
    * ============================================================ */
   readonly mostrarDiasSemAula = signal(false);
   readonly salvandoExcecao = signal(false);
@@ -342,7 +375,7 @@ export class CalendarioAulas implements OnInit {
     (tipo) => ({ value: tipo, label: TIPO_EXCECAO_INFO[tipo].label }),
   );
 
-  /** Próximos dias sem aula (de hoje em diante), para conferir e remover. */
+  /** Próximos dias sem chamada (de hoje em diante), para conferir e remover. */
   protected readonly proximasExcecoes = computed(() => {
     const hoje = this.dataIso(new Date());
     return this.excecaoService.excecoes().filter((e) => e.dataExcecao >= hoje);
@@ -387,9 +420,8 @@ export class CalendarioAulas implements OnInit {
         descricao: this.formExcecao.descricao?.trim() || null,
       });
       this.formExcecao = this.excecaoVazia();
-      this.aoGerarAulas(); // aulas planejadas nesses dias viram canceladas
     } catch (erro) {
-      this.erroExcecao.set(mensagemErro(erro as HttpErrorResponse, 'Não foi possível salvar o dia sem aula.'));
+      this.erroExcecao.set(mensagemErro(erro as HttpErrorResponse, 'Não foi possível salvar o dia sem chamada.'));
     } finally {
       this.salvandoExcecao.set(false);
     }
@@ -411,14 +443,9 @@ export class CalendarioAulas implements OnInit {
     this.diaSelecionado.set(null);
   }
 
-  abrirChamadaDaAula(aula: AulaComDetalhesResponseDTO): void {
-    this.router.navigate(['/chamada/aula', aula.aulaId]);
-  }
-
   /**
    * Renderiza cada evento como mini-card (horário / título / subtítulo) em
-   * vez de uma linha de texto truncada crua. Puramente visual — não toca em
-   * nenhum dado, só como `aula` já carregada é exibida.
+   * vez de uma linha de texto truncada crua. Puramente visual.
    */
   private renderEventContent(arg: EventContentArg) {
     const excecao = arg.event.extendedProps['excecao'] as DiaSemAula | undefined;
@@ -435,36 +462,34 @@ export class CalendarioAulas implements OnInit {
       return { domNodes: [rotulo] };
     }
 
-    const aula = arg.event.extendedProps['aula'] as AulaComDetalhesResponseDTO | undefined;
-    // Fundo colorido dos dias sem aula (display: 'background') não tem conteúdo.
-    if (!aula) return { domNodes: [] };
-    const variant = (arg.event.extendedProps['variant'] as BadgeVariant) ?? 'gray';
-    const wrapper = document.createElement('div');
-    wrapper.className = 'evt';
-    wrapper.style.setProperty('--evt-accent', `var(--${variant}-400)`);
-
-    if (aula.horarioInicio) {
-      const hora = document.createElement('span');
-      hora.className = 'evt-hora';
-      hora.textContent = aula.horarioInicio.slice(0, 5);
-      wrapper.appendChild(hora);
+    const nota = arg.event.extendedProps['nota'] as NotaCalendarioResponseDTO | undefined;
+    if (nota) {
+      const variante = (arg.event.extendedProps['variant'] as BadgeVariant) ?? 'coral';
+      const wrapper = document.createElement('div');
+      wrapper.className = 'evt evt-nota';
+      wrapper.style.setProperty('--evt-accent', `var(--${variante}-400)`);
+      if (nota.horario) {
+        const hora = document.createElement('span');
+        hora.className = 'evt-hora';
+        hora.textContent = nota.horario.slice(0, 5);
+        wrapper.appendChild(hora);
+      }
+      const titulo = document.createElement('span');
+      titulo.className = 'evt-titulo';
+      titulo.textContent = nota.titulo;
+      titulo.title = nota.descricao ? `${nota.titulo} — ${nota.descricao}` : nota.titulo;
+      wrapper.appendChild(titulo);
+      if (nota.descricao) {
+        const sub = document.createElement('span');
+        sub.className = 'evt-sub';
+        sub.textContent = nota.descricao;
+        sub.title = nota.descricao;
+        wrapper.appendChild(sub);
+      }
+      return { domNodes: [wrapper] };
     }
 
-    const tituloTexto = aula.titulo ?? aula.nomeTurma ?? 'Aula';
-    const titulo = document.createElement('span');
-    titulo.className = 'evt-titulo';
-    titulo.textContent = tituloTexto;
-    titulo.title = tituloTexto; // tooltip nativo quando truncar
-    wrapper.appendChild(titulo);
-
-    if (aula.nomeOficineiro) {
-      const sub = document.createElement('span');
-      sub.className = 'evt-sub';
-      sub.textContent = aula.nomeOficineiro;
-      sub.title = aula.nomeOficineiro;
-      wrapper.appendChild(sub);
-    }
-
-    return { domNodes: [wrapper] };
+    // Fundo colorido dos dias sem chamada (display: 'background') não tem conteúdo.
+    return { domNodes: [] };
   }
 }

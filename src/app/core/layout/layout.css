@@ -6,7 +6,17 @@
   border-bottom: 1px solid var(--gray-200);
   display: flex; align-items: center; gap: 8px; padding: 0 16px;
 }
-.topbar h1 { font-size: 17px; font-weight: 600; }
+.topbar .topbar-titulo { font-size: 17px; font-weight: 600; margin: 0; }
+
+/* Só aparece ao receber foco pelo teclado (WCAG 2.4.1). */
+.pular-conteudo {
+  position: fixed; top: 8px; left: 8px; z-index: 1000;
+  padding: 10px 16px; border-radius: var(--radius-sm);
+  background: var(--color-brand); color: var(--campo-bg); font-weight: 600; text-decoration: none;
+  transform: translateY(-200%);
+}
+.pular-conteudo:focus { transform: none; }
+.content:focus { outline: none; }
 
 .menu-btn {
   width: 44px; height: 44px; margin-left: -10px; border: none; border-radius: var(--radius-sm);
@@ -14,8 +24,10 @@
 }
 .menu-btn svg { width: 22px; height: 22px; }
 
+.topbar-acoes { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+
 .help-btn {
-  width: 44px; height: 44px; margin-left: auto; border: none; border-radius: var(--radius-sm);
+  width: 44px; height: 44px; border: none; border-radius: var(--radius-sm);
   background: transparent; color: var(--gray-400); display: grid; place-items: center;
   transition: background .14s, color .14s;
 }

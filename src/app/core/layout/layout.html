@@ -1,3 +1,5 @@
+<a class="pular-conteudo" href="#conteudo" (click)="pularParaConteudo($event)">Pular para o conteúdo</a>
+
 <app-sidebar [(open)]="menuOpen" [(collapsed)]="sidebarCollapsed" />
 
 @if (menuOpen()) {
@@ -16,22 +18,27 @@
       (click)="menuOpen.set(true)">
       <app-icon name="menu" />
     </button>
-    <h1>Sistema de Gestão</h1>
+    <p class="topbar-titulo">Sistema de Gestão</p>
 
-    @if (mostrarAjudaTour()) {
-      <button
-        type="button"
-        class="help-btn"
-        aria-label="Ver tutorial guiado"
-        appTooltip="Ver tutorial"
-        (click)="abrirTutorial()"
-      >
-        <app-icon name="help-circle" />
-      </button>
-    }
+    <div class="topbar-acoes">
+      <app-notificacoes />
+
+      @if (mostrarAjudaTour()) {
+        <button
+          type="button"
+          class="help-btn"
+          aria-label="Ver tutorial guiado"
+          appTooltip="Ver tutorial"
+          (click)="abrirTutorial()"
+        >
+          <app-icon name="help-circle" />
+        </button>
+      }
+    </div>
   </header>
 
-  <main class="content">
+  <main #conteudo id="conteudo" class="content" tabindex="-1">
     <router-outlet />
   </main>
+  <p class="sr-only" aria-live="polite">{{ anuncioTela() }}</p>
 </div>

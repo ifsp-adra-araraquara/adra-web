@@ -3,14 +3,17 @@
   [attr.name]="name() || null"
   [disabled]="effectiveDisabled()"
   [value]="selectedIndex()"
+  [attr.aria-invalid]="invalido() ? 'true' : null"
+  [attr.aria-describedby]="descritoPor() || null"
   (change)="handleChange($event)"
   (blur)="handleBlur()"
   class="select"
 >
   @if (placeholder()) {
-    <option value="-1" disabled>{{ placeholder() }}</option>
+    <option value="-1" disabled [selected]="selectedIndex() === -1">{{ placeholder() }}</option>
   }
+  <!-- [selected] em cada opção: o [value] do <select> roda antes de as opções existirem e o navegador mostraria a primeira. -->
   @for (opt of options(); track $index) {
-    <option [value]="$index" [disabled]="opt.disabled ?? false">{{ opt.label }}</option>
+    <option [value]="$index" [disabled]="opt.disabled ?? false" [selected]="$index === selectedIndex()">{{ opt.label }}</option>
   }
 </select>

@@ -4,4 +4,6 @@ export interface OficinaResponseDTO {
   ativo: boolean;
   oficineiroResponsavelId: number | null;
   local: string | null;
+  /** Grupos atendidos pela oficina. */
+  turmaIds: number[];
 }

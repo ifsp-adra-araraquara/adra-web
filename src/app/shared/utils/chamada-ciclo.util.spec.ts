@@ -1,6 +1,6 @@
 import { StatusPresenca } from '../enum/StatusPresenca';
 import { MotivoFalta } from '../enum/MotivoFalta';
-import { LinhaChamada, aniversarioNaAula, filtrarPorNome, marcarPresenca, proximoStatusPresenca } from './chamada.util';
+import { LinhaChamada, aniversarioNaAula, filtrarPorNome, marcarPresenca, marcarTodosPresentes, proximoStatusPresenca } from './chamada.util';
 
 const aluno = (assistidoId: number, nomeCompleto: string) =>
   ({ assistidoId, nomeCompleto, statusPresenca: StatusPresenca.PRESENTE, motivoFalta: null, observacao: '' }) as LinhaChamada;
@@ -17,9 +17,25 @@ describe('chamada.util — botão único P/F/FJ', () => {
   });
 
   it('voltar para P limpa o motivo da FJ', () => {
-    const comMotivo = [{ ...aluno(1, 'Ana'), statusPresenca: StatusPresenca.FALTA_JUSTIFICADA, motivoFalta: MotivoFalta.SAUDE }];
+    const comMotivo = [{ ...aluno(1, 'Ana'), statusPresenca: StatusPresenca.FALTA_JUSTIFICADA, motivoFalta: MotivoFalta.ATESTADO }];
     const [resultado] = marcarPresenca(comMotivo, 1, StatusPresenca.PRESENTE);
     expect(resultado.motivoFalta).toBeNull();
+  });
+
+  it('FT-13: a falta justificada marcada na chamada já vem como Atestado', () => {
+    const [resultado] = marcarPresenca([aluno(1, 'Ana')], 1, StatusPresenca.FALTA_JUSTIFICADA);
+    expect(resultado.motivoFalta).toBe(MotivoFalta.ATESTADO);
+  });
+
+  it('FT-13: o suspenso não muda ao tocar nem com "todos presentes"', () => {
+    const suspenso = {
+      ...aluno(1, 'Ana'),
+      statusPresenca: StatusPresenca.FALTA_JUSTIFICADA,
+      motivoFalta: MotivoFalta.SUSPENSAO,
+      suspensoAte: '2026-11-05',
+    };
+    expect(marcarPresenca([suspenso], 1, StatusPresenca.PRESENTE)[0]).toBe(suspenso);
+    expect(marcarTodosPresentes([suspenso, aluno(2, 'Bruno')])[0]).toBe(suspenso);
   });
 
   it('aniversário no dia da aula, no mês ou fora dele', () => {
