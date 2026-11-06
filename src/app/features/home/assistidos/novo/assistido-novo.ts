@@ -40,7 +40,7 @@ import { ResponsaveisPendentes } from './responsaveis-pendentes';
  *
  * 1. CPF primeiro: se já existe, mostra quem é e leva à ficha — não deixa
  *    cadastrar de novo. Se não existe, abre o formulário com o CPF fixo.
- * 2. Responsáveis entram por modal (ResponsavelVinculoModal), também pelo
+ * 2. Responsáveis entram por modal (ResponsavelVinculoModal), pelo nome ou
  *    CPF: quem já tem cadastro é só vinculado.
  * 3. Tudo vai num POST só (assistido + responsáveis + foto + documento).
  */

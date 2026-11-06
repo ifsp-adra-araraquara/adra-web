@@ -16,3 +16,8 @@ export function nomeCurto(nomeCompleto: string): string {
   const usaComposto = partes.length >= 3 && composto.length <= 11;
   return `${usaComposto ? composto : partes[0]} ${ultimaInicial}`;
 }
+
+/** Mesma normalização da busca da API: sem acento e sem caixa. */
+export function normalizar(texto: string): string {
+  return texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+}

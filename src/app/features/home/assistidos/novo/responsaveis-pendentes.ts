@@ -26,12 +26,12 @@ import { ResponsavelVinculoModal } from './responsavel-vinculo-modal';
       <p class="vazio">Nenhum responsável ainda. Adicione pelo menos um.</p>
     } @else {
       <ul class="resp-lista" role="list">
-        @for (r of responsaveis(); track r.cpf; let i = $index) {
+        @for (r of responsaveis(); track $index; let i = $index) {
           <li class="resp-card">
             <div class="resp-card__topo">
               <div>
                 <span class="cell-name">{{ r.nomeCompleto }}</span>
-                <span class="cell-sub">{{ r.parentesco || 'Parentesco não informado' }} · CPF {{ formatarCpf(r.cpf) }}</span>
+                <span class="cell-sub">{{ r.parentesco || 'Parentesco não informado' }}@if (r.cpf) { · CPF {{ formatarCpf(r.cpf) }} }</span>
               </div>
               <div class="resp-card__acoes">
                 <button type="button" class="btn-icon" [attr.aria-label]="'Editar ' + r.nomeCompleto" appTooltip="Editar" (click)="editar(i)">
@@ -61,7 +61,7 @@ import { ResponsavelVinculoModal } from './responsavel-vinculo-modal';
     <app-responsavel-vinculo-modal
       [(open)]="modalAberto"
       [inicial]="emEdicao()"
-      [cpfsUsados]="cpfsUsados()"
+      [usados]="usados()"
       (confirmado)="confirmado($event)"
     />
   `,
@@ -88,11 +88,7 @@ export class ResponsaveisPendentes {
     const i = this.indiceEmEdicao();
     return i == null ? null : (this.responsaveis()[i] ?? null);
   });
-  protected readonly cpfsUsados = computed(() =>
-    this.responsaveis()
-      .filter((_, i) => i !== this.indiceEmEdicao())
-      .map((r) => r.cpf),
-  );
+  protected readonly usados = computed(() => this.responsaveis().filter((_, i) => i !== this.indiceEmEdicao()));
 
   protected adicionar(): void {
     this.indiceEmEdicao.set(null);

@@ -12,6 +12,7 @@
 
       <div class="form-acoes">
         <app-button (click)="buscarPorCpf()" [loading]="buscandoCpf()">Buscar</app-button>
+        <app-button variant="secondary" type="button" (click)="cadastrarSemCpf()">Cadastrar sem CPF</app-button>
         <app-button variant="secondary" type="button" (click)="cancelar()">Cancelar</app-button>
       </div>
     </div>
@@ -58,8 +59,7 @@
           label="CPF"
           mask="cpf"
           formControlName="cpf"
-          [required]="true"
-          [readonly]="modoEdicao()"
+          [readonly]="cpfBloqueado()"
           [errorMessage]="erroCpfForm()"
         />
       </div>

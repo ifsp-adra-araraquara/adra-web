@@ -579,128 +579,29 @@
 
       <p class="form-sec-title">
         Responsáveis
-        @if (podeEditarCadastro() && responsaveisDoAssistido().length > 0 && !mostrarFormNovoResponsavelVinculado()) {
-          <app-button size="sm" variant="secondary" class="sec-acao" (click)="abrirFormNovoResponsavelVinculado()">
+        @if (podeEditarCadastro() && responsaveisDoAssistido().length > 0) {
+          <app-button size="sm" variant="secondary" class="sec-acao" (click)="modalResponsavelAberto.set(true)">
             <app-icon name="plus" [size]="16" /> Adicionar
           </app-button>
         }
       </p>
 
+      @if (erroResponsavelVinculado()) {
+        <div class="notice notice-error mb-s" role="alert">{{ erroResponsavelVinculado() }}</div>
+      }
+
       @if (carregandoResponsaveis()) {
         <div class="card card-pad"><p class="muted">Carregando responsáveis...</p></div>
       } @else if (erroResponsaveis()) {
         <div class="notice notice-error" role="alert">{{ erroResponsaveis() }}</div>
-      } @else if (responsaveisDoAssistido().length === 0 || mostrarFormNovoResponsavelVinculado()) {
+      } @else if (responsaveisDoAssistido().length === 0) {
         <div class="card card-pad">
-          @if (!mostrarFormNovoResponsavelVinculado()) {
-            <p class="muted mb-s">Nenhum responsável cadastrado para este atendido.</p>
+          <p class="muted mb-s">Nenhum responsável cadastrado para este atendido.</p>
 
-            @if (podeEditarCadastro()) {
-              <app-button size="sm" (click)="abrirFormNovoResponsavelVinculado()">
-                <app-icon name="plus" [size]="16" /> Cadastrar responsável
-              </app-button>
-            }
-          } @else {
-            @if (erroResponsavelVinculado()) {
-              <div class="notice notice-error mb-s" role="alert">{{ erroResponsavelVinculado() }}</div>
-            }
-
-            <div class="form-row">
-              <app-input
-                label="Nome completo"
-                placeholder="Nome do responsável"
-                [ngModel]="novoResponsavelVinculado.nomeCompleto"
-                (ngModelChange)="atualizarCampoResponsavelVinculado('nomeCompleto', $event)"
-              />
-
-              <div class="field">
-                <label>Parentesco</label>
-                <app-select
-                  [ngModel]="novoResponsavelVinculado.parentesco"
-                  (ngModelChange)="atualizarCampoResponsavelVinculado('parentesco', $event)"
-                  [options]="parentescoOptions"
-                />
-              </div>
-            </div>
-
-            <div class="form-row-3">
-              <app-input
-                label="CPF"
-                mask="cpf"
-                placeholder="000.000.000-00"
-                [ngModel]="novoResponsavelVinculado.cpf"
-                (ngModelChange)="atualizarCampoResponsavelVinculado('cpf', $event)"
-              />
-
-              <app-input
-                label="Telefone"
-                mask="telefone"
-                placeholder="(16) 90000-0000"
-                [ngModel]="novoResponsavelVinculado.telefone"
-                (ngModelChange)="atualizarCampoResponsavelVinculado('telefone', $event)"
-              />
-
-              <app-input
-                label="E-mail"
-                type="email"
-                placeholder="email@exemplo.com"
-                [ngModel]="novoResponsavelVinculado.email"
-                (ngModelChange)="atualizarCampoResponsavelVinculado('email', $event)"
-              />
-            </div>
-
-            <app-dados-complementares-responsavel [(dados)]="novoResponsavelVinculado" />
-
-            <label class="check">
-              <input
-                type="checkbox"
-                [ngModel]="novoResponsavelVinculado.autorizadoRetirada"
-                (ngModelChange)="
-                  atualizarCampoResponsavelVinculado('autorizadoRetirada', $event)
-                "
-              />
-              Autorizado a retirar o atendido
-            </label>
-
-            <label class="check">
-              <input
-                type="checkbox"
-                [ngModel]="novoResponsavelVinculado.contatoEmergencia"
-                (ngModelChange)="
-                  atualizarCampoResponsavelVinculado('contatoEmergencia', $event)
-                "
-              />
-              Contato de emergência
-            </label>
-
-            <label class="check">
-              <input
-                type="checkbox"
-                [ngModel]="novoResponsavelVinculado.responsavelPrincipal"
-                (ngModelChange)="
-                  atualizarCampoResponsavelVinculado('responsavelPrincipal', $event)
-                "
-              />
-              Responsável principal
-            </label>
-
-            <div style="display: flex; gap: 8px; margin-top: 12px">
-              <app-button
-                variant="secondary"
-                size="sm"
-                (click)="fecharFormNovoResponsavelVinculado()"
-              >
-                Cancelar
-              </app-button>
-
-              <app-button
-                size="sm"
-                [loading]="salvandoResponsavelVinculado()"
-                (click)="salvarResponsavelVinculado()"
-              >
-                Salvar responsável
-              </app-button>
-            </div>
+          @if (podeEditarCadastro()) {
+            <app-button size="sm" (click)="modalResponsavelAberto.set(true)">
+              <app-icon name="plus" [size]="16" /> Adicionar responsável
+            </app-button>
           }
         </div>
       } @else {
@@ -1012,6 +913,13 @@
     </ng-template>
   </app-modal>
 }
+
+<!-- MODAL: ADICIONAR RESPONSÁVEL (aba "Família" da ficha, abre por cima dela) -->
+<app-responsavel-vinculo-modal
+  [(open)]="modalResponsavelAberto"
+  [usados]="responsaveisUsados()"
+  (confirmado)="salvarResponsavelVinculado($event)"
+/>
 
 <!-- MODAL: EDITAR RESPONSÁVEL (aba "Família" da ficha, abre por cima dela) -->
 @if (responsavelEmEdicao(); as vinculo) {

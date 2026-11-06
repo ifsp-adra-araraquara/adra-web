@@ -90,6 +90,16 @@ describe('pre-cadastro-form.util', () => {
     expect(form.controls.renda.valid).toBe(false);
   });
 
+  it('CPF da mãe é obrigatório', () => {
+    const form = formularioPreenchido();
+    const cpf = form.controls.responsaveis.controls.mae.controls.cpf;
+
+    cpf.setValue('');
+
+    expect(cpf.hasError('required')).toBe(true);
+    expect(form.controls.responsaveis.valid).toBe(false);
+  });
+
   it('sem a mãe, o responsável legal passa a ser obrigatório e com CPF', () => {
     const form = formularioPreenchido();
     const r = form.controls.responsaveis.controls;

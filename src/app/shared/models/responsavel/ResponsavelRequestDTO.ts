@@ -5,7 +5,7 @@ import { EnderecoDTO } from '../endereco/EnderecoDTO';
 export interface ResponsavelRequestDTO {
   nomeCompleto: string;
   dataNascimento?: string;
-  cpf: string;
+  cpf?: string;
   telefone?: string;
   email?: string;
   endereco?: EnderecoDTO | null;

@@ -11,6 +11,10 @@ export function cpfValidator(): ValidatorFn {
   };
 }
 
+export function cpfOpcional(): ValidatorFn {
+  return (control) => (!control.value || cpfValido(control.value) ? null : { cpfInvalido: true });
+}
+
 export function cpfValido(valor: string): boolean {
   const cpf = valor.replace(/\D/g, '');
   if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) {
