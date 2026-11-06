@@ -1,7 +1,8 @@
 import { DOCUMENT } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, inject, output, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, inject, input, output, signal, viewChild } from '@angular/core';
 
 import { environment } from '../../../environments/environment';
+import { Button } from '../../shared/components/button/button';
 
 const FUNCAO_AO_CARREGAR = 'aoCarregarTurnstile';
 const URL_SCRIPT = `https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=${FUNCAO_AO_CARREGAR}`;
@@ -33,49 +34,63 @@ function carregarTurnstile(documento: Document): Promise<Turnstile> {
 
 @Component({
   selector: 'app-captcha-turnstile',
+  imports: [Button],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div #alvo class="captcha"></div>
     @if (falhou()) {
       <p class="erro" role="alert">
-        Não foi possível fazer a verificação de segurança. Confira a internet e desative bloqueadores. Depois, toque em
-        Voltar e em Continuar para tentar de novo. Suas respostas continuam aqui.
+        Não foi possível fazer a verificação de segurança. Confira a internet e desative bloqueadores. Suas respostas
+        continuam aqui.
       </p>
+      <app-button variant="secondary" size="sm" (click)="tentarDeNovo()">Tentar de novo</app-button>
     }
   `,
   styles: `
     .captcha { margin-top: 16px; }
-    .erro { margin: 8px 0 0; font-size: 14px; color: var(--color-danger, #b42318); }
+    .erro { margin: 8px 0; font-size: 14px; color: var(--color-danger, #b42318); }
   `,
 })
 export class CaptchaTurnstile {
   private readonly documento = inject(DOCUMENT);
   private readonly alvo = viewChild.required<ElementRef<HTMLElement>>('alvo');
 
+  readonly aparencia = input<'always' | 'interaction-only'>('always');
   readonly token = output<string | null>();
   protected readonly falhou = signal(false);
 
   private turnstile: Turnstile | null = null;
   private widgetId: string | null = null;
+  private destruido = false;
 
   constructor() {
-    let destruido = false;
     inject(DestroyRef).onDestroy(() => {
-      destruido = true;
+      this.destruido = true;
       if (this.widgetId) this.turnstile?.remove(this.widgetId);
     });
 
-    afterNextRender(() => {
-      carregarTurnstile(this.documento)
-        .then((turnstile) => {
-          if (!destruido) this.renderizar(turnstile);
-        })
-        .catch(() => this.falhou.set(true));
-    });
+    afterNextRender(() => this.carregar());
   }
 
   resetar(): void {
     if (this.widgetId) this.turnstile?.reset(this.widgetId);
+  }
+
+  protected tentarDeNovo(): void {
+    this.falhou.set(false);
+    if (this.widgetId) {
+      this.resetar();
+    } else {
+      this.carregar();
+    }
+  }
+
+  private carregar(): void {
+    carregarTurnstile(this.documento)
+      .then((turnstile) => {
+        if (!this.destruido) this.renderizar(turnstile);
+      })
+      .catch(() => this.falhou.set(true));
   }
 
   private renderizar(turnstile: Turnstile): void {
@@ -83,6 +98,7 @@ export class CaptchaTurnstile {
     this.widgetId = turnstile.render(this.alvo().nativeElement, {
       sitekey: environment.turnstileSiteKey,
       language: 'pt-br',
+      appearance: this.aparencia(),
       callback: (token: string) => {
         this.falhou.set(false);
         this.token.emit(token);

@@ -39,7 +39,10 @@
 
           <div #corpoEtapa class="pc-etapa">
             @switch (etapa().chave) {
-              @case ('termos') { <app-etapa-termos [grupo]="form.controls.termos" [tentativa]="tentativas()" /> }
+              @case ('termos') {
+                <app-etapa-termos [grupo]="form.controls.termos" [tentativa]="tentativas()" />
+                <app-captcha-turnstile (token)="tokenCaptcha.set($event)" />
+              }
               @case ('crianca') { <app-etapa-crianca [grupo]="form.controls.crianca" [tentativa]="tentativas()" /> }
               @case ('responsaveis') { <app-etapa-responsaveis [grupo]="form.controls.responsaveis" [tentativa]="tentativas()" /> }
               @case ('renda') { <app-etapa-renda [grupo]="form.controls.renda" [tentativa]="tentativas()" /> }
@@ -49,7 +52,7 @@
               }
               @case ('revisao') {
                 <app-etapa-revisao [form]="form" [anexos]="anexos()" (editar)="editar($event)" />
-                <app-captcha-turnstile (token)="tokenCaptcha.set($event)" />
+                <app-captcha-turnstile aparencia="interaction-only" (token)="tokenCaptcha.set($event)" />
               }
             }
           </div>
