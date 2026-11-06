@@ -46,7 +46,7 @@ import { FormularioPreCadastro, mensagemDoCampo } from '../pre-cadastro-form.uti
       }
 
       <app-input
-        label="NIS / CadÚnico (opcional)"
+        label="NIS / CadÚnico"
         placeholder="Só os números"
         [maxLength]="11"
         formControlName="nis"

@@ -21,12 +21,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => erro);
       }
       // Token da aplicacao venceu antes do Supabase avisar: troca e repete uma vez.
-      return auth.trocarPorTokenDaAplicacao().pipe(
-        switchMap(() => next(comToken(req, auth.token))),
-        catchError(() => {
-          auth.logout();
-          return throwError(() => erro);
-        })
+      return auth.trocarPorTokenDaAplicacao(false).pipe(
+        switchMap(() => next(comToken(req, auth.token)))
       );
     })
   );

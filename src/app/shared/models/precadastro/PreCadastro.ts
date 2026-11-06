@@ -7,7 +7,7 @@ import { EnderecoDTO } from '../endereco/EnderecoDTO';
 
 /** Respostas do formulário de inscrição além das colunas (espelha PreCadastroDadosDTO da API). */
 export interface PreCadastroDadosDTO {
-  termos: { aceiteLgpd: boolean; autorizaUsoImagem: boolean };
+  termos: { aceiteLgpd: boolean; autorizaUsoImagem: boolean; cienteFrequencia: boolean };
   crianca: { endereco: EnderecoDTO | null } | null;
   mae: {
     nomeCompleto: string;
@@ -78,11 +78,12 @@ export interface PreCadastroResumoDTO {
   anexosFaltando: string[];
 }
 
-/** Foto e documentos opcionais enviados junto com a inscrição. */
+/** Comprovante de endereço (obrigatório), foto e documentos enviados junto com a inscrição. */
 export interface AnexosPreCadastro {
   foto: File | null;
   documentosCrianca: File[];
   documentosResponsavel: File[];
+  comprovanteEndereco: File[];
 }
 
 export interface PreCadastroResponseDTO {

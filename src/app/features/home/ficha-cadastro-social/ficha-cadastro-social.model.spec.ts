@@ -17,7 +17,7 @@ const preCadastro = {
   responsavelNome: 'Avo Teste',
   responsavelTelefone: '16991112222',
   dados: {
-    termos: { aceiteLgpd: true, autorizaUsoImagem: false },
+    termos: { aceiteLgpd: true, autorizaUsoImagem: false, cienteFrequencia: true },
     crianca: { endereco: null },
     mae: null,
     pai: { nomeCompleto: 'Pai Teste', cpf: null, profissao: null, renda: 800, telefone: null },

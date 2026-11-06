@@ -29,7 +29,7 @@
 
     @case ('existente') {
       <div class="notice notice-info">
-        <span>Responsável já cadastrado. Ele será vinculado a este assistido, sem cadastrar de novo.</span>
+        <span>Responsável já cadastrado. Ele será vinculado a este atendido, sem cadastrar de novo.</span>
       </div>
 
       <dl class="resp-resumo">
@@ -40,7 +40,7 @@
       </dl>
       <p class="hint">Para corrigir os dados dessa pessoa, use a tela de Responsáveis.</p>
 
-      <p class="form-sec-title">Vínculo com o assistido</p>
+      <p class="form-sec-title">Vínculo com o atendido</p>
       <ng-container *ngTemplateOutlet="vinculo" />
     }
 
@@ -82,7 +82,7 @@
 
       <app-dados-complementares-responsavel [dados]="form()" (dadosChange)="atualizarComplementares($event)" />
 
-      <p class="form-sec-title">Vínculo com o assistido</p>
+      <p class="form-sec-title">Vínculo com o atendido</p>
       <ng-container *ngTemplateOutlet="vinculo" />
     }
   }
@@ -107,7 +107,7 @@
     </label>
     <label class="check">
       <input type="checkbox" [ngModel]="form().autorizadoRetirada" (ngModelChange)="atualizar('autorizadoRetirada', $event)" />
-      Autorizado a retirar o assistido
+      Autorizado a retirar o atendido
     </label>
   </ng-template>
 

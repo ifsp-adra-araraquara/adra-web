@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 
 import { EscolhaSimNao } from '../../../shared/components/escolha-sim-nao/escolha-sim-nao';
-import { TERMO_IMAGEM, TERMO_LGPD } from '../../../shared/utils/termos-inscricao';
+import { TERMO_FREQUENCIA, TERMO_IMAGEM, TERMO_LGPD } from '../../../shared/utils/termos-inscricao';
 import { FormularioPreCadastro, mensagemDoCampo } from '../pre-cadastro-form.util';
 
 @Component({
@@ -12,14 +12,14 @@ import { FormularioPreCadastro, mensagemDoCampo } from '../pre-cadastro-form.uti
   template: `
     <div [formGroup]="grupo()">
       <p class="intro">
-        Esta é a inscrição para as atividades da ADRA. Leva uns 10 minutos. Tenha em mãos o CPF da criança
+        Esta é a inscrição para as atividades da ADRA. Leva uns 10 minutos. Tenha em mãos o CPF do atendido
         e dos responsáveis.
       </p>
 
       @for (termo of termos; track termo.campo) {
         <section class="termo" [attr.aria-label]="termo.texto.titulo">
           <h3>{{ termo.texto.titulo }}</h3>
-          <details>
+          <details [open]="termo.aberto">
             <summary>Ler o termo completo</summary>
             @for (paragrafo of termo.texto.paragrafos; track $index) {
               <p>{{ paragrafo }}</p>
@@ -51,14 +51,23 @@ export class EtapaTermos {
   tentativa = input(0);
 
   protected readonly termos = [
-    { campo: 'aceiteLgpd' as const, texto: TERMO_LGPD, pergunta: 'Você aceita a declaração da LGPD?' },
-    { campo: 'autorizaUsoImagem' as const, texto: TERMO_IMAGEM, pergunta: 'Você aceita o termo de cessão de imagem?' },
+    { campo: 'aceiteLgpd' as const, texto: TERMO_LGPD, pergunta: 'Você aceita a declaração da LGPD?', aberto: false },
+    { campo: 'autorizaUsoImagem' as const, texto: TERMO_IMAGEM, pergunta: 'Você aceita o termo de cessão de imagem?', aberto: false },
+    {
+      campo: 'cienteFrequencia' as const,
+      texto: TERMO_FREQUENCIA,
+      pergunta: 'Você compreende e aceita a regra de frequência?',
+      aberto: true,
+    },
   ];
 
-  protected erro(campo: 'aceiteLgpd' | 'autorizaUsoImagem'): string | null {
+  protected erro(campo: 'aceiteLgpd' | 'autorizaUsoImagem' | 'cienteFrequencia'): string | null {
     const controle = this.grupo().controls[campo];
     if (campo === 'aceiteLgpd' && controle.touched && controle.value === false) {
       return 'Sem o aceite da LGPD não é possível enviar a inscrição.';
+    }
+    if (campo === 'cienteFrequencia' && controle.touched && controle.value === false) {
+      return 'Sem confirmar a regra de frequência não é possível enviar a inscrição.';
     }
     return mensagemDoCampo(controle);
   }

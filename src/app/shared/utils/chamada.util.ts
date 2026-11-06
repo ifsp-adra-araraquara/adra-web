@@ -214,7 +214,7 @@ export function podeEditarChamada(perfil: Role | null): boolean {
 }
 
 /**
- * CA-65.3/US-67: sociopedagógico só realiza/corrige a chamada no dia da
+ * CA-65.3/US-67: educador social só realiza/corrige a chamada no dia da
  * aula; coordenador corrige chamada de qualquer data.
  */
 export function podeCorrigirDataChamada(perfil: Role | null, aulaEhHoje: boolean): boolean {

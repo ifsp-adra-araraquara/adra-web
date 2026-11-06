@@ -9,7 +9,7 @@ const CHAVE_VISTO = 'adra.onboarding.visto';
 /**
  * Tour guiado de primeiro acesso (driver.js) cobrindo a jornada unificada
  * Turmas → abrir uma turma → Chamada do dia. Só faz sentido pra
- * Coordenador/Sociopedagógico — são os únicos perfis com acesso às duas
+ * Coordenador/Educador Social — são os únicos perfis com acesso às duas
  * telas (Oficineiro tem sua própria área consolidada em /oficineiro; Admin
  * só gerencia usuários).
  *
@@ -25,7 +25,7 @@ export class OnboardingService {
 
   private driverAtivo: Driver | null = null;
 
-  /** Só Coordenador/Sociopedagógico têm a jornada Turmas → Chamada completa mapeada. */
+  /** Só Coordenador/Educador Social têm a jornada Turmas → Chamada completa mapeada. */
   podeVerTour(): boolean {
     const perfil = this.auth.currentProfile();
     return perfil === Role.COORD || perfil === Role.EDUCADOR;
@@ -111,7 +111,7 @@ export class OnboardingService {
           popover: {
             title: 'Grupos',
             description:
-              'Cada linha é um grupo. Clique no ícone "→" ("Abrir grupo") pra ver alunos, oficinas e as demais ações dele num só lugar.',
+              'Cada linha é um grupo. Clique no ícone "→" ("Abrir grupo") pra ver atendidos, oficinas e as demais ações dele num só lugar.',
             side: 'top',
           },
         },

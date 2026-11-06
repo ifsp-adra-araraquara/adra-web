@@ -60,12 +60,12 @@
       <!-- Faixa etária -->
       <section class="bloco faixas" aria-labelledby="faixas-titulo">
         <header class="bloco-topo">
-          <h2 id="faixas-titulo">Faixa etária <span class="titulo-sub">assistidos ativos</span></h2>
+          <h2 id="faixas-titulo">Faixa etária <span class="titulo-sub">atendidos ativos</span></h2>
         </header>
         @if (mensal()) {
           @if (faixas(); as f) {
             @if (f.total === 0) {
-              <p class="vazio">Nenhum assistido ativo{{ oficinaId() ? ' nesta oficina' : '' }}.</p>
+              <p class="vazio">Nenhum atendido ativo{{ oficinaId() ? ' nesta oficina' : '' }}.</p>
             } @else {
               <div class="rosca-area">
                 <div class="rosca" role="img" [attr.aria-label]="f.descricao">
@@ -145,7 +145,7 @@
                 <li>
                   <button type="button" class="item" (click)="abrirAssistido(a.assistidoId)">
                     <app-avatar [entidadeId]="a.assistidoId" [nome]="a.nome" [size]="28" />
-                    <span class="item-texto"><b>{{ a.nome }}</b><small>{{ a.idade }} anos · {{ a.turma || 'Sem turma' }}</small></span>
+                    <span class="item-texto"><b>{{ a.nome }}</b><small>{{ a.idade }} anos · {{ a.turma || 'Sem grupo' }}</small></span>
                     <span class="item-fim" [class.texto-destaque]="a.dia === h.hoje">{{ diaAniversario(a.dia) }}</span>
                   </button>
                 </li>

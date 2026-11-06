@@ -95,6 +95,7 @@ export class Sidebar {
    */
   private readonly rotulosOverride: Record<string, string> = {
     DASHBOARD: 'Calendário',
+    ASSISTIDOS: 'Atendidos',
     TURMAS: 'Grupos',
   };
 

@@ -18,7 +18,7 @@ export type ChaveEtapa = 'termos' | 'crianca' | 'responsaveis' | 'renda' | 'saud
 
 export const ETAPAS: { chave: ChaveEtapa; titulo: string }[] = [
   { chave: 'termos', titulo: 'Termos' },
-  { chave: 'crianca', titulo: 'Criança ou adolescente' },
+  { chave: 'crianca', titulo: 'Atendido' },
   { chave: 'responsaveis', titulo: 'Responsáveis' },
   { chave: 'renda', titulo: 'Renda da família' },
   { chave: 'saude', titulo: 'Saúde e autorizações' },
@@ -43,6 +43,7 @@ export function criarFormularioPreCadastro(fb: FormBuilder) {
     termos: fb.group({
       aceiteLgpd: fb.control<boolean | null>(null, Validators.requiredTrue),
       autorizaUsoImagem: fb.control<boolean | null>(null, Validators.required),
+      cienteFrequencia: fb.control<boolean | null>(null, Validators.requiredTrue),
     }),
     crianca: fb.group({
       nomeCompleto: fb.nonNullable.control('', [Validators.required, Validators.maxLength(180)]),
@@ -87,7 +88,7 @@ export function criarFormularioPreCadastro(fb: FormBuilder) {
       recebe: fb.control<boolean | null>(null, Validators.required),
       programas: fb.nonNullable.control<ProgramaTransferencia[]>([], algumMarcado()),
       outro: fb.nonNullable.control('', [Validators.required, Validators.maxLength(120)]),
-      nis: fb.nonNullable.control('', Validators.pattern(/^(\d{11})?$/)),
+      nis: fb.nonNullable.control('', [Validators.required, Validators.pattern(/^\d{11}$/)]),
     }),
     saude: fb.group({
       possuiProblema: fb.control<boolean | null>(null, Validators.required),
@@ -170,7 +171,11 @@ export function paraPayload(form: FormularioPreCadastro): PreCadastroRequestDTO 
     email: texto(r.email),
     site,
     dados: {
-      termos: { aceiteLgpd: termos.aceiteLgpd === true, autorizaUsoImagem: termos.autorizaUsoImagem === true },
+      termos: {
+        aceiteLgpd: termos.aceiteLgpd === true,
+        autorizaUsoImagem: termos.autorizaUsoImagem === true,
+        cienteFrequencia: termos.cienteFrequencia === true,
+      },
       crianca: { endereco: enderecoCrianca },
       mae: r.temMae
         ? {

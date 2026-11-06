@@ -271,7 +271,7 @@ export class Disciplinar implements OnInit {
   // ================= Ações do registro =================
 
   acoesRegistro(r: RegistroDisciplinarDTO): ActionMenuItem[] {
-    const itens: ActionMenuItem[] = [{ id: 'ficha', label: 'Ver ficha do assistido', icon: 'user' }];
+    const itens: ActionMenuItem[] = [{ id: 'ficha', label: 'Ver ficha do atendido', icon: 'user' }];
     if (temDocumento(r)) itens.push({ id: 'documento', label: 'Imprimir documento', icon: 'file-text' });
     if (r.arquivado || !this.ehCoordenador()) return itens;
 

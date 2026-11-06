@@ -38,7 +38,7 @@ export class PainelIndicadores {
         icone: 'users',
         cor: 'verde',
         valor: String(m.assistidos.ativos),
-        rotulo: 'Assistidos ativos',
+        rotulo: 'Atendidos ativos',
         tendencia: tendencia(m.assistidos.ativos - m.assistidos.ativosMesAnterior, ' este mês', true),
       },
       {

@@ -155,7 +155,7 @@ export class Oficineiro implements OnInit {
               nomeCompleto: a.nomeCompleto,
             })),
           ),
-        error: () => this.erro.set('Não foi possível carregar os alunos do grupo.'),
+        error: () => this.erro.set('Não foi possível carregar os atendidos do grupo.'),
       });
   }
 

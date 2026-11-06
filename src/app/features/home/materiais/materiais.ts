@@ -34,10 +34,10 @@ export class Materiais {
   ];
 
   readonly planos: PlanoAula[] = [
-    { oficina: 'Reforço Escolar', turma: 'Turma A', data: '17/06', conteudoPrevisto: 'Frações - introdução', conteudoMinistrado: 'Frações - introdução', status: 'Realizada' },
-    { oficina: 'Música', turma: 'Turma A', data: '17/06', conteudoPrevisto: 'Leitura rítmica', conteudoMinistrado: '-', status: 'Planejada' },
-    { oficina: 'Esporte', turma: 'Turma B', data: '16/06', conteudoPrevisto: 'Voleibol - saque', conteudoMinistrado: 'Voleibol - saque e recepção', status: 'Realizada' },
-    { oficina: 'Teatro', turma: 'Turma A', data: '16/06', conteudoPrevisto: 'Expressão corporal', conteudoMinistrado: '-', status: 'Cancelada' },
+    { oficina: 'Reforço Escolar', turma: 'Grupo A', data: '17/06', conteudoPrevisto: 'Frações - introdução', conteudoMinistrado: 'Frações - introdução', status: 'Realizada' },
+    { oficina: 'Música', turma: 'Grupo A', data: '17/06', conteudoPrevisto: 'Leitura rítmica', conteudoMinistrado: '-', status: 'Planejada' },
+    { oficina: 'Esporte', turma: 'Grupo B', data: '16/06', conteudoPrevisto: 'Voleibol - saque', conteudoMinistrado: 'Voleibol - saque e recepção', status: 'Realizada' },
+    { oficina: 'Teatro', turma: 'Grupo A', data: '16/06', conteudoPrevisto: 'Expressão corporal', conteudoMinistrado: '-', status: 'Cancelada' },
   ];
 
   abaAtiva: 'materiais' | 'planos' = 'materiais';

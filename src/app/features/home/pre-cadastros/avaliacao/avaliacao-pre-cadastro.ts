@@ -36,9 +36,10 @@ import { ResponsaveisPendentes } from '../../assistidos/novo/responsaveis-penden
 import { RespostasFamilia } from './respostas-familia';
 
 const ROTULOS_ANEXO: Partial<Record<CategoriaArquivo, string>> = {
-  [CategoriaArquivo.FOTO_PERFIL]: 'Foto da criança',
-  [CategoriaArquivo.DOCUMENTO_IDENTIDADE]: 'Documento da criança',
+  [CategoriaArquivo.FOTO_PERFIL]: 'Foto do atendido',
+  [CategoriaArquivo.DOCUMENTO_IDENTIDADE]: 'Documento do atendido',
   [CategoriaArquivo.DOCUMENTO_RESPONSAVEL]: 'Documento do responsável',
+  [CategoriaArquivo.DECLARACAO_RESIDENCIA]: 'Comprovante de endereço',
 };
 
 /** Rascunho da API → responsável editável no formulário. */

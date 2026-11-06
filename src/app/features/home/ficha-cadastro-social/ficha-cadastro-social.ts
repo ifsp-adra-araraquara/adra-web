@@ -5,7 +5,7 @@ import { formatarEndereco } from '../../../shared/utils/endereco.util';
 import { dataPorExtenso } from '../../../shared/utils/data-por-extenso.util';
 import { hojeISO } from '../../../shared/utils/aula.util';
 import { formatarMoeda, formatarTelefone } from '../../../shared/utils/mascara.util';
-import { ANO_INSCRICAO, TERMO_IMAGEM, TERMO_LGPD } from '../../../shared/utils/termos-inscricao';
+import { ANO_INSCRICAO, TERMO_FREQUENCIA, TERMO_IMAGEM, TERMO_LGPD } from '../../../shared/utils/termos-inscricao';
 import { formatarCpf } from '../../../shared/validators/cpf.validator';
 import { FichaCadastroSocial, PessoaFicha } from './ficha-cadastro-social.model';
 
@@ -73,6 +73,7 @@ export class FichaCadastroSocialDocumento {
     return [
       { texto: TERMO_LGPD, aceito: f.aceiteLgpd },
       { texto: TERMO_IMAGEM, aceito: f.autorizaUsoImagem },
+      { texto: TERMO_FREQUENCIA, aceito: f.cienteFrequencia },
     ];
   }
 }

@@ -66,9 +66,9 @@
     <div class="toolbar filtros">
       <div class="filtros-busca">
         <app-input
-          label="Buscar por nome do assistido"
+          label="Buscar por nome do atendido"
           [hideLabel]="true"
-          placeholder="Buscar por nome do assistido…"
+          placeholder="Buscar por nome do atendido…"
           [ngModel]="termoBusca()"
           (ngModelChange)="onBusca($event)"
         />
@@ -132,7 +132,7 @@
             <thead>
               <tr>
                 <th>Data</th>
-                <th>Assistido</th>
+                <th>Atendido</th>
                 <th>Nível</th>
                 <th>Motivo</th>
                 <th>Situação</th>
@@ -332,7 +332,7 @@
         <p>O registro sai das contagens, mas continua no histórico. Consequências já aplicadas não são desfeitas.</p>
         <div class="field">
           <label for="acao-arquivar">Motivo do arquivamento</label>
-          <textarea id="acao-arquivar" rows="3" placeholder="Ex.: lançado no assistido errado"
+          <textarea id="acao-arquivar" rows="3" placeholder="Ex.: lançado no atendido errado"
                     [ngModel]="acaoTexto()" (ngModelChange)="acaoTexto.set($event)"></textarea>
         </div>
       }

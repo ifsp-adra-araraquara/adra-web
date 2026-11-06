@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   afterNextRender,
   computed,
@@ -14,6 +15,8 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter, skip } from 'rxjs';
 import { Sidebar } from './sidebar/sidebar';
+import { AuthService } from '../auth.service';
+import { InatividadeService } from '../inatividade.service';
 import { OnboardingService } from '../onboarding.service';
 import { TooltipDirective } from '../../shared/components/tooltip/tooltip';
 import { Icon } from '../../shared/components/icon/icon';
@@ -47,6 +50,9 @@ export class Layout {
   readonly mostrarAjudaTour = computed(() => this.onboarding.podeVerTour());
 
   constructor() {
+    const auth = inject(AuthService);
+    inject(InatividadeService).acompanhar(() => auth.logout(), inject(DestroyRef));
+
     effect(() => {
       localStorage.setItem(CHAVE_SIDEBAR_COLAPSADA, String(this.sidebarCollapsed()));
     });

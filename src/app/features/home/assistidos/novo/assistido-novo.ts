@@ -224,7 +224,7 @@ export class AssistidoNovo implements OnInit {
     if (limite != null && a.rendaFamiliar != null && a.rendaFamiliar > limite) {
       return `Renda familiar acima do limite do programa (${formatarMoeda(limite)}). A família não pode ser cadastrada.`;
     }
-    if (this.responsaveis().length === 0) return 'Informe pelo menos um responsável para o assistido.';
+    if (this.responsaveis().length === 0) return 'Informe pelo menos um responsável para o atendido.';
     return null;
   }
 

@@ -17,13 +17,15 @@ export class PreCadastroService {
   private readonly http = inject(HttpClient);
   private readonly api = `${environment.apiUrl}/api/pre-cadastro`;
 
-  /** Multipart: "dados" em JSON + foto e documentos opcionais. Devolve o protocolo (id do pré-cadastro). */
-  async registrarPublico(dto: PreCadastroRequestDTO, anexos: AnexosPreCadastro): Promise<number | null> {
+  /** Multipart: "dados" em JSON + comprovante de endereço + foto e documentos opcionais. Devolve o protocolo (id do pré-cadastro). */
+  async registrarPublico(dto: PreCadastroRequestDTO, anexos: AnexosPreCadastro, captcha: string): Promise<number | null> {
     const corpo = new FormData();
     corpo.append('dados', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
+    corpo.append('captcha', captcha);
     if (anexos.foto) corpo.append('foto', anexos.foto);
     anexos.documentosCrianca.forEach((arquivo) => corpo.append('documentosCrianca', arquivo));
     anexos.documentosResponsavel.forEach((arquivo) => corpo.append('documentosResponsavel', arquivo));
+    anexos.comprovanteEndereco.forEach((arquivo) => corpo.append('comprovanteEndereco', arquivo));
     const resposta = await firstValueFrom(this.http.post<{ preCadastroId: number | null }>(this.api, corpo));
     return resposta?.preCadastroId ?? null;
   }

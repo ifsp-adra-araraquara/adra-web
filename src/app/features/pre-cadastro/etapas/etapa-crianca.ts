@@ -14,7 +14,7 @@ import { FormularioPreCadastro, mensagemDoCampo } from '../pre-cadastro-form.uti
   template: `
     <div [formGroup]="grupo()">
       <app-input
-        label="Nome completo da criança ou adolescente"
+        label="Nome completo do atendido"
         formControlName="nomeCompleto"
         [required]="true"
         [maxLength]="180"
@@ -29,7 +29,7 @@ import { FormularioPreCadastro, mensagemDoCampo } from '../pre-cadastro-form.uti
           [errorMessage]="erro('dataNascimento')"
         />
         <app-input
-          label="CPF da criança"
+          label="CPF do atendido"
           mask="cpf"
           placeholder="000.000.000-00"
           formControlName="cpf"
