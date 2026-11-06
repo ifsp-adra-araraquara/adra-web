@@ -11,6 +11,7 @@ import { Icon } from '../../shared/components/icon/icon';
 import { mensagemErro } from '../../shared/utils/erro-http.util';
 import { ANO_INSCRICAO } from '../../shared/utils/termos-inscricao';
 import { CabecalhoEtapas } from './cabecalho-etapas';
+import { CaptchaTurnstile } from './captcha-turnstile';
 import { EtapaCrianca } from './etapas/etapa-crianca';
 import { EtapaDocumentos } from './etapas/etapa-documentos';
 import { EtapaRenda } from './etapas/etapa-renda';
@@ -33,6 +34,7 @@ import { ChaveEtapa, ETAPAS, aplicarCondicionais, criarFormularioPreCadastro, pa
     Button,
     Icon,
     CabecalhoEtapas,
+    CaptchaTurnstile,
     EtapaTermos,
     EtapaCrianca,
     EtapaResponsaveis,
@@ -61,6 +63,7 @@ export class PreCadastro {
   protected readonly enviado = signal(false);
   protected readonly protocolo = signal<number | null>(null);
   protected readonly erroEnvio = signal<string | null>(null);
+  protected readonly tokenCaptcha = signal<string | null>(null);
 
   /** Opcionais e fora do FormGroup (são arquivos). */
   protected readonly foto = signal<File | null>(null);
@@ -74,6 +77,7 @@ export class PreCadastro {
 
   private readonly tituloEtapa = viewChild<ElementRef<HTMLElement>>('tituloEtapa');
   private readonly corpoEtapa = viewChild<ElementRef<HTMLElement>>('corpoEtapa');
+  private readonly captcha = viewChild(CaptchaTurnstile);
 
   constructor() {
     aplicarCondicionais(this.form);
@@ -131,15 +135,23 @@ export class PreCadastro {
       this.erroEnvio.set('Há respostas faltando. Use "Editar" na seção para completar.');
       return;
     }
+    const tokenCaptcha = this.tokenCaptcha();
+    if (!tokenCaptcha) {
+      this.erroEnvio.set('Aguarde a verificação de segurança, no fim da página, e tente de novo.');
+      this.rolarAoTopo();
+      return;
+    }
     this.erroEnvio.set(null);
     this.enviando.set(true);
     try {
-      this.protocolo.set(await this.service.registrarPublico(paraPayload(this.form), this.anexos()));
+      this.protocolo.set(await this.service.registrarPublico(paraPayload(this.form), this.anexos(), tokenCaptcha));
       this.enviado.set(true);
       this.form.markAsPristine();
       this.rolarAoTopo();
     } catch (e) {
       this.erroEnvio.set(mensagemErro(e as HttpErrorResponse, 'Não foi possível enviar agora. Confira a internet e tente de novo.'));
+      this.tokenCaptcha.set(null);
+      this.captcha()?.resetar();
       this.rolarAoTopo();
     } finally {
       this.enviando.set(false);
@@ -150,6 +162,7 @@ export class PreCadastro {
   private mostrarEtapa(indice: number): void {
     this.indice.set(indice);
     this.erroEnvio.set(null);
+    this.tokenCaptcha.set(null);
     this.rolarAoTopo();
     setTimeout(() => this.tituloEtapa()?.nativeElement.focus());
   }
