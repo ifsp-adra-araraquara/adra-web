@@ -1,0 +1,107 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { AuthRetryableFetchError } from '@supabase/supabase-js';
+
+import { AuthService } from './auth.service';
+import { supabase } from './supabase.client';
+
+const USUARIO = JSON.stringify({ nomeCompleto: 'Ana', cargoFuncao: 'Coordenadora', modulos: [] });
+const MAIS_DE_240_MINUTOS_MS = 241 * 60_000;
+
+describe('AuthService', () => {
+  let signOut: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    localStorage.clear();
+    signOut = vi.spyOn(supabase.auth, 'signOut').mockResolvedValue({ error: null });
+    vi.spyOn(supabase.auth, 'onAuthStateChange').mockReturnValue({} as never);
+    vi.spyOn(supabase.auth, 'getSession').mockResolvedValue({ data: { session: { access_token: 'token' } }, error: null } as never);
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([{ path: 'login', children: [] }])] });
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  async function falharTrocaDeToken(status: number): Promise<AuthService> {
+    localStorage.setItem('usuario_logado', USUARIO);
+    const auth = TestBed.inject(AuthService);
+    auth.trocarPorTokenDaAplicacao(false).subscribe({ error: () => {} });
+    await Promise.resolve();
+    await Promise.resolve();
+    TestBed.inject(HttpTestingController)
+      .expectOne((requisicao) => requisicao.url.endsWith('/api/auth/login'))
+      .flush(null, { status, statusText: 'erro' });
+    return auth;
+  }
+
+  it('erro temporário na troca de token mantém a sessão', async () => {
+    const auth = await falharTrocaDeToken(503);
+
+    expect(signOut).not.toHaveBeenCalled();
+    expect(auth.currentUser()).not.toBeNull();
+  });
+
+  it('token recusado desloga só neste dispositivo', async () => {
+    const auth = await falharTrocaDeToken(401);
+
+    expect(signOut).toHaveBeenCalledWith({ scope: 'local' });
+    expect(auth.currentUser()).toBeNull();
+  });
+
+  it('Supabase Auth fora do ar mantém a sessão', async () => {
+    vi.mocked(supabase.auth.getSession).mockResolvedValue({
+      data: { session: null },
+      error: new AuthRetryableFetchError('fora do ar', 503),
+    } as never);
+    localStorage.setItem('usuario_logado', USUARIO);
+    const auth = TestBed.inject(AuthService);
+
+    auth.trocarPorTokenDaAplicacao(false).subscribe({ error: () => {} });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(signOut).not.toHaveBeenCalled();
+    expect(auth.currentUser()).not.toBeNull();
+  });
+
+  it('sessão do Supabase ausente desloga', async () => {
+    vi.mocked(supabase.auth.getSession).mockResolvedValue({ data: { session: null }, error: null } as never);
+    localStorage.setItem('usuario_logado', USUARIO);
+    const auth = TestBed.inject(AuthService);
+
+    auth.trocarPorTokenDaAplicacao(false).subscribe({ error: () => {} });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(signOut).toHaveBeenCalledWith({ scope: 'local' });
+  });
+
+  it('troca de token em segundo plano não restaura sessão encerrada', async () => {
+    localStorage.setItem('adra.ultima-atividade', String(Date.now() - MAIS_DE_240_MINUTOS_MS));
+    const auth = TestBed.inject(AuthService);
+
+    auth.trocarPorTokenDaAplicacao(false).subscribe();
+    await Promise.resolve();
+    await Promise.resolve();
+    TestBed.inject(HttpTestingController)
+      .expectOne((requisicao) => requisicao.url.endsWith('/api/auth/login'))
+      .flush({ token: 'novo', usuario: JSON.parse(USUARIO) });
+
+    expect(auth.currentUser()).toBeNull();
+    expect(auth.token).toBeNull();
+    expect(localStorage.getItem('usuario_logado')).toBeNull();
+  });
+
+  it('sessão inativa é encerrada ao abrir o sistema', () => {
+    localStorage.setItem('usuario_logado', USUARIO);
+    localStorage.setItem('adra.token', 'token');
+    localStorage.setItem('adra.ultima-atividade', String(Date.now() - MAIS_DE_240_MINUTOS_MS));
+
+    const auth = TestBed.inject(AuthService);
+
+    expect(signOut).toHaveBeenCalledWith({ scope: 'local' });
+    expect(auth.currentUser()).toBeNull();
+    expect(auth.token).toBeNull();
+  });
+});
