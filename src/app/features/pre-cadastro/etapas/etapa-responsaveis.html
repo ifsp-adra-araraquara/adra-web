@@ -101,7 +101,7 @@
       É o mesmo endereço do atendido
     </label>
     @if (!grupo().controls.mesmoEnderecoDaCrianca.value) {
-      <app-endereco-form formControlName="enderecoFamilia" />
+      <app-endereco-form formControlName="enderecoFamilia" [ruaObrigatoria]="true" />
       @if (erro('enderecoFamilia')) {
         <p class="app-input-error" role="alert">Informe pelo menos a rua.</p>
       }

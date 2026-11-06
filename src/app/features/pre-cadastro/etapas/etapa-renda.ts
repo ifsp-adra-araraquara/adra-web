@@ -50,6 +50,7 @@ import { FormularioPreCadastro, mensagemDoCampo } from '../pre-cadastro-form.uti
         placeholder="Só os números"
         [maxLength]="11"
         formControlName="nis"
+        [required]="true"
         [errorMessage]="erro('nis', 'O NIS tem 11 dígitos')"
       />
     </div>

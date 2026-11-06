@@ -2,6 +2,7 @@
   <app-input
     label="Rua"
     placeholder="Rua, avenida…"
+    [required]="ruaObrigatoria()"
     autocomplete="address-line1"
     [maxLength]="180"
     [disabled]="desabilitado()"

@@ -53,8 +53,8 @@ import { FormularioPreCadastro, mensagemDoCampo } from '../pre-cadastro-form.uti
       </div>
 
       <fieldset class="bloco" [class.campo-invalido]="!!erro('endereco')">
-        <legend>Endereço residencial <span class="obrigatorio" aria-hidden="true">*</span></legend>
-        <app-endereco-form formControlName="endereco" />
+        <legend>Endereço residencial</legend>
+        <app-endereco-form formControlName="endereco" [ruaObrigatoria]="true" />
         @if (erro('endereco')) {
           <p class="app-input-error" role="alert">Informe pelo menos a rua.</p>
         }

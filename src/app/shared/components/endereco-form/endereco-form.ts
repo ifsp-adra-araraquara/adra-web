@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, forwardRef, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, forwardRef, input, signal } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { Input } from '../input/input';
 import { EnderecoDTO } from '../../models/endereco/EnderecoDTO';
@@ -29,6 +29,8 @@ import { enderecoParaForm, enderecoVazio } from '../../utils/endereco.util';
   ],
 })
 export class EnderecoForm implements ControlValueAccessor {
+  readonly ruaObrigatoria = input(false);
+
   protected readonly valor = signal<EnderecoDTO>(enderecoVazio());
   protected readonly desabilitado = signal(false);
 
