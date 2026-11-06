@@ -1,7 +1,7 @@
 <div [formGroup]="grupo()">
   <app-escolha-sim-nao
     formControlName="temMae"
-    pergunta="Quem é o responsável pela criança?"
+    pergunta="Quem é o responsável pelo atendido?"
     rotuloSim="A mãe"
     rotuloNao="Outra pessoa"
   />
@@ -67,7 +67,7 @@
     <fieldset class="bloco" formGroupName="responsavelLegal">
       <legend>Responsável legal</legend>
       @if (!grupo().controls.temMae.value) {
-        <p class="dica">Quem cuida da criança no lugar da mãe (ex.: avó, avô, tia, tio).</p>
+        <p class="dica">Quem cuida do atendido no lugar da mãe (ex.: avó, avô, tia, tio).</p>
       }
       <app-input label="Nome completo" formControlName="nomeCompleto" [required]="true" [maxLength]="180" [errorMessage]="erro('responsavelLegal.nomeCompleto')" />
       <div class="form-row">
@@ -98,7 +98,7 @@
     <legend>Endereço da família</legend>
     <label class="check">
       <input type="checkbox" formControlName="mesmoEnderecoDaCrianca" />
-      É o mesmo endereço da criança
+      É o mesmo endereço do atendido
     </label>
     @if (!grupo().controls.mesmoEnderecoDaCrianca.value) {
       <app-endereco-form formControlName="enderecoFamilia" />

@@ -41,7 +41,7 @@ import { GradeMensal } from '../../../../shared/components/grade-mensal/grade-me
 
 /**
  * FT-17 — chamada de um grupo num dia (`/chamada/grupo/:turmaId/:data`), no modelo
- * do app do professor da Sistema Quality: um botão por atendido que cicla
+ * do app do oficineiro da Sistema Quality: um botão por atendido que cicla
  * P → F → FJ, contadores no rodapé e "Atualizar chamada" depois de salva.
  * Quem pode editar vem pronto da API (`podeEditar`): Coordenador qualquer dia,
  * Educador Social só hoje, Assistente Social só lê.

@@ -50,7 +50,7 @@
           </td>
           <td>
             <div class="t-actions">
-              <button type="button" aria-label="Ver alunos do grupo" appTooltip="Ver alunos" (click)="abrirTurma(turma)">
+              <button type="button" aria-label="Ver atendidos do grupo" appTooltip="Ver atendidos" (click)="abrirTurma(turma)">
                 <app-icon name="eye" />
               </button>
             </div>
@@ -107,13 +107,13 @@
 
   <app-modal
     [(open)]="mostrarAlunos"
-    [title]="'Alunos de ' + (turmaSelecionada()?.nomeTurma ?? '')"
+    [title]="'Atendidos de ' + (turmaSelecionada()?.nomeTurma ?? '')"
     (closed)="fecharTurma()"
   >
     @for (aluno of alunos(); track aluno.assistidoId) {
     <p class="student">{{ aluno.nomeCompleto }}</p>
     } @empty {
-    <p class="empty">Nenhum aluno ativo encontrado.</p>
+    <p class="empty">Nenhum atendido ativo encontrado.</p>
     }
   </app-modal>
 

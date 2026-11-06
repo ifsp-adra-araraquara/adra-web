@@ -1,7 +1,7 @@
 <app-modal
   [open]="turma() !== null"
-  [title]="'Alunos — ' + (turma()?.nomeTurma ?? '')"
-  [subtitle]="carregando() ? 'Carregando...' : alunos().length + (alunos().length === 1 ? ' aluno na turma' : ' alunos na turma')"
+  [title]="'Atendidos — ' + (turma()?.nomeTurma ?? '')"
+  [subtitle]="carregando() ? 'Carregando...' : alunos().length + (alunos().length === 1 ? ' atendido no grupo' : ' atendidos no grupo')"
   (closed)="fechar.emit()"
 >
   <div modal-icon class="mh-ico ico-green">
@@ -13,8 +13,8 @@
       <app-icon name="search" [size]="16" />
       <input
         type="search"
-        placeholder="Buscar aluno pelo nome"
-        aria-label="Buscar aluno pelo nome"
+        placeholder="Buscar atendido pelo nome"
+        aria-label="Buscar atendido pelo nome"
         [value]="busca()"
         (input)="busca.set($any($event.target).value)"
       />
@@ -25,11 +25,11 @@
   </div>
 
   @if (carregando()) {
-    <p class="estado">Carregando alunos...</p>
+    <p class="estado">Carregando atendidos...</p>
   } @else if (erro()) {
-    <p class="estado estado--erro" role="alert">Não foi possível carregar os alunos do grupo.</p>
+    <p class="estado estado--erro" role="alert">Não foi possível carregar os atendidos do grupo.</p>
   } @else if (filtrados().length === 0) {
-    <p class="estado">{{ busca() ? 'Nenhum aluno encontrado com esse nome.' : 'Nenhum aluno nesta turma.' }}</p>
+    <p class="estado">{{ busca() ? 'Nenhum atendido encontrado com esse nome.' : 'Nenhum atendido neste grupo.' }}</p>
   } @else {
     <ul class="lista" role="list">
       @for (aluno of filtrados(); track aluno.assistidoId) {

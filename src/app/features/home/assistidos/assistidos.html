@@ -1,8 +1,8 @@
 <section class="page" id="page-assistidos">
   <header class="page-header">
     <div class="page-header-texto">
-      <h1>Assistidos</h1>
-      <p class="page-intro">Cadastro e acompanhamento dos assistidos.</p>
+      <h1>Atendidos</h1>
+      <p class="page-intro">Cadastro e acompanhamento dos atendidos.</p>
     </div>
 
     @if (podeEditarCadastro()) {
@@ -11,7 +11,7 @@
           <app-icon name="users" [size]="16" /> Cadastro em massa
         </app-button>
         <app-button size="sm" (click)="abrirCadastroNovo()">
-          <app-icon name="plus" [size]="16" /> Novo assistido
+          <app-icon name="plus" [size]="16" /> Novo atendido
         </app-button>
       </div>
     }
@@ -20,7 +20,7 @@
   @if (turmaFiltroAtual(); as turmaCtx) {
     <div class="notice notice-info" style="align-items: center; justify-content: space-between" role="status">
       <span>
-        Mostrando alunos do grupo <strong>{{ turmaCtx.nomeTurma }}</strong>
+        Mostrando atendidos do grupo <strong>{{ turmaCtx.nomeTurma }}</strong>
         <button type="button" class="link-voltar" (click)="voltarParaTurmas()"><app-icon name="chevron-left" [size]="16" /> Voltar para Grupos</button>
       </span>
       <app-button variant="secondary" size="sm" (click)="removerFiltroTurma()">
@@ -47,7 +47,7 @@
   @if (abaAtiva() === 'acomp') {
     <p class="acomp-legenda">
       <app-icon name="alert-circle" [size]="16" />
-      Assistidos ativos com frequência abaixo de 75% ou com 3 ou mais faltas seguidas.
+      Atendidos ativos com frequência abaixo de 75% ou com 3 ou mais faltas seguidas.
     </p>
   }
 
@@ -89,14 +89,14 @@
 
   <div class="lista-assistidos" [attr.aria-busy]="carregando()">
     @if (carregando()) {
-      <div class="card lista-estado"><p class="muted">Carregando assistidos…</p></div>
+      <div class="card lista-estado"><p class="muted">Carregando atendidos…</p></div>
     } @else if (assistidos().length === 0) {
       <div class="card lista-estado">
         @if (temFiltrosAtivos()) {
-          <p class="muted">Nenhum assistido encontrado para os filtros aplicados.</p>
+          <p class="muted">Nenhum atendido encontrado para os filtros aplicados.</p>
           <app-button variant="secondary" size="sm" (click)="limparFiltros()">Limpar filtros</app-button>
         } @else {
-          <p class="muted">Nenhum assistido cadastrado.</p>
+          <p class="muted">Nenhum atendido cadastrado.</p>
         }
       </div>
     } @else {
@@ -152,7 +152,7 @@
                       <span class="muted">—</span>
                     }
                   </td>
-                  <td>{{ assistido.nomeTurma || 'Sem turma' }}</td>
+                  <td>{{ assistido.nomeTurma || 'Sem grupo' }}</td>
                   @if (turmaFiltroAtual()) {
                     <td>{{ assistido.dataEntradaTurma ? (assistido.dataEntradaTurma | date: 'dd/MM/yyyy') : '-' }}</td>
                     <td>{{ assistido.dataSaidaTurma ? (assistido.dataSaidaTurma | date: 'dd/MM/yyyy') : '-' }}</td>
@@ -225,7 +225,7 @@
               </div>
               <div>
                 <dt>Grupo</dt>
-                <dd>{{ assistido.nomeTurma || 'Sem turma' }}</dd>
+                <dd>{{ assistido.nomeTurma || 'Sem grupo' }}</dd>
               </div>
               @if (turmaFiltroAtual()) {
                 <div>
@@ -255,7 +255,7 @@
 
         <span class="pagina-info">
           Página {{ pagina() + 1 }} de {{ totalPaginas() }}
-          <span class="pagina-total">({{ totalElementos() }} assistidos)</span>
+          <span class="pagina-total">({{ totalElementos() }} atendidos)</span>
         </span>
 
         <app-button variant="secondary" size="sm" [disabled]="!temProxima()" (click)="proximaPagina()" aria-label="Próxima página">
@@ -585,7 +585,7 @@
       } @else if (responsaveisDoAssistido().length === 0 || mostrarFormNovoResponsavelVinculado()) {
         <div class="card card-pad">
           @if (!mostrarFormNovoResponsavelVinculado()) {
-            <p class="muted mb-s">Nenhum responsável cadastrado para este assistido.</p>
+            <p class="muted mb-s">Nenhum responsável cadastrado para este atendido.</p>
 
             @if (podeEditarCadastro()) {
               <app-button size="sm" (click)="abrirFormNovoResponsavelVinculado()">
@@ -651,7 +651,7 @@
                   atualizarCampoResponsavelVinculado('autorizadoRetirada', $event)
                 "
               />
-              Autorizado a retirar o assistido
+              Autorizado a retirar o atendido
             </label>
 
             <label class="check">
@@ -868,7 +868,7 @@
         <div class="notice notice-error" role="alert">{{ erroFrequencia() }}</div>
       } @else if (frequenciaAssistido().length === 0) {
         <div class="card card-pad">
-          <p class="muted">Nenhuma aula registrada para este assistido ainda.</p>
+          <p class="muted">Nenhuma aula registrada para este atendido ainda.</p>
         </div>
       } @else {
         <div class="freq-resumo">
@@ -944,7 +944,7 @@
         <div class="notice notice-error" role="alert">{{ erroHistoricoTurmas() }}</div>
       } @else if (historicoTurmasAssistido().length === 0) {
         <div class="card card-pad">
-          <p class="muted">Este assistido nunca foi vinculado a um grupo.</p>
+          <p class="muted">Este atendido nunca foi vinculado a um grupo.</p>
         </div>
       } @else {
         <div class="table-wrap" role="region" tabindex="0" aria-label="Histórico de grupos">
@@ -974,7 +974,7 @@
                 </td>
                 <td>
                   <div class="t-actions">
-                    <button type="button" aria-label="Ver alunos do grupo" appTooltip="Ver alunos" (click)="verAlunosDaTurmaHistorico(vinculo)">
+                    <button type="button" aria-label="Ver atendidos do grupo" appTooltip="Ver atendidos" (click)="verAlunosDaTurmaHistorico(vinculo)">
                       <app-icon name="eye" />
                     </button>
                     <button type="button" aria-label="Ver frequência do grupo" appTooltip="Ver frequência" (click)="verFrequenciaHistoricoTurma(vinculo)">
@@ -1073,7 +1073,7 @@
         [ngModel]="formEdicaoResponsavel.autorizadoRetirada"
         (ngModelChange)="atualizarCampoEdicaoResponsavel('autorizadoRetirada', $event)"
       />
-      Autorizado a retirar o assistido
+      Autorizado a retirar o atendido
     </label>
 
     <label class="check">
@@ -1114,15 +1114,15 @@
       <app-icon [name]="novoStatusDesejado() === StatusGeral.INATIVO ? 'power' : 'rotate-ccw'" />
     </div>
 
-    <p class="cell-sub">Assistido: <strong>{{ assistidoSelecionadoStatus()?.nomeCompleto }}</strong></p>
+    <p class="cell-sub">Atendido: <strong>{{ assistidoSelecionadoStatus()?.nomeCompleto }}</strong></p>
 
     @if (novoStatusDesejado() === StatusGeral.INATIVO) {
       <div class="notice notice-amber">
         <app-icon name="alert-circle" />
         <div>
-          <b>Impactos de inativar este assistido:</b>
+          <b>Impactos de inativar este atendido:</b>
           <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px;">
-            <li><strong>Desvinculação de Grupos:</strong> O assistido deixará de constar nas chamadas ativas e oficinas.</li>
+            <li><strong>Desvinculação de Grupos:</strong> O atendido deixará de constar nas chamadas ativas e oficinas.</li>
             <li><strong>Suspensão de Encaminhamentos:</strong> Não será possível realizar novas matrículas enquanto inativo.</li>
             <li><strong>Histórico Preservado:</strong> Ficha social, atendimentos e prontuários continuam salvos.</li>
           </ul>
@@ -1132,9 +1132,9 @@
       <div class="notice notice-info">
         <app-icon name="alert-circle" />
         <div>
-          <b>Impactos de reativar este assistido:</b>
+          <b>Impactos de reativar este atendido:</b>
           <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px;">
-            <li><strong>Retorno às Atividades:</strong> O assistido voltará ao cadastro ativo e poderá participar dos grupos.</li>
+            <li><strong>Retorno às Atividades:</strong> O atendido voltará ao cadastro ativo e poderá participar dos grupos.</li>
             <li><strong>Novas Matrículas Habilitadas:</strong> Será possível agendar novos atendimentos e oficinas.</li>
             <li><strong>Prontuários Acessíveis:</strong> Todo o histórico anterior continua disponível na ficha.</li>
           </ul>
@@ -1145,9 +1145,9 @@
     <ng-template #footer>
       <app-button variant="secondary" (click)="mostrarModalStatus.set(false)">Cancelar</app-button>
       @if (novoStatusDesejado() === StatusGeral.INATIVO) {
-        <app-button variant="danger" (click)="confirmarAlteracaoStatus()">Inativar Assistido</app-button>
+        <app-button variant="danger" (click)="confirmarAlteracaoStatus()">Inativar Atendido</app-button>
       } @else {
-        <app-button (click)="confirmarAlteracaoStatus()">Reativar Assistido</app-button>
+        <app-button (click)="confirmarAlteracaoStatus()">Reativar Atendido</app-button>
       }
     </ng-template>
   </app-modal>
@@ -1160,8 +1160,8 @@
 @if (mostrarModalEditar()) {
   <app-modal
     [open]="true"
-    [title]="secaoEdicao() === 'turma' ? 'Trocar turma' : 'Editar assistido'"
-    [subtitle]="secaoEdicao() === 'turma' ? assistidoEmEdicao()!.nomeCompleto : 'Atualize os dados cadastrais e o vínculo do assistido.'"
+    [title]="secaoEdicao() === 'turma' ? 'Trocar grupo' : 'Editar atendido'"
+    [subtitle]="secaoEdicao() === 'turma' ? assistidoEmEdicao()!.nomeCompleto : 'Atualize os dados cadastrais e o vínculo do atendido.'"
     size="lg"
     (closed)="fecharModalEditar()"
   >
@@ -1205,7 +1205,7 @@
 
       <app-input
         label="Nome completo"
-        placeholder="Nome do assistido"
+        placeholder="Nome do atendido"
         [ngModel]="formEdicaoAssistido.nomeCompleto"
         (ngModelChange)="atualizarCampoEdicaoAssistido('nomeCompleto', $event)"
       />

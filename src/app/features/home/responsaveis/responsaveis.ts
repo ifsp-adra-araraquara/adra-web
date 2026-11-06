@@ -66,7 +66,7 @@ export class Responsaveis implements OnInit {
     { value: 'todos', label: 'Todos os contatos' },
     { value: 'sem-telefone', label: 'Sem telefone' },
     { value: 'sem-email', label: 'Sem e-mail' },
-    { value: 'sem-vinculo', label: 'Sem assistido vinculado' },
+    { value: 'sem-vinculo', label: 'Sem atendido vinculado' },
   ];
 
   readonly responsaveisFiltrados = computed(() => {

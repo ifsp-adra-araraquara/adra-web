@@ -65,7 +65,7 @@ export class Turmas implements OnInit {
 
   /**
    * Só Coordenador pode criar/editar turma e ver o select de oficineiro
-   * (Sociopedagógico não tem acesso ao GET /api/usuarios no back, então
+   * (Educador Social não tem acesso ao GET /api/usuarios no back, então
    * nem tentamos chamá-lo pra esse perfil - CA acordado com o usuário).
    */
   isCoordenador = computed(() => this.authService.currentProfile() === Role.COORD);
@@ -487,7 +487,7 @@ export class Turmas implements OnInit {
       );
     } catch (erro) {
       console.error('Erro ao carregar assistidos para vincular:', erro);
-      this.erroVincularAlunos.set('Não foi possível carregar os assistidos disponíveis.');
+      this.erroVincularAlunos.set('Não foi possível carregar os atendidos disponíveis.');
     } finally {
       this.carregandoCandidatos.set(false);
     }
@@ -505,7 +505,7 @@ export class Turmas implements OnInit {
     if (!turma || this.vinculandoAlunos()) return;
 
     if (assistidoIds.length === 0) {
-      this.erroVincularAlunos.set('Selecione pelo menos um assistido.');
+      this.erroVincularAlunos.set('Selecione pelo menos um atendido.');
       return;
     }
 
@@ -521,7 +521,7 @@ export class Turmas implements OnInit {
     } catch (erro: any) {
       console.error('Erro ao vincular alunos à turma:', erro);
       this.erroVincularAlunos.set(
-        mensagemErro(erro, 'Não foi possível vincular os assistidos selecionados. Tente novamente.'),
+        mensagemErro(erro, 'Não foi possível vincular os atendidos selecionados. Tente novamente.'),
       );
       this.vinculandoAlunos.set(false);
     }

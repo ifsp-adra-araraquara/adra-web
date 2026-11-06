@@ -61,7 +61,7 @@ export function secoesRevisao(p: PreCadastroRequestDTO): SecaoRevisao[] {
     },
     {
       chave: 'crianca',
-      titulo: 'Criança ou adolescente',
+      titulo: 'Atendido',
       itens: [
         { rotulo: 'Nome', valor: p.nomeCompleto },
         { rotulo: 'Nascimento', valor: dataBr(p.dataNascimento) },
@@ -91,7 +91,7 @@ export function secoesRevisao(p: PreCadastroRequestDTO): SecaoRevisao[] {
         { rotulo: 'Problema de saúde', valor: saude.possuiProblema ? (saude.descricao ?? 'Sim') : 'Não' },
         { rotulo: 'Em caso de adoecimento', valor: `${saude.contatoEmergenciaNome} · ${formatarTelefone(saude.contatoEmergenciaTelefone)}` },
         { rotulo: 'Eventos, passeios e viagens', valor: simNao(a.eventosPasseios) },
-        { rotulo: 'Pode ir embora sozinha', valor: a.irEmboraSozinho ? 'Sim' : `Não · busca: ${a.quemBusca}` },
+        { rotulo: 'Pode ir embora sozinho', valor: a.irEmboraSozinho ? 'Sim' : `Não · busca: ${a.quemBusca}` },
       ],
     },
   ];

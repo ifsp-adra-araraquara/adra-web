@@ -18,7 +18,7 @@ export type ChaveEtapa = 'termos' | 'crianca' | 'responsaveis' | 'renda' | 'saud
 
 export const ETAPAS: { chave: ChaveEtapa; titulo: string }[] = [
   { chave: 'termos', titulo: 'Termos' },
-  { chave: 'crianca', titulo: 'Criança ou adolescente' },
+  { chave: 'crianca', titulo: 'Atendido' },
   { chave: 'responsaveis', titulo: 'Responsáveis' },
   { chave: 'renda', titulo: 'Renda da família' },
   { chave: 'saude', titulo: 'Saúde e autorizações' },

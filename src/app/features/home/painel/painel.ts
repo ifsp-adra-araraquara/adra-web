@@ -148,7 +148,7 @@ export class Painel implements OnInit {
       total,
       segmentos,
       descricao:
-        `${total} assistidos ativos: ` + segmentos.map((s) => `${s.legenda}, ${s.total}`).join('; '),
+        `${total} atendidos ativos: ` + segmentos.map((s) => `${s.legenda}, ${s.total}`).join('; '),
     };
   });
   readonly RAIO_ROSCA = RAIO_ROSCA;
@@ -198,7 +198,7 @@ export class Painel implements OnInit {
       case 'DISCIPLINAR':
         return `${NIVEIS_DISCIPLINARES[a.detalhe as NivelDisciplinar]?.rotulo ?? 'Registro'} registrada`;
       default:
-        return 'Assistido cadastrado';
+        return 'Atendido cadastrado';
     }
   }
 

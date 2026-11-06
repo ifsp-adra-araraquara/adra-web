@@ -12,7 +12,7 @@ import { FormularioPreCadastro, mensagemDoCampo } from '../pre-cadastro-form.uti
   template: `
     <div [formGroup]="grupo()">
       <p class="intro">
-        Esta é a inscrição para as atividades da ADRA. Leva uns 10 minutos. Tenha em mãos o CPF da criança
+        Esta é a inscrição para as atividades da ADRA. Leva uns 10 minutos. Tenha em mãos o CPF do atendido
         e dos responsáveis.
       </p>
 

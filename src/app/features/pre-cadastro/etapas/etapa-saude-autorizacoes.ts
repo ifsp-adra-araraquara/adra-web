@@ -16,7 +16,7 @@ type Campo = keyof FormularioPreCadastro['controls']['saude']['controls'];
     <div [formGroup]="grupo()">
       <app-escolha-sim-nao
         formControlName="possuiProblema"
-        pergunta="A criança tem algum problema de saúde?"
+        pergunta="O atendido tem algum problema de saúde?"
         [erro]="erro('possuiProblema')"
       />
       @if (grupo().controls.possuiProblema.value) {
@@ -47,17 +47,17 @@ type Campo = keyof FormularioPreCadastro['controls']['saude']['controls'];
 
       <app-escolha-sim-nao
         formControlName="eventosPasseios"
-        pergunta="Você autoriza a criança a participar de eventos, passeios e viagens?"
+        pergunta="Você autoriza o atendido a participar de eventos, passeios e viagens?"
         [erro]="erro('eventosPasseios')"
       />
       <app-escolha-sim-nao
         formControlName="irEmboraSozinho"
-        pergunta="Você autoriza a criança a ir embora sozinha?"
+        pergunta="Você autoriza o atendido a ir embora sozinho?"
         [erro]="erro('irEmboraSozinho')"
       />
       @if (grupo().controls.irEmboraSozinho.value === false) {
         <div class="field">
-          <label for="pc-quem-busca">Quem virá buscar a criança? <span class="obrigatorio" aria-hidden="true">*</span></label>
+          <label for="pc-quem-busca">Quem virá buscar o atendido? <span class="obrigatorio" aria-hidden="true">*</span></label>
           <textarea
             id="pc-quem-busca"
             rows="2"

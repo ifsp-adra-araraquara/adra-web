@@ -51,7 +51,6 @@
                 <app-etapa-revisao [form]="form" [anexos]="anexos()" (editar)="editar($event)" />
                 <app-captcha-turnstile (token)="tokenCaptcha.set($event)" />
               }
-              @case ('revisao') { <app-etapa-revisao [form]="form" [anexos]="anexos()" (editar)="editar($event)" /> }
             }
           </div>
 

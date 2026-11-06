@@ -61,7 +61,7 @@ describe('AssistidosLote', () => {
 
     const [linha] = component.linhas();
     expect(linha.resultado()?.status).toBe('INVALIDA');
-    expect(component.errosGerais(linha)).toEqual(['Adicione a foto do RG ou CPF do assistido.']);
+    expect(component.errosGerais(linha)).toEqual(['Adicione a foto do RG ou CPF do atendido.']);
   });
 
   it('cadastra uma linha por vez com documento e foto opcional, e mantém na grade a que falhou', async () => {

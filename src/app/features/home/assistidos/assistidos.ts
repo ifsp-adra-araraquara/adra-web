@@ -237,7 +237,7 @@ export class Assistidos implements OnInit {
     });
   }
 
-  /** Só Coordenação/Sociopedagógico listam oficinas — para os demais perfis o filtro some. */
+  /** Só Coordenação/Educador Social listam oficinas — para os demais perfis o filtro some. */
   carregarOficinas(): void {
     this.http.get<OficinaResponseDTO[]>(this.apiOficinas).subscribe({
       next: (lista) => this.oficinas.set(lista),
@@ -590,7 +590,7 @@ export class Assistidos implements OnInit {
     }
 
     if (!cpfValido(this.formEdicaoAssistido.cpf ?? '')) {
-      this.erroSalvarEdicao.set('Informe um CPF válido para o assistido.');
+      this.erroSalvarEdicao.set('Informe um CPF válido para o atendido.');
       return;
     }
 
@@ -851,7 +851,7 @@ export class Assistidos implements OnInit {
 
   /** Aba "Permissões": termos assinados no cadastro. */
   readonly termosFicha: { campo: 'aceiteLgpd' | 'autorizaUsoImagem' | 'autorizaEventosPasseios' | 'podeIrEmboraSozinho' | 'cienteFrequenciaObrigatoria'; titulo: string; descricao: string }[] = [
-    { campo: 'aceiteLgpd', titulo: 'Uso de dados (LGPD)', descricao: 'Coleta e guarda dos dados do assistido e da família para o atendimento.' },
+    { campo: 'aceiteLgpd', titulo: 'Uso de dados (LGPD)', descricao: 'Coleta e guarda dos dados do atendido e da família para o atendimento.' },
     { campo: 'autorizaUsoImagem', titulo: 'Cessão de imagem', descricao: 'Fotos e vídeos em materiais e redes sociais da ADRA.' },
     { campo: 'autorizaEventosPasseios', titulo: 'Eventos, passeios e viagens', descricao: 'Participar de atividades fora da ADRA, com a equipe.' },
     { campo: 'podeIrEmboraSozinho', titulo: 'Pode ir embora sozinho', descricao: 'Sair sozinho ao fim das atividades, sem um responsável.' },
@@ -915,7 +915,7 @@ export class Assistidos implements OnInit {
         },
         error: (erro) => {
           console.error('Erro ao carregar histórico de turmas:', erro);
-          this.erroHistoricoTurmas.set('Não foi possível carregar o histórico de grupos deste assistido.');
+          this.erroHistoricoTurmas.set('Não foi possível carregar o histórico de grupos deste atendido.');
           this.carregandoHistoricoTurmas.set(false);
         },
       });
@@ -994,7 +994,7 @@ export class Assistidos implements OnInit {
       })
       .catch((erro) => {
         console.error('Erro ao carregar frequência:', erro);
-        this.erroFrequencia.set('Não foi possível carregar o histórico de frequência deste assistido.');
+        this.erroFrequencia.set('Não foi possível carregar o histórico de frequência deste atendido.');
       })
       .finally(() => this.carregandoFrequencia.set(false));
   }
@@ -1029,7 +1029,7 @@ export class Assistidos implements OnInit {
       error: (erro) => {
         console.error('Erro ao carregar responsáveis:', erro);
 
-        this.erroResponsaveis.set('Não foi possível carregar os responsáveis deste assistido.');
+        this.erroResponsaveis.set('Não foi possível carregar os responsáveis deste atendido.');
 
         this.carregandoResponsaveis.set(false);
       },

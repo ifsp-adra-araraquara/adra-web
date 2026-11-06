@@ -156,11 +156,11 @@
         </button>
       </div>
 
-      <p class="drawer-secao-titulo">Alunos e frequência</p>
+      <p class="drawer-secao-titulo">Atendidos e frequência</p>
       <div class="drawer-acoes">
         <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); verAlunos(turma)">
           <app-icon name="eye" />
-          Ver alunos
+          Ver atendidos
         </button>
 
         <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); verFrequencia(turma)">
@@ -171,7 +171,7 @@
         @if (isCoordenador()) {
           <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); abrirModalVincularAlunos(turma)">
             <app-icon name="user-plus" />
-            Vincular alunos
+            Vincular atendidos
           </button>
         }
       </div>
@@ -305,7 +305,7 @@
       <div>
         <b>Impactos de inativar este grupo:</b>
         <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px">
-          <li><strong>Sem novos vínculos:</strong> o grupo não poderá receber novos assistidos.</li>
+          <li><strong>Sem novos vínculos:</strong> o grupo não poderá receber novos atendidos.</li>
           <li><strong>Histórico preservado:</strong> vínculos já existentes continuam registrados.</li>
         </ul>
       </div>
@@ -316,7 +316,7 @@
       <div>
         <b>Impactos de reativar este grupo:</b>
         <ul style="margin-top: 6px; padding-left: 16px; font-size: 13px">
-          <li><strong>Grupo volta a ficar disponível</strong> para novos vínculos de assistidos.</li>
+          <li><strong>Grupo volta a ficar disponível</strong> para novos vínculos de atendidos.</li>
         </ul>
       </div>
     </div>
@@ -341,7 +341,7 @@
      ============================================================ -->
 <app-modal
   [(open)]="mostrarModalVincularAlunos"
-  [title]="'Vincular alunos — ' + (turmaVincularAlunos()?.nomeTurma ?? '')"
+  [title]="'Vincular atendidos — ' + (turmaVincularAlunos()?.nomeTurma ?? '')"
   [size]="'lg'"
   (closed)="fecharModalVincularAlunos()"
 >
@@ -350,7 +350,7 @@
   </div>
 
   <p class="page-intro" style="margin: 0 0 12px">
-    Selecione os assistidos ativos que devem ser vinculados a este grupo. Um assistido já
+    Selecione os atendidos ativos que devem ser vinculados a este grupo. Um atendido já
     vinculado a outro grupo é transferido — o vínculo anterior é encerrado automaticamente.
   </p>
 
@@ -359,7 +359,7 @@
   }
 
   <app-input
-    label="Buscar assistido"
+    label="Buscar atendido"
     [hideLabel]="true"
     placeholder="Buscar por nome…"
     style="margin-bottom: 10px"
@@ -386,7 +386,7 @@
           }
         </label>
       } @empty {
-        <p class="empty" style="padding: 20px">Nenhum assistido disponível para vincular.</p>
+        <p class="empty" style="padding: 20px">Nenhum atendido disponível para vincular.</p>
       }
     </div>
   }

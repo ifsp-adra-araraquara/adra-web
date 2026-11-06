@@ -15,14 +15,14 @@ import { UploadDocumento } from '../../../shared/components/upload-documento/upl
     </p>
 
     <section class="bloco" aria-labelledby="doc-foto">
-      <h3 id="doc-foto">Foto da criança</h3>
-      <app-foto-perfil label="Foto da criança" [(arquivo)]="foto" />
+      <h3 id="doc-foto">Foto do atendido</h3>
+      <app-foto-perfil label="Foto do atendido" [(arquivo)]="foto" />
     </section>
 
     <section class="bloco" aria-labelledby="doc-crianca">
-      <h3 id="doc-crianca">Documento da criança</h3>
+      <h3 id="doc-crianca">Documento do atendido</h3>
       <app-upload-documento
-        label="RG ou CPF da criança"
+        label="RG ou CPF do atendido"
         dica="Foto ou PDF. Até 2 arquivos (frente e verso)."
         [maximo]="2"
         [(arquivos)]="documentosCrianca"

@@ -1,17 +1,17 @@
 <section class="page cadastro" aria-labelledby="cadastro-titulo">
   <button type="button" class="btn-voltar" (click)="voltar()">
     <app-icon name="chevron-left" />
-    Assistidos
+    Atendidos
   </button>
 
   <header class="page-header">
     <div class="page-header-texto">
-      <h1 id="cadastro-titulo">Novo assistido</h1>
+      <h1 id="cadastro-titulo">Novo atendido</h1>
       <p class="page-intro">
         @if (etapa() === 'cpf') {
-          Comece pelo CPF da criança: se ela já tiver cadastro, você vai direto para a ficha dela.
+          Comece pelo CPF do atendido: se ele já tiver cadastro, você vai direto para a ficha dele.
         } @else {
-          Preencha os dados e informe pelo menos um responsável. Nada é gravado até clicar em "Salvar assistido".
+          Preencha os dados e informe pelo menos um responsável. Nada é gravado até clicar em "Salvar atendido".
         }
       </p>
     </div>
@@ -22,7 +22,7 @@
     <div class="card card-pad busca-cpf">
       <form class="busca-cpf__form" (ngSubmit)="buscarCpf()">
         <app-input
-          label="CPF do assistido"
+          label="CPF do atendido"
           mask="cpf"
           placeholder="000.000.000-00"
           [required]="true"
@@ -59,7 +59,7 @@
     <!-- ======================= Etapa 2: formulário ======================= -->
     @if (alertaDuplicidade()) {
       <div class="notice notice-amber">
-        Já existe um assistido com o mesmo nome e data de nascimento. O cadastro só é aceito se os dois tiverem
+        Já existe um atendido com o mesmo nome e data de nascimento. O cadastro só é aceito se os dois tiverem
         CPFs diferentes.
       </div>
     }
@@ -86,7 +86,7 @@
 
       <app-input
         label="Nome completo"
-        placeholder="Nome do assistido"
+        placeholder="Nome do atendido"
         [required]="true"
         [ngModel]="assistido().nomeCompleto"
         (ngModelChange)="atualizar('nomeCompleto', $event)"
@@ -169,7 +169,7 @@
       <div class="acoes">
         <app-button variant="secondary" (click)="voltar()">Cancelar</app-button>
         <app-button [loading]="salvando()" (click)="salvar()">
-          {{ salvando() ? 'Salvando...' : 'Salvar assistido' }}
+          {{ salvando() ? 'Salvando...' : 'Salvar atendido' }}
         </app-button>
       </div>
     </div>
