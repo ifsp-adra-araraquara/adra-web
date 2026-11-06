@@ -21,6 +21,8 @@ import { EtapaSaudeAutorizacoes } from './etapas/etapa-saude-autorizacoes';
 import { EtapaTermos } from './etapas/etapa-termos';
 import { ChaveEtapa, ETAPAS, aplicarCondicionais, criarFormularioPreCadastro, paraPayload } from './pre-cadastro-form.util';
 
+const MENSAGEM_AGUARDE_CAPTCHA = 'Aguarde a verificação de segurança e tente de novo.';
+
 /**
  * Link público (sem login) da inscrição: substitui o Google Forms. A página
  * guarda o formulário inteiro e a etapa atual; cada etapa só desenha os seus
@@ -108,6 +110,11 @@ export class PreCadastro {
       this.focarPrimeiroErro();
       return;
     }
+    if (chave === 'termos' && !this.tokenCaptcha()) {
+      this.erroEnvio.set(MENSAGEM_AGUARDE_CAPTCHA);
+      this.rolarAoTopo();
+      return;
+    }
     this.mostrarEtapa(this.indice() + 1);
   }
 
@@ -145,7 +152,7 @@ export class PreCadastro {
     }
     const tokenCaptcha = this.tokenCaptcha();
     if (!tokenCaptcha) {
-      this.erroEnvio.set('Aguarde a verificação de segurança, no fim da página, e tente de novo.');
+      this.erroEnvio.set(MENSAGEM_AGUARDE_CAPTCHA);
       this.rolarAoTopo();
       return;
     }
