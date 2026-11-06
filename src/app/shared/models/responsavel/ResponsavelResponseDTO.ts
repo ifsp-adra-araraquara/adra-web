@@ -6,7 +6,7 @@ export interface ResponsavelResponseDTO {
   responsavelId: number;
   nomeCompleto: string;
   dataNascimento: string | null;
-  cpf: string;
+  cpf: string | null;
   telefone: string | null;
   email: string | null;
   endereco: EnderecoDTO | null;

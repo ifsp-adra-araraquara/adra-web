@@ -11,11 +11,7 @@ import { Avatar } from '../../../../shared/components/avatar/avatar';
 import { Icon } from '../../../../shared/components/icon/icon';
 import { Button } from '../../../../shared/components/button/button';
 import { formatarTelefone } from '../../../../shared/utils/mascara.util';
-
-/** Mesma normalização da busca da API: sem acento e sem caixa. */
-function normalizar(texto: string): string {
-  return texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-}
+import { normalizar } from '../../../../shared/utils/nome.util';
 
 /**
  * Visão rápida dos alunos ATUAIS de uma turma: foto, nome, responsável e

@@ -60,7 +60,7 @@
               @for (responsavel of responsaveisFiltrados(); track responsavel.responsavelId) {
                 <tr class="linha-clicavel" (click)="abrirVisualizacaoPelaLinha($event, responsavel)">
                   <td class="cell-name">{{ responsavel.nomeCompleto }}</td>
-                  <td>{{ responsavel.cpf }}</td>
+                  <td>{{ responsavel.cpf || 'Não informado' }}</td>
                   <td>{{ responsavel.telefone || '-' }}</td>
                   <td>
                     <span class="vinculos" [class.vinculos-zero]="!responsavel.totalAssistidos"
@@ -131,7 +131,7 @@
       <div class="form-row">
         <div class="field">
           <label>CPF</label>
-          <div class="input" style="background: var(--gray-50)">{{ responsavel.cpf }}</div>
+          <div class="input" style="background: var(--gray-50)">{{ responsavel.cpf || 'Não informado' }}</div>
         </div>
         <div class="field">
           <label>Data de nascimento</label>

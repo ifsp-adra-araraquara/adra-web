@@ -7,7 +7,7 @@ import { Sexo } from '../../shared/enum/Sexo';
 import { EnderecoDTO } from '../../shared/models/endereco/EnderecoDTO';
 import { PreCadastroRequestDTO } from '../../shared/models/precadastro/PreCadastro';
 import { enderecoParaPayload, enderecoVazio } from '../../shared/utils/endereco.util';
-import { cpfValido, cpfValidator } from '../../shared/validators/cpf.validator';
+import { cpfOpcional, cpfValido, cpfValidator } from '../../shared/validators/cpf.validator';
 
 /** Valor do select de estado civil que abre o campo "Qual?" (o enum da API não tem OUTRO). */
 export const ESTADO_CIVIL_OUTRO = 'OUTRO';
@@ -25,10 +25,6 @@ export const ETAPAS: { chave: ChaveEtapa; titulo: string }[] = [
   { chave: 'documentos', titulo: 'Documentos e foto' },
   { chave: 'revisao', titulo: 'Revisão' },
 ];
-
-function cpfOpcional(): ValidatorFn {
-  return (control) => (!control.value || cpfValido(control.value) ? null : { cpfInvalido: true });
-}
 
 function enderecoComRua(): ValidatorFn {
   return (control) => ((control.value as EnderecoDTO | null)?.logradouro?.trim() ? null : { required: true });

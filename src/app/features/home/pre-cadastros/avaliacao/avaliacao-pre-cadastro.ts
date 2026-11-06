@@ -220,7 +220,7 @@ export class AvaliacaoPreCadastro implements OnInit {
     const a = this.assistido();
     if (!a.nomeCompleto.trim()) return 'Informe o nome completo.';
     if (!cpfValido(a.cpf ?? '')) return 'Informe um CPF válido para o atendido.';
-    if (this.responsaveis().length === 0) return 'Informe pelo menos um responsável com CPF.';
+    if (this.responsaveis().length === 0) return 'Informe pelo menos um responsável.';
     return validarDadosComplementares(a);
   }
 

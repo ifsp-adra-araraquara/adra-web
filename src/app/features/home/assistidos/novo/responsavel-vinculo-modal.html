@@ -1,7 +1,7 @@
 <app-modal
   [(open)]="open"
   [title]="editando ? 'Editar responsável' : 'Adicionar responsável'"
-  [subtitle]="etapa() === 'cpf' ? 'Comece pelo CPF: se a pessoa já tiver cadastro, ela é só vinculada.' : ''"
+  [subtitle]="etapa() === 'busca' ? 'Busque pelo nome ou CPF: se a pessoa já tiver cadastro, ela é só vinculada.' : ''"
   size="lg"
 >
   <div modal-icon class="mh-ico ico-green">
@@ -13,18 +13,30 @@
   }
 
   @switch (etapa()) {
-    @case ('cpf') {
-      <form (ngSubmit)="buscar()">
-        <app-input
-          label="CPF do responsável"
-          mask="cpf"
-          placeholder="000.000.000-00"
-          [required]="true"
-          name="cpfBusca"
-          [ngModel]="cpfBusca()"
-          (ngModelChange)="cpfBusca.set($event); erro.set(null)"
-        />
-      </form>
+    @case ('busca') {
+      <app-input
+        label="Nome ou CPF do responsável"
+        placeholder="Digite o nome ou o CPF"
+        [ngModel]="termo()"
+        (ngModelChange)="termo.set($event)"
+      />
+
+      @if (carregando()) {
+        <p class="hint">Carregando responsáveis...</p>
+      } @else if (buscou() && resultados().length === 0) {
+        <p class="hint">Nenhum responsável encontrado. Se for alguém novo, use "Cadastrar novo".</p>
+      }
+
+      <ul class="resp-resultados" role="list">
+        @for (r of resultados(); track r.responsavelId) {
+          <li>
+            <button type="button" class="resp-resultado" (click)="selecionar(r)">
+              <span class="cell-name">{{ r.nomeCompleto }}</span>
+              <span class="cell-sub">{{ descricao(r) }}</span>
+            </button>
+          </li>
+        }
+      </ul>
     }
 
     @case ('existente') {
@@ -34,7 +46,7 @@
 
       <dl class="resp-resumo">
         <div><dt>Nome</dt><dd>{{ form().nomeCompleto }}</dd></div>
-        <div><dt>CPF</dt><dd>{{ formatarCpf(form().cpf) }}</dd></div>
+        <div><dt>CPF</dt><dd>{{ formatarCpf(form().cpf ?? '') || 'Não informado' }}</dd></div>
         <div><dt>Telefone</dt><dd>{{ formatarTelefone(form().telefone ?? '') || '—' }}</dd></div>
         <div><dt>E-mail</dt><dd>{{ form().email || '—' }}</dd></div>
       </dl>
@@ -45,12 +57,6 @@
     }
 
     @case ('novo') {
-      @if (!editando) {
-        <div class="notice notice-info">
-          <span>CPF sem cadastro. Preencha os dados do responsável.</span>
-        </div>
-      }
-
       <div class="form-row">
         <app-input
           label="Nome completo"
@@ -59,7 +65,13 @@
           [ngModel]="form().nomeCompleto"
           (ngModelChange)="atualizar('nomeCompleto', $event)"
         />
-        <app-input label="CPF" mask="cpf" [readonly]="true" [ngModel]="form().cpf" />
+        <app-input
+          label="CPF"
+          mask="cpf"
+          placeholder="000.000.000-00"
+          [ngModel]="form().cpf"
+          (ngModelChange)="atualizar('cpf', $event)"
+        />
       </div>
 
       <div class="form-row">
@@ -112,12 +124,12 @@
   </ng-template>
 
   <ng-template #footer>
-    @if (etapa() !== 'cpf' && !editando) {
-      <app-button variant="secondary" (click)="buscarOutroCpf()">Outro CPF</app-button>
+    @if (etapa() !== 'busca' && !editando) {
+      <app-button variant="secondary" (click)="voltarParaBusca()">Voltar à busca</app-button>
     }
     <app-button variant="secondary" (click)="open.set(false)">Cancelar</app-button>
-    @if (etapa() === 'cpf') {
-      <app-button [loading]="buscando()" (click)="buscar()">Buscar CPF</app-button>
+    @if (etapa() === 'busca') {
+      <app-button (click)="cadastrarNovo()">Cadastrar novo</app-button>
     } @else {
       <app-button (click)="confirmar()">{{ editando ? 'Atualizar responsável' : 'Adicionar responsável' }}</app-button>
     }
