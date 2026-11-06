@@ -174,7 +174,7 @@ export class AssistidosLote {
     const cpfs = this.linhas().flatMap((linha) =>
       linha.form.controls.responsaveis.controls.map((responsavel) => responsavel.controls.cpf.value),
     );
-    return new Set(cpfs.filter(Boolean)).size;
+    return new Set(cpfs.filter(Boolean)).size + cpfs.filter((cpf) => !cpf).length;
   }
 
   responsaveisJaCadastrados(): number {
@@ -241,7 +241,7 @@ export class AssistidosLote {
     this.linhas.update((linhas) => [...linhas, ...importadas.map((dados) => this.criarLinha(dados))]);
     this.aviso.set(
       `${importadas.length} atendido(s) importado(s) de ${arquivo.name}. ` +
-        'Essa planilha não tem CPF — preencha o de cada um antes de validar e cadastrar.',
+        'Essa planilha não tem CPF — preencha o de cada atendido antes de validar e cadastrar.',
     );
   }
 
@@ -433,7 +433,7 @@ export class AssistidosLote {
   private criarResponsavel(dados?: ResponsavelLinhaLote): ResponsavelForm {
     return new FormGroup({
       nomeCompleto: new FormControl(dados?.nomeCompleto ?? '', { nonNullable: true, validators: [Validators.required] }),
-      cpf: new FormControl(dados?.cpf ?? '', { nonNullable: true, validators: [Validators.required, cpfValidator] }),
+      cpf: new FormControl(dados?.cpf ?? '', { nonNullable: true, validators: [cpfValidator] }),
       parentesco: new FormControl(dados?.parentesco ?? '', { nonNullable: true }),
       telefone: new FormControl(dados?.telefone ?? '', { nonNullable: true, validators: [telefoneValidator] }),
       email: new FormControl(dados?.email ?? '', { nonNullable: true, validators: [Validators.email] }),
