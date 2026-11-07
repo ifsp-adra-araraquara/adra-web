@@ -28,6 +28,7 @@ const preCadastro = {
     autorizacoes: { eventosPasseios: true, irEmboraSozinho: false, quemBusca: 'Avó Teste' },
   },
   status: 'PENDENTE',
+  observacao: null,
 } as PreCadastroResponseDTO;
 
 describe('ficha de cadastro social', () => {

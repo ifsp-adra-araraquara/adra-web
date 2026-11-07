@@ -20,6 +20,7 @@ const detalhe = {
   dados: {},
   status: 'PENDENTE',
   motivoReprovacao: null,
+  observacao: null,
   assistidoId: null,
   assistidoExistenteId: null,
   arquivos: [],
@@ -45,6 +46,8 @@ describe('AvaliacaoPreCadastro', () => {
     rascunhoAssistido: vi.fn(),
     aprovar: vi.fn(),
     reprovar: vi.fn(),
+    colocarNaListaEspera: vi.fn(),
+    salvarObservacao: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -96,6 +99,31 @@ describe('AvaliacaoPreCadastro', () => {
     expect(service.aprovar).toHaveBeenCalledWith(5, expect.objectContaining({ cpf: '56532228281' }));
     expect(texto()).toContain('CPF já cadastrado para o atendido X.');
     expect(texto()).toContain('Abrir ficha do atendido');
+  });
+
+  it('coloca na lista de espera levando a observação digitada', async () => {
+    const componente = fixture.componentInstance as unknown as { alterarObservacao(valor: string): void };
+    service.colocarNaListaEspera.mockResolvedValue({ ...detalhe, status: 'LISTA_ESPERA', observacao: 'Ligar de manhã' });
+
+    componente.alterarObservacao('Ligar de manhã');
+    botao('Colocar na lista de espera').click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(service.colocarNaListaEspera).toHaveBeenCalledWith(5, 'Ligar de manhã');
+    expect(botao('Colocar na lista de espera')).toBeUndefined();
+    expect(botao('Aprovar e criar cadastro')).toBeDefined();
+  });
+
+  it('aprovar acrescenta a observação da equipe às observações do atendido', async () => {
+    const componente = fixture.componentInstance as unknown as { alterarObservacao(valor: string): void };
+    service.aprovar.mockResolvedValue({ ...detalhe, status: 'CONVERTIDO' });
+
+    componente.alterarObservacao('Família atendeu');
+    botao('Aprovar e criar cadastro').click();
+    await fixture.whenStable();
+
+    expect(service.aprovar).toHaveBeenCalledWith(5, expect.objectContaining({ observacoes: 'Família atendeu' }));
   });
 
   it('reprovar sem motivo é bloqueado na tela', async () => {
