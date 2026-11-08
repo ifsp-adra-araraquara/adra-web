@@ -18,7 +18,6 @@
             label="Nova senha"
             type="password"
             name="novaSenha"
-            placeholder="••••••••"
             autocomplete="new-password"
             [(ngModel)]="novaSenha"
         />
@@ -29,7 +28,6 @@
         label="Confirmar nova senha"
         type="password"
         name="confirmarSenha"
-        placeholder="••••••••"
         autocomplete="new-password"
         [(ngModel)]="confirmarSenha"
         [errorMessage]="confirmarSenha.length > 0 && confirmarSenha !== novaSenha ? 'As senhas não coincidem.' : null"

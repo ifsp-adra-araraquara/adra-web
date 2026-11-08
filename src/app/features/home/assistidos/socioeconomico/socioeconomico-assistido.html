@@ -7,13 +7,9 @@
       placeholder="0,00"
       [ngModel]="dados().rendaFamiliar"
       (ngModelChange)="atualizar('rendaFamiliar', $event)"
-      [errorMessage]="acimaDoLimite() ? 'Acima do limite do programa (' + formatarMoeda(limiteRenda()) + ').' : null"
     />
     @if (somaRendaResponsaveis(); as soma) {
       <p class="dica">Soma da renda dos responsáveis informados: {{ formatarMoeda(soma) }}</p>
-    }
-    @if (limiteRenda() != null && !acimaDoLimite()) {
-      <p class="dica">Limite do programa: {{ formatarMoeda(limiteRenda()) }}</p>
     }
   </div>
 

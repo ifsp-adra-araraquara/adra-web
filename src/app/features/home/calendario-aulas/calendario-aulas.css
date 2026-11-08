@@ -8,11 +8,7 @@
   padding-bottom: 14px;
   border-bottom: 1px solid var(--gray-100);
 }
-/* Celular: Oficina na largura toda, De/Até lado a lado; visualização e botões
-   em linhas próprias, cada botão com a mesma largura. */
-.cal-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.cal-filters .field { margin-bottom: 0; min-width: 0; }
-.cal-filters .field:first-child { grid-column: 1 / -1; }
+/* Celular: visualização e botões em linhas próprias, cada botão com a mesma largura. */
 .cal-actions { display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
 .cal-botoes { display: flex; gap: 8px; }
 .cal-botoes .btn { flex: 1 1 0; min-height: 44px; white-space: nowrap; justify-content: center; }
@@ -41,13 +37,28 @@
 .seg-btn.active { background: #fff; color: var(--color-adra-green-600); box-shadow: var(--shadow-sm); }
 .seg-btn:not(.active):hover { color: var(--color-adra-green-600); }
 
-/* ===== LEGENDA ===== */
-.cal-legend { display: flex; flex-wrap: wrap; gap: 16px; }
+/* ===== LEGENDA — pílulas com a mesma cor do dia no calendário ===== */
+.cal-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.legend-titulo { font-size: 12px; font-weight: 600; color: var(--gray-600); margin-right: 2px; }
+.legend-separador { width: 1px; height: 18px; background: var(--gray-200); margin: 0 6px; }
 .legend-chip {
   display: inline-flex; align-items: center; gap: 6px;
-  font-size: 12.5px; font-weight: 500; color: var(--gray-600);
+  padding: 3px 10px 3px 8px;
+  border-radius: 999px;
+  background: var(--cor-fundo, var(--gray-50));
+  color: var(--cor, var(--gray-600));
+  font-size: 12px; font-weight: 600;
 }
-.legend-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.legend-chip--nota {
+  background: #fff;
+  color: var(--gray-800);
+  box-shadow: inset 0 0 0 1px var(--gray-200);
+  --cor-ponto: var(--color-adra-green-400);
+}
+.legend-chip--hachura {
+  background-image: repeating-linear-gradient(135deg, transparent 0 4px, rgba(0, 0, 0, 0.05) 4px 8px);
+}
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--cor-ponto, var(--gray-400)); }
 
 /* ===== CARD DO CALENDÁRIO ===== */
 .cal-card {
@@ -111,9 +122,10 @@
   transition: background-color .14s ease, box-shadow .14s ease;
 }
 ::ng-deep .fc .fc-daygrid-day { cursor: pointer; }
+/* Hover neutro: verde fica só para "hoje" e não se confunde com a cor de Férias. */
 ::ng-deep .fc .fc-daygrid-day:hover .fc-daygrid-day-frame {
-  background: var(--color-adra-green-50);
-  box-shadow: inset 0 0 0 1px var(--color-adra-green-200);
+  background: var(--gray-50);
+  box-shadow: inset 0 0 0 1px var(--gray-200);
 }
 ::ng-deep .fc .fc-daygrid-day-top { padding: 3px 4px 1px; }
 ::ng-deep .fc .fc-daygrid-day-number {
@@ -181,9 +193,7 @@
 
 @media (min-width: 720px) {
   .cal-scroll .fc { padding: 14px; }
-  .cal-toolbar { flex-direction: row; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; }
-  .cal-filters { display: flex; flex-wrap: wrap; gap: 14px; }
-  .cal-filters .field { flex: 1 1 160px; }
+  .cal-toolbar { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-end; }
   .cal-actions { flex-direction: row; align-items: center; }
   .seg-control { display: inline-flex; }
   .seg-btn { flex: none; }
@@ -192,13 +202,8 @@
   ::ng-deep .evt-sub { display: block; }
 }
 
-/* ===== PAINEL "AULAS DO DIA" (clique numa célula vazia do calendário) ===== */
 /* ===== Dias sem chamada (férias, feriado, ponto facultativo, evento/passeio) ===== */
-.cal-legend--sem-aula { margin-top: 6px; align-items: center; }
-.legend-titulo { font-size: 12px; font-weight: 600; color: var(--gray-600); }
-.legend-quadro { width: 12px; height: 12px; border-radius: 3px; border: 1px solid; flex: none; }
-
-/* Hachurado por cima da cor do fundo: o dia "salta" mesmo sem aulas */
+/* Hachurado por cima da cor do fundo: o dia "salta" mesmo sem eventos */
 ::ng-deep .fc .dia-sem-aula {
   background-image: repeating-linear-gradient(135deg, transparent 0 6px, rgba(0, 0, 0, 0.04) 6px 12px);
 }
@@ -210,6 +215,21 @@
 .excecoes-lista li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border: 1px solid var(--gray-100); border-radius: 8px; }
 
 /* ===== Notas / eventos globais do calendário ===== */
+/* Nota: cartão branco com bolinha verde — formato diferente da barra colorida
+   dos dias sem chamada, para não se confundir com Feriado nem com Férias. */
+::ng-deep .evt.evt-nota {
+  position: relative;
+  padding-left: 16px;
+  border: 1px solid var(--gray-200);
+  border-radius: 5px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+::ng-deep .evt.evt-nota::before {
+  content: '';
+  position: absolute; left: 6px; top: 7px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--color-adra-green-400);
+}
 ::ng-deep .evt-nota .evt-titulo { font-weight: 700; }
 
 .dia-notas-lista { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
@@ -217,15 +237,15 @@
 .dia-nota-item {
   display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
   padding: 10px 12px;
-  background: var(--coral-50);
-  border: 1px solid color-mix(in srgb, var(--coral-400) 30%, transparent);
-  border-left: 3px solid var(--coral-400);
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--color-adra-green-400);
   border-radius: var(--radius-sm);
 }
 .dia-nota-info { display: flex; flex-direction: column; gap: 3px; font-size: 13.5px; color: var(--gray-800); }
 .dia-nota-cabecalho { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .dia-nota-hora {
-  font-size: 11.5px; font-weight: 700; color: var(--coral-600);
+  font-size: 11.5px; font-weight: 700; color: var(--color-adra-green-600);
   background: #fff; padding: 1px 6px; border-radius: 4px;
 }
 .dia-nota-desc { font-size: 12.5px; color: var(--gray-600); margin: 0; white-space: pre-wrap; }

@@ -1,4 +1,4 @@
-.avaliacao { max-width: 1200px; margin: 0 auto; }
+
 
 .selos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .link-ficha { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; }
