@@ -2,15 +2,14 @@
   <header class="page-header">
     <p class="eyebrow">Área do oficineiro</p>
     <h1 id="oficineiro-titulo">Minhas atividades</h1>
-    <p class="page-intro">Consulte seus grupos, envie o semanário de cada semana e acompanhe os comunicados.</p>
+    <p class="page-intro">Consulte seus grupos e envie o semanário de cada semana.</p>
   </header>
 
   <nav class="tabs" role="tablist" aria-label="Módulos do oficineiro">
     @for (item of [
     { id: 'turmas', label: 'Grupos' },
     { id: 'calendario', label: 'Calendário' },
-    { id: 'semanario', label: 'Semanário' },
-    { id: 'comunicados', label: 'Comunicados' }
+    { id: 'semanario', label: 'Semanário' }
     ]; track item.id) {
     <button type="button" class="tab" [class.active]="aba() === item.id" role="tab" [attr.aria-selected]="aba() === item.id" (click)="selecionarAba($any(item.id))">
       {{ item.label }}
@@ -93,14 +92,6 @@
       <p class="empty">Nenhum semanário enviado ainda.</p>
       }
     </div>
-  </section>
-  }
-  @case ('comunicados') {
-  <section class="panel" aria-labelledby="comunicados-titulo">
-    <div class="panel-header"><div><h2 id="comunicados-titulo">Comunicados</h2><span class="subtle">Mensagens da coordenação</span></div></div>
-    @for (comunicado of comunicados(); track comunicado.comunicadoId) {
-    <article class="announcement"><h3>{{ comunicado.titulo }}</h3><p>{{ comunicado.mensagem }}</p><time>{{ comunicado.criadoEm }}</time></article>
-    } @empty { <p class="empty">Nenhum comunicado para seus grupos.</p> }
   </section>
   }
   }

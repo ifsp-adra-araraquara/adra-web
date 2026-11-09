@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { OficineiroComunicadoDTO } from '../../../shared/models/oficineiro/OficineiroComunicadoDTO';
 import { OficineiroTurmaDTO } from '../../../shared/models/oficineiro/OficineiroTurmaDTO';
 import { AuthService } from '../../../core/auth.service';
 import { ArquivoService } from '../../../core/arquivo.service';
@@ -27,7 +26,7 @@ import { Icon } from '../../../shared/components/icon/icon';
 import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
 
-type AbaOficineiro = 'turmas' | 'calendario' | 'semanario' | 'comunicados';
+type AbaOficineiro = 'turmas' | 'calendario' | 'semanario';
 
 @Component({
   selector: 'app-oficineiro',
@@ -59,7 +58,6 @@ export class Oficineiro implements OnInit {
   readonly oficinasSemGrupo = computed(() =>
     this.oficinas().filter((o) => o.ativo && !this.turmas().some((t) => t.oficinaId === o.oficinaId)),
   );
-  readonly comunicados = signal<OficineiroComunicadoDTO[]>([]);
   readonly turmaSelecionada = signal<OficineiroTurmaDTO | null>(null);
   readonly mostrarAlunos = signal(false);
   readonly alunos = signal<{ assistidoId: number; nomeCompleto: string }[]>([]);
@@ -294,7 +292,6 @@ export class Oficineiro implements OnInit {
     try {
       if (aba === 'turmas') await this.carregarTurmas();
       if (aba === 'semanario') await this.carregarSemanarios();
-      if (aba === 'comunicados') await this.carregarComunicados();
     } catch {
       this.erro.set('Não foi possível carregar esta área.');
     } finally {
@@ -325,13 +322,6 @@ export class Oficineiro implements OnInit {
     return `${turma.oficinaId}-${turma.turmaId}`;
   }
 
-  private async carregarComunicados(): Promise<void> {
-    const comunicados = await firstValueFrom(
-      this.http.get<OficineiroComunicadoDTO[]>(`${this.api}/api/comunicados/minhas-turmas`),
-    );
-    this.comunicados.set(comunicados);
-  }
-
   private usuarioLogado() {
     return this.auth.currentUserResponse();
   }
@@ -340,8 +330,7 @@ export class Oficineiro implements OnInit {
     return (
       valor === 'turmas' ||
       valor === 'calendario' ||
-      valor === 'semanario' ||
-      valor === 'comunicados'
+      valor === 'semanario'
     );
   }
 
