@@ -211,8 +211,8 @@ export class AssistidosLote {
     );
   }
 
-  // Lista de presença da turma (.xlsx): traz nome, nascimento e responsável;
-  // sem CPF, por isso a linha fica marcada pendente até alguém completar.
+  // Lista de presença da turma (.xlsx): traz nome, nascimento e responsável, sem CPF.
+  // O CPF do atendido é opcional; dá para completar depois na ficha.
   async importarXlsx(evento: Event): Promise<void> {
     const campo = evento.target as HTMLInputElement;
     const arquivo = campo.files?.[0];
@@ -240,7 +240,7 @@ export class AssistidosLote {
     this.linhas.update((linhas) => [...linhas, ...importadas.map((dados) => this.criarLinha(dados))]);
     this.aviso.set(
       `${importadas.length} atendido(s) importado(s) de ${arquivo.name}. ` +
-        'Essa planilha não tem CPF — preencha o de cada atendido antes de validar e cadastrar.',
+        'Essa planilha não tem CPF. Se tiver o de algum atendido, preencha; senão, dá para completar depois na ficha.',
     );
   }
 
@@ -407,7 +407,7 @@ export class AssistidosLote {
         nonNullable: true,
         validators: [Validators.required, dataNascimentoValidator],
       }),
-      cpf: new FormControl(dados?.cpf ?? '', { nonNullable: true, validators: [Validators.required, cpfValidator] }),
+      cpf: new FormControl(dados?.cpf ?? '', { nonNullable: true, validators: [cpfValidator] }),
       responsaveis: new FormArray(
         responsaveis.map((responsavel) => this.criarResponsavel(responsavel)),
         Validators.minLength(1),

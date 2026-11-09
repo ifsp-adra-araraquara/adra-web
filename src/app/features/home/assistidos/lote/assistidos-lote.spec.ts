@@ -27,7 +27,7 @@ describe('AssistidosLote', () => {
     await fixture.whenStable();
   });
 
-  /** CPF do assistido é obrigatório: cada irmão com o seu (válidos, de teste). */
+  /** CPFs válidos de teste, um para cada irmão (o CPF do atendido é opcional). */
   const CPF_IRMAO: Record<string, string> = { 'Ana Souza': '22233344405', 'Bruno Souza': '33344455508' };
 
   function adicionarIrmao(nomeCompleto: string): void {
@@ -64,6 +64,29 @@ describe('AssistidosLote', () => {
     expect(linha.form.valid).toBe(true);
     expect(linha.resultado()?.status).toBe('VALIDA');
     expect(component.errosGerais(linha)).toEqual([]);
+  });
+
+  it('sem CPF do atendido a linha fica válida e o CPF não vai no envio', () => {
+    adicionarIrmao('Ana Souza');
+    const [linha] = component.linhas();
+    linha.form.controls.cpf.setValue('');
+
+    component.validar();
+    const requisicao = httpMock.expectOne(`${api}/lote/validar`);
+    expect((requisicao.request.body as { cpf?: string }[])[0].cpf).toBeUndefined();
+    requisicao.flush([valida(0)]);
+
+    expect(linha.form.valid).toBe(true);
+    expect(linha.resultado()?.status).toBe('VALIDA');
+  });
+
+  it('CPF do atendido preenchido e inválido continua barrando a linha', () => {
+    adicionarIrmao('Ana Souza');
+    const [linha] = component.linhas();
+    linha.form.controls.cpf.setValue('11111111111');
+
+    expect(linha.form.controls.cpf.errors).toEqual({ cpf: true });
+    expect(linha.form.valid).toBe(false);
   });
 
   it('cadastra uma linha por vez com documento e foto opcional, e mantém na grade a que falhou', async () => {

@@ -573,7 +573,9 @@ export class Assistidos implements OnInit {
       return;
     }
 
-    if (!cpfValido(this.formEdicaoAssistido.cpf ?? '')) {
+    // CPF é opcional; se informado, precisa ser válido.
+    const cpfEdicao = this.formEdicaoAssistido.cpf ?? '';
+    if (cpfEdicao && !cpfValido(cpfEdicao)) {
       this.erroSalvarEdicao.set('Informe um CPF válido para o atendido.');
       return;
     }

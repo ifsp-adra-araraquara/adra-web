@@ -156,6 +156,14 @@ export class AssistidoNovo implements OnInit {
     });
   }
 
+  /** Sem o CPF em mãos (comum sem pré-cadastro): segue para o formulário; dá para informar depois na ficha. */
+  cadastrarSemCpf(): void {
+    this.existente.set(null);
+    this.erroCpf.set(null);
+    this.assistido.update((a) => ({ ...a, cpf: '' }));
+    this.etapa.set('formulario');
+  }
+
   /** Volta para trocar o CPF; o que já foi preenchido continua. */
   trocarCpf(): void {
     this.existente.set(null);
