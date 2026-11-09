@@ -79,6 +79,18 @@ export interface RegistroDisciplinarDTO {
   registradoPorId: number;
   registradoPorNome: string;
   criadoEm: string;
+  /** Só na consulta de um registro de suspensão (carta): dias de atividade do grupo no período. */
+  suspensaoDiasDeAtividade?: number | null;
+  /** Só na consulta de um registro de suspensão (carta): próximo dia de atividade depois do fim. */
+  suspensaoRetorno?: string | null;
+}
+
+/** Período de suspensão em dias de atividade do grupo do atendido (reunião de 05/11). */
+export interface PeriodoSuspensaoDTO {
+  inicio: string;
+  fim: string;
+  diasDeAtividade: number;
+  retorno: string;
 }
 
 /** Registro lançado + a recomendação pendente do atendido (registro que completou 3 do nível), se houver. */
