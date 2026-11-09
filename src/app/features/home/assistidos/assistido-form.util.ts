@@ -17,7 +17,7 @@ export interface ResponsavelPendente extends ResponsavelRequestDTO {
   responsavelPrincipal: boolean;
   contatoEmergencia: boolean;
   autorizadoRetirada: boolean;
-  /** Preenchido quando o CPF já tinha cadastro: a pessoa é só vinculada, não recadastrada. */
+  /** Preenchido quando a pessoa já tinha cadastro: ela é só vinculada, não recadastrada. */
   responsavelId?: number | null;
 }
 
@@ -87,7 +87,7 @@ export function validarResponsavel(responsavel: { nomeCompleto: string; cpf?: st
   if (!responsavel.nomeCompleto.trim()) {
     return 'Informe o nome do responsável.';
   }
-  if (!cpfValido(responsavel.cpf ?? '')) {
+  if (responsavel.cpf && !cpfValido(responsavel.cpf)) {
     return 'Informe um CPF válido para o responsável.';
   }
   if (!telefoneValido(responsavel.telefone ?? '')) {
@@ -139,8 +139,7 @@ export function paraPayloadAssistido(dados: AssistidoRequestDTO): AssistidoReque
 
 /**
  * Responsável preenchido no front -> payload "cadastrar e vincular". Para quem
- * já tem cadastro, a API acha pelo CPF e só cria o vínculo (os dados enviados
- * são os do próprio cadastro, lidos na busca por CPF).
+ * já tem cadastro, a API acha pelo id e só cria o vínculo.
  */
 export function paraVinculoComResponsavel(
   responsavel: ResponsavelPendente,
@@ -162,5 +161,6 @@ export function paraVinculoComResponsavel(
     responsavelPrincipal,
     contatoEmergencia: responsavel.contatoEmergencia,
     autorizadoRetirada: responsavel.autorizadoRetirada,
+    responsavelId: responsavel.responsavelId,
   };
 }

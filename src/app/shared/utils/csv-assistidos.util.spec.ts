@@ -26,4 +26,11 @@ describe('csv-assistidos.util', () => {
     expect(linha.responsaveis[0].cpf).toBe('02364546078');
     expect(paraDataIso(linha.dataNascimento)).toBeNull();
   });
+
+  it('mantem vazio o CPF do responsavel que nao foi informado', () => {
+    const [linha] = parseCsvAssistidos('nome;data_nascimento;cpf;resp1_nome;resp1_cpf\nJoão;03/05/2015;11144477735;Maria;\n');
+
+    expect(linha.responsaveis[0].nomeCompleto).toBe('Maria');
+    expect(linha.responsaveis[0].cpf).toBe('');
+  });
 });

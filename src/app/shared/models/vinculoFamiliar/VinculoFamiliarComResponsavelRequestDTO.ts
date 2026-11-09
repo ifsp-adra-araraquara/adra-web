@@ -19,4 +19,5 @@ export interface VinculoFamiliarComResponsavelRequestDTO {
   responsavelPrincipal: boolean;
   contatoEmergencia: boolean;
   autorizadoRetirada: boolean;
+  responsavelId?: number | null;
 }

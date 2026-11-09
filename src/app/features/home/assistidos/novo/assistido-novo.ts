@@ -25,7 +25,6 @@ import { mensagemErro } from '../../../../shared/utils/erro-http.util';
 import { DadosComplementaresAssistidoForm, SEXO_OPTIONS } from '../dados-complementares/dados-complementares-assistido';
 import { SocioeconomicoAssistidoForm } from '../socioeconomico/socioeconomico-assistido';
 import { TermosAssistidoForm } from '../termos/termos-assistido';
-import { MENSAGEM_SEM_DOCUMENTO } from '../mensagens-cadastro';
 import {
   assistidoVazio,
   paraPayloadAssistido,
@@ -40,7 +39,7 @@ import { ResponsaveisPendentes } from './responsaveis-pendentes';
  *
  * 1. CPF primeiro: se já existe, mostra quem é e leva à ficha — não deixa
  *    cadastrar de novo. Se não existe, abre o formulário com o CPF fixo.
- * 2. Responsáveis entram por modal (ResponsavelVinculoModal), também pelo
+ * 2. Responsáveis entram por modal (ResponsavelVinculoModal), pelo nome ou
  *    CPF: quem já tem cadastro é só vinculado.
  * 3. Tudo vai num POST só (assistido + responsáveis + foto + documento).
  */
@@ -94,7 +93,6 @@ export class AssistidoNovo implements OnInit {
   turmas = signal<TurmaResponseDTO[]>([]);
   limiteRendaFamiliar = signal<number | null>(null);
   alertaDuplicidade = signal(false);
-  tentouSalvar = signal(false);
   salvando = signal(false);
   erroSalvar = signal<string | null>(null);
 
@@ -213,7 +211,6 @@ export class AssistidoNovo implements OnInit {
 
   private validar(): string | null {
     const a = this.assistido();
-    if (this.documentos().length === 0) return MENSAGEM_SEM_DOCUMENTO;
     if (!a.nomeCompleto.trim() || !a.dataNascimento) return 'Preencha nome completo e data de nascimento.';
 
     const erroComplementares = validarDadosComplementares(a);
@@ -230,7 +227,6 @@ export class AssistidoNovo implements OnInit {
 
   async salvar(): Promise<void> {
     if (this.salvando()) return;
-    this.tentouSalvar.set(true);
 
     const erro = this.validar();
     if (erro) {

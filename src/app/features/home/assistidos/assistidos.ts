@@ -45,6 +45,7 @@ import { mensagemErro } from '../../../shared/utils/erro-http.util';
 import { FotoPerfil } from '../../../shared/components/foto-perfil/foto-perfil';
 import { Avatar } from '../../../shared/components/avatar/avatar';
 import { UploadDocumento } from '../../../shared/components/upload-documento/upload-documento';
+import { ResponsavelVinculoModal } from './novo/responsavel-vinculo-modal';
 import { ListaDocumentos } from '../../../shared/components/lista-documentos/lista-documentos';
 import { ArquivoService } from '../../../core/arquivo.service';
 import { AssistidoService } from '../../../core/assistido.service';
@@ -80,7 +81,7 @@ import {
 @Component({
   selector: 'app-assistidos',
   standalone: true,
-  imports: [ActionMenu, TooltipDirective, Icon, CommonModule, FormsModule, Select, Input, Button, Modal, Badge, FotoPerfil, Avatar, UploadDocumento, ListaDocumentos, DadosComplementaresAssistidoForm, DadosComplementaresResponsavelForm, SocioeconomicoAssistidoForm, TermosAssistidoForm, FichaDisciplinarAssistido],
+  imports: [ActionMenu, TooltipDirective, Icon, CommonModule, FormsModule, Select, Input, Button, Modal, Badge, FotoPerfil, Avatar, UploadDocumento, ResponsavelVinculoModal, ListaDocumentos, DadosComplementaresAssistidoForm, DadosComplementaresResponsavelForm, SocioeconomicoAssistidoForm, TermosAssistidoForm, FichaDisciplinarAssistido],
   templateUrl: './assistidos.html',
   styleUrl: './assistidos.css',
 })
@@ -167,10 +168,11 @@ export class Assistidos implements OnInit {
   salvandoEdicaoResponsavel = signal(false);
   erroEdicaoResponsavel = signal<string | null>(null);
 
-  mostrarFormNovoResponsavelVinculado = signal(false);
-  salvandoResponsavelVinculado = signal(false);
+  modalResponsavelAberto = signal(false);
   erroResponsavelVinculado = signal<string | null>(null);
-  novoResponsavelVinculado: ResponsavelPendente = responsavelVazio();
+  responsaveisUsados = computed(() =>
+    this.responsaveisDoAssistido().map((v) => ({ responsavelId: v.responsavelId, cpf: v.cpfResponsavel ?? '' })),
+  );
 
   turmasAtivas = computed(() => this.turmas().filter((turma) => turma.ativo));
 
@@ -364,23 +366,6 @@ export class Assistidos implements OnInit {
       this.pagina.update((p) => p + 1);
       this.carregarAssistidos();
     }
-  }
-
-  abrirFormNovoResponsavelVinculado(): void {
-    this.novoResponsavelVinculado = responsavelVazio();
-    this.erroResponsavelVinculado.set(null);
-    this.mostrarFormNovoResponsavelVinculado.set(true);
-  }
-
-  fecharFormNovoResponsavelVinculado(): void {
-    this.mostrarFormNovoResponsavelVinculado.set(false);
-  }
-
-  atualizarCampoResponsavelVinculado(
-    campo: keyof ResponsavelPendente,
-    valor: string | boolean,
-  ): void {
-    this.novoResponsavelVinculado = { ...this.novoResponsavelVinculado, [campo]: valor };
   }
 
   /*
@@ -782,7 +767,7 @@ export class Assistidos implements OnInit {
 
     this.erroResponsaveis.set(null);
 
-    this.mostrarFormNovoResponsavelVinculado.set(false);
+    this.erroResponsavelVinculado.set(null);
 
     this.historicoTurmasAssistido.set([]);
 
@@ -1044,42 +1029,39 @@ export class Assistidos implements OnInit {
     return `${this.calcularIdade(dataNascimento)} anos`;
   }
 
-  async salvarResponsavelVinculado(): Promise<void> {
+  async salvarResponsavelVinculado(responsavel: ResponsavelPendente): Promise<void> {
     const assistido = this.assistidoSelecionado();
-    if (!assistido || this.salvandoResponsavelVinculado()) {
+    if (!assistido) {
       return;
     }
 
-    const erroValidacao = validarResponsavel(this.novoResponsavelVinculado);
-    if (erroValidacao) {
-      this.erroResponsavelVinculado.set(erroValidacao);
-      return;
-    }
-
-    this.salvandoResponsavelVinculado.set(true);
     this.erroResponsavelVinculado.set(null);
 
     const responsavelPrincipal =
-      this.novoResponsavelVinculado.responsavelPrincipal ||
+      responsavel.responsavelPrincipal ||
       this.responsaveisDoAssistido().filter((r) => r.responsavelPrincipal).length === 0;
 
-    const dto = paraVinculoComResponsavel(this.novoResponsavelVinculado, responsavelPrincipal);
+    const urlVinculos = `${this.apiAssistidos}/${assistido.assistidoId}/responsaveis`;
 
     try {
-      await firstValueFrom(
-        this.http.post(
-          `${this.apiAssistidos}/${assistido.assistidoId}/responsaveis/cadastrar-vincular`,
-          dto,
-        ),
-      );
-
-      this.mostrarFormNovoResponsavelVinculado.set(false);
-      this.salvandoResponsavelVinculado.set(false);
+      if (responsavel.responsavelId) {
+        const vinculo: VinculoFamiliarRequestDTO = {
+          responsavelId: responsavel.responsavelId,
+          parentesco: responsavel.parentesco || undefined,
+          responsavelPrincipal,
+          contatoEmergencia: responsavel.contatoEmergencia,
+          autorizadoRetirada: responsavel.autorizadoRetirada,
+        };
+        await firstValueFrom(this.http.post(urlVinculos, vinculo));
+      } else {
+        await firstValueFrom(
+          this.http.post(`${urlVinculos}/cadastrar-vincular`, paraVinculoComResponsavel(responsavel, responsavelPrincipal)),
+        );
+      }
       this.carregarResponsaveis(assistido.assistidoId);
     } catch (erro) {
       console.error('Erro ao vincular responsável:', erro);
       this.erroResponsavelVinculado.set(mensagemErro(erro as HttpErrorResponse, 'Não foi possível salvar o responsável.'));
-      this.salvandoResponsavelVinculado.set(false);
     }
   }
 

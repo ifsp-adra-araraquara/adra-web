@@ -107,7 +107,7 @@ export function modeloCsvAssistidos(): string {
     {
       nomeCompleto: 'Ana Souza (exemplo, apague esta linha)',
       dataNascimento: '03/05/2015',
-      cpf: '',
+      cpf: '11144477735',
       responsaveis: [
         {
           nomeCompleto: 'Maria Souza',

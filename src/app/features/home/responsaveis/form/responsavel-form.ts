@@ -4,7 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ResponsavelService } from '../../../../core/responsavel.service';
 import { AlertaCpfDuplicadoDTO } from '../../../../shared/models/responsavel/AlertaCpfDuplicadoDTO';
 import { ResponsavelResponseDTO } from '../../../../shared/models/responsavel/ResponsavelResponseDTO';
-import { cpfValidator } from '../../../../shared/validators/cpf.validator';
+import { cpfOpcional, cpfValidator } from '../../../../shared/validators/cpf.validator';
 import { errosPorCampo } from '../../../../shared/utils/erro-http.util';
 import { Input } from '../../../../shared/components/input/input';
 import { Button } from '../../../../shared/components/button/button';
@@ -38,6 +38,7 @@ export class ResponsavelForm implements OnChanges {
 
   etapa = signal<EtapaForm>('buscaCpf');
   modoEdicao = signal(false);
+  cpfBloqueado = signal(false);
   responsavelIdEmEdicao = signal<number | null>(null);
 
   buscandoCpf = signal(false);
@@ -53,7 +54,7 @@ export class ResponsavelForm implements OnChanges {
   form = this.fb.nonNullable.group({
     nomeCompleto: ['', [Validators.required, Validators.maxLength(180)]],
     dataNascimento: [''],
-    cpf: ['', [Validators.required, cpfValidator()]],
+    cpf: ['', cpfOpcional()],
     telefone: ['', Validators.pattern(/^$|^\d{10,11}$/)],
     email: ['', Validators.email],
     endereco: [enderecoParaForm(null) as EnderecoDTO],
@@ -154,8 +155,14 @@ export class ResponsavelForm implements OnChanges {
     this.cpfBusca.reset('');
   }
 
+  cadastrarSemCpf(): void {
+    this.limparMensagens();
+    this.iniciarCadastroComCpf('');
+  }
+
   private iniciarCadastroComCpf(cpf: string): void {
     this.modoEdicao.set(false);
+    this.cpfBloqueado.set(false);
     this.responsavelIdEmEdicao.set(null);
     this.form.reset();
     this.form.patchValue({ cpf });
@@ -166,11 +173,12 @@ export class ResponsavelForm implements OnChanges {
 
   private iniciarEdicao(responsavel: ResponsavelResponseDTO): void {
     this.modoEdicao.set(true);
+    this.cpfBloqueado.set(!!responsavel.cpf);
     this.responsavelIdEmEdicao.set(responsavel.responsavelId);
     this.form.reset({
       nomeCompleto: responsavel.nomeCompleto,
       dataNascimento: responsavel.dataNascimento ?? '',
-      cpf: responsavel.cpf,
+      cpf: responsavel.cpf ?? '',
       telefone: responsavel.telefone ?? '',
       email: responsavel.email ?? '',
       endereco: enderecoParaForm(responsavel.endereco),
@@ -249,6 +257,7 @@ export class ResponsavelForm implements OnChanges {
   private reiniciar(): void {
     this.etapa.set('buscaCpf');
     this.modoEdicao.set(false);
+    this.cpfBloqueado.set(false);
     this.responsavelIdEmEdicao.set(null);
     this.cpfBusca.reset('');
     this.cpfNaoEncontrado.set(false);
