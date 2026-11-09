@@ -1,27 +1,103 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { DatePipe, Location } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { PreCadastroService } from '../../../core/pre-cadastro.service';
-import { PreCadastroResumoDTO, StatusPreCadastro } from '../../../shared/models/precadastro/PreCadastro';
+import { PROGRAMA_TRANSFERENCIA_LABELS, ProgramaTransferencia } from '../../../shared/enum/ProgramaTransferencia';
+import { PreCadastroResumoDTO, StatusPreCadastro, emAvaliacao } from '../../../shared/models/precadastro/PreCadastro';
 import { Badge } from '../../../shared/components/badge/badge';
 import { Icon } from '../../../shared/components/icon/icon';
 import { Input } from '../../../shared/components/input/input';
+import { SeletorMultiplo } from '../../../shared/components/seletor-multiplo/seletor-multiplo';
+import { SelectOption } from '../../../shared/components/select/select';
+import { Table, TableColumn } from '../../../shared/components/table/table';
 import { LinkInscricao } from './link-inscricao';
-import { formatarTelefone } from '../../../shared/utils/mascara.util';
+import { formatarMoeda, formatarTelefone } from '../../../shared/utils/mascara.util';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
 
 const ABAS: { status: StatusPreCadastro; rotulo: string; vazio: string }[] = [
   { status: 'PENDENTE', rotulo: 'Pendentes', vazio: 'Nenhuma inscrição aguardando avaliação.' },
+  { status: 'LISTA_ESPERA', rotulo: 'Lista de espera', vazio: 'Nenhuma inscrição na lista de espera.' },
   { status: 'CONVERTIDO', rotulo: 'Aprovados', vazio: 'Nenhuma inscrição aprovada ainda.' },
   { status: 'DESCARTADO', rotulo: 'Reprovados', vazio: 'Nenhuma inscrição reprovada.' },
+];
+
+const QUALQUER_PROGRAMA = 'QUALQUER_PROGRAMA';
+const PROBLEMA_SAUDE = 'PROBLEMA_SAUDE';
+const NAO_VISTAS = 'NAO_VISTAS';
+
+const PROGRAMAS = Object.keys(PROGRAMA_TRANSFERENCIA_LABELS) as ProgramaTransferencia[];
+
+const OPCOES_PROGRAMA: SelectOption<string>[] = [
+  { value: QUALQUER_PROGRAMA, label: 'Recebe qualquer programa' },
+  ...PROGRAMAS.map((programa) => ({ value: programa, label: PROGRAMA_TRANSFERENCIA_LABELS[programa] })),
+];
+const OPCOES_CONDICAO: SelectOption<string>[] = [{ value: PROBLEMA_SAUDE, label: 'Problema de saúde' }];
+const OPCOES_VISUALIZACAO: SelectOption<string>[] = [{ value: NAO_VISTAS, label: 'Não vistas pela Assistente Social' }];
+
+export interface FiltrosTriagem {
+  rendaAte: number | null;
+  programas: ProgramaTransferencia[];
+  comProblemaSaude: boolean;
+  somenteNaoVistas: boolean;
+}
+
+export function atendeFiltros(item: PreCadastroResumoDTO, filtros: FiltrosTriagem): boolean {
+  if (filtros.rendaAte != null && item.rendaFamiliar != null && item.rendaFamiliar > filtros.rendaAte) return false;
+  if (filtros.comProblemaSaude && !item.possuiProblemaSaude) return false;
+  if (filtros.somenteNaoVistas && item.vistoAssistenteSocial) return false;
+  return !filtros.programas.length || item.programasTransferencia.some((programa) => filtros.programas.includes(programa));
+}
+
+/** "Recebe qualquer programa" marca ou desmarca todos; com todos marcados, ele aparece marcado. */
+export function programasMarcados(atuais: ProgramaTransferencia[]): string[] {
+  return atuais.length === PROGRAMAS.length ? [QUALQUER_PROGRAMA, ...atuais] : atuais;
+}
+
+export function alternarProgramas(atuais: ProgramaTransferencia[], marcados: string[]): ProgramaTransferencia[] {
+  const qualquerAntes = atuais.length === PROGRAMAS.length;
+  const qualquerAgora = marcados.includes(QUALQUER_PROGRAMA);
+  if (qualquerAntes !== qualquerAgora) return qualquerAgora ? [...PROGRAMAS] : [];
+  return PROGRAMAS.filter((programa) => marcados.includes(programa));
+}
+
+type LinhaPreCadastro = PreCadastroResumoDTO & { posicao: number };
+
+const TODAS_AS_LINHAS = Number.MAX_SAFE_INTEGER;
+
+const COLUNAS_TRIAGEM: TableColumn<LinhaPreCadastro>[] = [
+  { key: 'candidato', header: 'Candidato a atendido', type: 'custom' },
+  { key: 'responsavel', header: 'Responsável', type: 'custom' },
+  { key: 'chegada', header: 'Chegada', type: 'custom' },
+  {
+    key: 'renda',
+    header: 'Renda',
+    value: (linha) => (linha.rendaFamiliar != null ? formatarMoeda(linha.rendaFamiliar) : 'Não informada'),
+  },
+  {
+    key: 'programas',
+    header: 'Programas',
+    value: (linha) => linha.programasTransferencia.map((programa) => PROGRAMA_TRANSFERENCIA_LABELS[programa]).join(', ') || '—',
+  },
+  { key: 'saude', header: 'Saúde', value: (linha) => (linha.possuiProblemaSaude ? 'Sim' : '—') },
+  { key: 'pendencias', header: 'Pendências', type: 'custom' },
+];
+
+const COLUNAS_DECIDIDAS: TableColumn<LinhaPreCadastro>[] = [
+  { key: 'candidato', header: 'Candidato a atendido', type: 'custom' },
+  { key: 'responsavel', header: 'Responsável', type: 'custom' },
+  { key: 'chegada', header: 'Enviado em', type: 'custom' },
+  { key: 'situacao', header: 'Situação', type: 'badge', value: (linha) => linha.status },
 ];
 
 const UM_DIA = 24 * 60 * 60 * 1000;
 
 /** "hoje", "ontem", "há 3 dias" — quanto tempo a inscrição está esperando. */
 export function haQuantoTempo(criadoEm: string, agora: Date): string {
-  const dias = Math.floor((agora.getTime() - new Date(criadoEm).getTime()) / UM_DIA);
+  const inicioDoDia = (data: Date) => new Date(data.getFullYear(), data.getMonth(), data.getDate()).getTime();
+  const dias = Math.round((inicioDoDia(agora) - inicioDoDia(new Date(criadoEm))) / UM_DIA);
   if (dias <= 0) return 'hoje';
   if (dias === 1) return 'ontem';
   return `há ${dias} dias`;
@@ -30,7 +106,7 @@ export function haQuantoTempo(criadoEm: string, agora: Date): string {
 /** Inscrições enviadas pelo link público, para a Coordenação e a Assistente Social avaliarem. */
 @Component({
   selector: 'app-pre-cadastros',
-  imports: [RouterLink, Badge, Icon, Input, LinkInscricao],
+  imports: [DatePipe, FormsModule, RouterLink, Badge, Icon, Input, LinkInscricao, SeletorMultiplo, Table],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="page" aria-labelledby="pc-lista-titulo">
@@ -56,75 +132,157 @@ export function haQuantoTempo(criadoEm: string, agora: Date): string {
             class="tab"
             [class.active]="aba.status === status()"
             [attr.aria-selected]="aba.status === status()"
-            (click)="status.set(aba.status)"
+            (click)="selecionarAba(aba.status)"
           >
             {{ aba.rotulo }} <span class="count">{{ porStatus()[aba.status].length }}</span>
           </button>
         }
       </div>
 
-      <div class="busca">
-        <app-input label="Buscar por nome" [hideLabel]="true" placeholder="Buscar por nome" (input)="busca.set($any($event.target).value)" />
+      <div class="toolbar filtros">
+        <div class="filtros-busca" #campoBusca>
+          <app-input label="Buscar por nome" [hideLabel]="true" placeholder="Buscar por nome" [ngModel]="busca()" (ngModelChange)="busca.set($event)" />
+        </div>
+        @if (comFiltros()) {
+          <div class="filtros-renda">
+            <app-input label="Renda até (R$)" [hideLabel]="true" placeholder="Renda até R$" type="number" min="0" [ngModel]="rendaAte()" (ngModelChange)="alterarRendaAte($event)" />
+          </div>
+        }
+      </div>
+
+      @if (comFiltros()) {
+        <div class="grupos">
+          <app-seletor-multiplo label="Programas" [opcoes]="opcoesPrograma" [valores]="programasMarcados()" (valoresChange)="alterarProgramas($event)" />
+          <app-seletor-multiplo label="Condições" [opcoes]="opcoesCondicao" [valores]="comProblemaSaude() ? [problemaSaude] : []" (valoresChange)="alterarProblemaSaude($event)" />
+          <app-seletor-multiplo label="Visualização" [opcoes]="opcoesVisualizacao" [valores]="somenteNaoVistas() ? [naoVistas] : []" (valoresChange)="alterarNaoVistas($event)" />
+        </div>
+      }
+
+      <div class="resultado" aria-live="polite">
+        @if (filtroAtivo() && !carregando()) {
+          <span>Mostrando {{ visiveis().length }} de {{ porStatus()[status()].length }}</span>
+          <button type="button" class="limpar" (click)="limparFiltros(); campoBusca.querySelector('input')?.focus()">Limpar filtros</button>
+        }
       </div>
 
       @if (carregando()) {
         <div class="card card-pad"><p class="muted">Carregando…</p></div>
       } @else if (visiveis().length === 0) {
-        <div class="card card-pad"><p class="muted">{{ busca() ? 'Nenhum nome encontrado.' : abaAtual().vazio }}</p></div>
+        <div class="card card-pad"><p class="muted">{{ filtroAtivo() ? 'Nenhuma inscrição com esses filtros.' : abaAtual().vazio }}</p></div>
       } @else {
-        <ul class="lista" role="list">
-          @for (item of visiveis(); track item.preCadastroId) {
-            <li class="card item">
-              <a class="item__link" [routerLink]="['/pre-cadastros', item.preCadastroId]">
-                <span class="item__nome">{{ item.nomeCompleto }}</span>
-                <span class="item__sub">
-                  @if (item.idade != null) { {{ item.idade }} anos · }
-                  Responsável: {{ item.responsavelNome }}
-                </span>
-              </a>
-              <div class="item__rodape">
-                @if (item.responsavelTelefone) {
-                  <a class="item__tel" [href]="'tel:' + item.responsavelTelefone">
-                    <app-icon name="phone" [size]="14" /> {{ formatarTelefone(item.responsavelTelefone) }}
-                  </a>
+        <div class="card tabela">
+          <app-table
+            [label]="'Inscrições: ' + abaAtual().rotulo"
+            [columns]="colunas()"
+            [data]="visiveis()"
+            [trackBy]="idDaLinha"
+            [rowClick]="abrir"
+            [pageSize]="todasAsLinhas"
+          >
+            <ng-template #cell let-linha let-coluna="column">
+              @switch (coluna.key) {
+                @case ('candidato') {
+                  <div class="candidato">
+                    @if (comFiltros()) {
+                      <span class="posicao"><span class="sr-only">Posição na fila </span>{{ linha.posicao }}</span>
+                      <span class="marcador" [class.nao-visto]="!linha.vistoAssistenteSocial">
+                        @if (!linha.vistoAssistenteSocial) { <span class="sr-only">Não vista pela Assistente Social</span> }
+                      </span>
+                    }
+                    <div class="empilhado">
+                      <a class="cell-name" [routerLink]="['/pre-cadastros', linha.preCadastroId]" [queryParams]="parametrosDaUrl()">{{ linha.nomeCompleto }}</a>
+                      @if (linha.idade != null) { <span class="cell-sub">{{ linha.idade }} anos</span> }
+                    </div>
+                  </div>
                 }
-                <span class="item__quando">Chegou {{ haQuantoTempo(item.criadoEm) }}</span>
-                @if (item.cpfJaCadastrado) { <app-badge variant="amber" label="CPF já cadastrado" /> }
-                @if (item.anexosFaltando.length) {
-                  <app-badge variant="amber" [label]="'Faltam: ' + item.anexosFaltando.join(', ').toLocaleLowerCase('pt-BR')" />
+                @case ('responsavel') {
+                  <div class="empilhado">
+                    <span>{{ linha.responsavelNome }}</span>
+                    @if (linha.responsavelTelefone) {
+                      <a class="tel" [href]="'tel:' + linha.responsavelTelefone">
+                        <app-icon name="phone" [size]="14" /> {{ formatarTelefone(linha.responsavelTelefone) }}
+                      </a>
+                    }
+                  </div>
                 }
-                @if (status() !== 'PENDENTE') { <app-badge [status]="item.status" /> }
-              </div>
-            </li>
-          }
-        </ul>
+                @case ('chegada') {
+                  <div class="empilhado">
+                    <span>{{ linha.criadoEm | date: 'dd/MM/yyyy' }}</span>
+                    <span class="cell-sub">{{ haQuantoTempo(linha.criadoEm) }}</span>
+                  </div>
+                }
+                @case ('pendencias') {
+                  <div class="selos">
+                    @if (linha.cpfJaCadastrado) { <app-badge variant="amber" label="CPF já cadastrado" /> }
+                    @if (linha.anexosFaltando.length) {
+                      <app-badge variant="amber" [label]="linha.anexosFaltando.length === 1 ? 'Falta 1 anexo' : 'Faltam ' + linha.anexosFaltando.length + ' anexos'" />
+                    }
+                    @if (!linha.cpfJaCadastrado && !linha.anexosFaltando.length) { — }
+                  </div>
+                }
+              }
+            </ng-template>
+            <ng-template #rowActions let-linha>
+              <a
+                class="btn-icon"
+                [routerLink]="['/pre-cadastros', linha.preCadastroId]"
+                [queryParams]="parametrosDaUrl()"
+                [attr.aria-label]="'Avaliar inscrição de ' + linha.nomeCompleto"
+                tabindex="-1"
+              ><app-icon name="chevron-right" /></a>
+            </ng-template>
+          </app-table>
+        </div>
       }
     </section>
   `,
   styles: `
-    .busca { max-width: 420px; margin-bottom: 14px; }
-    .lista { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
-    @media (min-width: 900px) { .lista { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    .item { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
-    .item__link { display: flex; flex-direction: column; gap: 4px; min-height: 44px; color: inherit; text-decoration: none; }
-    .item__link:hover .item__nome { color: var(--color-adra-green-600); text-decoration: underline; }
-    .item__nome { font-size: 16px; font-weight: 600; color: var(--gray-800); }
-    .item__sub, .item__quando { font-size: 13px; color: var(--gray-600); }
-    .item__rodape { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
-    .item__tel { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 14px; color: var(--color-adra-green-600); }
+    .filtros { margin-bottom: 10px; }
+    .grupos { display: flex; flex-wrap: wrap; gap: 0 28px; margin-bottom: 4px; }
+    .resultado { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 13px; color: var(--gray-600); }
+    .resultado:empty { margin-bottom: 0; }
+    .limpar { padding: 4px 0; border: none; background: none; font: inherit; color: var(--color-adra-green-600); text-decoration: underline; cursor: pointer; }
+    @media (min-width: 720px) {
+      .filtros-busca { flex: 1; }
+      .filtros-renda { width: 180px; }
+    }
+    .candidato { display: flex; align-items: center; gap: 10px; }
+    .marcador { flex: none; width: 8px; height: 8px; border-radius: 50%; }
+    .marcador.nao-visto { background: var(--blue-600); }
+    .posicao { min-width: 28px; font-size: 13px; font-weight: 600; color: var(--gray-400); font-variant-numeric: tabular-nums; }
+    .empilhado { display: flex; flex-direction: column; gap: 2px; }
+    .cell-name { color: var(--gray-800); text-decoration: none; }
+    .cell-name:hover { color: var(--color-adra-green-600); text-decoration: underline; }
+    .tel { display: inline-flex; align-items: center; gap: 6px; color: var(--color-adra-green-600); }
+    .selos { display: flex; flex-wrap: wrap; gap: 6px; }
+    @media (max-width: 719px) { .tabela { border: none; background: none; box-shadow: none; } }
   `,
 })
 export class PreCadastros implements OnInit {
   private readonly service = inject(PreCadastroService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly location = inject(Location);
 
   protected readonly abas = ABAS;
   protected readonly formatarTelefone = formatarTelefone;
+  protected readonly todasAsLinhas = TODAS_AS_LINHAS;
+  protected readonly opcoesPrograma = OPCOES_PROGRAMA;
+  protected readonly opcoesCondicao = OPCOES_CONDICAO;
+  protected readonly opcoesVisualizacao = OPCOES_VISUALIZACAO;
+  protected readonly problemaSaude = PROBLEMA_SAUDE;
+  protected readonly naoVistas = NAO_VISTAS;
   private readonly agora = new Date();
 
   protected readonly status = signal<StatusPreCadastro>('PENDENTE');
   protected readonly busca = signal('');
+  protected readonly rendaAte = signal<number | null>(null);
+  protected readonly comProblemaSaude = signal(false);
+  protected readonly programas = signal<ProgramaTransferencia[]>([]);
+  protected readonly somenteNaoVistas = signal(false);
   protected readonly porStatus = signal<Record<StatusPreCadastro, PreCadastroResumoDTO[]>>({
     PENDENTE: [],
+    LISTA_ESPERA: [],
     CONVERTIDO: [],
     DESCARTADO: [],
   });
@@ -132,26 +290,109 @@ export class PreCadastros implements OnInit {
   protected readonly erro = signal<string | null>(null);
 
   protected readonly abaAtual = computed(() => ABAS.find((aba) => aba.status === this.status())!);
-  protected readonly visiveis = computed(() => {
+  protected readonly comFiltros = computed(() => emAvaliacao(this.status()));
+  protected readonly filtroAtivo = computed(
+    () =>
+      !!this.busca().trim() ||
+      (this.comFiltros() &&
+        (this.rendaAte() != null || this.programas().length > 0 || this.comProblemaSaude() || this.somenteNaoVistas())),
+  );
+  protected readonly colunas = computed(() => (this.comFiltros() ? COLUNAS_TRIAGEM : COLUNAS_DECIDIDAS));
+  protected readonly visiveis = computed<LinhaPreCadastro[]>(() => {
     const termo = this.busca().trim().toLocaleLowerCase('pt-BR');
-    const lista = this.porStatus()[this.status()];
-    return termo ? lista.filter((item) => item.nomeCompleto.toLocaleLowerCase('pt-BR').includes(termo)) : lista;
+    const lista = this.porStatus()[this.status()].map((item, indice) => ({ ...item, posicao: indice + 1 }));
+    const porNome = termo ? lista.filter((item) => item.nomeCompleto.toLocaleLowerCase('pt-BR').includes(termo)) : lista;
+    if (!this.comFiltros()) return porNome;
+    const filtros = {
+      rendaAte: this.rendaAte(),
+      programas: this.programas(),
+      comProblemaSaude: this.comProblemaSaude(),
+      somenteNaoVistas: this.somenteNaoVistas(),
+    };
+    return porNome.filter((item) => atendeFiltros(item, filtros));
   });
 
+  protected readonly parametrosDaUrl = computed(() => ({
+    status: this.status() === 'PENDENTE' ? null : this.status(),
+    rendaAte: this.rendaAte(),
+    programas: this.programas().join(',') || null,
+    saude: this.comProblemaSaude() ? 1 : null,
+    naoVistas: this.somenteNaoVistas() ? 1 : null,
+  }));
+
+  protected readonly programasMarcados = computed(() => programasMarcados(this.programas()));
+
   ngOnInit(): void {
+    this.aplicarFiltrosDaUrl();
     this.carregar();
   }
 
+  protected selecionarAba(status: StatusPreCadastro): void {
+    this.status.set(status);
+    this.atualizarUrl();
+  }
+
+  protected alterarRendaAte(valor: number | null): void {
+    this.rendaAte.set(valor);
+    this.atualizarUrl();
+  }
+
+  protected alterarProgramas(marcados: string[]): void {
+    this.programas.update((atuais) => alternarProgramas(atuais, marcados));
+    this.atualizarUrl();
+  }
+
+  protected alterarProblemaSaude(marcados: string[]): void {
+    this.comProblemaSaude.set(marcados.includes(PROBLEMA_SAUDE));
+    this.atualizarUrl();
+  }
+
+  protected alterarNaoVistas(marcados: string[]): void {
+    this.somenteNaoVistas.set(marcados.includes(NAO_VISTAS));
+    this.atualizarUrl();
+  }
+
+  protected limparFiltros(): void {
+    this.busca.set('');
+    this.rendaAte.set(null);
+    this.programas.set([]);
+    this.comProblemaSaude.set(false);
+    this.somenteNaoVistas.set(false);
+    this.atualizarUrl();
+  }
+
+  protected readonly idDaLinha = (linha: LinhaPreCadastro) => linha.preCadastroId;
+
+  protected readonly abrir = (linha: LinhaPreCadastro) =>
+    this.router.navigate(['/pre-cadastros', linha.preCadastroId], { queryParams: this.parametrosDaUrl() });
+
   protected haQuantoTempo(criadoEm: string): string {
     return haQuantoTempo(criadoEm, this.agora);
+  }
+
+  private aplicarFiltrosDaUrl(): void {
+    const params = this.route.snapshot.queryParamMap;
+    const status = ABAS.find((aba) => aba.status === params.get('status'))?.status;
+    const rendaAte = Number(params.get('rendaAte'));
+    const programas = params.get('programas')?.split(',') ?? [];
+    this.status.set(status ?? 'PENDENTE');
+    this.rendaAte.set(params.get('rendaAte') && rendaAte >= 0 ? rendaAte : null);
+    this.programas.set(PROGRAMAS.filter((programa) => programas.includes(programa)));
+    this.comProblemaSaude.set(params.get('saude') === '1');
+    this.somenteNaoVistas.set(params.get('naoVistas') === '1');
+  }
+
+  private atualizarUrl(): void {
+    const destino = this.router.createUrlTree([], { relativeTo: this.route, queryParams: this.parametrosDaUrl() });
+    this.location.replaceState(this.router.serializeUrl(destino));
   }
 
   private async carregar(): Promise<void> {
     this.carregando.set(true);
     this.erro.set(null);
     try {
-      const [pendentes, aprovados, reprovados] = await Promise.all(ABAS.map((aba) => this.service.listar(aba.status)));
-      this.porStatus.set({ PENDENTE: pendentes, CONVERTIDO: aprovados, DESCARTADO: reprovados });
+      const [pendentes, listaEspera, aprovados, reprovados] = await Promise.all(ABAS.map((aba) => this.service.listar(aba.status)));
+      this.porStatus.set({ PENDENTE: pendentes, LISTA_ESPERA: listaEspera, CONVERTIDO: aprovados, DESCARTADO: reprovados });
     } catch (e) {
       this.erro.set(mensagemErro(e as HttpErrorResponse, 'Não foi possível carregar os pré-cadastros.'));
     } finally {

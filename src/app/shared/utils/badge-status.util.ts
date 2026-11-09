@@ -35,6 +35,7 @@ const BADGE_STATUS_MAP: Record<string, BadgeStatusInfo> = {
   // já coberto pela entrada de SituacaoAula.PENDENTE acima.
 
   // Pré-cadastro (o PENDENTE dele também usa a entrada acima).
+  LISTA_ESPERA: { label: 'Lista de espera', variant: 'blue' },
   CONVERTIDO: { label: 'Aprovado', variant: 'green' },
   DESCARTADO: { label: 'Reprovado', variant: 'coral' },
 };

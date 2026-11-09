@@ -53,4 +53,12 @@ export class PreCadastroService {
   reprovar(preCadastroId: number, motivo: string): Promise<PreCadastroResponseDTO> {
     return firstValueFrom(this.http.patch<PreCadastroResponseDTO>(`${this.api}/${preCadastroId}/reprovar`, { motivo }));
   }
+
+  colocarNaListaEspera(preCadastroId: number, observacao: string): Promise<PreCadastroResponseDTO> {
+    return firstValueFrom(this.http.patch<PreCadastroResponseDTO>(`${this.api}/${preCadastroId}/lista-espera`, { observacao }));
+  }
+
+  salvarObservacao(preCadastroId: number, observacao: string): Promise<void> {
+    return firstValueFrom(this.http.patch<void>(`${this.api}/${preCadastroId}/observacao`, { observacao }));
+  }
 }
