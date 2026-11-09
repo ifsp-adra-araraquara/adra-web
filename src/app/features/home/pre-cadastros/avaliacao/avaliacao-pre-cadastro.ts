@@ -9,7 +9,7 @@ import { environment } from '../../../../../environments/environment';
 import { PreCadastroService } from '../../../../core/pre-cadastro.service';
 import { CategoriaArquivo } from '../../../../shared/enum/CategoriaArquivo';
 import { AssistidoRequestDTO } from '../../../../shared/models/assistido/AssistidoRequestDTO';
-import { PreCadastroResponseDTO } from '../../../../shared/models/precadastro/PreCadastro';
+import { PreCadastroResponseDTO, emAvaliacao } from '../../../../shared/models/precadastro/PreCadastro';
 import { TurmaResponseDTO } from '../../../../shared/models/turma/TurmaResponseDTO';
 import { VinculoFamiliarComResponsavelRequestDTO } from '../../../../shared/models/vinculoFamiliar/VinculoFamiliarComResponsavelRequestDTO';
 import { Badge } from '../../../../shared/components/badge/badge';
@@ -110,9 +110,17 @@ export class AvaliacaoPreCadastro implements OnInit {
   protected readonly motivo = signal('');
   protected readonly tentouReprovar = signal(false);
 
+  protected readonly observacao = signal('');
+  protected readonly salvandoObservacao = signal(false);
+  protected readonly observacaoSalva = signal(false);
+
   protected readonly pendente = computed(() => this.detalhe()?.status === 'PENDENTE');
+  protected readonly emAvaliacao = computed(() => {
+    const status = this.detalhe()?.status;
+    return !!status && emAvaliacao(status);
+  });
   /** Formulário antigo (sem CPF): não dá para montar o cadastro, só reprovar. */
-  protected readonly podeAprovar = computed(() => this.pendente() && !!this.detalhe()?.cpf);
+  protected readonly podeAprovar = computed(() => this.emAvaliacao() && !!this.detalhe()?.cpf);
   protected readonly idade = computed(() => {
     const nascimento = this.detalhe()?.dataNascimento;
     if (!nascimento) return null;
@@ -177,6 +185,7 @@ export class AvaliacaoPreCadastro implements OnInit {
     const a = this.assistido();
     const payload: AssistidoRequestDTO = {
       ...paraPayloadAssistido(a),
+      observacoes: [a.observacoes, this.observacao().trim()].filter(Boolean).join('\n'),
       turmaId: a.turmaId ? Number(a.turmaId) : null,
       responsaveis: this.responsaveis().map((r) => paraVinculoComResponsavel(r)),
     };
@@ -215,6 +224,38 @@ export class AvaliacaoPreCadastro implements OnInit {
     }
   }
 
+  protected async colocarNaListaEspera(): Promise<void> {
+    if (this.salvando()) return;
+    this.salvando.set(true);
+    this.erroAcao.set(null);
+    try {
+      this.detalhe.set(await this.service.colocarNaListaEspera(this.preCadastroId, this.observacao()));
+    } catch (e) {
+      this.erroAcao.set(mensagemErro(e as HttpErrorResponse, 'Não foi possível colocar na lista de espera. Tente de novo.'));
+    } finally {
+      this.salvando.set(false);
+    }
+  }
+
+  protected alterarObservacao(valor: string): void {
+    this.observacao.set(valor);
+    this.observacaoSalva.set(false);
+  }
+
+  protected async salvarObservacao(): Promise<void> {
+    if (this.salvandoObservacao()) return;
+    this.salvandoObservacao.set(true);
+    this.erroAcao.set(null);
+    try {
+      await this.service.salvarObservacao(this.preCadastroId, this.observacao());
+      this.observacaoSalva.set(true);
+    } catch (e) {
+      this.erroAcao.set(mensagemErro(e as HttpErrorResponse, 'Não foi possível salvar a observação. Tente de novo.'));
+    } finally {
+      this.salvandoObservacao.set(false);
+    }
+  }
+
   /** Na aprovação só nome e CPF são obrigatórios (mais o que o cadastro do atendido já exige). */
   private validar(): string | null {
     const a = this.assistido();
@@ -229,7 +270,8 @@ export class AvaliacaoPreCadastro implements OnInit {
       const detalhe = await this.service.buscar(this.preCadastroId);
       this.detalhe.set(detalhe);
       this.existenteId.set(detalhe.assistidoExistenteId);
-      if (detalhe.status === 'PENDENTE' && detalhe.cpf) {
+      this.observacao.set(detalhe.observacao ?? '');
+      if (emAvaliacao(detalhe.status) && detalhe.cpf) {
         const [rascunho, turmas] = await Promise.all([
           this.service.rascunhoAssistido(this.preCadastroId),
           firstValueFrom(this.http.get<TurmaResponseDTO[]>(`${environment.apiUrl}/api/turmas`)),

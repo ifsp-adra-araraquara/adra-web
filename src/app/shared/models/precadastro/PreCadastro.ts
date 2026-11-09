@@ -60,8 +60,11 @@ export interface PreCadastroRequestDTO {
   site: string;
 }
 
-/** No banco: PENDENTE | CONVERTIDO | DESCARTADO. Na tela: Pendente / Aprovado / Reprovado. */
-export type StatusPreCadastro = 'PENDENTE' | 'CONVERTIDO' | 'DESCARTADO';
+export type StatusPreCadastro = 'PENDENTE' | 'LISTA_ESPERA' | 'CONVERTIDO' | 'DESCARTADO';
+
+export function emAvaliacao(status: StatusPreCadastro): boolean {
+  return status === 'PENDENTE' || status === 'LISTA_ESPERA';
+}
 
 export interface PreCadastroResumoDTO {
   preCadastroId: number;
@@ -76,6 +79,10 @@ export interface PreCadastroResumoDTO {
   assistidoId: number | null;
   /** O que a família não enviou ("Foto da criança"...). Vazio depois de aprovado. */
   anexosFaltando: string[];
+  rendaFamiliar: number | null;
+  possuiProblemaSaude: boolean | null;
+  programasTransferencia: ProgramaTransferencia[];
+  vistoAssistenteSocial: boolean;
 }
 
 /** Comprovante de endereço (obrigatório), foto e documentos enviados junto com a inscrição. */
@@ -99,8 +106,8 @@ export interface PreCadastroResponseDTO {
   dados: Partial<PreCadastroDadosDTO>;
   status: StatusPreCadastro;
   motivoReprovacao: string | null;
+  observacao: string | null;
   assistidoId: number | null;
-  /** Atendido que já tem este CPF (só para pendentes). */
   assistidoExistenteId: number | null;
   /** Foto e documentos enviados (até a aprovação; depois ficam no atendido e no responsável). */
   arquivos: ArquivoResponseDTO[];

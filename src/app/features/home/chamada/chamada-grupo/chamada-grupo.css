@@ -151,11 +151,6 @@ textarea { width: 100%; }
 .alerta-texto { color: var(--amber-600); }
 
 @media (min-width: 720px) {
-  /* A partir do iPad: lista única, centralizada e com largura de leitura.
-     A grade do mês usa a largura toda (ver .larga). */
-  .chamada-grupo { max-width: 880px; margin: 0 auto; }
-  .chamada-grupo.larga { max-width: none; }
-
   .rodape {
     flex-direction: row; align-items: center; justify-content: space-between;
     margin: 16px 0 0; border: 1px solid var(--gray-100); border-radius: var(--radius);

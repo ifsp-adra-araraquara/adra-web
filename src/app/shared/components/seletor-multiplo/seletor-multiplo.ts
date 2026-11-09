@@ -34,13 +34,13 @@ import { SelectOption } from '../select/select';
     .opcoes { display: flex; gap: 8px; flex-wrap: wrap; }
   `,
 })
-export class SeletorMultiplo {
+export class SeletorMultiplo<T extends string | number = number> {
   label = input.required<string>();
-  opcoes = input.required<SelectOption<number>[]>();
+  opcoes = input.required<SelectOption<T>[]>();
   textoVazio = input('Nenhuma opção disponível.');
-  valores = model<number[]>([]);
+  valores = model<T[]>([]);
 
-  protected alternar(valor: number): void {
+  protected alternar(valor: T): void {
     this.valores.update((atuais) =>
       atuais.includes(valor) ? atuais.filter((v) => v !== valor) : [...atuais, valor],
     );

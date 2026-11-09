@@ -132,4 +132,27 @@ describe('RegistroDisciplinarModal', () => {
     expect(modal.data()).toBe(modal.hoje);
     expect(modal.outraData()).toBe(false);
   });
+
+  it('suspensão com um atendido usa o período em dias de atividade do grupo (reunião de 05/11)', async () => {
+    const suspensao = { motivoId: 9, nome: 'Bullying', nivel: NivelDisciplinar.SUSPENSAO, ativo: true };
+    const sugerirPeriodoSuspensao = vi
+      .fn()
+      .mockResolvedValue({ inicio: '2026-11-06', fim: '2026-11-10', diasDeAtividade: 3, retorno: '2026-11-11' });
+    const fixture = await montar({
+      listarMotivos: vi.fn().mockResolvedValue([motivo, suspensao]),
+      sugerirPeriodoSuspensao,
+    });
+    const modal = fixture.componentInstance;
+
+    modal.escolhidos.set([lucas]);
+    modal.motivoId.set(9);
+    modal.escolherData('2026-11-05');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(sugerirPeriodoSuspensao).toHaveBeenCalledWith(7, '2026-11-05');
+    expect(modal.suspensaoInicio()).toBe('2026-11-06');
+    expect(modal.suspensaoFim()).toBe('2026-11-10');
+    expect(modal.retornoSuspensao()).toBe('2026-11-11');
+  });
 });

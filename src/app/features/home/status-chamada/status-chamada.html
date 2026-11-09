@@ -1,14 +1,16 @@
 <section class="status-chamada-page" aria-labelledby="status-chamada-titulo">
+  <button type="button" class="btn-voltar" (click)="voltar()">
+    <app-icon name="chevron-left" />
+    Voltar
+  </button>
   <header class="page-header">
-    <button type="button" class="btn-voltar" (click)="voltar()">
-      <app-icon name="chevron-left" />
-      Voltar
-    </button>
-    <p class="eyebrow">Pedagógico</p>
-    <h1 id="status-chamada-titulo">Status das chamadas</h1>
-    <p class="page-intro">
-      Dias de chamada de cada grupo no período, até hoje, e se a chamada foi lançada. Feriados e dias sem atividade não entram.
-    </p>
+    <div class="page-header-texto">
+      <p class="eyebrow">Pedagógico</p>
+      <h1 id="status-chamada-titulo">Status das chamadas</h1>
+      <p class="page-intro">
+        Dias de chamada de cada grupo no período, até hoje, e se a chamada foi lançada. Feriados e dias sem atividade não entram.
+      </p>
+    </div>
   </header>
 
   <section class="panel">

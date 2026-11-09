@@ -61,7 +61,6 @@ import { DadosComplementaresResponsavelForm } from '../responsaveis/dados-comple
 import { SocioeconomicoAssistidoForm } from './socioeconomico/socioeconomico-assistido';
 import { TermosAssistidoForm } from './termos/termos-assistido';
 import { FichaDisciplinarAssistido } from './ficha-disciplinar/ficha-disciplinar-assistido';
-import { ElegibilidadeDTO } from '../../../shared/models/assistido/ElegibilidadeDTO';
 import {
   PROGRAMA_TRANSFERENCIA_LABELS,
   ProgramaTransferencia,

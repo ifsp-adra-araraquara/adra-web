@@ -1,6 +1,4 @@
 :host { display: block; width: 100%; }
-/* Mesma coluna centralizada da tela do grupo (chamada-grupo.css) */
-.chamada-page { max-width: 880px; margin: 0 auto; }
 
 .count-alerta { background: var(--amber-50) !important; color: var(--amber-600) !important; }
 .hint-pendentes { margin: 0 0 12px; font-size: 13px; color: var(--gray-600); }

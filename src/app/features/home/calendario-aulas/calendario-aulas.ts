@@ -160,17 +160,16 @@ export class CalendarioAulas implements OnInit {
   /** Notas/eventos globais cadastrados pela Coordenação — visíveis para todos. */
   private readonly eventosNotas = computed<EventInput[]>(() =>
     this.notaService.notas().map((nota) => {
-      const cores = this.CORES_STATUS['coral'];
       const horarioCurto = nota.horario ? nota.horario.slice(0, 5) : null;
       return {
         id: `nota-${nota.notaId}`,
         title: horarioCurto ? `${horarioCurto} · ${nota.titulo}` : nota.titulo,
         start: nota.horario ? `${nota.dataNota}T${nota.horario}` : nota.dataNota,
         allDay: !nota.horario,
-        backgroundColor: cores.bg,
-        borderColor: cores.bg,
-        textColor: cores.text,
-        extendedProps: { nota, variant: 'coral' as BadgeVariant },
+        backgroundColor: '#fff',
+        borderColor: '#fff',
+        textColor: 'var(--gray-800)',
+        extendedProps: { nota },
       };
     }),
   );
@@ -201,12 +200,6 @@ export class CalendarioAulas implements OnInit {
       if (this.dataInicioFiltro() !== inicio) this.dataInicioFiltro.set(inicio);
       if (this.dataFimFiltro() !== fim) this.dataFimFiltro.set(fim);
     });
-  }
-
-  /** Campo "De" alterado à mão: leva o calendário até essa data. */
-  irParaData(valor: string): void {
-    this.dataInicioFiltro.set(valor);
-    if (valor) this.calendarioRef?.getApi().gotoDate(valor);
   }
 
   alternarVisualizacao(view: CalendarView) {
@@ -464,10 +457,8 @@ export class CalendarioAulas implements OnInit {
 
     const nota = arg.event.extendedProps['nota'] as NotaCalendarioResponseDTO | undefined;
     if (nota) {
-      const variante = (arg.event.extendedProps['variant'] as BadgeVariant) ?? 'coral';
       const wrapper = document.createElement('div');
       wrapper.className = 'evt evt-nota';
-      wrapper.style.setProperty('--evt-accent', `var(--${variante}-400)`);
       if (nota.horario) {
         const hora = document.createElement('span');
         hora.className = 'evt-hora';

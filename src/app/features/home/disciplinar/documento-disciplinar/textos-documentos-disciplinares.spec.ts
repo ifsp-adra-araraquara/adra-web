@@ -80,6 +80,11 @@ describe('textos dos documentos disciplinares (FT-25)', () => {
       'O atendido deverá cumprir suspensão pelo período de 03 (três) dias, podendo retornar às atividades no dia 14/09/2026 (segunda-feira).',
     );
 
+    const grupoDeSegundaAQuarta = textoDocumento(
+      registro({ ...suspensao, origem: 'MANUAL', suspensaoDiasDeAtividade: 2, suspensaoRetorno: '2026-09-14' }),
+    );
+    expect(grupoDeSegundaAQuarta.paragrafos[5]).toContain('02 (dois) dias');
+
     const acumulo = textoDocumento(registro({ ...suspensao, origem: 'RECOMENDACAO' }));
     expect(acumulo.paragrafos[1]).toContain('ao acúmulo de 03 (três) advertências');
   });

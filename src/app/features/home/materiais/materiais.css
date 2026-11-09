@@ -2,10 +2,6 @@
   display: block;
 }
 
-.materiais-page {
-  max-width: 1200px;
-}
-
 .page-header {
   margin-bottom: 24px;
 }
@@ -133,22 +129,4 @@ h2 {
   margin-bottom: 0;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-th, td {
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--gray-100);
-  text-align: left;
-  white-space: nowrap;
-}
-
-th {
-  color: var(--gray-600);
-  font-size: 11px;
-  text-transform: uppercase;
-}
 

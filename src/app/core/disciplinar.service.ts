@@ -10,6 +10,7 @@ import {
   MotivoDisciplinarRequestDTO,
   PaginaRegistrosDisciplinares,
   PendenciasDisciplinaresDTO,
+  PeriodoSuspensaoDTO,
   RegistroCriadoDTO,
   RegistroDisciplinarDTO,
   RegistroDisciplinarRequestDTO,
@@ -78,6 +79,14 @@ export class DisciplinarService {
   gerarPelaRecomendacao(registroId: number, dto: GerarPelaRecomendacaoRequestDTO): Promise<RegistroCriadoDTO> {
     return firstValueFrom(
       this.http.post<RegistroCriadoDTO>(`${this.api}/disciplinar/${registroId}/recomendacao`, dto),
+    );
+  }
+
+  /** Período padrão de suspensão pelo fato na data: 3 dias de atividade do grupo, a partir do próximo dia de atividade. */
+  sugerirPeriodoSuspensao(assistidoId: number, data: string): Promise<PeriodoSuspensaoDTO> {
+    const params = new HttpParams().set('data', data);
+    return firstValueFrom(
+      this.http.get<PeriodoSuspensaoDTO>(`${this.api}/assistidos/${assistidoId}/disciplinar/periodo-suspensao`, { params }),
     );
   }
 

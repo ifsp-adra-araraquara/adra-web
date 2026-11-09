@@ -7,7 +7,7 @@ import { NIVEIS_DISCIPLINARES, NivelDisciplinar } from '../../enum/NivelDiscipli
 import { Role } from '../../enum/role.enum';
 import { RegistroCriadoDTO, RegistroDisciplinarDTO } from '../../models/disciplinar/Disciplinar';
 import { hojeISO } from '../../utils/aula.util';
-import { nivelRecomendado, rotuloSequencia, somarDias, textoRecomendacao } from '../../utils/disciplinar.util';
+import { dataBr, nivelRecomendado, rotuloSequencia, somarDias, textoRecomendacao } from '../../utils/disciplinar.util';
 import { mensagemErro } from '../../utils/erro-http.util';
 import { Modal } from '../modal/modal';
 import { Button } from '../button/button';
@@ -38,6 +38,7 @@ export class RecomendacaoDisciplinarModal {
   gerado = output<RegistroCriadoDTO>();
 
   readonly hoje = hojeISO();
+  readonly dataBr = dataBr;
   readonly NIVEIS = NIVEIS_DISCIPLINARES;
 
   private readonly fila = signal<RegistroDisciplinarDTO[]>([]);
@@ -59,6 +60,27 @@ export class RecomendacaoDisciplinarModal {
   readonly erro = signal<string | null>(null);
   readonly erroCampos = signal<string | null>(null);
 
+  /** Retorno às atividades do período sugerido pela API (dias de atividade do grupo), para a dica do formulário. */
+  readonly retornoSuspensao = signal<string | null>(null);
+  private pedidoPeriodo = 0;
+
+  /**
+   * Suspensão conta dias de atividade do grupo (reunião de 05/11): pede à API o período
+   * a partir da data do fato. Se falhar, fica o padrão local; o back aplica a regra de todo jeito.
+   */
+  private async sugerirPeriodo(assistidoId: number, data: string): Promise<void> {
+    const pedido = ++this.pedidoPeriodo;
+    try {
+      const periodo = await this.disciplinarService.sugerirPeriodoSuspensao(assistidoId, data);
+      if (pedido !== this.pedidoPeriodo) return;
+      this.suspensaoInicio.set(periodo.inicio);
+      this.suspensaoFim.set(periodo.fim);
+      this.retornoSuspensao.set(periodo.retorno);
+    } catch {
+      if (pedido === this.pedidoPeriodo) this.retornoSuspensao.set(null);
+    }
+  }
+
   constructor() {
     effect(() => {
       this.fila.set(this.recomendacoes());
@@ -76,12 +98,15 @@ export class RecomendacaoDisciplinarModal {
   abrirFormulario(r: RegistroDisciplinarDTO): void {
     this.descricao.set(`${NIVEIS_DISCIPLINARES[this.nivelAGerar()!].rotulo} pela ${rotuloSequencia(r)} registrada.`);
     this.formAberto.set(true);
+    if (this.ehSuspensao()) this.sugerirPeriodo(r.assistidoId, this.data());
   }
 
   onData(valor: string): void {
     this.data.set(valor);
     this.suspensaoInicio.set(valor);
     this.suspensaoFim.set(somarDias(valor, DIAS_SUSPENSAO_PADRAO - 1));
+    const atual = this.fila()[0];
+    if (this.ehSuspensao() && atual) this.sugerirPeriodo(atual.assistidoId, valor);
   }
 
   async gerar(r: RegistroDisciplinarDTO): Promise<void> {
@@ -128,6 +153,7 @@ export class RecomendacaoDisciplinarModal {
   }
 
   private reiniciarFormulario(): void {
+    this.retornoSuspensao.set(null);
     this.formAberto.set(false);
     this.data.set(this.hoje);
     this.descricao.set('');

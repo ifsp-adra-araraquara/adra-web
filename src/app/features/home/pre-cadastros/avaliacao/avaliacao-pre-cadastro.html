@@ -1,5 +1,5 @@
 <section class="page avaliacao" aria-labelledby="avaliacao-titulo">
-  <a class="btn-voltar" routerLink="/pre-cadastros">
+  <a class="btn-voltar" routerLink="/pre-cadastros" queryParamsHandling="preserve">
     <app-icon name="chevron-left" />
     Pré-cadastros
   </a>
@@ -18,7 +18,7 @@
         </p>
         <div class="selos">
           <app-badge [status]="d.status" />
-          @if (existenteId() && pendente()) {
+          @if (existenteId() && emAvaliacao()) {
             <app-badge variant="amber" label="CPF já cadastrado" />
           }
         </div>
@@ -31,7 +31,7 @@
     </header>
 
     @if (existenteId(); as id) {
-      @if (pendente()) {
+      @if (emAvaliacao()) {
         <div class="notice notice-amber" role="status">
           <app-icon name="alert-circle" />
           <span>
@@ -71,6 +71,26 @@
           <b>Motivo:</b> {{ d.motivoReprovacao }}
         </span>
       </div>
+    }
+
+    @if (emAvaliacao()) {
+      <section class="card card-pad bloco" aria-labelledby="sec-observacao">
+        <h2 id="sec-observacao" class="form-sec-title">Observação da equipe</h2>
+        <p class="dica">Anote o que combinar com a família. Ao aprovar, a observação vai para a ficha do atendido.</p>
+        <div class="field">
+          <label class="sr-only" for="av-observacao">Observação da equipe</label>
+          <textarea id="av-observacao" rows="3" maxlength="2000" [ngModel]="observacao()" (ngModelChange)="alterarObservacao($event)"></textarea>
+        </div>
+        <div class="observacao-acoes">
+          <app-button variant="secondary" size="sm" [loading]="salvandoObservacao()" (click)="salvarObservacao()">Salvar observação</app-button>
+          <span class="dica-salvo" role="status">@if (observacaoSalva()) { Observação salva. }</span>
+        </div>
+      </section>
+    } @else if (d.observacao) {
+      <section class="card card-pad bloco" aria-labelledby="sec-observacao">
+        <h2 id="sec-observacao" class="form-sec-title">Observação da equipe</h2>
+        <p class="observacao-texto">{{ d.observacao }}</p>
+      </section>
     }
 
     <div class="colunas" [class.colunas--leitura]="!podeAprovar()">
@@ -142,13 +162,16 @@
       </aside>
     </div>
 
-    @if (pendente()) {
+    @if (emAvaliacao()) {
       <div class="rodape">
         @if (erroAcao()) {
           <div class="notice notice-error" role="alert">{{ erroAcao() }}</div>
         }
         <div class="acoes">
           <app-button variant="danger" (click)="abrirReprovar()">Reprovar</app-button>
+          @if (pendente() && podeAprovar()) {
+            <app-button variant="secondary" [loading]="salvando()" (click)="colocarNaListaEspera()">Colocar na lista de espera</app-button>
+          }
           @if (podeAprovar()) {
             <app-button [loading]="salvando()" (click)="aprovar()">Aprovar e criar cadastro</app-button>
           }

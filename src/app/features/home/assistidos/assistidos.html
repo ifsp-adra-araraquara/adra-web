@@ -545,7 +545,6 @@
           @if (erroSocioeconomico()) {
             <div class="notice notice-error mb-s" role="alert">{{ erroSocioeconomico() }}</div>
           }
-          <!-- Sem [limiteRenda]: a regra de corte vale só na entrada da família. -->
           <app-socioeconomico-assistido [(dados)]="formSocioeconomico" />
           <div style="display: flex; gap: 8px; margin-top: 12px">
             <app-button variant="secondary" size="sm" (click)="cancelarEdicaoSocioeconomico()">Cancelar</app-button>
