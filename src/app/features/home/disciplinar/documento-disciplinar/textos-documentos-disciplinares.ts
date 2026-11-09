@@ -42,6 +42,8 @@ type DadosDocumento = Pick<
   | 'dataRegistro'
   | 'suspensaoInicio'
   | 'suspensaoFim'
+  | 'suspensaoDiasDeAtividade'
+  | 'suspensaoRetorno'
 >;
 
 const ORDINAIS = ['PRIMEIRA', 'SEGUNDA', 'TERCEIRA', 'QUARTA', 'QUINTA', 'SEXTA', 'SÉTIMA', 'OITAVA', 'NONA', 'DÉCIMA'];
@@ -139,8 +141,9 @@ export function textoDocumento(r: DadosDocumento): TextoDocumento {
         ],
       };
     case 'SUSPENSAO': {
-      const dias = diasUteis(r.suspensaoInicio!, r.suspensaoFim!);
-      const retorno = proximoDiaUtil(r.suspensaoFim!);
+      // Dias de atividade do grupo e retorno vêm da API (reunião de 05/11); sem eles, conta de segunda a sexta.
+      const dias = r.suspensaoDiasDeAtividade ?? diasUteis(r.suspensaoInicio!, r.suspensaoFim!);
+      const retorno = r.suspensaoRetorno ?? proximoDiaUtil(r.suspensaoFim!);
       const causa = r.origem === 'RECOMENDACAO' ? 'ao acúmulo de 03 (três) advertências' : `a ${semPontoFinal(r.descricao)}`;
       return {
         titulo: 'Termo de Suspensão Educativa',

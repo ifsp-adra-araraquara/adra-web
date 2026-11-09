@@ -174,6 +174,27 @@ export class RegistroDisciplinarModal {
 
   private readonly tituloOque = viewChild<ElementRef<HTMLElement>>('tituloOque');
 
+  /** Retorno às atividades do período sugerido pela API (dias de atividade do grupo), para a dica do formulário. */
+  readonly retornoSuspensao = signal<string | null>(null);
+  private pedidoPeriodo = 0;
+
+  /**
+   * Suspensão conta dias de atividade do grupo (reunião de 05/11): pede à API o período
+   * a partir da data do fato. Se falhar, fica o padrão local; o back aplica a regra de todo jeito.
+   */
+  private async sugerirPeriodo(assistidoId: number, data: string): Promise<void> {
+    const pedido = ++this.pedidoPeriodo;
+    try {
+      const periodo = await this.disciplinarService.sugerirPeriodoSuspensao(assistidoId, data);
+      if (pedido !== this.pedidoPeriodo) return;
+      this.suspensaoInicio.set(periodo.inicio);
+      this.suspensaoFim.set(periodo.fim);
+      this.retornoSuspensao.set(periodo.retorno);
+    } catch {
+      if (pedido === this.pedidoPeriodo) this.retornoSuspensao.set(null);
+    }
+  }
+
   constructor() {
     // Sempre que abre: limpa o estado e carrega os motivos ativos.
     effect(() => {
@@ -184,6 +205,15 @@ export class RegistroDisciplinarModal {
           this.carregarMotivos();
         });
       }
+    });
+
+    // Suspensão com um atendido: o período vem em dias de atividade do grupo dele.
+    effect(() => {
+      const atendidos = this.assistidosAtuais();
+      if (!this.ehSuspensao() || atendidos.length !== 1) return;
+      const assistidoId = atendidos[0].assistidoId;
+      const data = this.data();
+      untracked(() => this.sugerirPeriodo(assistidoId, data));
     });
 
     const midia = this.document.defaultView?.matchMedia?.(MIDIA_LARGA);
@@ -313,6 +343,7 @@ export class RegistroDisciplinarModal {
   }
 
   private reiniciar(): void {
+    this.retornoSuspensao.set(null);
     this.passo.set('quem');
     this.escolhidos.set([]);
     this.motivoId.set(null);

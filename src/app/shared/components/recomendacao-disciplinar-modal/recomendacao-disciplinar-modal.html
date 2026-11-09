@@ -41,6 +41,9 @@
             (ngModelChange)="suspensaoFim.set($event)"
           />
         </div>
+        @if (retornoSuspensao(); as retorno) {
+          <p class="hint" aria-live="polite">3 dias de atividade do grupo, sem fim de semana e feriado. Retorno em {{ dataBr(retorno) }}.</p>
+        }
       }
       <div class="field">
         <label for="recomendacao-descricao">Descrição</label>

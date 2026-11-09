@@ -185,7 +185,7 @@
   </fieldset>
 
   @if (ehSuspensao() && varios()) {
-    <p class="hint">Com mais de um atendido, a suspensão vale por 3 dias a partir da data. Ajuste o período de cada um depois, se precisar.</p>
+    <p class="hint">Cada atendido fica suspenso por 3 dias de atividade do seu grupo, a partir do próximo dia de atividade. Fim de semana e feriado não contam. Ajuste o período de cada um depois, se precisar.</p>
   } @else if (ehSuspensao()) {
     <div class="form-row">
       <app-input
@@ -203,6 +203,9 @@
         (ngModelChange)="suspensaoFim.set($event)"
       />
     </div>
+    @if (retornoSuspensao(); as retorno) {
+      <p class="campo-dica" aria-live="polite">3 dias de atividade do grupo, sem fim de semana e feriado. Retorno em {{ dataBr(retorno) }}.</p>
+    }
   }
 
   <div class="campo">
