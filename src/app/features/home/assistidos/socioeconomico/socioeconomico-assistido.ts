@@ -16,9 +16,9 @@ export type DadosSocioeconomicosAssistido = Pick<
 >;
 
 /**
- * Socioeconômico da família: renda familiar (com aviso do limite do programa),
+ * Socioeconômico da família: renda familiar (só estimativa, não barra o cadastro),
  * programas de transferência de renda e NIS/CadÚnico.
- * Uso: `<app-socioeconomico-assistido [(dados)]="form" [limiteRenda]="limite()" />`.
+ * Uso: `<app-socioeconomico-assistido [(dados)]="form" />`.
  */
 @Component({
   selector: 'app-socioeconomico-assistido',
@@ -30,8 +30,6 @@ export type DadosSocioeconomicosAssistido = Pick<
 })
 export class SocioeconomicoAssistidoForm<T extends DadosSocioeconomicosAssistido> {
   dados = model.required<T>();
-  /** Limite de renda familiar do programa (null = regra ainda não definida). */
-  limiteRenda = input<number | null>(null);
   /** Soma da renda dos responsáveis já informados — só como referência para preencher. */
   somaRendaResponsaveis = input<number | null>(null);
 
@@ -45,12 +43,6 @@ export class SocioeconomicoAssistidoForm<T extends DadosSocioeconomicosAssistido
     valor: programa,
     label: PROGRAMA_TRANSFERENCIA_LABELS[programa],
   }));
-
-  protected readonly acimaDoLimite = computed(() => {
-    const limite = this.limiteRenda();
-    const renda = this.dados().rendaFamiliar;
-    return limite != null && renda != null && renda > limite;
-  });
 
   protected readonly temOutro = computed(
     () => !!this.dados().programasTransferencia?.includes(ProgramaTransferencia.OUTRO),

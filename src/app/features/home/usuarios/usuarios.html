@@ -1,63 +1,59 @@
 <section class="page" id="page-usuarios">
-  <p class="page-intro">
-    Cadastro, edição e ativação de usuários do sistema. Cada usuário pertence a um perfil que define
-    suas permissões (RBAC).
-  </p>
+  <header class="page-header">
+    <div class="page-header-texto">
+      <h1>Usuários</h1>
+      <p class="page-intro">
+        Cadastro, edição e ativação de usuários do sistema. Cada usuário pertence a um perfil que define suas permissões.
+      </p>
+    </div>
+
+    <div class="page-header-acoes">
+      <app-button size="sm" (click)="abrirModalCadastro()"><app-icon name="plus" [size]="16" /> Novo usuário</app-button>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <app-input
+      id="busca-usuario"
+      label="Buscar por nome ou e-mail"
+      [hideLabel]="true"
+      placeholder="Buscar por nome ou e-mail…"
+      [ngModel]="termoBusca()"
+      (ngModelChange)="onBuscaChange($event)"
+    />
+
+    <label for="filtro-perfil" class="sr-only">Filtrar por perfil</label>
+    <app-select
+      id="filtro-perfil"
+      [ngModel]="filtroPerfil()"
+      (ngModelChange)="filtroPerfil.set($event); onFiltroChange()"
+      [options]="perfilFiltroOptions"
+    />
+
+    <label for="filtro-status" class="sr-only">Filtrar por status</label>
+    <app-select
+      id="filtro-status"
+      [ngModel]="filtroStatus()"
+      (ngModelChange)="filtroStatus.set($event); onFiltroChange()"
+      [options]="statusFiltroOptions"
+    />
+  </div>
+
+  @if (avisoGeral()) {
+    <div class="notice notice-info aviso-usuarios" role="status">
+      <span>{{ avisoGeral() }}</span>
+      <button type="button" class="btn-icon btn-icon--ghost" aria-label="Fechar aviso" (click)="avisoGeral.set(null)"><app-icon name="x" /></button>
+    </div>
+  }
+
+  @if (erroGeral()) {
+    <div class="notice notice-amber aviso-usuarios" role="alert">
+      <span>{{ erroGeral() }}</span>
+      <button type="button" class="btn-icon btn-icon--ghost" aria-label="Fechar aviso" (click)="erroGeral.set(null)"><app-icon name="x" /></button>
+    </div>
+  }
 
   <div class="card">
-    <div class="card-head">
-      <h3>Usuários</h3>
-
-      <div class="right">
-        <app-button size="sm" (click)="abrirModalCadastro()"><app-icon name="plus" [size]="16" /> Novo usuário</app-button>
-      </div>
-    </div>
-
-    <div class="card-toolbar">
-      <div class="toolbar-search">
-        <app-input
-          id="busca-usuario"
-          label="Buscar por nome ou e-mail"
-          [hideLabel]="true"
-          placeholder="Buscar por nome ou e-mail…"
-          [ngModel]="termoBusca()"
-          (ngModelChange)="onBuscaChange($event)"
-        />
-      </div>
-
-      <div class="toolbar-filters">
-        <label for="filtro-perfil" class="sr-only">Filtrar por perfil</label>
-        <app-select
-          id="filtro-perfil"
-          [ngModel]="filtroPerfil()"
-          (ngModelChange)="filtroPerfil.set($event); onFiltroChange()"
-          [options]="perfilFiltroOptions"
-        />
-
-        <label for="filtro-status" class="sr-only">Filtrar por status</label>
-        <app-select
-          id="filtro-status"
-          [ngModel]="filtroStatus()"
-          (ngModelChange)="filtroStatus.set($event); onFiltroChange()"
-          [options]="statusFiltroOptions"
-        />
-      </div>
-    </div>
-
-    @if (avisoGeral()) {
-      <div class="notice notice-info" style="margin: 0 24px 16px 24px; display: flex; justify-content: space-between; align-items: center;" role="status">
-        <span>{{ avisoGeral() }}</span>
-        <button type="button" class="btn-icon btn-icon--ghost" aria-label="Fechar aviso" (click)="avisoGeral.set(null)"><app-icon name="x" /></button>
-      </div>
-    }
-
-    @if (erroGeral()) {
-      <div class="notice notice-amber" style="margin: 0 24px 16px 24px; display: flex; justify-content: space-between; align-items: center;" role="alert">
-        <span>{{ erroGeral() }}</span>
-        <button type="button" class="btn-icon btn-icon--ghost" aria-label="Fechar aviso" (click)="erroGeral.set(null)"><app-icon name="x" /></button>
-      </div>
-    }
-
     <div class="table-wrap">
       @if (carregando()) {
         <p class="loading" role="status">Carregando usuários…</p>

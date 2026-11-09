@@ -292,6 +292,7 @@ thead th {
   text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em;
   color: var(--gray-600); font-weight: 600; padding: 12px 14px; border-bottom: 1px solid var(--borda);
   white-space: nowrap; background: var(--cabecalho-tabela);
+  height: 69px; /* mesma altura em todas as tabelas, com ou sem coluna ordenável (app-table) */
 }
 /* Dentro de um cartão o cabeçalho acompanha o canto arredondado. */
 .card thead tr:first-child th:first-child { border-top-left-radius: calc(var(--radius) - 1px); }

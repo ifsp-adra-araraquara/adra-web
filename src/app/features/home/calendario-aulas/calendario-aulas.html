@@ -1,12 +1,5 @@
 <div class="cal">
   <div class="cal-toolbar">
-    <div class="cal-filters">
-      <div class="field">
-        <label>De</label>
-        <input class="input" type="date" [ngModel]="dataInicioFiltro()" (ngModelChange)="irParaData($event)" name="dataInicioFiltro" />
-      </div>
-    </div>
-
     <div class="cal-actions">
       <div class="seg-control" role="group" aria-label="Visualização do calendário">
         <button type="button" class="seg-btn" [class.active]="visualizacao() === 'dayGridMonth'" (click)="alternarVisualizacao('dayGridMonth')">Mês</button>
@@ -22,17 +15,21 @@
     </div>
   </div>
 
-  <div class="cal-legend">
-    <span class="legend-chip">
-      <span class="legend-dot" style="background: var(--coral-400)"></span>
-      Nota / evento global
+  <div class="cal-legend" aria-label="Legenda do calendário">
+    <span class="legend-chip legend-chip--nota">
+      <span class="legend-dot"></span>
+      Nota / evento
     </span>
-  </div>
-  <div class="cal-legend cal-legend--sem-aula" aria-label="Dias sem chamada">
-    <span class="legend-titulo">Sem chamada:</span>
+    <span class="legend-separador" aria-hidden="true"></span>
+    <span class="legend-titulo">Sem chamada</span>
     @for (item of legendaExcecoes; track item.tipo) {
-      <span class="legend-chip">
-        <span class="legend-quadro" [style.background]="'var(--' + item.variant + '-50, var(--gray-100))'" [style.border-color]="'var(--' + item.variant + '-400)'"></span>
+      <span
+        class="legend-chip legend-chip--hachura"
+        [style.--cor-fundo]="'var(--' + item.variant + '-50)'"
+        [style.--cor]="'var(--' + item.variant + '-600)'"
+        [style.--cor-ponto]="'var(--' + item.variant + '-400)'"
+      >
+        <span class="legend-dot"></span>
         {{ item.label }}
       </span>
     }

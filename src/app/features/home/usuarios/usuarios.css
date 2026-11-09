@@ -1,23 +1,10 @@
 /* Título de seção, linha, campo e rótulo: padrão global (styles.css), igual ao app-input. */
 
-.card-toolbar {
+.aviso-usuarios {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 10px;
-  padding: 12px 20px;
-  border-bottom: 1px solid #f1f5f9;
-  flex-wrap: wrap;
-}
-
-.toolbar-search {
-  position: relative;
-  flex: 1 1 220px;
-}
-
-.toolbar-filters {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  margin-bottom: 16px;
 }
 
 .sr-only {

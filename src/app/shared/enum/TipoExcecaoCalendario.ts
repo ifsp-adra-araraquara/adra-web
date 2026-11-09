@@ -16,5 +16,5 @@ export const TIPO_EXCECAO_INFO: Record<TipoExcecaoCalendario, { label: string; v
   [TipoExcecaoCalendario.FERIAS]: { label: 'Férias', variant: 'teal' },
   [TipoExcecaoCalendario.PONTO_FACULTATIVO]: { label: 'Ponto facultativo', variant: 'amber' },
   [TipoExcecaoCalendario.EVENTO_PASSEIO]: { label: 'Evento / passeio', variant: 'blue' },
-  [TipoExcecaoCalendario.OUTRO]: { label: 'Sem chamada', variant: 'gray' },
+  [TipoExcecaoCalendario.OUTRO]: { label: 'Outro motivo', variant: 'gray' },
 };

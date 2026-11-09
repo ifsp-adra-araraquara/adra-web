@@ -9,7 +9,6 @@ import { environment } from '../../../../../environments/environment';
 import { AssistidoService } from '../../../../core/assistido.service';
 import { AssistidoRequestDTO } from '../../../../shared/models/assistido/AssistidoRequestDTO';
 import { AssistidoResponseDTO } from '../../../../shared/models/assistido/AssistidoResponseDTO';
-import { ElegibilidadeDTO } from '../../../../shared/models/assistido/ElegibilidadeDTO';
 import { TurmaResponseDTO } from '../../../../shared/models/turma/TurmaResponseDTO';
 import { EnderecoDTO } from '../../../../shared/models/endereco/EnderecoDTO';
 import { Input } from '../../../../shared/components/input/input';
@@ -20,7 +19,6 @@ import { Badge } from '../../../../shared/components/badge/badge';
 import { FotoPerfil } from '../../../../shared/components/foto-perfil/foto-perfil';
 import { UploadDocumento } from '../../../../shared/components/upload-documento/upload-documento';
 import { cpfValido, formatarCpf } from '../../../../shared/validators/cpf.validator';
-import { formatarMoeda } from '../../../../shared/utils/mascara.util';
 import { mensagemErro } from '../../../../shared/utils/erro-http.util';
 import { DadosComplementaresAssistidoForm, SEXO_OPTIONS } from '../dados-complementares/dados-complementares-assistido';
 import { SocioeconomicoAssistidoForm } from '../socioeconomico/socioeconomico-assistido';
@@ -92,7 +90,6 @@ export class AssistidoNovo implements OnInit {
   documentos = signal<File[]>([]);
   responsaveis = signal<ResponsavelPendente[]>([]);
   turmas = signal<TurmaResponseDTO[]>([]);
-  limiteRendaFamiliar = signal<number | null>(null);
   alertaDuplicidade = signal(false);
   tentouSalvar = signal(false);
   salvando = signal(false);
@@ -125,10 +122,6 @@ export class AssistidoNovo implements OnInit {
     this.http.get<TurmaResponseDTO[]>(this.apiTurmas).subscribe({
       next: (lista) => this.turmas.set(lista),
       error: (erro) => console.error('Erro ao carregar turmas:', erro),
-    });
-    this.http.get<ElegibilidadeDTO>(`${this.apiAssistidos}/elegibilidade`).subscribe({
-      next: (criterios) => this.limiteRendaFamiliar.set(criterios.rendaFamiliarLimite),
-      error: () => this.limiteRendaFamiliar.set(null),
     });
   }
 
@@ -219,11 +212,6 @@ export class AssistidoNovo implements OnInit {
     const erroComplementares = validarDadosComplementares(a);
     if (erroComplementares) return erroComplementares;
 
-    // Regra de corte só na entrada (o back faz a mesma checagem).
-    const limite = this.limiteRendaFamiliar();
-    if (limite != null && a.rendaFamiliar != null && a.rendaFamiliar > limite) {
-      return `Renda familiar acima do limite do programa (${formatarMoeda(limite)}). A família não pode ser cadastrada.`;
-    }
     if (this.responsaveis().length === 0) return 'Informe pelo menos um responsável para o atendido.';
     return null;
   }
