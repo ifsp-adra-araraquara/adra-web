@@ -3,7 +3,7 @@
     @if (previewUrl(); as url) {
       <img [src]="url" alt="Prévia da foto de perfil" />
     } @else if (entidadeIdAtual(); as id) {
-      <app-avatar [entidadeId]="id" [nome]="nomeAtual()" [size]="88" />
+      <app-avatar [entidadeTipo]="entidadeTipo()" [entidadeId]="id" [nome]="nomeAtual()" [size]="88" />
     } @else {
       <app-icon name="camera" [size]="28" />
     }

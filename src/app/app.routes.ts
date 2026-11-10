@@ -42,6 +42,11 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
+        path: 'perfil',
+        title: 'Meu Perfil',
+        loadComponent: () => import('./features/home/perfil/meu-perfil').then((m) => m.MeuPerfil),
+      },
+      {
         path: 'painel',
         title: 'Painel',
         loadComponent: () => import('./features/home/painel/painel').then((m) => m.Painel),

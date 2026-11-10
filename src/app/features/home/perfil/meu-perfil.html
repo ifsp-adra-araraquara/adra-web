@@ -1,0 +1,255 @@
+<section class="page" id="page-meu-perfil">
+  <header class="page-header">
+    <div class="page-header-texto">
+      <h1>Meu Perfil</h1>
+      <p class="page-intro">
+        Gerencie seus dados pessoais, foto de perfil e senha de acesso.
+      </p>
+    </div>
+  </header>
+
+  @if (carregando()) {
+    <div class="card card-pad">
+      <p class="muted" role="status">Carregando perfil…</p>
+    </div>
+  } @else if (erroCarregamento()) {
+    <div class="notice notice-error" role="alert">
+      <app-icon name="alert-circle" />
+      <div>{{ erroCarregamento() }}</div>
+    </div>
+  } @else if (usuario(); as u) {
+    <div class="perfil-grid">
+      <!-- ==================== CARTÃO 1: DADOS PESSOAIS E FOTO ==================== -->
+      <form class="card card-pad" (ngSubmit)="salvarDadosPessoais()" novalidate>
+        <h2 class="form-sec-title">Foto e dados pessoais</h2>
+
+        <div class="foto-bloco">
+          <label
+            class="foto-bloco__avatar"
+            for="input-foto-meu-perfil"
+            [attr.aria-busy]="processandoFoto()"
+            aria-hidden="true"
+          >
+            @if (previewUrl(); as url) {
+              <img [src]="url" alt="Prévia da nova foto de perfil" />
+            } @else if (removerFotoAtual()) {
+              <span class="foto-bloco__iniciais">{{ iniciais() }}</span>
+            } @else {
+              <app-avatar
+                [entidadeTipo]="EntidadeArquivo.USUARIO"
+                [entidadeId]="u.usuarioId"
+                [nome]="nomeCompleto() || u.nomeCompleto"
+                [size]="88"
+              />
+            }
+            @if (processandoFoto()) {
+              <span class="foto-bloco__carregando" aria-hidden="true"></span>
+            }
+          </label>
+
+          <div class="foto-bloco__info">
+            <span class="foto-bloco__titulo">Foto de perfil</span>
+            <p class="hint">
+              A foto é ajustada automaticamente e aparece na barra lateral após salvar as alterações.
+            </p>
+
+            <input
+              #seletorFoto
+              id="input-foto-meu-perfil"
+              class="sr-only"
+              type="file"
+              accept="image/*"
+              tabindex="-1"
+              aria-hidden="true"
+              (change)="aoSelecionarFoto($event)"
+            />
+
+            <div class="foto-bloco__acoes">
+              <app-button
+                type="button"
+                size="sm"
+                [loading]="processandoFoto()"
+                (click)="seletorFoto.click()"
+              >
+                <app-icon name="camera" [size]="14" />
+                {{ temFotoVisivel() ? 'Trocar foto' : 'Adicionar foto' }}
+              </app-button>
+
+              @if (temFotoVisivel()) {
+                <app-button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  (click)="marcarRemocaoFoto()"
+                >
+                  <app-icon name="trash" [size]="14" />
+                  Remover foto
+                </app-button>
+              }
+
+              @if ((novaFoto() && fotoSalva()) || removerFotoAtual()) {
+                <app-button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  (click)="desfazerAlteracaoFoto()"
+                >
+                  <app-icon name="rotate-ccw" [size]="14" />
+                  Manter a atual
+                </app-button>
+              }
+            </div>
+
+            @if (erroFoto()) {
+              <p class="app-input-error" role="alert">{{ erroFoto() }}</p>
+            }
+          </div>
+        </div>
+
+        <div class="form-row">
+          <app-input
+            id="perfil-nome"
+            name="nomeCompleto"
+            label="Nome completo"
+            placeholder="Seu nome completo"
+            [required]="true"
+            [ngModel]="nomeCompleto()"
+            (ngModelChange)="nomeCompleto.set($event)"
+          />
+
+          <app-input
+            id="perfil-telefone"
+            name="telefone"
+            label="Telefone"
+            mask="telefone"
+            placeholder="(16) 90000-0000"
+            [ngModel]="telefone()"
+            (ngModelChange)="telefone.set($event)"
+          />
+        </div>
+
+        <h3 class="form-sec-title">Dados de acesso</h3>
+
+        <div class="form-row">
+          <app-input
+            id="perfil-email"
+            name="email"
+            label="E-mail institucional"
+            type="email"
+            [readonly]="true"
+            [ngModel]="u.email"
+          />
+
+          <app-input
+            id="perfil-nivel"
+            name="nivelPermissao"
+            label="Perfil de acesso"
+            [readonly]="true"
+            [ngModel]="rotuloPerfil()"
+          />
+        </div>
+
+        <div class="notice notice-lock aviso-admin">
+          <app-icon name="lock" />
+          <div>
+            E-mail e perfil de acesso são somente para leitura. Quem altera esses dados é o
+            <strong>Administrador</strong>.
+          </div>
+        </div>
+
+        @if (erroDados()) {
+          <div class="notice notice-error" role="alert">
+            <app-icon name="alert-circle" />
+            <div>{{ erroDados() }}</div>
+          </div>
+        }
+
+        @if (sucessoDados()) {
+          <div class="notice notice-info" role="status">
+            <app-icon name="check" />
+            <div>{{ sucessoDados() }}</div>
+          </div>
+        }
+
+        <div class="form-acoes form-acoes--topo">
+          <app-button
+            type="submit"
+            [loading]="salvandoDados()"
+            [disabled]="processandoFoto()"
+          >
+            Salvar alterações
+          </app-button>
+        </div>
+      </form>
+
+      <!-- ==================== CARTÃO 2: TROCA DE SENHA ==================== -->
+      <form class="card card-pad" (ngSubmit)="salvarNovaSenha()" novalidate>
+        <h2 class="form-sec-title">Alterar senha</h2>
+        <p class="muted mb-s">
+          Para sua segurança, informe a senha atual antes de definir uma nova senha. Sua sessão
+          continuará ativa após a troca.
+        </p>
+
+        <app-input
+          id="perfil-senha-atual"
+          name="senhaAtual"
+          label="Senha atual"
+          type="password"
+          autocomplete="current-password"
+          placeholder="Digite sua senha atual"
+          [required]="true"
+          [ngModel]="senhaAtual()"
+          (ngModelChange)="senhaAtual.set($event)"
+        />
+
+        <app-input
+          id="perfil-nova-senha"
+          name="novaSenha"
+          label="Nova senha"
+          type="password"
+          autocomplete="new-password"
+          placeholder="Mínimo de 8 caracteres"
+          [required]="true"
+          [ngModel]="novaSenha()"
+          (ngModelChange)="novaSenha.set($event)"
+        />
+
+        <app-senha-forca [senha]="novaSenha()" />
+
+        <div class="mt-s">
+          <app-input
+            id="perfil-confirmar-senha"
+            name="confirmarSenha"
+            label="Confirmar nova senha"
+            type="password"
+            autocomplete="new-password"
+            placeholder="Repita a nova senha"
+            [required]="true"
+            [ngModel]="confirmarSenha()"
+            (ngModelChange)="confirmarSenha.set($event)"
+          />
+        </div>
+
+        @if (erroSenha()) {
+          <div class="notice notice-error" role="alert">
+            <app-icon name="alert-circle" />
+            <div>{{ erroSenha() }}</div>
+          </div>
+        }
+
+        @if (sucessoSenha()) {
+          <div class="notice notice-info" role="status">
+            <app-icon name="check" />
+            <div>{{ sucessoSenha() }}</div>
+          </div>
+        }
+
+        <div class="form-acoes form-acoes--topo">
+          <app-button type="submit" [loading]="salvandoSenha()">
+            Alterar senha
+          </app-button>
+        </div>
+      </form>
+    </div>
+  }
+</section>
