@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, effect, inject, input, 
 import { Icon } from '../icon/icon';
 import { Button } from '../button/button';
 import { Avatar } from '../avatar/avatar';
+import { EntidadeArquivo } from '../../enum/EntidadeArquivo';
 import { comprimirImagem, formatarTamanho, ImagemInvalidaError } from '../../utils/compressao-imagem.util';
 
 /** Arquivo original maior que isso nem é processado (celular comum gera 3–8 MB). */
@@ -35,6 +36,7 @@ export class FotoPerfil {
   invalido = input(false);
   /** Na edição: dono já salvo — mostra a foto atual enquanto nenhuma nova for escolhida. */
   entidadeIdAtual = input<number | null>(null);
+  entidadeTipo = input<EntidadeArquivo>(EntidadeArquivo.ASSISTIDO);
   nomeAtual = input('');
   /** Maior lado da foto final, em px. */
   ladoMaximo = input(512);
