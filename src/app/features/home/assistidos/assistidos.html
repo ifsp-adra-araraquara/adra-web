@@ -7,6 +7,14 @@
 
     @if (podeEditarCadastro()) {
       <div class="page-header-acoes">
+        <app-button variant="secondary" size="sm" (click)="abrirListaPorAno()">
+          <app-icon name="list" [size]="16" /> Lista por ano
+        </app-button>
+        @if (ehCoordenador()) {
+          <app-button variant="secondary" size="sm" (click)="abrirPrazoDeGuarda()">
+            <app-icon name="shield" [size]="16" /> Prazo de guarda
+          </app-button>
+        }
         <app-button variant="secondary" size="sm" (click)="abrirCadastroEmMassa()">
           <app-icon name="users" [size]="16" /> Cadastro em massa
         </app-button>

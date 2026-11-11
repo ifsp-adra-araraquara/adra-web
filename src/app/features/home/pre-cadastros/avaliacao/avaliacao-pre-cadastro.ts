@@ -10,6 +10,7 @@ import { PreCadastroService } from '../../../../core/pre-cadastro.service';
 import { CategoriaArquivo } from '../../../../shared/enum/CategoriaArquivo';
 import { AssistidoRequestDTO } from '../../../../shared/models/assistido/AssistidoRequestDTO';
 import { PreCadastroResponseDTO, emAvaliacao } from '../../../../shared/models/precadastro/PreCadastro';
+import { ComparacaoRematriculaDTO } from '../../../../shared/models/matricula/Matricula';
 import { TurmaResponseDTO } from '../../../../shared/models/turma/TurmaResponseDTO';
 import { VinculoFamiliarComResponsavelRequestDTO } from '../../../../shared/models/vinculoFamiliar/VinculoFamiliarComResponsavelRequestDTO';
 import { Badge } from '../../../../shared/components/badge/badge';
@@ -34,6 +35,7 @@ import { SocioeconomicoAssistidoForm } from '../../assistidos/socioeconomico/soc
 import { TermosAssistidoForm } from '../../assistidos/termos/termos-assistido';
 import { ResponsaveisPendentes } from '../../assistidos/novo/responsaveis-pendentes';
 import { RespostasFamilia } from './respostas-familia';
+import { ComparacaoRematricula } from './comparacao-rematricula';
 
 const ROTULOS_ANEXO: Partial<Record<CategoriaArquivo, string>> = {
   [CategoriaArquivo.FOTO_PERFIL]: 'Foto do atendido',
@@ -62,6 +64,8 @@ function paraResponsavelPendente(v: VinculoFamiliarComResponsavelRequestDTO): Re
  * Avaliação de um pré-cadastro: o cadastro do atendido já vem preenchido com
  * o que a família enviou (rascunho da API) e a equipe edita o que quiser.
  * Aprovar cria o atendido; reprovar pede o motivo. Já avaliado: só leitura.
+ * CPF de quem já é atendido = rematrícula: mostra o que mudou (sem alterar a
+ * ficha) e abre a matrícula do ano no grupo escolhido.
  */
 @Component({
   selector: 'app-avaliacao-pre-cadastro',
@@ -80,6 +84,7 @@ function paraResponsavelPendente(v: VinculoFamiliarComResponsavelRequestDTO): Re
     TermosAssistidoForm,
     ResponsaveisPendentes,
     RespostasFamilia,
+    ComparacaoRematricula,
   ],
   templateUrl: './avaliacao-pre-cadastro.html',
   styleUrl: './avaliacao-pre-cadastro.css',
@@ -106,6 +111,10 @@ export class AvaliacaoPreCadastro implements OnInit {
   /** Atendido que já tem o CPF (409 ao aprovar ou aviso do detalhe). */
   protected readonly existenteId = signal<number | null>(null);
 
+  protected readonly comparacao = signal<ComparacaoRematriculaDTO | null>(null);
+  protected readonly turmaRematricula = signal<number | null>(null);
+  protected readonly tentouRematricular = signal(false);
+
   protected readonly modalReprovar = signal(false);
   protected readonly motivo = signal('');
   protected readonly tentouReprovar = signal(false);
@@ -119,8 +128,19 @@ export class AvaliacaoPreCadastro implements OnInit {
     const status = this.detalhe()?.status;
     return !!status && emAvaliacao(status);
   });
-  /** Formulário antigo (sem CPF): não dá para montar o cadastro, só reprovar. */
-  protected readonly podeAprovar = computed(() => this.emAvaliacao() && !!this.detalhe()?.cpf);
+  /** Formulário antigo (sem CPF): não dá para montar o cadastro, só reprovar. Quem já é atendido: rematrícula. */
+  protected readonly podeAprovar = computed(() => this.emAvaliacao() && !!this.detalhe()?.cpf && !this.existenteId());
+  protected readonly rematricula = computed(() => this.emAvaliacao() && !!this.existenteId());
+  protected readonly podeRematricular = computed(() => this.rematricula() && this.comparacao()?.jaMatriculadoNoAno === false);
+  protected readonly grupoOptions = computed<SelectOption<number | null>[]>(() => [
+    { value: null, label: 'Escolha o grupo' },
+    ...this.turmas()
+      .filter((t) => t.ativo)
+      .map((t) => ({ value: t.turmaId, label: t.nomeTurma })),
+  ]);
+  protected readonly erroGrupo = computed(() =>
+    this.tentouRematricular() && this.turmaRematricula() == null ? 'Escolha o grupo do atendido no novo ano.' : null,
+  );
   protected readonly idade = computed(() => {
     const nascimento = this.detalhe()?.dataNascimento;
     if (!nascimento) return null;
@@ -193,10 +213,27 @@ export class AvaliacaoPreCadastro implements OnInit {
       this.detalhe.set(await this.service.aprovar(this.preCadastroId, payload));
     } catch (e) {
       const resposta = e as HttpErrorResponse;
-      if (resposta.status === 409 && resposta.error?.assistidoId) {
-        this.existenteId.set(resposta.error.assistidoId);
-      }
       this.erroAcao.set(mensagemErro(resposta, 'Não foi possível aprovar. Confira os dados e tente de novo.'));
+      if (resposta.status === 409 && resposta.error?.assistidoId) {
+        // CPF cadastrado enquanto a tela estava aberta: vira rematrícula.
+        this.existenteId.set(resposta.error.assistidoId);
+        await this.carregarRematricula().catch(() => undefined);
+      }
+    } finally {
+      this.salvando.set(false);
+    }
+  }
+
+  protected async rematricular(): Promise<void> {
+    this.tentouRematricular.set(true);
+    const turmaId = this.turmaRematricula();
+    if (turmaId == null || this.salvando()) return;
+    this.salvando.set(true);
+    this.erroAcao.set(null);
+    try {
+      this.detalhe.set(await this.service.rematricular(this.preCadastroId, turmaId));
+    } catch (e) {
+      this.erroAcao.set(mensagemErro(e as HttpErrorResponse, 'Não foi possível rematricular. Tente de novo.'));
     } finally {
       this.salvando.set(false);
     }
@@ -265,13 +302,27 @@ export class AvaliacaoPreCadastro implements OnInit {
     return validarDadosComplementares(a);
   }
 
+  private async carregarRematricula(): Promise<void> {
+    const [comparacao, turmas] = await Promise.all([
+      this.service.comparacao(this.preCadastroId),
+      firstValueFrom(this.http.get<TurmaResponseDTO[]>(`${environment.apiUrl}/api/turmas`)),
+    ]);
+    this.comparacao.set(comparacao);
+    this.turmas.set(turmas);
+    // Sem passagem automática: sugere o grupo de agora, a equipe confirma ou troca.
+    const atualAtivo = turmas.some((t) => t.ativo && t.turmaId === comparacao.turmaAtualId);
+    this.turmaRematricula.set(atualAtivo ? comparacao.turmaAtualId : null);
+  }
+
   private async carregar(): Promise<void> {
     try {
       const detalhe = await this.service.buscar(this.preCadastroId);
       this.detalhe.set(detalhe);
       this.existenteId.set(detalhe.assistidoExistenteId);
       this.observacao.set(detalhe.observacao ?? '');
-      if (emAvaliacao(detalhe.status) && detalhe.cpf) {
+      if (emAvaliacao(detalhe.status) && detalhe.assistidoExistenteId) {
+        await this.carregarRematricula();
+      } else if (emAvaliacao(detalhe.status) && detalhe.cpf) {
         const [rascunho, turmas] = await Promise.all([
           this.service.rascunhoAssistido(this.preCadastroId),
           firstValueFrom(this.http.get<TurmaResponseDTO[]>(`${environment.apiUrl}/api/turmas`)),

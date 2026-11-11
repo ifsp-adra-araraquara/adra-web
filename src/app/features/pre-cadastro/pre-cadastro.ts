@@ -9,7 +9,6 @@ import { BrandLogo } from '../../shared/components/brand-logo/brand-logo';
 import { Button } from '../../shared/components/button/button';
 import { Icon } from '../../shared/components/icon/icon';
 import { mensagemErro } from '../../shared/utils/erro-http.util';
-import { ANO_INSCRICAO } from '../../shared/utils/termos-inscricao';
 import { CabecalhoEtapas } from './cabecalho-etapas';
 import { CaptchaTurnstile } from './captcha-turnstile';
 import { EtapaCrianca } from './etapas/etapa-crianca';
@@ -54,7 +53,8 @@ export class PreCadastro {
   private readonly service = inject(PreCadastroService);
   private readonly document = inject(DOCUMENT);
 
-  protected readonly ANO = ANO_INSCRICAO;
+  /** Ano da inscrição: o do período de matrícula aberto (a API diz); até responder, o ano corrente. */
+  protected readonly ano = signal(new Date().getFullYear());
   protected readonly etapas = ETAPAS;
   protected readonly form = criarFormularioPreCadastro(inject(FormBuilder));
 
@@ -84,6 +84,10 @@ export class PreCadastro {
   private readonly captcha = viewChild(CaptchaTurnstile);
 
   constructor() {
+    this.service.inscricao().then(
+      (inscricao) => this.ano.set(inscricao.ano),
+      () => undefined, // sem resposta, fica o ano corrente (a API decide o ano no envio de qualquer forma)
+    );
     aplicarCondicionais(this.form);
     this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => aplicarCondicionais(this.form));
   }

@@ -13,13 +13,14 @@
       <div class="page-header-texto">
         <h1 id="avaliacao-titulo">{{ d.nomeCompleto }}</h1>
         <p class="page-intro">
+          Inscrição {{ d.anoReferencia }} ·
           @if (idade() != null) { {{ idade() }} anos · }
           Enviado em {{ d.criadoEm | date: 'dd/MM/yyyy HH:mm' }}
         </p>
         <div class="selos">
           <app-badge [status]="d.status" />
-          @if (existenteId() && emAvaliacao()) {
-            <app-badge variant="amber" label="CPF já cadastrado" />
+          @if (rematricula()) {
+            <app-badge variant="blue" label="Rematrícula" />
           }
         </div>
       </div>
@@ -30,17 +31,14 @@
       </div>
     </header>
 
-    @if (existenteId(); as id) {
-      @if (emAvaliacao()) {
-        <div class="notice notice-amber" role="status">
-          <app-icon name="alert-circle" />
-          <span>
-            Este atendido já tem cadastro com este CPF. Não é preciso aprovar: abra a ficha e, se for o caso, reprove
-            esta inscrição.
-            <button type="button" class="link" (click)="abrirFichaDoAtendido(id)">Abrir ficha do atendido</button>
-          </span>
-        </div>
-      }
+    @if (rematricula() && comparacao()?.jaMatriculadoNoAno) {
+      <div class="notice notice-amber" role="status">
+        <app-icon name="alert-circle" />
+        <span>
+          {{ comparacao()!.nomeAssistido }} já está matriculado(a) em {{ d.anoReferencia }}. Se este envio for repetido,
+          reprove a inscrição.
+        </span>
+      </div>
     }
 
     @if (d.anexosFaltando.length && d.status !== 'CONVERTIDO') {
@@ -57,7 +55,7 @@
         <app-icon name="check" />
         <span>
           Aprovado por {{ d.revisadoPorNome || 'equipe' }} em {{ d.revisadoEm | date: 'dd/MM/yyyy HH:mm' }}. O atendido foi
-          cadastrado.
+          matriculado em {{ d.anoReferencia }}.
           @if (d.assistidoId) {
             <button type="button" class="link" (click)="abrirFichaDoAtendido(d.assistidoId)">Abrir ficha do atendido</button>
           }
@@ -76,7 +74,10 @@
     @if (emAvaliacao()) {
       <section class="card card-pad bloco" aria-labelledby="sec-observacao">
         <h2 id="sec-observacao" class="form-sec-title">Observação da equipe</h2>
-        <p class="dica">Anote o que combinar com a família. Ao aprovar, a observação vai para a ficha do atendido.</p>
+        <p class="dica">
+          Anote o que combinar com a família.
+          @if (!rematricula()) { Ao aprovar, a observação vai para a ficha do atendido. }
+        </p>
         <div class="field">
           <label class="sr-only" for="av-observacao">Observação da equipe</label>
           <textarea id="av-observacao" rows="3" maxlength="2000" [ngModel]="observacao()" (ngModelChange)="alterarObservacao($event)"></textarea>
@@ -93,8 +94,36 @@
       </section>
     }
 
-    <div class="colunas" [class.colunas--leitura]="!podeAprovar()">
-      @if (podeAprovar()) {
+    <div class="colunas" [class.colunas--leitura]="!podeAprovar() && !rematricula()">
+      @if (rematricula() && comparacao(); as c) {
+        <div class="formulario">
+          <app-comparacao-rematricula [comparacao]="c" (abrirFicha)="abrirFichaDoAtendido(c.assistidoId)" />
+
+          @if (podeRematricular()) {
+            <section class="card card-pad bloco" aria-labelledby="sec-grupo">
+              <h2 id="sec-grupo" class="form-sec-title">Grupo em {{ c.ano }}</h2>
+              <p class="dica">
+                Não há passagem automática de grupo: confirme ou troque.
+                @if (c.nomeTurmaAtual) { Hoje o atendido está em <b>{{ c.nomeTurmaAtual }}</b>. }
+              </p>
+              <div class="field">
+                <label for="av-grupo-ano">Grupo <span class="obrigatorio" aria-hidden="true">*</span></label>
+                <app-select
+                  id="av-grupo-ano"
+                  [options]="grupoOptions()"
+                  [invalido]="!!erroGrupo()"
+                  [descritoPor]="erroGrupo() ? 'av-grupo-ano-erro' : ''"
+                  [ngModel]="turmaRematricula()"
+                  (ngModelChange)="turmaRematricula.set($event)"
+                />
+                @if (erroGrupo(); as mensagem) {
+                  <p class="app-input-error" id="av-grupo-ano-erro" role="alert">{{ mensagem }}</p>
+                }
+              </div>
+            </section>
+          }
+        </div>
+      } @else if (podeAprovar()) {
         <div class="formulario">
           <p class="dica-topo">
             O cadastro já vem preenchido com o que a família enviou. Edite o que precisar: só nome e CPF são obrigatórios.
@@ -169,11 +198,14 @@
         }
         <div class="acoes">
           <app-button variant="danger" (click)="abrirReprovar()">Reprovar</app-button>
-          @if (pendente() && podeAprovar()) {
+          @if (pendente() && (podeAprovar() || podeRematricular())) {
             <app-button variant="secondary" [loading]="salvando()" (click)="colocarNaListaEspera()">Colocar na lista de espera</app-button>
           }
           @if (podeAprovar()) {
             <app-button [loading]="salvando()" (click)="aprovar()">Aprovar e criar cadastro</app-button>
+          }
+          @if (podeRematricular()) {
+            <app-button [loading]="salvando()" (click)="rematricular()">Rematricular em {{ d.anoReferencia }}</app-button>
           }
         </div>
       </div>

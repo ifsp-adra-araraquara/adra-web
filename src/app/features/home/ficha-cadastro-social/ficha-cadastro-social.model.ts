@@ -23,6 +23,8 @@ export interface PessoaFicha {
 
 /** Modelo neutro da ficha: o mesmo documento sai do pré-cadastro e do cadastro do atendido. */
 export interface FichaCadastroSocial {
+  /** Ano letivo da inscrição. */
+  ano: number;
   crianca: { nome: string; nascimento: string | null; cpf: string | null; sexo: string | null };
   mae: PessoaFicha | null;
   pai: PessoaFicha | null;
@@ -60,6 +62,7 @@ export function dePreCadastro(p: PreCadastroResponseDTO): FichaCadastroSocial {
   const { mae, pai, responsavelLegal: legal, transferencia: t, saude, autorizacoes: a, termos } = p.dados;
   const enderecoCrianca = p.dados.crianca?.endereco;
   return {
+    ano: p.anoReferencia,
     crianca: { nome: p.nomeCompleto, nascimento: p.dataNascimento, cpf: p.cpf, sexo: p.sexo ? SEXO_LABELS[p.sexo] : null },
     mae: mae
       ? {
@@ -140,7 +143,11 @@ function linhaDasObservacoes(observacoes: string | null, prefixo: string): strin
 }
 
 /** Ficha do atendido já cadastrado (FT-26). Mãe e pai saem pelo parentesco; o principal que sobrar é o responsável legal. */
-export function deAssistido(a: AssistidoResponseDTO, vinculos: VinculoFamiliarResponseDTO[]): FichaCadastroSocial {
+export function deAssistido(
+  a: AssistidoResponseDTO,
+  vinculos: VinculoFamiliarResponseDTO[],
+  ano: number = new Date().getFullYear(),
+): FichaCadastroSocial {
   const parentesco = (v: VinculoFamiliarResponseDTO) => (v.parentesco ?? '').trim().toLocaleLowerCase('pt-BR');
   const mae = vinculos.find((v) => parentesco(v) === 'mãe');
   const pai = vinculos.find((v) => parentesco(v) === 'pai');
@@ -149,6 +156,7 @@ export function deAssistido(a: AssistidoResponseDTO, vinculos: VinculoFamiliarRe
   const emergencia = vinculos.find((v) => v.contatoEmergencia);
 
   return {
+    ano,
     crianca: { nome: a.nomeCompleto, nascimento: a.dataNascimento, cpf: a.cpf, sexo: a.sexo ? SEXO_LABELS[a.sexo] : null },
     mae: mae ? dePessoaVinculada(mae) : null,
     pai: pai ? dePessoaVinculada(pai) : null,

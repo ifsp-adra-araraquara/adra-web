@@ -336,6 +336,16 @@ export class Assistidos implements OnInit {
     this.router.navigate(['/turmas']);
   }
 
+  /** Histórico: atendidos de cada ano, para imprimir/salvar PDF ou baixar planilha. */
+  abrirListaPorAno(): void {
+    this.router.navigate(['/assistidos/por-ano']);
+  }
+
+  /** Descarte pelo prazo de guarda (5 anos) e limpeza do armazenamento — só o Coordenador. */
+  abrirPrazoDeGuarda(): void {
+    this.router.navigate(['/assistidos/prazo-de-guarda']);
+  }
+
   abrirCadastroEmMassa(): void {
     this.router.navigate(['/assistidos/lote']);
   }

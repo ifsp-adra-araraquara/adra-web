@@ -1,17 +1,17 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
 import { EnderecoDTO } from '../../../shared/models/endereco/EnderecoDTO';
 import { formatarEndereco } from '../../../shared/utils/endereco.util';
 import { dataPorExtenso } from '../../../shared/utils/data-por-extenso.util';
 import { hojeISO } from '../../../shared/utils/aula.util';
 import { formatarMoeda, formatarTelefone } from '../../../shared/utils/mascara.util';
-import { ANO_INSCRICAO, TERMO_FREQUENCIA, TERMO_IMAGEM, TERMO_LGPD } from '../../../shared/utils/termos-inscricao';
+import { TERMO_FREQUENCIA, TERMO_IMAGEM, TERMO_LGPD } from '../../../shared/utils/termos-inscricao';
 import { formatarCpf } from '../../../shared/validators/cpf.validator';
 import { FichaCadastroSocial, PessoaFicha } from './ficha-cadastro-social.model';
 
 /** Provisório: segue as seções do Google Forms até chegar o modelo de ficha socioeconômica da ADRA. */
 export const FICHA_PROVISORIA = {
-  titulo: `Ficha de inscrição e cadastro socioeconômico — ${ANO_INSCRICAO}`,
+  titulo: 'Ficha de inscrição e cadastro socioeconômico',
   aviso: 'Modelo provisório — será trocado pelo modelo de ficha socioeconômica da ADRA.',
 };
 
@@ -27,6 +27,7 @@ export class FichaCadastroSocialDocumento {
   ficha = input.required<FichaCadastroSocial>();
 
   protected readonly FICHA = FICHA_PROVISORIA;
+  protected readonly titulo = computed(() => `${FICHA_PROVISORIA.titulo} — ${this.ficha().ano}`);
 
   protected readonly dataPorExtenso = dataPorExtenso(hojeISO());
 

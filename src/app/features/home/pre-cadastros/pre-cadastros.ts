@@ -4,16 +4,23 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
+import { AuthService } from '../../../core/auth.service';
+import { MatriculaService } from '../../../core/matricula.service';
 import { PreCadastroService } from '../../../core/pre-cadastro.service';
+import { Role } from '../../../shared/enum/role.enum';
+import { EncerramentoPreviaDTO, PeriodoMatriculaDTO } from '../../../shared/models/matricula/Matricula';
 import { PROGRAMA_TRANSFERENCIA_LABELS, ProgramaTransferencia } from '../../../shared/enum/ProgramaTransferencia';
 import { PreCadastroResumoDTO, StatusPreCadastro, emAvaliacao } from '../../../shared/models/precadastro/PreCadastro';
 import { Badge } from '../../../shared/components/badge/badge';
 import { Icon } from '../../../shared/components/icon/icon';
 import { Input } from '../../../shared/components/input/input';
 import { SeletorMultiplo } from '../../../shared/components/seletor-multiplo/seletor-multiplo';
-import { SelectOption } from '../../../shared/components/select/select';
+import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Table, TableColumn } from '../../../shared/components/table/table';
 import { LinkInscricao } from './link-inscricao';
+import { PeriodoMatricula } from './periodo-matricula';
+import { EncerramentoAno } from './encerramento-ano';
+import { anosDaLista } from './periodo-matricula.util';
 import { formatarMoeda, formatarTelefone } from '../../../shared/utils/mascara.util';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
 
@@ -106,7 +113,7 @@ export function haQuantoTempo(criadoEm: string, agora: Date): string {
 /** Inscrições enviadas pelo link público, para a Coordenação e a Assistente Social avaliarem. */
 @Component({
   selector: 'app-pre-cadastros',
-  imports: [DatePipe, FormsModule, RouterLink, Badge, Icon, Input, LinkInscricao, SeletorMultiplo, Table],
+  imports: [DatePipe, FormsModule, RouterLink, Badge, Icon, Input, LinkInscricao, PeriodoMatricula, EncerramentoAno, Select, SeletorMultiplo, Table],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="page" aria-labelledby="pc-lista-titulo">
@@ -116,9 +123,17 @@ export function haQuantoTempo(criadoEm: string, agora: Date): string {
           <p class="page-intro">Inscrições enviadas pelas famílias pelo link público.</p>
         </div>
         <div class="page-header-acoes">
-          <app-link-inscricao />
+          <app-link-inscricao [ano]="anoDaInscricao()" />
         </div>
       </header>
+
+      <app-periodo-matricula [periodos]="periodos()" [podeEditar]="ehCoordenador()" (salvo)="aoSalvarPeriodo()" />
+      @if (ehCoordenador() && encerramentoPendente(); as previa) {
+        <app-encerramento-ano [previa]="previa" (encerrado)="aoEncerrarAno($event.ano)" />
+      }
+      @if (avisoEncerramento()) {
+        <div class="notice notice-info" role="status">{{ avisoEncerramento() }}</div>
+      }
 
       @if (erro()) {
         <div class="notice notice-error" role="alert">{{ erro() }}</div>
@@ -140,6 +155,10 @@ export function haQuantoTempo(criadoEm: string, agora: Date): string {
       </div>
 
       <div class="toolbar filtros">
+        <div class="filtros-ano">
+          <label class="sr-only" for="pc-ano">Ano da inscrição</label>
+          <app-select id="pc-ano" [options]="opcoesAno()" [ngModel]="ano()" (ngModelChange)="alterarAno($event)" />
+        </div>
         <div class="filtros-busca" #campoBusca>
           <app-input label="Buscar por nome" [hideLabel]="true" placeholder="Buscar por nome" [ngModel]="busca()" (ngModelChange)="busca.set($event)" />
         </div>
@@ -213,7 +232,7 @@ export function haQuantoTempo(criadoEm: string, agora: Date): string {
                 }
                 @case ('pendencias') {
                   <div class="selos">
-                    @if (linha.cpfJaCadastrado) { <app-badge variant="amber" label="CPF já cadastrado" /> }
+                    @if (linha.cpfJaCadastrado) { <app-badge variant="blue" label="Rematrícula" /> }
                     @if (linha.anexosFaltando.length) {
                       <app-badge variant="amber" [label]="linha.anexosFaltando.length === 1 ? 'Falta 1 anexo' : 'Faltam ' + linha.anexosFaltando.length + ' anexos'" />
                     }
@@ -244,6 +263,7 @@ export function haQuantoTempo(criadoEm: string, agora: Date): string {
     .limpar { padding: 4px 0; border: none; background: none; font: inherit; color: var(--color-adra-green-600); text-decoration: underline; cursor: pointer; }
     @media (min-width: 720px) {
       .filtros-busca { flex: 1; }
+      .filtros-ano { width: 170px; }
       .filtros-renda { width: 180px; }
     }
     .candidato { display: flex; align-items: center; gap: 10px; }
@@ -263,6 +283,8 @@ export class PreCadastros implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
+  private readonly matriculaService = inject(MatriculaService);
+  private readonly auth = inject(AuthService);
 
   protected readonly abas = ABAS;
   protected readonly formatarTelefone = formatarTelefone;
@@ -274,6 +296,21 @@ export class PreCadastros implements OnInit {
   protected readonly naoVistas = NAO_VISTAS;
   private readonly agora = new Date();
 
+  protected readonly ehCoordenador = computed(() => this.auth.currentProfile() === Role.COORD);
+  private readonly anoCorrente = this.agora.getFullYear();
+  /** null = todos os anos. Padrão: o ano das inscrições de hoje (o do período aberto). */
+  protected readonly ano = signal<number | null>(this.anoCorrente);
+  protected readonly anoDaInscricao = signal(this.anoCorrente);
+  protected readonly periodos = signal<PeriodoMatriculaDTO[]>([]);
+  protected readonly encerramentoPendente = signal<EncerramentoPreviaDTO | null>(null);
+  protected readonly avisoEncerramento = signal<string | null>(null);
+  protected readonly opcoesAno = computed<SelectOption<number | null>[]>(() => [
+    ...anosDaLista(this.periodos(), this.anoDaInscricao(), this.anoCorrente).map((ano) => ({
+      value: ano,
+      label: `Inscrições ${ano}`,
+    })),
+    { value: null, label: 'Todos os anos' },
+  ]);
   protected readonly status = signal<StatusPreCadastro>('PENDENTE');
   protected readonly busca = signal('');
   protected readonly rendaAte = signal<number | null>(null);
@@ -313,6 +350,7 @@ export class PreCadastros implements OnInit {
   });
 
   protected readonly parametrosDaUrl = computed(() => ({
+    ano: this.ano() ?? 'todos',
     status: this.status() === 'PENDENTE' ? null : this.status(),
     rendaAte: this.rendaAte(),
     programas: this.programas().join(',') || null,
@@ -324,7 +362,58 @@ export class PreCadastros implements OnInit {
 
   ngOnInit(): void {
     this.aplicarFiltrosDaUrl();
+    this.iniciar();
+  }
+
+  protected alterarAno(ano: number | null): void {
+    this.ano.set(ano);
+    this.atualizarUrl();
     this.carregar();
+  }
+
+  /** Abriu ou ajustou o período: a lista passa a mostrar as inscrições do ano dele. */
+  protected async aoSalvarPeriodo(): Promise<void> {
+    await this.carregarPeriodos();
+    this.ano.set(this.anoDaInscricao());
+    this.atualizarUrl();
+    this.carregar();
+  }
+
+  protected async aoEncerrarAno(ano: number): Promise<void> {
+    this.avisoEncerramento.set(`${ano} encerrado. Quem não renovou foi desligado em 31/12/${ano}.`);
+    await this.carregarPeriodos();
+    this.ano.set(this.anoDaInscricao());
+    this.atualizarUrl();
+    this.carregar();
+  }
+
+  /** Sem ano na URL, a lista abre no ano das inscrições de hoje (separa a matrícula do ano seguinte). */
+  private async iniciar(): Promise<void> {
+    const anoNaUrl = this.route.snapshot.queryParamMap.get('ano');
+    await this.carregarPeriodos();
+    if (anoNaUrl === 'todos') {
+      this.ano.set(null);
+    } else if (anoNaUrl && Number.isInteger(Number(anoNaUrl))) {
+      this.ano.set(Number(anoNaUrl));
+    } else {
+      this.ano.set(this.anoDaInscricao());
+    }
+    this.carregar();
+  }
+
+  private async carregarPeriodos(): Promise<void> {
+    try {
+      const [periodos, inscricao, pendente] = await Promise.all([
+        this.matriculaService.periodos(),
+        this.service.inscricao(),
+        this.ehCoordenador() ? this.matriculaService.encerramentoPendente() : Promise.resolve(null),
+      ]);
+      this.periodos.set(periodos);
+      this.anoDaInscricao.set(inscricao.ano);
+      this.encerramentoPendente.set(pendente);
+    } catch {
+      // Sem os períodos a lista ainda funciona, no ano corrente.
+    }
   }
 
   protected selecionarAba(status: StatusPreCadastro): void {
@@ -391,7 +480,10 @@ export class PreCadastros implements OnInit {
     this.carregando.set(true);
     this.erro.set(null);
     try {
-      const [pendentes, listaEspera, aprovados, reprovados] = await Promise.all(ABAS.map((aba) => this.service.listar(aba.status)));
+      const ano = this.ano();
+      const [pendentes, listaEspera, aprovados, reprovados] = await Promise.all(
+        ABAS.map((aba) => this.service.listar(aba.status, ano)),
+      );
       this.porStatus.set({ PENDENTE: pendentes, LISTA_ESPERA: listaEspera, CONVERTIDO: aprovados, DESCARTADO: reprovados });
     } catch (e) {
       this.erro.set(mensagemErro(e as HttpErrorResponse, 'Não foi possível carregar os pré-cadastros.'));

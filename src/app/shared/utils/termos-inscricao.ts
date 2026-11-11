@@ -3,8 +3,6 @@
  * "INSCRIÇÃO - ADRA ARARAQUARA 2027"). Usados no link público e na ficha de
  * cadastro social impressa.
  */
-export const ANO_INSCRICAO = 2027;
-
 export const TERMO_LGPD = {
   titulo: 'Declaração – LGPD (Lei Geral de Proteção de Dados)',
   paragrafos: [

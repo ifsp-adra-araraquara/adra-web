@@ -24,7 +24,7 @@ import { INSTITUICAO } from '../../utils/instituicao';
         <app-icon name="chevron-left" [size]="16" /> Voltar
       </app-button>
       <app-button size="sm" (click)="imprimir()">
-        <app-icon name="file-text" [size]="16" /> Imprimir
+        <app-icon name="file-text" [size]="16" /> {{ rotuloImprimir() }}
       </app-button>
     </div>
 
@@ -71,6 +71,8 @@ import { INSTITUICAO } from '../../utils/instituicao';
 })
 export class FolhaA4 {
   rotulo = input('Documento para impressão');
+  /** Texto do botão (ex.: "Imprimir ou salvar PDF"). */
+  rotuloImprimir = input('Imprimir');
 
   private readonly location = inject(Location);
   private readonly document = inject(DOCUMENT);

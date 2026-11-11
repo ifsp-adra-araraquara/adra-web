@@ -5,6 +5,7 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 
 import { PreCadastroService } from '../../../../core/pre-cadastro.service';
 import { PreCadastroResponseDTO } from '../../../../shared/models/precadastro/PreCadastro';
+import { ComparacaoRematriculaDTO } from '../../../../shared/models/matricula/Matricula';
 import { AvaliacaoPreCadastro } from './avaliacao-pre-cadastro';
 
 // Dados inventados.
@@ -22,7 +23,9 @@ const detalhe = {
   motivoReprovacao: null,
   observacao: null,
   assistidoId: null,
+  anoReferencia: 2027,
   assistidoExistenteId: null,
+  jaMatriculadoNoAno: false,
   arquivos: [],
   anexosFaltando: ['Foto do atendido', 'Documento do responsável'],
   revisadoPorNome: null,
@@ -48,6 +51,8 @@ describe('AvaliacaoPreCadastro', () => {
     reprovar: vi.fn(),
     colocarNaListaEspera: vi.fn(),
     salvarObservacao: vi.fn(),
+    comparacao: vi.fn(),
+    rematricular: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -87,18 +92,23 @@ describe('AvaliacaoPreCadastro', () => {
     expect(texto()).toContain('A família não enviou: Foto do atendido, Documento do responsável');
   });
 
-  it('aprovar com CPF já cadastrado mostra o aviso com o link para a ficha', async () => {
+  it('aprovar com CPF que acabou de ser cadastrado vira rematrícula', async () => {
     service.aprovar.mockRejectedValue(
       new HttpErrorResponse({ status: 409, error: { mensagem: 'CPF já cadastrado para o atendido X.', assistidoId: 42 } }),
     );
+    service.comparacao.mockResolvedValue(comparacao());
 
     botao('Aprovar e criar cadastro').click();
+    await new Promise((resolve) => setTimeout(resolve));
+    TestBed.inject(HttpTestingController).expectOne((req) => req.url.endsWith('/api/turmas')).flush([]);
+    await new Promise((resolve) => setTimeout(resolve));
     await fixture.whenStable();
     fixture.detectChanges();
 
     expect(service.aprovar).toHaveBeenCalledWith(5, expect.objectContaining({ cpf: '56532228281' }));
     expect(texto()).toContain('CPF já cadastrado para o atendido X.');
-    expect(texto()).toContain('Abrir ficha do atendido');
+    expect(texto()).toContain('Rematrícula em 2027');
+    expect(botao('Aprovar e criar cadastro')).toBeUndefined();
   });
 
   it('coloca na lista de espera levando a observação digitada', async () => {
@@ -136,5 +146,112 @@ describe('AvaliacaoPreCadastro', () => {
 
     expect(service.reprovar).not.toHaveBeenCalled();
     expect(document.body.textContent).toContain('Informe o motivo da reprovação.');
+  });
+});
+
+// Dados inventados.
+function comparacao(extra: Partial<ComparacaoRematriculaDTO> = {}): ComparacaoRematriculaDTO {
+  return {
+    assistidoId: 42,
+    nomeAssistido: 'Crianca Teste',
+    statusAssistido: 'ATIVO',
+    ano: 2027,
+    jaMatriculadoNoAno: false,
+    turmaAtualId: 3,
+    nomeTurmaAtual: 'Grupo Manhã',
+    campos: [
+      { rotulo: 'Endereço', naFicha: 'Rua das Flores, 100', enviado: 'Rua das Palmeiras, 100', diferente: true },
+      { rotulo: 'NIS', naFicha: '12345678901', enviado: '12345678901', diferente: false },
+    ],
+    ...extra,
+  };
+}
+
+describe('AvaliacaoPreCadastro — rematrícula', () => {
+  let fixture: ComponentFixture<AvaliacaoPreCadastro>;
+  const service = {
+    buscar: vi.fn(),
+    comparacao: vi.fn(),
+    rematricular: vi.fn(),
+    colocarNaListaEspera: vi.fn(),
+  };
+
+  async function montar(dadosComparacao: ComparacaoRematriculaDTO): Promise<void> {
+    service.buscar.mockResolvedValue({ ...detalhe, assistidoExistenteId: 42, jaMatriculadoNoAno: dadosComparacao.jaMatriculadoNoAno });
+    service.comparacao.mockResolvedValue(dadosComparacao);
+
+    await TestBed.configureTestingModule({
+      imports: [AvaliacaoPreCadastro],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: PreCadastroService, useValue: service },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: '5' }) } } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(AvaliacaoPreCadastro);
+    fixture.detectChanges();
+    await new Promise((resolve) => setTimeout(resolve));
+    TestBed.inject(HttpTestingController)
+      .expectOne((req) => req.url.endsWith('/api/turmas'))
+      .flush([
+        { turmaId: 3, nomeTurma: 'Grupo Manhã', ativo: true },
+        { turmaId: 4, nomeTurma: 'Grupo Tarde', ativo: true },
+      ]);
+    await fixture.whenStable();
+    fixture.detectChanges();
+  }
+
+  beforeEach(() => Object.values(service).forEach((fn) => fn.mockReset()));
+
+  const texto = () => (fixture.nativeElement as HTMLElement).textContent ?? '';
+  const botao = (rotulo: string) =>
+    [...(fixture.nativeElement as HTMLElement).querySelectorAll('button')].find((b) => b.textContent?.includes(rotulo));
+
+  it('mostra só o que mudou e não oferece criar outro cadastro', async () => {
+    await montar(comparacao());
+
+    expect(texto()).toContain('Rematrícula em 2027');
+    expect(texto()).toContain('1 dado diferente da ficha');
+    expect(texto()).toContain('Rua das Palmeiras, 100');
+    expect(texto()).not.toContain('12345678901');
+    expect(botao('Aprovar e criar cadastro')).toBeUndefined();
+
+    botao('Mostrar também os 1 dados iguais')!.click();
+    fixture.detectChanges();
+    expect(texto()).toContain('12345678901');
+  });
+
+  it('rematricula no grupo de agora, sugerido por padrão', async () => {
+    await montar(comparacao());
+    service.rematricular.mockResolvedValue({ ...detalhe, status: 'CONVERTIDO', assistidoId: 42 });
+
+    botao('Rematricular em 2027')!.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(service.rematricular).toHaveBeenCalledWith(5, 3);
+    expect(texto()).toContain('matriculado em 2027');
+  });
+
+  it('sem grupo escolhido não rematricula', async () => {
+    await montar(comparacao({ turmaAtualId: null, nomeTurmaAtual: null }));
+
+    botao('Rematricular em 2027')!.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(service.rematricular).not.toHaveBeenCalled();
+    expect(texto()).toContain('Escolha o grupo do atendido no novo ano.');
+  });
+
+  it('já matriculado no ano: avisa e não oferece rematricular de novo', async () => {
+    await montar(comparacao({ jaMatriculadoNoAno: true }));
+
+    expect(texto()).toContain('já está matriculado(a) em 2027');
+    expect(botao('Rematricular em 2027')).toBeUndefined();
+    expect(botao('Reprovar')).toBeDefined();
   });
 });
