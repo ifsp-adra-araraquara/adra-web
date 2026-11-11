@@ -122,4 +122,15 @@ export interface PreCadastroResponseDTO {
   revisadoPorNome: string | null;
   revisadoEm: string | null;
   criadoEm: string;
+  /** Nenhum atendido com este CPF, mas há um com o mesmo nome e nascimento: provável rematrícula. */
+  possivelMesmoAtendido?: PossivelMesmoAtendido | null;
+  /** Ano para onde a inscrição em avaliação pode ir ("Matrícula do próximo ano") ou voltar; null se não pode. */
+  anoParaMover?: number | null;
+}
+
+export interface PossivelMesmoAtendido {
+  assistidoId: number;
+  nomeCompleto: string;
+  /** A ficha está sem CPF (o normal em fichas antigas). */
+  fichaSemCpf: boolean;
 }

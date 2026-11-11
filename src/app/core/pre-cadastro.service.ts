@@ -75,6 +75,11 @@ export class PreCadastroService {
     return firstValueFrom(this.http.patch<PreCadastroResponseDTO>(`${this.api}/${preCadastroId}/lista-espera`, { observacao }));
   }
 
+  /** "Matrícula do próximo ano": muda o ano da inscrição sem aprovar (ou devolve ao ano atual). */
+  moverParaAno(preCadastroId: number, ano: number): Promise<PreCadastroResponseDTO> {
+    return firstValueFrom(this.http.patch<PreCadastroResponseDTO>(`${this.api}/${preCadastroId}/ano`, { ano }));
+  }
+
   salvarObservacao(preCadastroId: number, observacao: string): Promise<void> {
     return firstValueFrom(this.http.patch<void>(`${this.api}/${preCadastroId}/observacao`, { observacao }));
   }

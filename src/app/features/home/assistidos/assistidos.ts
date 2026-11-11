@@ -133,7 +133,7 @@ export class Assistidos implements OnInit {
   filtroOficina = signal<number | ''>('');
   turmas = signal<TurmaResponseDTO[]>([]);
   oficinas = signal<OficinaResponseDTO[]>([]);
-  abaAtiva = signal<'todos' | 'ativos' | 'inativos' | 'acomp'>('todos');
+  abaAtiva = signal<'todos' | 'ativos' | 'inativos' | 'acomp' | 'proximo'>('todos');
   /** Totais das abas — recarregado quando muda busca/turma/oficina (não ao trocar de aba). */
   contagem = signal<AssistidoContagemDTO | null>(null);
 
@@ -350,7 +350,7 @@ export class Assistidos implements OnInit {
     this.router.navigate(['/assistidos/lote']);
   }
 
-  trocarAbaStatus(aba: 'todos' | 'ativos' | 'inativos' | 'acomp'): void {
+  trocarAbaStatus(aba: 'todos' | 'ativos' | 'inativos' | 'acomp' | 'proximo'): void {
     this.abaAtiva.set(aba);
     this.pagina.set(0);
     this.carregarAssistidos();
@@ -396,6 +396,9 @@ export class Assistidos implements OnInit {
       params = params.set('status', StatusGeral.INATIVO);
     } else if (aba === 'acomp') {
       params = params.set('emAcompanhamento', 'true');
+    } else if (aba === 'proximo') {
+      // Matriculados para o ano seguinte: ficam fora das outras abas até 1º de janeiro.
+      params = params.set('proximoAno', 'true');
     }
 
     this.http.get<PaginaResponse<AssistidoResponseDTO>>(this.apiAssistidos, { params }).subscribe({
