@@ -63,12 +63,19 @@ import { Icon } from '../../../../shared/components/icon/icon';
     </section>
   `,
   styles: `
+    :host { display: block; }
+    .bloco { margin-bottom: 16px; }
+    .link {
+      padding: 4px 0; border: none; background: none; cursor: pointer;
+      color: var(--color-adra-green-800); font: inherit; font-weight: 600;
+      text-decoration: underline; text-underline-offset: 2px;
+    }
     .dica { margin: 0 0 12px; font-size: 14px; line-height: 1.5; color: var(--gray-600); }
     .resumo { display: flex; align-items: center; gap: 6px; margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--amber-600); }
     .resumo--igual { color: var(--color-adra-green-800); }
     .comparacao { width: 100%; border-collapse: collapse; font-size: 14px; }
     .comparacao th, .comparacao td { padding: 8px 10px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--gray-200); }
-    .comparacao thead th { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .02em; color: var(--gray-600); }
+    .comparacao thead th { height: auto; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .02em; color: var(--gray-600); }
     .comparacao tbody th { font-weight: 600; color: var(--gray-800); width: 30%; }
     .comparacao td { color: var(--gray-800); white-space: pre-line; overflow-wrap: anywhere; }
     .comparacao tr.diferente { background: var(--amber-50); }

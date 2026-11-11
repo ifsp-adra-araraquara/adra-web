@@ -26,8 +26,7 @@ import { hojeIso } from './periodo-matricula.util';
       <app-icon name="calendar" [size]="18" />
       <p class="texto">
         @if (aberto(); as p) {
-          <b>Matrícula {{ p.ano }} aberta</b> desde {{ p.inicio | date: 'dd/MM/yyyy' }}
-          @if (p.fim) { até {{ p.fim | date: 'dd/MM/yyyy' }} } @else { (sem data para fechar) }.
+          <b>Matrícula {{ p.ano }} aberta</b> desde {{ p.inicio | date: 'dd/MM/yyyy' }}{{ p.fim ? ' até ' + (p.fim | date: 'dd/MM/yyyy') : ', sem data para fechar' }}.
           O link de inscrição grava em {{ p.ano }}.
         } @else {
           Nenhum período de matrícula aberto: as inscrições do link valem para {{ anoCorrente }}.

@@ -45,7 +45,7 @@ describe('EncerramentoAno', () => {
     fixture.componentInstance.encerrado.subscribe(encerrou);
 
     expect(document.body.textContent).toContain('Bruno Teste');
-    expect(document.body.textContent).toContain('perdem a vaga');
+    expect(document.body.textContent).toContain('1 não renovou e perde a vaga');
     expect(confirmarNoModal().disabled).toBe(true);
 
     const caixa = document.querySelector<HTMLInputElement>('.check input')!;

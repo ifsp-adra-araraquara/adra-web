@@ -108,7 +108,12 @@ import { SITUACAO_MATRICULA, dataBr, frequencia, planilhaDaListaAnual } from './
     .doc-sub { margin: 0 0 12px !important; text-align: center; font-size: 9.5pt; color: #333; }
     .doc-tabela { width: 100%; border-collapse: collapse; font-size: 9pt; }
     .doc-tabela th, .doc-tabela td { padding: 3px 5px; border: 1px solid #bbb; text-align: left; vertical-align: top; }
-    .doc-tabela thead th { background: #f0f0f0; font-weight: 700; }
+    /* Sobrescreve o cabeçalho padrão das tabelas da tela (altura fixa, caixa alta). */
+    .doc-tabela thead th {
+      height: auto; background: #f0f0f0; color: #111; font-size: 9pt; font-weight: 700;
+      text-transform: none; letter-spacing: normal; white-space: normal;
+    }
+    .doc-tabela tbody td { color: #111; }
     .doc-tabela .num { text-align: right; white-space: nowrap; }
     .doc-tabela tr { break-inside: avoid; }
     .doc-vazio { text-align: center; }

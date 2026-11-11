@@ -21,7 +21,8 @@ import { mensagemErro } from '../../../shared/utils/erro-http.util';
       <app-icon name="flag" [size]="18" />
       <p class="texto">
         <b>{{ previa().ano }} ainda não foi encerrado.</b>
-        {{ previa().renovaram }} de {{ previa().totalAtivas }} atendidos renovaram para {{ previa().ano + 1 }}.
+        {{ previa().renovaram }} de {{ previa().totalAtivas }} {{ previa().totalAtivas === 1 ? 'atendido renovou' : 'atendidos renovaram' }}
+        para {{ previa().ano + 1 }}.
       </p>
       <app-button variant="secondary" size="sm" (click)="abrir()">Encerrar {{ previa().ano }}</app-button>
     </div>
@@ -38,9 +39,20 @@ import { mensagemErro } from '../../../shared/utils/erro-http.util';
       }
 
       <ul class="numeros" role="list">
-        <li><b>{{ previa().renovaram }}</b> renovaram e seguem em {{ previa().ano + 1 }}, no grupo escolhido na rematrícula.</li>
-        <li><b>{{ previa().naoRenovaram }}</b> não renovaram e <b>perdem a vaga</b>: ficam desligados em 31/12/{{ previa().ano }}.</li>
-        <li><b>{{ previa().novosNoAnoSeguinte }}</b> famílias novas já matriculadas em {{ previa().ano + 1 }}.</li>
+        <li>
+          <b>{{ previa().renovaram }}</b> {{ previa().renovaram === 1 ? 'renovou e segue' : 'renovaram e seguem' }}
+          em {{ previa().ano + 1 }}, no grupo escolhido na rematrícula.
+        </li>
+        <li>
+          <b>{{ previa().naoRenovaram }}</b> {{ previa().naoRenovaram === 1 ? 'não renovou e' : 'não renovaram e' }}
+          <b>{{ previa().naoRenovaram === 1 ? 'perde a vaga' : 'perdem a vaga' }}</b>:
+          {{ previa().naoRenovaram === 1 ? 'fica desligado' : 'ficam desligados' }} em 31/12/{{ previa().ano }}.
+        </li>
+        <li>
+          <b>{{ previa().novosNoAnoSeguinte }}</b>
+          {{ previa().novosNoAnoSeguinte === 1 ? 'família nova já matriculada' : 'famílias novas já matriculadas' }}
+          em {{ previa().ano + 1 }}.
+        </li>
       </ul>
 
       @if (previa().quemNaoRenovou.length) {
