@@ -11,6 +11,7 @@ import {
 } from '../shared/models/precadastro/PreCadastro';
 import { AssistidoRequestDTO } from '../shared/models/assistido/AssistidoRequestDTO';
 import { UrlArquivoDTO } from '../shared/models/arquivo/UrlArquivoDTO';
+import { ComparacaoRematriculaDTO, InscricaoAbertaDTO } from '../shared/models/matricula/Matricula';
 
 @Injectable({ providedIn: 'root' })
 export class PreCadastroService {
@@ -30,8 +31,24 @@ export class PreCadastroService {
     return resposta?.preCadastroId ?? null;
   }
 
-  listar(status: StatusPreCadastro): Promise<PreCadastroResumoDTO[]> {
-    return firstValueFrom(this.http.get<PreCadastroResumoDTO[]>(this.api, { params: { status } }));
+  /** {@code ano} null = inscrições de todos os anos. */
+  listar(status: StatusPreCadastro, ano: number | null = null): Promise<PreCadastroResumoDTO[]> {
+    const params: Record<string, string> = { status };
+    if (ano != null) params['ano'] = String(ano);
+    return firstValueFrom(this.http.get<PreCadastroResumoDTO[]>(this.api, { params }));
+  }
+
+  /** Link público (sem login): de que ano é a inscrição feita hoje. */
+  inscricao(): Promise<InscricaoAbertaDTO> {
+    return firstValueFrom(this.http.get<InscricaoAbertaDTO>(`${this.api}/inscricao`));
+  }
+
+  comparacao(preCadastroId: number): Promise<ComparacaoRematriculaDTO> {
+    return firstValueFrom(this.http.get<ComparacaoRematriculaDTO>(`${this.api}/${preCadastroId}/comparacao`));
+  }
+
+  rematricular(preCadastroId: number, turmaId: number): Promise<PreCadastroResponseDTO> {
+    return firstValueFrom(this.http.post<PreCadastroResponseDTO>(`${this.api}/${preCadastroId}/rematricular`, { turmaId }));
   }
 
   buscar(preCadastroId: number): Promise<PreCadastroResponseDTO> {

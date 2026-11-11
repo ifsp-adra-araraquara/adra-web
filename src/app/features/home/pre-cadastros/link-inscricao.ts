@@ -1,10 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 
 import { Button } from '../../../shared/components/button/button';
 import { Icon } from '../../../shared/components/icon/icon';
 import { Modal } from '../../../shared/components/modal/modal';
-import { ANO_INSCRICAO } from '../../../shared/utils/termos-inscricao';
 
 /**
  * Botão "Enviar link de inscrição": mostra o link público do pré-cadastro para
@@ -48,13 +47,16 @@ import { ANO_INSCRICAO } from '../../../shared/utils/termos-inscricao';
 export class LinkInscricao {
   private readonly document = inject(DOCUMENT);
 
+  /** Ano das inscrições feitas hoje (o do período de matrícula aberto). */
+  readonly ano = input.required<number>();
+
   protected readonly aberto = signal(false);
   protected readonly copiado = signal(false);
 
   protected readonly link = computed(() => `${this.document.location.origin}/pre-cadastro`);
   protected readonly linkWhatsApp = computed(() => {
     const mensagem =
-      `Olá! Esta é a inscrição ${ANO_INSCRICAO} da ADRA Araraquara. ` +
+      `Olá! Esta é a inscrição ${this.ano()} da ADRA Araraquara. ` +
       `Preencha pelo link (leva uns 10 minutos): ${this.link()}`;
     return `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
   });

@@ -83,6 +83,8 @@ export interface PreCadastroResumoDTO {
   possuiProblemaSaude: boolean | null;
   programasTransferencia: ProgramaTransferencia[];
   vistoAssistenteSocial: boolean;
+  /** Ano letivo da inscrição. */
+  anoReferencia: number;
 }
 
 /** Comprovante de endereço (obrigatório), foto e documentos enviados junto com a inscrição. */
@@ -108,7 +110,12 @@ export interface PreCadastroResponseDTO {
   motivoReprovacao: string | null;
   observacao: string | null;
   assistidoId: number | null;
+  /** Ano letivo da inscrição. */
+  anoReferencia: number;
+  /** Atendido que já tem este CPF: é rematrícula. */
   assistidoExistenteId: number | null;
+  /** O atendido existente já tem matrícula no ano da inscrição. */
+  jaMatriculadoNoAno: boolean;
   /** Foto e documentos enviados (até a aprovação; depois ficam no atendido e no responsável). */
   arquivos: ArquivoResponseDTO[];
   anexosFaltando: string[];
