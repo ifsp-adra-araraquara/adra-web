@@ -162,6 +162,14 @@ export const routes: Routes = [
         canActivate: [roleGuard],
       },
       {
+        path: 'assistidos/prazo-de-guarda',
+        title: 'Prazo de guarda',
+        loadComponent: () =>
+          import('./features/home/guarda-dados/guarda-dados').then((m) => m.GuardaDados),
+        data: { roles: [Role.COORD] },
+        canActivate: [roleGuard],
+      },
+      {
         path: 'assistidos/por-ano',
         title: 'Atendidos por ano',
         loadComponent: () =>
