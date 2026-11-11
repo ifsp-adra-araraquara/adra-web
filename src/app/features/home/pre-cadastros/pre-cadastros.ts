@@ -8,7 +8,7 @@ import { AuthService } from '../../../core/auth.service';
 import { MatriculaService } from '../../../core/matricula.service';
 import { PreCadastroService } from '../../../core/pre-cadastro.service';
 import { Role } from '../../../shared/enum/role.enum';
-import { PeriodoMatriculaDTO } from '../../../shared/models/matricula/Matricula';
+import { EncerramentoPreviaDTO, PeriodoMatriculaDTO } from '../../../shared/models/matricula/Matricula';
 import { PROGRAMA_TRANSFERENCIA_LABELS, ProgramaTransferencia } from '../../../shared/enum/ProgramaTransferencia';
 import { PreCadastroResumoDTO, StatusPreCadastro, emAvaliacao } from '../../../shared/models/precadastro/PreCadastro';
 import { Badge } from '../../../shared/components/badge/badge';
@@ -19,6 +19,7 @@ import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Table, TableColumn } from '../../../shared/components/table/table';
 import { LinkInscricao } from './link-inscricao';
 import { PeriodoMatricula } from './periodo-matricula';
+import { EncerramentoAno } from './encerramento-ano';
 import { anosDaLista } from './periodo-matricula.util';
 import { formatarMoeda, formatarTelefone } from '../../../shared/utils/mascara.util';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
@@ -112,7 +113,7 @@ export function haQuantoTempo(criadoEm: string, agora: Date): string {
 /** Inscrições enviadas pelo link público, para a Coordenação e a Assistente Social avaliarem. */
 @Component({
   selector: 'app-pre-cadastros',
-  imports: [DatePipe, FormsModule, RouterLink, Badge, Icon, Input, LinkInscricao, PeriodoMatricula, Select, SeletorMultiplo, Table],
+  imports: [DatePipe, FormsModule, RouterLink, Badge, Icon, Input, LinkInscricao, PeriodoMatricula, EncerramentoAno, Select, SeletorMultiplo, Table],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="page" aria-labelledby="pc-lista-titulo">
@@ -127,6 +128,12 @@ export function haQuantoTempo(criadoEm: string, agora: Date): string {
       </header>
 
       <app-periodo-matricula [periodos]="periodos()" [podeEditar]="ehCoordenador()" (salvo)="aoSalvarPeriodo()" />
+      @if (ehCoordenador() && encerramentoPendente(); as previa) {
+        <app-encerramento-ano [previa]="previa" (encerrado)="aoEncerrarAno($event.ano)" />
+      }
+      @if (avisoEncerramento()) {
+        <div class="notice notice-info" role="status">{{ avisoEncerramento() }}</div>
+      }
 
       @if (erro()) {
         <div class="notice notice-error" role="alert">{{ erro() }}</div>
@@ -295,6 +302,8 @@ export class PreCadastros implements OnInit {
   protected readonly ano = signal<number | null>(this.anoCorrente);
   protected readonly anoDaInscricao = signal(this.anoCorrente);
   protected readonly periodos = signal<PeriodoMatriculaDTO[]>([]);
+  protected readonly encerramentoPendente = signal<EncerramentoPreviaDTO | null>(null);
+  protected readonly avisoEncerramento = signal<string | null>(null);
   protected readonly opcoesAno = computed<SelectOption<number | null>[]>(() => [
     ...anosDaLista(this.periodos(), this.anoDaInscricao(), this.anoCorrente).map((ano) => ({
       value: ano,
@@ -370,6 +379,14 @@ export class PreCadastros implements OnInit {
     this.carregar();
   }
 
+  protected async aoEncerrarAno(ano: number): Promise<void> {
+    this.avisoEncerramento.set(`${ano} encerrado. Quem não renovou foi desligado em 31/12/${ano}.`);
+    await this.carregarPeriodos();
+    this.ano.set(this.anoDaInscricao());
+    this.atualizarUrl();
+    this.carregar();
+  }
+
   /** Sem ano na URL, a lista abre no ano das inscrições de hoje (separa a matrícula do ano seguinte). */
   private async iniciar(): Promise<void> {
     const anoNaUrl = this.route.snapshot.queryParamMap.get('ano');
@@ -386,9 +403,14 @@ export class PreCadastros implements OnInit {
 
   private async carregarPeriodos(): Promise<void> {
     try {
-      const [periodos, inscricao] = await Promise.all([this.matriculaService.periodos(), this.service.inscricao()]);
+      const [periodos, inscricao, pendente] = await Promise.all([
+        this.matriculaService.periodos(),
+        this.service.inscricao(),
+        this.ehCoordenador() ? this.matriculaService.encerramentoPendente() : Promise.resolve(null),
+      ]);
       this.periodos.set(periodos);
       this.anoDaInscricao.set(inscricao.ano);
+      this.encerramentoPendente.set(pendente);
     } catch {
       // Sem os períodos a lista ainda funciona, no ano corrente.
     }

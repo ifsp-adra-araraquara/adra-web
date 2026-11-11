@@ -37,3 +37,30 @@ export interface ComparacaoRematriculaDTO {
   nomeTurmaAtual: string | null;
   campos: CampoComparadoDTO[];
 }
+
+export interface AtendidoNaoRenovouDTO {
+  assistidoId: number;
+  nomeCompleto: string;
+  nomeTurma: string | null;
+}
+
+/** O que acontece ao encerrar o ano, antes de confirmar. */
+export interface EncerramentoPreviaDTO {
+  ano: number;
+  totalAtivas: number;
+  renovaram: number;
+  naoRenovaram: number;
+  novosNoAnoSeguinte: number;
+  quemNaoRenovou: AtendidoNaoRenovouDTO[];
+  podeEncerrar: boolean;
+  motivoBloqueio: string | null;
+}
+
+export interface EncerramentoAnoDTO {
+  ano: number;
+  encerradoEm: string;
+  encerradoPorNome: string | null;
+  totalEncerradas: number;
+  totalRenovaram: number;
+  totalNaoRenovaram: number;
+}
