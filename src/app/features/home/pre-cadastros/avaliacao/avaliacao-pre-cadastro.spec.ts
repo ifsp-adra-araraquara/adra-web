@@ -53,6 +53,7 @@ describe('AvaliacaoPreCadastro', () => {
     salvarObservacao: vi.fn(),
     comparacao: vi.fn(),
     rematricular: vi.fn(),
+    moverParaAno: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -87,6 +88,37 @@ describe('AvaliacaoPreCadastro', () => {
   const texto = () => (fixture.nativeElement as HTMLElement).textContent ?? '';
   const botao = (rotulo: string) =>
     [...(fixture.nativeElement as HTMLElement).querySelectorAll('button')].find((b) => b.textContent?.includes(rotulo))!;
+
+  it('"Matrícula do próximo ano" muda o ano sem aprovar e deixa voltar', async () => {
+    const proximo = new Date().getFullYear() + 1;
+    const componente = fixture.componentInstance as unknown as { detalhe: { set(d: PreCadastroResponseDTO): void } };
+    componente.detalhe.set({ ...detalhe, anoReferencia: proximo - 1, anoParaMover: proximo });
+    fixture.detectChanges();
+    service.moverParaAno.mockResolvedValue({ ...detalhe, anoReferencia: proximo, anoParaMover: proximo - 1 });
+
+    botao(`Matrícula do próximo ano (${proximo})`).click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(service.moverParaAno).toHaveBeenCalledWith(5, proximo);
+    expect(texto()).toContain(`Inscrição movida para as matrículas de ${proximo}`);
+    expect(botao(`Voltar para ${proximo - 1}`)).toBeDefined();
+    expect(botao('Aprovar e criar cadastro')).toBeDefined();
+    expect(service.aprovar).not.toHaveBeenCalled();
+  });
+
+  it('avisa quando pode ser rematrícula de ficha sem CPF', () => {
+    const componente = fixture.componentInstance as unknown as { detalhe: { set(d: PreCadastroResponseDTO): void } };
+    componente.detalhe.set({
+      ...detalhe,
+      possivelMesmoAtendido: { assistidoId: 42, nomeCompleto: 'Crianca Ficha Antiga', fichaSemCpf: true },
+    });
+    fixture.detectChanges();
+
+    expect(texto()).toContain('Pode ser rematrícula');
+    expect(texto()).toContain('Crianca Ficha Antiga');
+    expect(texto()).toContain('complete o CPF na ficha');
+  });
 
   it('avisa o que a família não enviou', () => {
     expect(texto()).toContain('A família não enviou: Foto do atendido, Documento do responsável');

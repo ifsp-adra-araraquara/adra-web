@@ -41,6 +41,40 @@
       </div>
     }
 
+    @if (movidaPara(); as ano) {
+      <div class="notice notice-info" role="status">
+        <app-icon name="check" />
+        <span>
+          Inscrição movida para as matrículas de <b>{{ ano }}</b>. Ela continua {{ pendente() ? 'pendente' : 'na lista de espera' }}
+          e agora aparece em Pré-cadastros no ano {{ ano }}.
+        </span>
+      </div>
+    } @else if (emAvaliacao() && doProximoAno()) {
+      <div class="notice notice-info" role="status">
+        <app-icon name="calendar" />
+        <span>
+          Matrícula de <b>{{ d.anoReferencia }}</b>: ao aprovar, o atendido começa em 01/01/{{ d.anoReferencia }}. Até lá ele
+          não entra na chamada nem na lista de atendidos de agora (fica em Atendidos → Próximo ano).
+        </span>
+      </div>
+    }
+
+    @if (emAvaliacao() && d.possivelMesmoAtendido; as possivel) {
+      <div class="notice notice-amber" role="status">
+        <app-icon name="alert-triangle" />
+        <span>
+          <b>Pode ser rematrícula:</b> já existe o atendido {{ possivel.nomeCompleto }} com o mesmo nome e data de nascimento,
+          @if (possivel.fichaSemCpf) {
+            mas a ficha está sem CPF. Se for a mesma pessoa, complete o CPF na ficha e abra esta inscrição de novo para
+            rematricular, sem criar outra ficha.
+          } @else {
+            com outro CPF. Confira se não é a mesma pessoa antes de aprovar.
+          }
+          <button type="button" class="link" (click)="abrirFichaDoAtendido(possivel.assistidoId)">Abrir ficha</button>
+        </span>
+      </div>
+    }
+
     @if (d.anexosFaltando.length && d.status !== 'CONVERTIDO') {
       <div class="notice notice-amber" role="status">
         <app-icon name="alert-triangle" />
@@ -200,6 +234,11 @@
           <app-button variant="danger" (click)="abrirReprovar()">Reprovar</app-button>
           @if (pendente() && (podeAprovar() || podeRematricular())) {
             <app-button variant="secondary" [loading]="salvando()" (click)="colocarNaListaEspera()">Colocar na lista de espera</app-button>
+          }
+          @if (anoParaMover(); as ano) {
+            <app-button variant="secondary" [loading]="salvando()" (click)="moverDeAno()">
+              {{ ano > d.anoReferencia ? 'Matrícula do próximo ano (' + ano + ')' : 'Voltar para ' + ano }}
+            </app-button>
           }
           @if (podeAprovar()) {
             <app-button [loading]="salvando()" (click)="aprovar()">Aprovar e criar cadastro</app-button>

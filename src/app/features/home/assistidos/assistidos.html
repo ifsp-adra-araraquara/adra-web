@@ -50,7 +50,19 @@
     <button type="button" class="tab" [class.active]="abaAtiva() === 'inativos'" [attr.aria-pressed]="abaAtiva() === 'inativos'" (click)="trocarAbaStatus('inativos')">
       Inativos @if (contagem(); as c) { <span class="count">{{ c.inativos }}</span> }
     </button>
+    @if (contagem()?.proximoAno || abaAtiva() === 'proximo') {
+      <button type="button" class="tab" [class.active]="abaAtiva() === 'proximo'" [attr.aria-pressed]="abaAtiva() === 'proximo'" (click)="trocarAbaStatus('proximo')">
+        Próximo ano @if (contagem()?.anoProximo; as ano) { ({{ ano }}) } @if (contagem(); as c) { <span class="count">{{ c.proximoAno ?? 0 }}</span> }
+      </button>
+    }
   </div>
+
+  @if (abaAtiva() === 'proximo') {
+    <p class="acomp-legenda">
+      <app-icon name="calendar" [size]="16" />
+      Matriculados para o próximo ano. Entram na chamada, no painel e nas outras abas a partir de 1º de janeiro.
+    </p>
+  }
 
   @if (abaAtiva() === 'acomp') {
     <p class="acomp-legenda">

@@ -22,6 +22,7 @@ import { Select, SelectOption } from '../../../../shared/components/select/selec
 import { cpfValido } from '../../../../shared/validators/cpf.validator';
 import { enderecoParaForm } from '../../../../shared/utils/endereco.util';
 import { mensagemErro } from '../../../../shared/utils/erro-http.util';
+import { hojeISO } from '../../../../shared/utils/aula.util';
 import {
   assistidoVazio,
   paraPayloadAssistido,
@@ -123,7 +124,14 @@ export class AvaliacaoPreCadastro implements OnInit {
   protected readonly salvandoObservacao = signal(false);
   protected readonly observacaoSalva = signal(false);
 
+  /** Aviso depois de mover de ano (a inscrição continua aqui, em avaliação). */
+  protected readonly movidaPara = signal<number | null>(null);
+
   protected readonly pendente = computed(() => this.detalhe()?.status === 'PENDENTE');
+  protected readonly anoAtual = new Date().getFullYear();
+  /** Inscrição para o ano seguinte: aprovada, só começa em 1º de janeiro. */
+  protected readonly doProximoAno = computed(() => (this.detalhe()?.anoReferencia ?? 0) > this.anoAtual);
+  protected readonly anoParaMover = computed(() => (this.emAvaliacao() ? (this.detalhe()?.anoParaMover ?? null) : null));
   protected readonly emAvaliacao = computed(() => {
     const status = this.detalhe()?.status;
     return !!status && emAvaliacao(status);
@@ -256,6 +264,30 @@ export class AvaliacaoPreCadastro implements OnInit {
     } catch (e) {
       this.erroAcao.set(mensagemErro(e as HttpErrorResponse, 'Não foi possível reprovar. Tente de novo.'));
       this.modalReprovar.set(false);
+    } finally {
+      this.salvando.set(false);
+    }
+  }
+
+  protected async moverDeAno(): Promise<void> {
+    const ano = this.anoParaMover();
+    if (ano == null || this.salvando()) return;
+    this.salvando.set(true);
+    this.erroAcao.set(null);
+    try {
+      const detalhe = await this.service.moverParaAno(this.preCadastroId, ano);
+      this.detalhe.set(detalhe);
+      this.movidaPara.set(ano);
+      // A ficha do próximo ano começa em 1º de janeiro; o resto do que a equipe já revisou fica.
+      const inicioDoAno = `${ano}-01-01`;
+      const hoje = hojeISO();
+      this.assistido.update((a) => ({ ...a, dataEntrada: inicioDoAno > hoje ? inicioDoAno : hoje }));
+      if (detalhe.assistidoExistenteId) {
+        // Rematrícula: "já matriculado no ano" depende do ano da inscrição.
+        await this.carregarRematricula();
+      }
+    } catch (e) {
+      this.erroAcao.set(mensagemErro(e as HttpErrorResponse, 'Não foi possível mudar o ano da inscrição. Tente de novo.'));
     } finally {
       this.salvando.set(false);
     }
