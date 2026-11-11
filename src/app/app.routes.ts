@@ -162,6 +162,14 @@ export const routes: Routes = [
         canActivate: [roleGuard],
       },
       {
+        path: 'assistidos/por-ano',
+        title: 'Atendidos por ano',
+        loadComponent: () =>
+          import('./features/home/lista-anual/lista-anual').then((m) => m.ListaAnual),
+        data: { roles: [Role.COORD, Role.ASSISTENTE] },
+        canActivate: [roleGuard],
+      },
+      {
         path: 'assistidos/:id/ficha-social',
         title: 'Ficha de cadastro social',
         loadComponent: () =>

@@ -336,6 +336,11 @@ export class Assistidos implements OnInit {
     this.router.navigate(['/turmas']);
   }
 
+  /** Histórico: atendidos de cada ano, para imprimir/salvar PDF ou baixar planilha. */
+  abrirListaPorAno(): void {
+    this.router.navigate(['/assistidos/por-ano']);
+  }
+
   abrirCadastroEmMassa(): void {
     this.router.navigate(['/assistidos/lote']);
   }

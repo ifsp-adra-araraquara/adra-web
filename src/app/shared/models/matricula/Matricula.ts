@@ -64,3 +64,33 @@ export interface EncerramentoAnoDTO {
   totalRenovaram: number;
   totalNaoRenovaram: number;
 }
+
+export type StatusMatricula = 'ATIVA' | 'ENCERRADA' | 'DESLIGADA';
+
+export interface LinhaListaAnualDTO {
+  assistidoId: number;
+  nomeCompleto: string;
+  dataNascimento: string;
+  statusMatricula: StatusMatricula;
+  grupo: string | null;
+  entrada: string | null;
+  saida: string | null;
+  totalChamadas: number;
+  presencas: number;
+  faltas: number;
+  faltasJustificadas: number;
+  /** null sem chamada no ano. Falta justificada não conta como presença. */
+  frequenciaPercentual: number | null;
+}
+
+/** Lista de atendidos de um ano (histórico), gerada na hora. */
+export interface ListaAnualDTO {
+  ano: number;
+  encerrado: boolean;
+  /** Frequência considerada até este dia. */
+  frequenciaAte: string;
+  totalAtivas: number;
+  totalEncerradas: number;
+  totalDesligadas: number;
+  atendidos: LinhaListaAnualDTO[];
+}
