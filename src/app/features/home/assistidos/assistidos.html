@@ -6,7 +6,7 @@
     </div>
 
     @if (podeEditarCadastro()) {
-      <div class="page-header-acoes">
+      <div class="page-header-acoes acoes-atendidos">
         <app-button variant="secondary" size="sm" (click)="abrirListaPorAno()">
           <app-icon name="list" [size]="16" /> Lista por ano
         </app-button>
@@ -18,7 +18,7 @@
         <app-button variant="secondary" size="sm" (click)="abrirCadastroEmMassa()">
           <app-icon name="users" [size]="16" /> Cadastro em massa
         </app-button>
-        <app-button size="sm" (click)="abrirCadastroNovo()">
+        <app-button class="acao-principal" size="sm" (click)="abrirCadastroNovo()">
           <app-icon name="plus" [size]="16" /> Novo atendido
         </app-button>
       </div>
@@ -131,10 +131,11 @@
                 <th class="col-larga">CPF</th>
                 <th>Responsável</th>
                 <th class="col-larga">Contato</th>
-                <th>Grupo</th>
                 @if (turmaFiltroAtual()) {
-                  <th>Entrada no grupo</th>
-                  <th>Saída do grupo</th>
+                  <!-- Com filtro de grupo, a coluna "Grupo" seria igual em todas as linhas (o aviso no topo já diz qual é). -->
+                  <th>No grupo</th>
+                } @else {
+                  <th>Grupo</th>
                 }
                 <th>Frequência</th>
                 <th>Status</th>
@@ -172,10 +173,22 @@
                       <span class="muted">—</span>
                     }
                   </td>
-                  <td>{{ assistido.nomeTurma || 'Sem grupo' }}</td>
-                  @if (turmaFiltroAtual()) {
-                    <td>{{ assistido.dataEntradaTurma ? (assistido.dataEntradaTurma | date: 'dd/MM/yyyy') : '-' }}</td>
-                    <td>{{ assistido.dataSaidaTurma ? (assistido.dataSaidaTurma | date: 'dd/MM/yyyy') : '-' }}</td>
+                  @if (turmaFiltroAtual(); as turmaCtx) {
+                    <td>
+                      <span class="nowrap">
+                        @if (comecaNoFuturo(assistido.dataEntradaTurma)) {
+                          A partir de {{ assistido.dataEntradaTurma | date: 'dd/MM/yyyy' }}
+                        } @else {
+                          {{ assistido.dataEntradaTurma ? (assistido.dataEntradaTurma | date: 'dd/MM/yyyy') : '—' }}
+                          – {{ assistido.dataSaidaTurma ? (assistido.dataSaidaTurma | date: 'dd/MM/yyyy') : 'hoje' }}
+                        }
+                      </span>
+                      @if (assistido.dataSaidaTurma && assistido.nomeTurma !== turmaCtx.nomeTurma) {
+                        <span class="cell-sub">Hoje em {{ assistido.nomeTurma || 'nenhum grupo' }}</span>
+                      }
+                    </td>
+                  } @else {
+                    <td>{{ assistido.nomeTurma || 'Sem grupo' }}</td>
                   }
                   <td>
                     <ng-container *ngTemplateOutlet="frequencia; context: { $implicit: assistido }" />
@@ -251,9 +264,13 @@
                 <div>
                   <dt>No grupo</dt>
                   <dd>
-                    {{ assistido.dataEntradaTurma ? (assistido.dataEntradaTurma | date: 'dd/MM/yyyy') : '-' }}
-                    até
-                    {{ assistido.dataSaidaTurma ? (assistido.dataSaidaTurma | date: 'dd/MM/yyyy') : 'hoje' }}
+                    @if (comecaNoFuturo(assistido.dataEntradaTurma)) {
+                      A partir de {{ assistido.dataEntradaTurma | date: 'dd/MM/yyyy' }}
+                    } @else {
+                      {{ assistido.dataEntradaTurma ? (assistido.dataEntradaTurma | date: 'dd/MM/yyyy') : '-' }}
+                      até
+                      {{ assistido.dataSaidaTurma ? (assistido.dataSaidaTurma | date: 'dd/MM/yyyy') : 'hoje' }}
+                    }
                   </dd>
                 </div>
               }
@@ -337,8 +354,8 @@
         [size]="72"
         [ampliavel]="true"
       />
-      <p class="cell-sub">
-        {{ calcularIdade(assistidoSelecionado()!.dataNascimento) }} anos ·
+      <p class="cell-sub ficha-resumo">
+        <span>{{ calcularIdade(assistidoSelecionado()!.dataNascimento) }} anos</span>
         <app-badge [status]="assistidoSelecionado()!.status" />
       </p>
       @if (podeEditarCadastro()) {
@@ -348,8 +365,8 @@
       }
     </div>
 
-    <!-- ABAS -->
-    <div class="tabs">
+    <!-- ABAS (quebram linha no celular em vez de esconder as últimas) -->
+    <div class="tabs ficha-abas">
       <button
         class="tab"
         [class.active]="abaVerAssistido() === 'dados'"
@@ -420,7 +437,7 @@
         <div class="field">
           <label>CPF</label>
           <div class="input" style="background: var(--gray-50)">
-            {{ assistidoSelecionado()!.cpf || 'Não informado' }}
+            {{ assistidoSelecionado()!.cpf ? formatarCpf(assistidoSelecionado()!.cpf!) : 'Não informado' }}
           </div>
         </div>
 
@@ -675,7 +692,7 @@
                 <div class="field">
                   <label>CPF</label>
                   <div class="input" style="background: var(--gray-50)">
-                    {{ responsavel.cpfResponsavel || 'Não informado' }}
+                    {{ responsavel.cpfResponsavel ? formatarCpf(responsavel.cpfResponsavel) : 'Não informado' }}
                   </div>
                 </div>
                 <div class="field">

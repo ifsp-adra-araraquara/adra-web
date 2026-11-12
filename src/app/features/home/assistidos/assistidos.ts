@@ -35,7 +35,8 @@ import { ResponsavelResponseDTO } from '../../../shared/models/responsavel/Respo
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Input } from '../../../shared/components/input/input';
 import { Button } from '../../../shared/components/button/button';
-import { cpfValido } from '../../../shared/validators/cpf.validator';
+import { hojeISO } from '../../../shared/utils/aula.util';
+import { cpfValido, formatarCpf } from '../../../shared/validators/cpf.validator';
 import { Modal } from '../../../shared/components/modal/modal';
 import { Badge } from '../../../shared/components/badge/badge';
 import { Icon } from '../../../shared/components/icon/icon';
@@ -98,6 +99,7 @@ export class Assistidos implements OnInit {
   readonly CategoriaArquivo = CategoriaArquivo;
   readonly formatarEndereco = formatarEndereco;
   readonly formatarMoeda = formatarMoeda;
+  readonly formatarCpf = formatarCpf;
 
   private readonly apiAssistidos = `${environment.apiUrl}/api/assistidos`;
   private readonly apiResponsaveis = `${environment.apiUrl}/api/responsaveis`;
@@ -420,6 +422,11 @@ export class Assistidos implements OnInit {
    * ============================================================ */
 
   /** CPF parcialmente oculto na listagem (LGPD); completo só na ficha. */
+  /** Vínculo que só começa depois de hoje (matrícula do próximo ano): não termina "hoje". */
+  comecaNoFuturo(dataEntrada: string | null | undefined): boolean {
+    return !!dataEntrada && dataEntrada.slice(0, 10) > hojeISO();
+  }
+
   cpfMascarado(cpf: string | null): string {
     const d = (cpf ?? '').replace(/\D/g, '');
     return d.length === 11 ? `***.***.${d.slice(6, 9)}-**` : '—';
