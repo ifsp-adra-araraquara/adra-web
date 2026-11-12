@@ -4,7 +4,7 @@ import { DiaSemana } from '../../enum/DiaSemana';
 export interface TurmaRequestDTO {
   nomeTurma: string;
   turno: Turno | '';
-  faixaEtaria: string; // ⚠️ pendência do planning: formato ainda em texto livre
+  faixaEtariaId: number | null;
   capacidade: number | null;
   observacoes?: string;
   diasDaSemana: DiaSemana[];

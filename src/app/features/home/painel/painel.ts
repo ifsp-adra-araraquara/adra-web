@@ -29,16 +29,12 @@ const COR_NIVEL: Record<NivelDisciplinar, string> = {
 const RAIO_ROSCA = 48;
 
 /**
- * Cor fixa por faixa (a cor segue a faixa, não a posição). As três
- * principais seguem o protótipo; paleta validada (dataviz validate_palette).
+ * Faixas são cadastráveis: a cor segue a ordem que vem da API (por idade).
+ * Paleta validada (dataviz validate_palette); "Sem faixa" fica em cinza.
  */
-const COR_FAIXA: Record<string, string> = {
-  'Até 5': '#9467C9',
-  '6–10': '#00846A',
-  '11–13': '#52B788',
-  '14–17': '#3A86D8',
-  '18+': '#D9A21B',
-};
+const CORES_FAIXA = ['#00846A', '#52B788', '#3A86D8', '#9467C9', '#D9A21B'];
+const COR_SEM_FAIXA = '#B4B2A9';
+const SEM_FAIXA = 'Sem faixa';
 
 /**
  * FT-05 — Painel do Coordenador (tela inicial do perfil).
@@ -126,7 +122,9 @@ export class Painel implements OnInit {
    * viewBox 0..120 (raio 48): o comprimento é a fração da circunferência.
    */
   readonly faixas = computed(() => {
-    const faixas = (this.mensal()?.faixasEtarias ?? []).filter((f) => f.total > 0);
+    const faixas = (this.mensal()?.faixasEtarias ?? [])
+      .map((f, i) => ({ ...f, cor: f.rotulo === SEM_FAIXA ? COR_SEM_FAIXA : CORES_FAIXA[i % CORES_FAIXA.length] }))
+      .filter((f) => f.total > 0);
     const total = faixas.reduce((s, f) => s + f.total, 0);
     const circunferencia = 2 * Math.PI * RAIO_ROSCA;
     const espaco = faixas.length > 1 ? 2 : 0;
@@ -135,8 +133,6 @@ export class Painel implements OnInit {
       const comprimento = (f.total / total) * circunferencia;
       const seg = {
         ...f,
-        legenda: f.rotulo === 'Sem data' ? 'Sem data de nascimento' : `${f.rotulo} anos`,
-        cor: COR_FAIXA[f.rotulo] ?? '#B4B2A9',
         percentual: Math.round((f.total / total) * 100),
         traco: `${Math.max(comprimento - espaco, 0.5)} ${circunferencia}`,
         deslocamento: -inicio,
@@ -148,7 +144,7 @@ export class Painel implements OnInit {
       total,
       segmentos,
       descricao:
-        `${total} atendidos ativos: ` + segmentos.map((s) => `${s.legenda}, ${s.total}`).join('; '),
+        `${total} atendidos ativos: ` + segmentos.map((s) => `${s.rotulo}, ${s.total}`).join('; '),
     };
   });
   readonly RAIO_ROSCA = RAIO_ROSCA;

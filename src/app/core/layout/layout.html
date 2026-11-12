@@ -1,4 +1,4 @@
-<a class="pular-conteudo" href="#conteudo" (click)="pularParaConteudo($event)">Pular para o conteúdo</a>
+<a class="pular-conteudo no-print" href="#conteudo" (click)="pularParaConteudo($event)">Pular para o conteúdo</a>
 
 <app-sidebar [(open)]="menuOpen" [(collapsed)]="sidebarCollapsed" />
 
@@ -40,5 +40,5 @@
   <main #conteudo id="conteudo" class="content" tabindex="-1">
     <router-outlet />
   </main>
-  <p class="sr-only" aria-live="polite">{{ anuncioTela() }}</p>
+  <p class="sr-only no-print" aria-live="polite">{{ anuncioTela() }}</p>
 </div>
