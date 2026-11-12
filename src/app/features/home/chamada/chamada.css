@@ -36,6 +36,8 @@
 .aula-seta { flex: none; width: 18px; height: 18px; color: var(--gray-400); }
 
 .vazio { padding: 28px 16px; text-align: center; font-size: 14px; color: var(--gray-600); }
+.vazio p { margin: 0; }
+.atalhos-dia { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 14px; }
 
 /* Celular estreito: o chip desce para baixo do nome em vez de espremer o texto */
 @media (max-width: 420px) {
