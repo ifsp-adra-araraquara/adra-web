@@ -82,7 +82,7 @@ export class CalendarioAulas implements OnInit {
 
   readonly dataInicioFiltro = signal<string>('');
   readonly dataFimFiltro = signal<string>('');
-  private readonly isWide = inject(DOCUMENT).defaultView?.matchMedia?.('(min-width: 720px)')?.matches ?? true;
+  private readonly isWide = inject(DOCUMENT).defaultView?.matchMedia?.('(min-width: 768px)')?.matches ?? true;
   readonly visualizacao = signal<CalendarView>(this.isWide ? 'dayGridMonth' : 'listWeek');
 
   readonly calendarOptions = computed<CalendarOptions>(() => ({
