@@ -187,9 +187,54 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-::ng-deep .fc-list .evt-sub { display: block; }
+::ng-deep .fc .fc-list, ::ng-deep .fc .fc-list-table { width: 100%; max-width: 100%; }
+::ng-deep .fc-list .evt-titulo {
+  font-size: 13px; line-height: 1.35;
+  white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere;
+}
+::ng-deep .fc-list .evt-sub {
+  display: block; margin-top: 2px; font-size: 12px; line-height: 1.4;
+  white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere;
+}
 ::ng-deep .fc-list .evt-hora { display: none; }
 ::ng-deep .fc-list-event { cursor: pointer; }
+
+@media (max-width: 767px) {
+  ::ng-deep .fc .fc-toolbar { gap: 8px; }
+  ::ng-deep .fc .fc-toolbar-chunk { min-width: 0; gap: 8px; flex-wrap: wrap; }
+  ::ng-deep .fc .fc-toolbar-title { font-size: 15px; line-height: 1.25; }
+
+  ::ng-deep .fc .fc-list-table,
+  ::ng-deep .fc .fc-list-table tbody,
+  ::ng-deep .fc .fc-list-day,
+  ::ng-deep .fc .fc-list-day > th { display: block; width: 100%; }
+
+  ::ng-deep .fc .fc-list-day-cushion {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 4px 8px; padding: 8px 12px;
+  }
+  ::ng-deep .fc .fc-list-day-cushion::after { display: none; }
+  ::ng-deep .fc .fc-list-day-text, ::ng-deep .fc .fc-list-day-side-text { float: none !important; }
+  ::ng-deep .fc .fc-list-day-text { font-size: 13px; font-weight: 700; color: var(--gray-800); text-transform: capitalize; }
+  ::ng-deep .fc .fc-list-day-side-text { font-size: 12px; font-weight: 500; color: var(--texto-suave); }
+
+  ::ng-deep .fc .fc-list-event {
+    display: flex; flex-direction: column; gap: 4px;
+    width: 100%; padding: 10px 12px; border-bottom: 1px solid var(--gray-100);
+  }
+  ::ng-deep .fc .fc-list-event:last-child { border-bottom: none; }
+  ::ng-deep .fc .fc-list-event:hover td { background-color: transparent; }
+  ::ng-deep .fc .fc-list-event-graphic { display: none; }
+  ::ng-deep .fc .fc-list-event-time {
+    display: block; width: auto; padding: 0; border: none;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .3px;
+    color: var(--texto-suave); white-space: normal;
+  }
+  ::ng-deep .fc .fc-list-event-title { display: block; width: 100%; min-width: 0; padding: 0; border: none; }
+  ::ng-deep .fc-list .evt { padding: 6px 10px; }
+  ::ng-deep .fc-list .evt.evt-nota { padding-left: 20px; }
+  ::ng-deep .fc-list .evt.evt-nota::before { left: 8px; top: 10px; }
+}
 
 @media (min-width: 720px) {
   .cal-scroll .fc { padding: 14px; }
