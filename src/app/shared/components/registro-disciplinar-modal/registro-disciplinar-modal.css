@@ -114,9 +114,8 @@
 .envolvido-remover:focus-visible { outline: 3px solid var(--color-brand); outline-offset: -3px; }
 
 /* Motivos: um ponto com a cor do nível, como nos cartazes */
-.motivo-grupo + .motivo-grupo { margin-top: 6px; }
-.motivo-nivel { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: var(--gray-600); }
-.nivel-ponto { width: 8px; height: 8px; border-radius: 50%; background: var(--gray-400); }
+.chip-nivel { display: inline-flex; align-items: center; gap: 8px; }
+.nivel-ponto { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--gray-400); }
 .nivel-ponto[data-variant='amber'] { background: var(--amber-400); }
 .nivel-ponto[data-variant='coral'] { background: var(--coral-400); }
 .nivel-ponto[data-variant='red'] { background: var(--red-400); }

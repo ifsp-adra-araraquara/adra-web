@@ -1,1 +1,2 @@
 :host { display: block; width: 100%; }
+.page-header .btn { align-self: flex-start; }

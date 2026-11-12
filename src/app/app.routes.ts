@@ -236,6 +236,14 @@ export const routes: Routes = [
         canActivate: [roleGuard],
       },
       {
+        path: 'chamada/turma/:turmaId/lista',
+        title: 'Lista de frequência',
+        loadComponent: () =>
+          import('./features/home/lista-frequencia/lista-frequencia').then((m) => m.ListaFrequenciaPagina),
+        data: { roles: [Role.COORD, Role.ASSISTENTE, Role.EDUCADOR] },
+        canActivate: [roleGuard],
+      },
+      {
         path: 'materiais',
         title: 'Materiais',
         loadComponent: () => import('./features/home/materiais/materiais').then((m) => m.Materiais),

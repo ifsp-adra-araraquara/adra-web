@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/auth.service';
 import { ChamadaService } from '../../../../core/chamada.service';
 import { DisciplinarService } from '../../../../core/disciplinar.service';
@@ -44,11 +44,11 @@ import { GradeMensal } from '../../../../shared/components/grade-mensal/grade-me
  * do app do oficineiro da Sistema Quality: um botão por atendido que cicla
  * P → F → FJ, contadores no rodapé e "Atualizar chamada" depois de salva.
  * Quem pode editar vem pronto da API (`podeEditar`): Coordenador qualquer dia,
- * Educador Social só hoje, Assistente Social só lê.
+ * Educador Social qualquer dia do mês atual, Assistente Social só lê.
  */
 @Component({
   selector: 'app-chamada-grupo',
-  imports: [FormsModule, AniversarioCards, Avatar, Badge, Button, Icon, Modal, GradeMensal],
+  imports: [FormsModule, RouterLink, AniversarioCards, Avatar, Badge, Button, Icon, Modal, GradeMensal],
   templateUrl: './chamada-grupo.html',
   styleUrl: './chamada-grupo.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -94,7 +94,7 @@ export class ChamadaGrupo {
     if (!chamada || chamada.podeEditar) return null;
     if (chamada.data > hojeISO()) return `A chamada abre no dia (${dataBr(chamada.data)}).`;
     if (this.auth.currentProfile() === Role.EDUCADOR) {
-      return 'A chamada só pode ser feita ou corrigida no dia. Peça à coordenação se precisar alterar.';
+      return 'O Educador Social lança e corrige a chamada do mês atual. Para meses anteriores, peça à coordenação.';
     }
     return chamada.lancada ? null : 'A chamada deste dia ainda não foi feita.';
   });
