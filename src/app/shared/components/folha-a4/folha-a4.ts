@@ -19,16 +19,18 @@ import { INSTITUICAO } from '../../utils/instituicao';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { style: 'display: block;' },
   template: `
-    <div class="barra no-print" [class.paisagem]="paisagem()">
-      <app-button variant="secondary" size="sm" (click)="voltar()">
-        <app-icon name="chevron-left" [size]="16" /> Voltar
-      </app-button>
-      <app-button size="sm" (click)="imprimir()">
-        <app-icon name="file-text" [size]="16" /> {{ rotuloImprimir() }}
-      </app-button>
-    </div>
+    @if (mostrarBarra()) {
+      <div class="barra no-print" [class.paisagem]="paisagem()">
+        <app-button variant="secondary" size="sm" (click)="voltar()">
+          <app-icon name="chevron-left" [size]="16" /> Voltar
+        </app-button>
+        <app-button size="sm" (click)="imprimir()">
+          <app-icon name="file-text" [size]="16" /> {{ rotuloImprimir() }}
+        </app-button>
+      </div>
+    }
 
-    <article class="folha" [class.paisagem]="paisagem()" [attr.aria-label]="rotulo()">
+    <article class="folha" [class.paisagem]="paisagem()" [class.nova-pagina]="novaPagina()" [attr.aria-label]="rotulo()">
       <header class="folha-cabecalho">
         <app-brand-logo [size]="44" [markOnly]="true" />
         <div>
@@ -57,6 +59,8 @@ import { INSTITUICAO } from '../../utils/instituicao';
     .barra.paisagem { max-width: 297mm; }
     .folha.paisagem { max-width: 297mm; min-height: 210mm; padding: 10mm 10mm 8mm; }
     .folha p { margin: 0; }
+    /* Várias folhas seguidas (ex.: um grupo por página): espaço entre elas na tela. */
+    .folha.nova-pagina { margin-top: 24px; }
     .folha-cabecalho { display: flex; align-items: center; gap: 14px; justify-content: center; text-align: center; }
     .instituicao { font-variant: small-caps; font-size: 13pt; }
     .cnpj { font-size: 8.5pt; }
@@ -71,6 +75,7 @@ import { INSTITUICAO } from '../../utils/instituicao';
       /* Página nomeada: só a folha deitada sai em A4 paisagem. */
       @page paisagem { size: A4 landscape; margin: 0; }
       .folha.paisagem { page: paisagem; width: 297mm; min-height: 210mm; }
+      .folha.nova-pagina { margin-top: 0; break-before: page; }
     }
   `,
 })
@@ -78,6 +83,10 @@ export class FolhaA4 {
   rotulo = input('Documento para impressão');
   /** Texto do botão (ex.: "Imprimir ou salvar PDF"). */
   rotuloImprimir = input('Imprimir');
+  /** Barra Voltar/Imprimir: só na primeira folha quando há várias seguidas. */
+  mostrarBarra = input(true);
+  /** Começa em página nova na impressão (segunda folha em diante). */
+  novaPagina = input(false);
   /** A4 deitado (listas largas, como a de frequência do mês). */
   paisagem = input(false);
 

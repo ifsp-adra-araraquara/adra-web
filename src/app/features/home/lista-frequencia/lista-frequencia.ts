@@ -19,8 +19,10 @@ import { ListaFrequencia, montarListaFrequencia } from './lista-frequencia.util'
 /**
  * /chamada/turma/:turmaId/lista?mes=yyyy-MM — lista de frequência do grupo no
  * mês, em A4 deitado, para imprimir ou salvar em PDF (prestação de contas).
+ * Com `:turmaId = todos`, sai uma folha por grupo ativo num documento só.
  * Gerada na hora a partir da grade mensal; nada fica guardado.
  */
+const TODOS = 0;
 @Component({
   selector: 'app-lista-frequencia',
   imports: [FormsModule, FolhaA4, Icon, Select],
@@ -50,8 +52,13 @@ import { ListaFrequencia, montarListaFrequencia } from './lista-frequencia.util'
 
     @if (carregando()) {
       <p class="muted no-print" role="status">Carregando…</p>
-    } @else if (lista(); as l) {
-      <app-folha-a4 [rotulo]="l.titulo" rotuloImprimir="Imprimir ou salvar PDF" [paisagem]="true">
+    } @else {
+      @if (gruposSemAtendidos()) {
+        <p class="dica no-print avulsa">{{ gruposSemAtendidos() }} grupo(s) sem atendidos no mês ficaram de fora.</p>
+      }
+      @for (l of listas(); track $index; let primeira = $first) {
+      <app-folha-a4 [rotulo]="l.titulo" rotuloImprimir="Imprimir ou salvar PDF" [paisagem]="true"
+                    [mostrarBarra]="primeira" [novaPagina]="!primeira">
         <h2 class="doc-titulo">{{ l.titulo }}</h2>
         <p class="doc-sub">
           {{ l.linhas.length }} atendidos · {{ l.diasComChamada }} dias com chamada
@@ -105,6 +112,7 @@ import { ListaFrequencia, montarListaFrequencia } from './lista-frequencia.util'
           <p><span class="linha-assinatura"></span>Coordenação ADRA</p>
         </div>
       </app-folha-a4>
+      }
     }
   `,
   styles: `
@@ -115,6 +123,7 @@ import { ListaFrequencia, montarListaFrequencia } from './lista-frequencia.util'
     .campo-grupo { width: 260px; max-width: 100%; }
     .campo label { font-size: 13px; font-weight: 600; color: var(--gray-600); }
     .dica { margin: 10px 0 0; font-size: 13px; color: var(--gray-600); }
+    .dica.avulsa { max-width: 297mm; margin: 0 auto 10px; }
     .doc-titulo { margin: 14px 0 2px; font-size: 13pt; text-align: center; }
     .doc-sub { margin: 0 0 10px !important; text-align: center; font-size: 9pt; color: #333; }
     .doc-tabela { width: 100%; border-collapse: collapse; font-size: 8pt; }
@@ -151,25 +160,36 @@ export class ListaFrequenciaPagina implements OnInit {
   protected readonly turmaId = signal<number | null>(null);
   protected readonly mes = signal(this.mesAtual);
   protected readonly turmas = signal<TurmaResponseDTO[]>([]);
-  protected readonly lista = signal<ListaFrequencia | null>(null);
+  protected readonly listas = signal<ListaFrequencia[]>([]);
+  protected readonly gruposSemAtendidos = signal(0);
   protected readonly carregando = signal(true);
   protected readonly erro = signal<string | null>(null);
 
   protected readonly opcoesGrupo = computed<SelectOption<number>[]>(() =>
-    this.turmas().map((t) => ({ value: t.turmaId, label: t.nomeTurma })),
+    this.turmas().length
+      ? [
+          { value: TODOS, label: 'Todos os grupos (um por página)' },
+          ...this.turmas().map((t) => ({ value: t.turmaId, label: t.nomeTurma })),
+        ]
+      : [],
   );
 
   async ngOnInit(): Promise<void> {
-    const turmaId = Number(this.route.snapshot.paramMap.get('turmaId'));
-    this.turmaId.set(Number.isInteger(turmaId) && turmaId > 0 ? turmaId : null);
+    const param = this.route.snapshot.paramMap.get('turmaId');
+    const turmaId = param === 'todos' ? TODOS : Number(param);
+    this.turmaId.set(Number.isInteger(turmaId) && turmaId >= 0 ? turmaId : null);
     const mes = this.route.snapshot.queryParamMap.get('mes');
     if (mes && /^\d{4}-\d{2}$/.test(mes)) this.mes.set(mes);
 
     // O Educador Social não lista os grupos (a API não deixa): troca só o mês.
     if (this.auth.currentProfile() !== Role.EDUCADOR) {
-      firstValueFrom(this.http.get<TurmaResponseDTO[]>(`${environment.apiUrl}/api/turmas`))
-        .then((turmas) => this.turmas.set([...turmas].sort((a, b) => a.nomeTurma.localeCompare(b.nomeTurma))))
+      // "Todos os grupos" precisa da lista antes de carregar; um grupo só, não.
+      const pedido = firstValueFrom(this.http.get<TurmaResponseDTO[]>(`${environment.apiUrl}/api/turmas`))
+        .then((turmas) =>
+          this.turmas.set(turmas.filter((t) => t.ativo).sort((a, b) => a.nomeTurma.localeCompare(b.nomeTurma, 'pt-BR'))),
+        )
         .catch(() => this.turmas.set([]));
+      if (this.turmaId() === TODOS) await pedido;
     }
     await this.carregar();
   }
@@ -177,7 +197,10 @@ export class ListaFrequenciaPagina implements OnInit {
   protected trocarGrupo(turmaId: number | null): void {
     if (turmaId == null || turmaId === this.turmaId()) return;
     this.turmaId.set(turmaId);
-    this.router.navigate(['/chamada/turma', turmaId, 'lista'], { queryParams: { mes: this.mes() }, replaceUrl: true });
+    this.router.navigate(['/chamada/turma', turmaId === TODOS ? 'todos' : turmaId, 'lista'], {
+      queryParams: { mes: this.mes() },
+      replaceUrl: true,
+    });
     this.carregar();
   }
 
@@ -203,11 +226,19 @@ export class ListaFrequenciaPagina implements OnInit {
     this.carregando.set(true);
     this.erro.set(null);
     try {
-      const grade = await this.chamadaService.carregarGradeMensal(turmaId, mes);
+      const ids = turmaId === TODOS ? this.turmas().map((t) => t.turmaId) : [turmaId];
+      if (!ids.length) throw new Error('sem grupos');
+      // Um pedido por grupo, em paralelo (são poucos grupos ativos).
+      const grades = await Promise.all(ids.map((id) => this.chamadaService.carregarGradeMensal(id, mes)));
       if (mes !== this.mes() || turmaId !== this.turmaId()) return;
-      this.lista.set(montarListaFrequencia(grade));
+      const listas = grades.map(montarListaFrequencia);
+      // Em "todos", grupo sem atendido no mês não gasta folha.
+      const comAtendidos = turmaId === TODOS ? listas.filter((l) => l.linhas.length) : listas;
+      this.gruposSemAtendidos.set(listas.length - comAtendidos.length);
+      this.listas.set(comAtendidos);
     } catch (e) {
-      this.lista.set(null);
+      this.listas.set([]);
+      this.gruposSemAtendidos.set(0);
       this.erro.set(mensagemErro(e as HttpErrorResponse, 'Não foi possível carregar a lista do mês.'));
     } finally {
       this.carregando.set(false);
