@@ -77,14 +77,14 @@ import { SITUACAO_MATRICULA, dataBr, frequencia, planilhaDaListaAnual } from './
             <tbody>
               @for (linha of l.atendidos; track linha.assistidoId; let i = $index) {
                 <tr>
-                  <td class="num">{{ i + 1 }}</td>
-                  <td>{{ linha.nomeCompleto }}</td>
-                  <td>{{ dataBr(linha.dataNascimento) }}</td>
-                  <td>{{ linha.grupo || '—' }}</td>
-                  <td>{{ dataBr(linha.entrada) || '—' }}</td>
-                  <td>{{ dataBr(linha.saida) || '—' }}</td>
-                  <td>{{ situacao[linha.statusMatricula] }}</td>
-                  <td class="num">{{ frequencia(linha) }}</td>
+                  <td class="num col-num">{{ i + 1 }}</td>
+                  <td class="col-nome">{{ linha.nomeCompleto }}</td>
+                  <td data-label="Nascimento">{{ dataBr(linha.dataNascimento) }}</td>
+                  <td data-label="Grupo">{{ linha.grupo || '—' }}</td>
+                  <td data-label="Entrada">{{ dataBr(linha.entrada) || '—' }}</td>
+                  <td data-label="Saída">{{ dataBr(linha.saida) || '—' }}</td>
+                  <td data-label="Situação">{{ situacao[linha.statusMatricula] }}</td>
+                  <td class="num" data-label="Frequência">{{ frequencia(linha) }}</td>
                 </tr>
               }
             </tbody>
@@ -117,8 +117,16 @@ import { SITUACAO_MATRICULA, dataBr, frequencia, planilhaDaListaAnual } from './
     .doc-tabela .num { text-align: right; white-space: nowrap; }
     .doc-tabela tr { break-inside: avoid; }
     .doc-vazio { text-align: center; }
-    @media (max-width: 719px) {
-      .doc-tabela { display: block; overflow-x: auto; }
+    /* Só na tela do celular: cada linha vira um cartão. A impressão/PDF continua em tabela. */
+    @media screen and (max-width: 719px) {
+      .doc-tabela, .doc-tabela tbody, .doc-tabela tr, .doc-tabela td { display: block; }
+      .doc-tabela thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+      .doc-tabela tr { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; padding: 8px 10px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 6px; }
+      .doc-tabela td { border: none; padding: 1px 0; font-size: 10pt; }
+      .doc-tabela td.col-num { grid-column: 1; color: #666; }
+      .doc-tabela td.col-nome { grid-column: 2; font-weight: 700; }
+      .doc-tabela td[data-label] { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 12px; text-align: right; }
+      .doc-tabela td[data-label]::before { content: attr(data-label); color: #666; font-weight: 600; text-align: left; }
     }
   `,
 })
