@@ -27,6 +27,8 @@ import { Input } from '../../../shared/components/input/input';
 import { Button } from '../../../shared/components/button/button';
 import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 import { AuthService } from '../../../core/auth.service';
+import { FaixaEtariaService } from '../../../core/faixa-etaria.service';
+import { FaixaEtariaDTO } from '../../../shared/models/faixa-etaria/FaixaEtaria';
 import { Icon } from '../../../shared/components/icon/icon';
 import { SeletorDiasSemana } from '../../../shared/components/seletor-dias-semana/seletor-dias-semana';
 import { SeletorMultiplo } from '../../../shared/components/seletor-multiplo/seletor-multiplo';
@@ -34,11 +36,12 @@ import { ListaBadges } from '../../../shared/components/lista-badges/lista-badge
 import { HistoricoOficineiros } from '../../../shared/components/historico-oficineiros/historico-oficineiros';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
 import { AlunosTurmaModal } from './alunos-turma-modal/alunos-turma-modal';
+import { FaixasEtariasModal } from './faixas-etarias-modal/faixas-etarias-modal';
 
 @Component({
   selector: 'app-turmas',
   standalone: true,
-  imports: [AlunosTurmaModal, Icon, SeletorDiasSemana, SeletorMultiplo, ListaBadges, HistoricoOficineiros, 
+  imports: [AlunosTurmaModal, FaixasEtariasModal, Icon, SeletorDiasSemana, SeletorMultiplo, ListaBadges, HistoricoOficineiros, 
     CommonModule,
     FormsModule,
     Select,
@@ -55,6 +58,7 @@ import { AlunosTurmaModal } from './alunos-turma-modal/alunos-turma-modal';
 export class Turmas implements OnInit {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
+  private faixaEtariaService = inject(FaixaEtariaService);
   private readonly router = inject(Router);
 
   private readonly apiTurmas = `${environment.apiUrl}/api/turmas`;
@@ -86,11 +90,16 @@ export class Turmas implements OnInit {
     { value: 'todas', label: 'Todas' }
   ];
 
-  faixaEtariaOptions: SelectOption<string>[] = [
-    { value: '6–9 anos', label: '6–9 anos' },
-    { value: '10–13 anos', label: '10–13 anos' },
-    { value: '14–17 anos', label: '14–17 anos' }
-  ];
+  faixasEtarias = signal<FaixaEtariaDTO[]>([]);
+  mostrarFaixasEtarias = signal(false);
+
+  /** Faixas ativas; a inativa só aparece no grupo que já a usa. */
+  faixaEtariaOptions = computed<SelectOption<number>[]>(() => {
+    const faixaDoGrupo = this.turmaEmEdicao()?.faixaEtariaId;
+    return this.faixasEtarias()
+      .filter((f) => f.ativo || f.faixaEtariaId === faixaDoGrupo)
+      .map((f) => ({ value: f.faixaEtariaId, label: f.ativo ? f.rotulo : `${f.rotulo} (inativa)` }));
+  });
 
   turmas = signal<TurmaResponseDTO[]>([]);
   carregando = signal(false);
@@ -134,6 +143,7 @@ export class Turmas implements OnInit {
   ngOnInit(): void {
     this.carregarTurmas();
     this.carregarOficinas();
+    this.carregarFaixasEtarias();
 
   }
 
@@ -272,6 +282,20 @@ export class Turmas implements OnInit {
     });
   }
 
+  private async carregarFaixasEtarias(): Promise<void> {
+    try {
+      this.faixasEtarias.set(await this.faixaEtariaService.listar(true));
+    } catch (erro) {
+      console.error('Erro ao carregar faixas etárias:', erro);
+    }
+  }
+
+  /** Editar uma faixa muda o rótulo dos grupos que a usam. */
+  aoAlterarFaixasEtarias(): void {
+    this.carregarFaixasEtarias();
+    this.carregarTurmas();
+  }
+
   /* ============================================================
    * MODAL: NOVA / EDITAR TURMA (US-09 e US-11)
    * O mesmo modal atende os dois casos: se turmaEmEdicao() tiver
@@ -288,7 +312,7 @@ export class Turmas implements OnInit {
     return {
       nomeTurma: '',
       turno: '',
-      faixaEtaria: '',
+      faixaEtariaId: null,
       capacidade: null,
       observacoes: '',
       diasDaSemana: [],
@@ -308,7 +332,7 @@ export class Turmas implements OnInit {
     this.formTurma = {
       nomeTurma: turma.nomeTurma,
       turno: turma.turno,
-      faixaEtaria: turma.faixaEtaria,
+      faixaEtariaId: turma.faixaEtariaId,
       capacidade: turma.capacidade,
       observacoes: turma.observacoes ?? '',
       diasDaSemana: turma.diasDaSemana ?? [],

@@ -5,7 +5,9 @@ export interface TurmaResponseDTO {
   turmaId: number;
   nomeTurma: string;
   turno: Turno;
-  faixaEtaria: string;
+  faixaEtariaId: number | null;
+  /** Rótulo da faixa, ex.: "6–10 anos". */
+  faixaEtaria: string | null;
   capacidade: number;
   ativo: boolean;
   observacoes?: string;

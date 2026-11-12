@@ -10,6 +10,9 @@
 
     @if (isCoordenador()) {
       <div class="page-header-acoes">
+        <app-button variant="secondary" size="sm" (click)="mostrarFaixasEtarias.set(true)">
+          <app-icon name="users" [size]="16" /> Faixas etárias
+        </app-button>
         <app-button size="sm" (click)="abrirModalNovaTurma()">
           <app-icon name="plus" [size]="16" /> Novo grupo
         </app-button>
@@ -92,7 +95,7 @@
     <app-drawer
       [open]="true"
       [title]="turma.nomeTurma"
-      [subtitle]="turma.turno + ' · ' + turma.faixaEtaria"
+      [subtitle]="turma.faixaEtaria ? turma.turno + ' · ' + turma.faixaEtaria : turma.turno"
       (closed)="fecharDrawerTurma()"
     >
       <div
@@ -191,6 +194,14 @@
   }
 </section>
 
+@if (isCoordenador()) {
+  <app-faixas-etarias-modal
+    [(open)]="mostrarFaixasEtarias"
+    [faixas]="faixasEtarias()"
+    (alterado)="aoAlterarFaixasEtarias()"
+  />
+}
+
 <!-- ============================================================
      MODAL: NOVA / EDITAR TURMA
      ============================================================ -->
@@ -231,10 +242,10 @@
     <div class="field">
       <label>Faixa etária</label>
       <app-select
-        [ngModel]="formTurma.faixaEtaria"
-        (ngModelChange)="atualizarCampoTurma('faixaEtaria', $event)"
+        [ngModel]="formTurma.faixaEtariaId"
+        (ngModelChange)="atualizarCampoTurma('faixaEtariaId', $event)"
         [placeholder]="'Selecione'"
-        [options]="faixaEtariaOptions"
+        [options]="faixaEtariaOptions()"
       />
     </div>
 

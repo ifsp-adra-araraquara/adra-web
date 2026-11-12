@@ -1,0 +1,44 @@
+<app-modal [(open)]="open" [title]="'Faixas etárias'" [subtitle]="'Usadas nos grupos e no painel'" size="sm"
+           (closed)="limparFormulario()">
+  <div modal-icon class="mh-ico ico-green"><app-icon name="users" /></div>
+
+  @if (erro()) {
+    <div class="notice notice-error" role="alert">{{ erro() }}</div>
+  }
+
+  <div class="form-row">
+    <app-input label="Idade mínima" type="number" min="0" max="120" placeholder="Ex.: 6"
+               [ngModel]="idadeMinima()" (ngModelChange)="idadeMinima.set($event)" />
+    <app-input label="Idade máxima" type="number" min="0" max="120" placeholder="Ex.: 10"
+               [ngModel]="idadeMaxima()" (ngModelChange)="idadeMaxima.set($event)" />
+  </div>
+
+  <div class="acoes-form">
+    @if (editando()) {
+      <app-button variant="secondary" size="sm" (click)="limparFormulario()">Cancelar edição</app-button>
+    }
+    <app-button size="sm" [loading]="salvando()" (click)="salvar()">
+      {{ editando() ? 'Salvar faixa' : 'Adicionar faixa' }}
+    </app-button>
+  </div>
+
+  <p class="hint">Editar uma faixa muda todos os grupos que a usam. Faixa inativa sai do cadastro de grupos, mas continua nos grupos que já a têm.</p>
+
+  <ul class="lista" role="list">
+    @for (faixa of faixas(); track faixa.faixaEtariaId) {
+      <li [class.inativa]="!faixa.ativo" [class.em-edicao]="editando()?.faixaEtariaId === faixa.faixaEtariaId">
+        <span class="rotulo">{{ faixa.rotulo }}</span>
+        @if (!faixa.ativo) { <app-badge variant="gray" label="Inativa" /> }
+        <button type="button" class="btn btn-ghost btn-sm" [attr.aria-label]="'Editar faixa ' + faixa.rotulo"
+                (click)="editar(faixa)">Editar</button>
+        <button type="button" class="btn btn-ghost btn-sm"
+                [attr.aria-label]="(faixa.ativo ? 'Inativar' : 'Reativar') + ' faixa ' + faixa.rotulo"
+                [disabled]="salvando()" (click)="alternarAtivo(faixa)">
+          {{ faixa.ativo ? 'Inativar' : 'Reativar' }}
+        </button>
+      </li>
+    } @empty {
+      <li class="muted">Nenhuma faixa cadastrada.</li>
+    }
+  </ul>
+</app-modal>

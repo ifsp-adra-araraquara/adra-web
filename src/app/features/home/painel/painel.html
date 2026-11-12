@@ -74,7 +74,7 @@
                     @for (s of f.segmentos; track s.rotulo) {
                       <circle cx="60" cy="60" [attr.r]="RAIO_ROSCA" [attr.stroke]="s.cor"
                               [attr.stroke-dasharray]="s.traco" [attr.stroke-dashoffset]="s.deslocamento">
-                        <title>{{ s.legenda }}: {{ s.total }} ({{ s.percentual }}%)</title>
+                        <title>{{ s.rotulo }}: {{ s.total }} ({{ s.percentual }}%)</title>
                       </circle>
                     }
                   </svg>
@@ -84,7 +84,7 @@
                   @for (s of f.segmentos; track s.rotulo) {
                     <li>
                       <span class="amostra" [style.background]="s.cor"></span>
-                      <span class="rosca-rotulo">{{ s.legenda }}</span>
+                      <span class="rosca-rotulo">{{ s.rotulo }}</span>
                       <b>{{ s.total }}</b>
                       <small>{{ s.percentual }}%</small>
                     </li>

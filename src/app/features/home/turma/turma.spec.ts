@@ -14,22 +14,29 @@ describe('Turmas', () => {
 
   const apiTurmas = `${environment.apiUrl}/api/turmas`;
   const apiOficinas = `${environment.apiUrl}/api/oficinas`;
+  const apiFaixas = `${environment.apiUrl}/api/faixas-etarias`;
 
   const turmaMock: TurmaResponseDTO = {
     turmaId: 1,
     nomeTurma: 'CJ Grupo A',
     turno: Turno.MANHA,
-    faixaEtaria: '6-9 anos',
+    faixaEtariaId: 1,
+    faixaEtaria: '6–10 anos',
     capacidade: 24,
     ativo: true,
     observacoes: '',
     oficinaIds: [],
   };
 
-  /** ngOnInit dispara carregarTurmas() + carregarOficinas() juntos — mocka ambos. */
+  /** ngOnInit carrega turmas, oficinas e faixas etárias juntos — mocka todos. */
   function flushCargaInicial(turmas: TurmaResponseDTO[] = []): void {
     httpMock.expectOne((r) => r.url === apiTurmas).flush(turmas);
+    flushOficinasEFaixas();
+  }
+
+  function flushOficinasEFaixas(): void {
     httpMock.expectOne((r) => r.url === apiOficinas).flush([]);
+    httpMock.expectOne((r) => r.url === apiFaixas).flush([]);
   }
 
   beforeEach(async () => {
@@ -60,7 +67,7 @@ describe('Turmas', () => {
     expect(req.request.method).toBe('GET');
 
     req.flush([turmaMock]);
-    httpMock.expectOne((r) => r.url === apiOficinas).flush([]);
+    flushOficinasEFaixas();
 
     expect(component.turmas()).toEqual([turmaMock]);
     expect(component.carregando()).toBe(false);
@@ -71,7 +78,7 @@ describe('Turmas', () => {
 
     const req = httpMock.expectOne((r) => r.url === apiTurmas);
     req.flush('erro', { status: 500, statusText: 'Server Error' });
-    httpMock.expectOne((r) => r.url === apiOficinas).flush([]);
+    flushOficinasEFaixas();
 
     expect(component.erroListar()).toContain('Não foi possível carregar');
     expect(component.carregando()).toBe(false);
