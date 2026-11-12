@@ -124,24 +124,6 @@ tr.arquivado td { opacity: .6; }
 .pagina-info { font-size: 13px; color: var(--gray-600); text-align: center; }
 .pagina-total { display: block; font-size: 12px; color: var(--gray-400); }
 
-/* ---- Motivos ---- */
-.motivos-intro { margin: 0 0 14px; font-size: 13px; color: var(--gray-600); max-width: 72ch; }
-.motivos-grid { display: grid; gap: 14px; }
-.motivos-grupo { padding: 14px 16px; }
-.motivos-grupo-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
-.motivos-grupo-topo h2 { margin: 0 0 4px; font-size: 14px; }
-.motivos-lista { list-style: none; margin: 0; padding: 0; }
-.motivos-lista li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 52px;
-  padding: 4px 0;
-  border-top: 1px solid var(--gray-100);
-}
-.motivos-lista li.inativo .motivo-nome { color: var(--gray-400); text-decoration: line-through; }
-.motivo-nome { flex: 1; min-width: 0; font-size: 13.5px; color: var(--gray-800); overflow-wrap: anywhere; }
-
 @media (max-width: 380px) {
   .pag-rotulo { display: none; }
   .pendencia { padding: 10px 12px; column-gap: 8px; }
@@ -159,7 +141,6 @@ tr.arquivado td { opacity: .6; }
   .filtros { display: flex; }
   .filtros-busca { flex: 1; }
   .filtros-select { width: 220px; flex: none; }
-  .motivos-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* iPad na horizontal e notebook: tabela */

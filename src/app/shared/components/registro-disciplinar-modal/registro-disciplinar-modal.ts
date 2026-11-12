@@ -20,11 +20,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { DisciplinarService } from '../../../core/disciplinar.service';
 import { NIVEIS_DISCIPLINARES, NivelDisciplinar, ORDEM_NIVEIS } from '../../enum/NivelDisciplinar';
-import {
-  MotivoDisciplinarDTO,
-  RegistroCriadoDTO,
-  RegistroDisciplinarDTO,
-} from '../../models/disciplinar/Disciplinar';
+import { RegistroCriadoDTO, RegistroDisciplinarDTO } from '../../models/disciplinar/Disciplinar';
 import { Role } from '../../enum/role.enum';
 import { hojeISO } from '../../utils/aula.util';
 import { dataBr, previaRegistro, rotuloSequencia, somarDias } from '../../utils/disciplinar.util';
@@ -39,6 +35,7 @@ import { RecomendacaoDisciplinarModal } from '../recomendacao-disciplinar-modal/
 import { AtendidoEscolhido, SeletorAtendidos } from '../seletor-atendidos/seletor-atendidos';
 
 const DIAS_SUSPENSAO_PADRAO = 3;
+export const MAX_MOTIVO = 200;
 /** A partir daqui "quem" e "o quê" ficam lado a lado; abaixo, viram dois passos. */
 const MIDIA_LARGA = '(min-width: 768px)';
 
@@ -91,20 +88,20 @@ export class RegistroDisciplinarModal {
   readonly hoje = hojeISO();
   readonly ontem = somarDias(this.hoje, -1);
 
-  readonly motivos = signal<MotivoDisciplinarDTO[]>([]);
+  readonly MAX_MOTIVO = MAX_MOTIVO;
   readonly ehCoordenador = computed(() => this.auth.currentProfile() === Role.COORD);
   private readonly niveisPermitidos = computed(() =>
-    this.auth.currentProfile() === Role.EDUCADOR ? [NivelDisciplinar.OCORRENCIA] : ORDEM_NIVEIS,
+    this.auth.currentProfile() === Role.EDUCADOR
+      ? [NivelDisciplinar.OCORRENCIA]
+      : ORDEM_NIVEIS.filter((n) => n !== NivelDisciplinar.UNIFORME),
   );
-  readonly gruposMotivos = computed(() =>
-    this.niveisPermitidos()
-      .map((nivel) => ({
-        nivel,
-        rotulo: NIVEIS_DISCIPLINARES[nivel].rotulo,
-        variant: NIVEIS_DISCIPLINARES[nivel].variant,
-        motivos: this.motivos().filter((m) => m.nivel === nivel),
-      }))
-      .filter((g) => g.motivos.length > 0),
+  /** E-mail da ADRA de 11/11: só ocorrência, advertência e suspensão; o motivo é escrito. */
+  readonly opcoesNivel = computed(() =>
+    this.niveisPermitidos().map((nivel) => ({
+      nivel,
+      rotulo: NIVEIS_DISCIPLINARES[nivel].rotulo,
+      variant: NIVEIS_DISCIPLINARES[nivel].variant,
+    })),
   );
 
   /** Tela larga (iPad, notebook, PC): bandeja e formulário lado a lado. */
@@ -113,7 +110,8 @@ export class RegistroDisciplinarModal {
   readonly escolhidos = signal<AtendidoEscolhido[]>([]);
 
   // Formulário
-  readonly motivoId = signal<number | null>(null);
+  readonly nivel = signal<NivelDisciplinar | null>(null);
+  readonly motivo = signal('');
   readonly data = signal(this.hoje);
   readonly outraData = signal(false);
   readonly descricao = signal('');
@@ -122,6 +120,7 @@ export class RegistroDisciplinarModal {
 
   readonly salvando = signal(false);
   readonly erro = signal<string | null>(null);
+  readonly erroNivel = signal<string | null>(null);
   readonly erroMotivo = signal<string | null>(null);
   readonly erroData = signal<string | null>(null);
   readonly erroDescricao = signal<string | null>(null);
@@ -142,8 +141,7 @@ export class RegistroDisciplinarModal {
     this.varios() ? `Registrar para ${this.assistidosAtuais().length} atendidos` : 'Registrar',
   );
 
-  readonly motivoSelecionado = computed(() => this.motivos().find((m) => m.motivoId === this.motivoId()) ?? null);
-  readonly nivelSelecionado = computed(() => this.motivoSelecionado()?.nivel ?? null);
+  readonly nivelSelecionado = computed(() => this.nivel());
   readonly ehSuspensao = computed(() => this.nivelSelecionado() === NivelDisciplinar.SUSPENSAO);
 
   /** O que cada atendido vai receber, antes de salvar. */
@@ -196,14 +194,10 @@ export class RegistroDisciplinarModal {
   }
 
   constructor() {
-    // Sempre que abre: limpa o estado e carrega os motivos ativos.
+    // Sempre que abre: limpa o estado.
     effect(() => {
       if (this.open()) {
-        // untracked: a chegada dos motivos não pode reabrir (e limpar) o formulário.
-        untracked(() => {
-          this.reiniciar();
-          this.carregarMotivos();
-        });
+        untracked(() => this.reiniciar());
       }
     });
 
@@ -274,13 +268,15 @@ export class RegistroDisciplinarModal {
       const criados = this.varios()
         ? await this.disciplinarService.registrarVarios({
             assistidoIds: atendidos.map((a) => a.assistidoId),
-            motivoId: this.motivoId()!,
+            nivel: this.nivel()!,
+            motivo: this.motivo().trim(),
             data: this.data(),
             descricao: this.descricao().trim(),
           })
         : [
             await this.disciplinarService.registrar(atendidos[0].assistidoId, {
-              motivoId: this.motivoId()!,
+              nivel: this.nivel()!,
+              motivo: this.motivo().trim(),
               data: this.data(),
               descricao: this.descricao().trim(),
               turmaId: this.turmaId(),
@@ -325,7 +321,14 @@ export class RegistroDisciplinarModal {
 
   // Popula um erro por campo (mostrado embaixo dele) em vez de só um aviso genérico no topo.
   private validar(): boolean {
-    this.erroMotivo.set(!this.motivoId() ? 'Escolha o motivo.' : null);
+    this.erroNivel.set(!this.nivel() ? 'Escolha ocorrência, advertência ou suspensão.' : null);
+    this.erroMotivo.set(
+      !this.motivo().trim()
+        ? 'Escreva o motivo.'
+        : this.motivo().trim().length > MAX_MOTIVO
+          ? `O motivo tem no máximo ${MAX_MOTIVO} caracteres.`
+          : null,
+    );
     this.erroData.set(
       !this.data() ? 'Informe a data.' : this.data() > this.hoje ? 'A data não pode ser no futuro.' : null,
     );
@@ -339,20 +342,22 @@ export class RegistroDisciplinarModal {
             ? 'O fim da suspensão não pode ser antes do início.'
             : null,
     );
-    return !this.erroMotivo() && !this.erroData() && !this.erroDescricao() && !this.erroSuspensao();
+    return !this.erroNivel() && !this.erroMotivo() && !this.erroData() && !this.erroDescricao() && !this.erroSuspensao();
   }
 
   private reiniciar(): void {
     this.retornoSuspensao.set(null);
     this.passo.set('quem');
     this.escolhidos.set([]);
-    this.motivoId.set(null);
+    this.nivel.set(null);
+    this.motivo.set('');
     this.data.set(this.hoje);
     this.outraData.set(false);
     this.descricao.set('');
     this.suspensaoInicio.set(this.hoje);
     this.suspensaoFim.set(somarDias(this.hoje, DIAS_SUSPENSAO_PADRAO - 1));
     this.erro.set(null);
+    this.erroNivel.set(null);
     this.erroMotivo.set(null);
     this.erroData.set(null);
     this.erroDescricao.set(null);
@@ -360,14 +365,6 @@ export class RegistroDisciplinarModal {
     this.resultado.set(null);
   }
 
-  private async carregarMotivos(): Promise<void> {
-    if (this.motivos().length > 0) return;
-    try {
-      this.motivos.set(await this.disciplinarService.listarMotivos());
-    } catch {
-      this.erro.set('Não foi possível carregar os motivos.');
-    }
-  }
 }
 
 /** ["Lucas M.", "Pedro H.", "Ana S."] → "Lucas M., Pedro H. e Ana S." */

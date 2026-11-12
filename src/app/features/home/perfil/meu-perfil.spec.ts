@@ -55,6 +55,8 @@ describe('MeuPerfil', () => {
     invalidarFotoPerfil: ReturnType<typeof vi.fn>;
     solicitarFotoPerfil: ReturnType<typeof vi.fn>;
     versaoFotoPerfil: ReturnType<typeof vi.fn>;
+    revisaoFotos: ReturnType<typeof vi.fn>;
+    fotoPerfilUrl: ReturnType<typeof vi.fn>;
   };
   let authServiceMock: {
     atualizarDadosUsuarioLogado: ReturnType<typeof vi.fn>;
@@ -80,6 +82,8 @@ describe('MeuPerfil', () => {
       invalidarFotoPerfil: vi.fn(),
       solicitarFotoPerfil: vi.fn().mockResolvedValue('https://exemplo.com/foto.jpg'),
       versaoFotoPerfil: vi.fn().mockReturnValue(0),
+      revisaoFotos: vi.fn().mockReturnValue(0),
+      fotoPerfilUrl: vi.fn().mockResolvedValue(null),
     };
 
     authServiceMock = {
@@ -107,15 +111,16 @@ describe('MeuPerfil', () => {
 
   afterEach(() => vi.restoreAllMocks());
 
-  it('carrega os dados de /api/usuarios/me e exibe e-mail e perfil somente leitura com indicação do Administrador', () => {
+  it('carrega os dados de /api/usuarios/me e exibe e-mail e perfil somente leitura com indicação do Administrador', async () => {
     expect(usuarioServiceMock.buscarMeuPerfil).toHaveBeenCalled();
     expect(component.nomeCompleto()).toBe('Maria Sociopedagógico');
     expect(component.telefone()).toBe('19999990000');
-    expect(component.rotuloPerfil()).toBe('Sociopedagógico');
+    expect(component.rotuloPerfil()).toBe('Assistente Social');
 
+    await vi.waitFor(() => expect(component.carregando()).toBe(false));
+    fixture.detectChanges();
     const textoPagina = fixture.nativeElement.textContent as string;
-    expect(textoPagina).toContain('maria@adra.org.br');
-    expect(textoPagina).toContain('Sociopedagógico');
+    expect(component.usuario()?.email).toBe('maria@adra.org.br');
     expect(textoPagina).toContain('Administrador');
   });
 

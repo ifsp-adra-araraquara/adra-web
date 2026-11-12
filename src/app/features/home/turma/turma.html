@@ -172,6 +172,10 @@
             <app-icon name="user-plus" />
             Vincular atendidos
           </button>
+          <button type="button" class="drawer-acao" (click)="fecharDrawerTurma(); abrirCorrecaoEntrada(turma)">
+            <app-icon name="calendar" />
+            Corrigir data de entrada
+          </button>
         }
       </div>
 
@@ -339,6 +343,70 @@
       <app-button [loading]="alterandoStatus()" (click)="confirmarAlteracaoStatus()">
         Reativar grupo
       </app-button>
+    }
+  </ng-template>
+</app-modal>
+
+<!-- ============================================================
+     MODAL: CORRIGIR DATA DE ENTRADA NO GRUPO
+     ============================================================ -->
+<app-modal
+  [(open)]="mostrarCorrecaoEntrada"
+  title="Corrigir data de entrada"
+  [subtitle]="turmaCorrecaoEntrada()?.nomeTurma ?? ''"
+  size="sm"
+  (closed)="fecharCorrecaoEntrada()"
+>
+  <div modal-icon class="mh-ico ico-green"><app-icon name="calendar" /></div>
+
+  @if (resultadoCorrecaoEntrada() === null) {
+    <p>
+      Os atendidos ativos que entraram no grupo depois desta data passam a contar desde ela, e a chamada
+      dos dias anteriores fica disponível para eles.
+    </p>
+    <app-input
+      class="mt-s"
+      label="Entraram no grupo em"
+      type="date"
+      [max]="hoje"
+      [required]="true"
+      [ngModel]="dataCorrecaoEntrada()"
+      (ngModelChange)="dataCorrecaoEntrada.set($event)"
+      [errorMessage]="erroCorrecaoEntrada()"
+    />
+    <p class="hint mt-s">Não volta antes de 1º de janeiro do ano da matrícula nem da saída de um grupo anterior.</p>
+    <div class="notice notice-amber mt-s">
+      <app-icon name="alert-circle" />
+      <span>Nas chamadas já lançadas desses dias, quem for corrigido passa a contar como <b>presente</b>.</span>
+    </div>
+  } @else {
+    <div class="notice notice-success" role="status">
+      <app-icon name="check" />
+      <span>
+        @switch (resultadoCorrecaoEntrada()) {
+          @case (0) { Nenhum atendido precisou de correção. }
+          @case (1) { 1 atendido corrigido. }
+          @default { {{ resultadoCorrecaoEntrada() }} atendidos corrigidos. }
+        }
+      </span>
+    </div>
+    @if (chamadasLancadasCorrecao() > 0) {
+      <div class="notice notice-amber mt-s" role="status">
+        <app-icon name="alert-circle" />
+        <span>
+          Há {{ chamadasLancadasCorrecao() }} {{ chamadasLancadasCorrecao() === 1 ? 'chamada já lançada' : 'chamadas já lançadas' }}
+          no período. Nelas, os corrigidos aparecem como presentes: confira e marque as faltas, se houver.
+        </span>
+      </div>
+    }
+  }
+
+  <ng-template #footer>
+    @if (resultadoCorrecaoEntrada() === null) {
+      <app-button variant="secondary" (click)="fecharCorrecaoEntrada()">Cancelar</app-button>
+      <app-button [loading]="corrigindoEntrada()" (click)="confirmarCorrecaoEntrada()">Corrigir</app-button>
+    } @else {
+      <app-button (click)="fecharCorrecaoEntrada()">Fechar</app-button>
     }
   </ng-template>
 </app-modal>

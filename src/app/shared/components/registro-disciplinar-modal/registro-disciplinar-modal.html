@@ -133,30 +133,43 @@
     </div>
   }
 
-  <fieldset class="campo" [attr.aria-describedby]="erroMotivo() ? 'registro-motivo-erro' : null">
-    <legend class="campo-rotulo">Motivo</legend>
-    @for (grupo of gruposMotivos(); track grupo.nivel) {
-      <div class="motivo-grupo">
-        <span class="motivo-nivel"><span class="nivel-ponto" [attr.data-variant]="grupo.variant"></span>{{ grupo.rotulo }}</span>
-        <div class="chips" role="group" [attr.aria-label]="grupo.rotulo">
-          @for (m of grupo.motivos; track m.motivoId) {
-            <button
-              type="button"
-              class="chip"
-              [class.ativo]="motivoId() === m.motivoId"
-              [attr.aria-pressed]="motivoId() === m.motivoId"
-              (click)="motivoId.set(m.motivoId)"
-            >
-              {{ m.nome }}
-            </button>
-          }
-        </div>
-      </div>
+  <fieldset class="campo" [attr.aria-describedby]="erroNivel() ? 'registro-nivel-erro' : null">
+    <legend class="campo-rotulo">Tipo de registro</legend>
+    <div class="chips" role="group" aria-label="Tipo de registro">
+      @for (opcao of opcoesNivel(); track opcao.nivel) {
+        <button
+          type="button"
+          class="chip chip-nivel"
+          [class.ativo]="nivel() === opcao.nivel"
+          [attr.aria-pressed]="nivel() === opcao.nivel"
+          (click)="nivel.set(opcao.nivel)"
+        >
+          <span class="nivel-ponto" [attr.data-variant]="opcao.variant" aria-hidden="true"></span>{{ opcao.rotulo }}
+        </button>
+      }
+    </div>
+    @if (erroNivel(); as msg) {
+      <p id="registro-nivel-erro" class="app-input-error" role="alert">{{ msg }}</p>
     }
+  </fieldset>
+
+  <div class="campo">
+    <label class="campo-rotulo" for="registro-motivo">Motivo</label>
+    <input
+      id="registro-motivo"
+      class="input"
+      type="text"
+      [attr.maxlength]="MAX_MOTIVO"
+      placeholder="Ex.: agressão a colega no intervalo"
+      [ngModel]="motivo()"
+      (ngModelChange)="motivo.set($event)"
+      [attr.aria-invalid]="erroMotivo() ? true : null"
+      [attr.aria-describedby]="erroMotivo() ? 'registro-motivo-erro' : null"
+    />
     @if (erroMotivo(); as msg) {
       <p id="registro-motivo-erro" class="app-input-error" role="alert">{{ msg }}</p>
     }
-  </fieldset>
+  </div>
 
   <fieldset class="campo">
     <legend class="campo-rotulo">Quando</legend>

@@ -2,7 +2,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
@@ -35,6 +35,7 @@ import { SeletorMultiplo } from '../../../shared/components/seletor-multiplo/sel
 import { ListaBadges } from '../../../shared/components/lista-badges/lista-badges';
 import { HistoricoOficineiros } from '../../../shared/components/historico-oficineiros/historico-oficineiros';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
+import { hojeISO } from '../../../shared/utils/aula.util';
 import { AlunosTurmaModal } from './alunos-turma-modal/alunos-turma-modal';
 import { FaixasEtariasModal } from './faixas-etarias-modal/faixas-etarias-modal';
 
@@ -444,6 +445,65 @@ export class Turmas implements OnInit {
       console.error('Erro ao alterar status da turma:', erro);
       this.alterandoStatus.set(false);
       // mantém o modal aberto pra o usuário poder tentar de novo
+    }
+  }
+
+  /* ============================================================
+   * CORRIGIR DATA DE ENTRADA (e-mail da ADRA de 11/11)
+   * Os vínculos feitos depois do início das atividades começavam no dia em
+   * que foram feitos, e a chamada dos dias anteriores vinha vazia. O
+   * Coordenador corrige de uma vez: PATCH /api/turmas/{id}/vinculos/data-entrada.
+   * ============================================================ */
+  readonly hoje = hojeISO();
+  mostrarCorrecaoEntrada = signal(false);
+  turmaCorrecaoEntrada = signal<TurmaResponseDTO | null>(null);
+  dataCorrecaoEntrada = signal(hojeISO().slice(0, 8) + '01');
+  corrigindoEntrada = signal(false);
+  erroCorrecaoEntrada = signal<string | null>(null);
+  resultadoCorrecaoEntrada = signal<number | null>(null);
+  /** Chamadas já feitas no período: os corrigidos passam a contar nelas como presentes. */
+  chamadasLancadasCorrecao = signal(0);
+
+  abrirCorrecaoEntrada(turma: TurmaResponseDTO): void {
+    this.turmaCorrecaoEntrada.set(turma);
+    this.dataCorrecaoEntrada.set(this.hoje.slice(0, 8) + '01');
+    this.erroCorrecaoEntrada.set(null);
+    this.resultadoCorrecaoEntrada.set(null);
+    this.chamadasLancadasCorrecao.set(0);
+    this.mostrarCorrecaoEntrada.set(true);
+  }
+
+  fecharCorrecaoEntrada(): void {
+    this.mostrarCorrecaoEntrada.set(false);
+    this.turmaCorrecaoEntrada.set(null);
+  }
+
+  async confirmarCorrecaoEntrada(): Promise<void> {
+    const turma = this.turmaCorrecaoEntrada();
+    const data = this.dataCorrecaoEntrada();
+    if (!turma || this.corrigindoEntrada()) return;
+    if (!data) {
+      this.erroCorrecaoEntrada.set('Informe a data.');
+      return;
+    }
+    if (data > this.hoje) {
+      this.erroCorrecaoEntrada.set('A data não pode ser no futuro.');
+      return;
+    }
+    this.corrigindoEntrada.set(true);
+    this.erroCorrecaoEntrada.set(null);
+    try {
+      const { corrigidos, chamadasLancadas } = await firstValueFrom(
+        this.http.patch<{ corrigidos: number; chamadasLancadas: number }>(`${this.apiTurmas}/${turma.turmaId}/vinculos/data-entrada`, {
+          dataEntrada: data,
+        }),
+      );
+      this.resultadoCorrecaoEntrada.set(corrigidos);
+      this.chamadasLancadasCorrecao.set(chamadasLancadas);
+    } catch (erro) {
+      this.erroCorrecaoEntrada.set(mensagemErro(erro as HttpErrorResponse, 'Não foi possível corrigir. Tente novamente.'));
+    } finally {
+      this.corrigindoEntrada.set(false);
     }
   }
 

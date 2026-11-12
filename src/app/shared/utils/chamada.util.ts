@@ -214,14 +214,6 @@ export function podeEditarChamada(perfil: Role | null): boolean {
 }
 
 /**
- * CA-65.3/US-67: educador social só realiza/corrige a chamada no dia da
- * aula; coordenador corrige chamada de qualquer data.
- */
-export function podeCorrigirDataChamada(perfil: Role | null, aulaEhHoje: boolean): boolean {
-  return perfil === Role.COORD || aulaEhHoje;
-}
-
-/**
  * Aniversário do aluno em relação à aula, como a coluna "Niver" da planilha:
  * `hoje` quando cai no dia da aula, `mes` quando cai no mesmo mês. `dia` vem
  * como dd/mm e `idade` é a que o aluno completa no ano da aula.

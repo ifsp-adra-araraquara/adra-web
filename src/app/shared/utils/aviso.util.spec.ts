@@ -1,5 +1,5 @@
 import { AvisoDTO } from '../models/aviso/Aviso';
-import { acaoDoAviso, rotaDoAviso } from './aviso.util';
+import { acaoDoAviso, agruparAvisos, rotaDoAviso } from './aviso.util';
 
 // Dados inventados.
 const suspensoHoje: AvisoDTO = {
@@ -20,5 +20,19 @@ describe('aviso.util', () => {
   it('Educador Social (só Chamada e Calendário) vai para a chamada', () => {
     expect(rotaDoAviso(suspensoHoje, true)).toEqual({ comandos: ['/chamada'] });
     expect(acaoDoAviso(suspensoHoje, true)).toBe('Abrir chamada');
+  });
+
+  it('semanário não enviado fica no grupo Semanário e leva às oficinas', () => {
+    const semanario: AvisoDTO = {
+      tipo: 'SEMANARIO_PENDENTE',
+      titulo: 'Futebol — semanário da semana',
+      detalhe: '2 grupos sem semanário na semana de 09/11',
+      assistidoId: null,
+      turmaId: null,
+      data: '2026-11-09',
+    };
+    expect(rotaDoAviso(semanario)).toEqual({ comandos: ['/oficinas'] });
+    expect(acaoDoAviso(semanario)).toBe('Ver oficinas');
+    expect(agruparAvisos([semanario]).map((g) => g.titulo)).toEqual(['Semanário']);
   });
 });
