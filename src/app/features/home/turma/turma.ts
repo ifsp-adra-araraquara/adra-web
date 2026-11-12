@@ -159,6 +159,11 @@ export class Turmas implements OnInit {
     this.turmaAlunosModal.set(turma);
   }
 
+  /** Lista de presença para passeio/evento; vinda do grupo, ele já vem marcado. */
+  abrirListaEvento(turma?: TurmaResponseDTO): void {
+    this.router.navigate(['/turmas/lista-evento'], { queryParams: turma ? { grupos: turma.turmaId } : {} });
+  }
+
   verFrequencia(turma: TurmaResponseDTO): void {
     this.router.navigate(['/chamada/turma', turma.turmaId, 'grade']);
   }

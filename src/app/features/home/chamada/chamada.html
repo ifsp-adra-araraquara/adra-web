@@ -6,6 +6,7 @@
     </div>
     @if (ehCoordenador()) {
       <div class="page-header-acoes">
+        <app-button variant="secondary" (click)="irParaListasFrequencia()">Listas de frequência</app-button>
         <app-button variant="secondary" (click)="irParaStatusChamadas()">Relatório por período</app-button>
       </div>
     }

@@ -86,6 +86,11 @@ export class Chamada implements OnInit {
     this.router.navigate(['/chamada/grupo', pendente.turmaId, pendente.data]);
   }
 
+  /** Lista de frequência do mês para imprimir: abre com todos os grupos, um por página. */
+  irParaListasFrequencia(): void {
+    this.router.navigate(['/chamada/turma', 'todos', 'lista'], { queryParams: { mes: hojeISO().slice(0, 7) } });
+  }
+
   irParaStatusChamadas(): void {
     this.router.navigate(['/chamada/status']);
   }

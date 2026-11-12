@@ -118,6 +118,13 @@ export const routes: Routes = [
         canActivate: [roleGuard],
       },
       {
+        path: 'turmas/lista-evento',
+        title: 'Lista para evento',
+        loadComponent: () => import('./features/home/lista-evento/lista-evento').then((m) => m.ListaEvento),
+        data: { roles: [Role.COORD] },
+        canActivate: [roleGuard],
+      },
+      {
         path: 'oficinas',
         title: 'Oficinas',
         loadComponent: () => import('./features/home/oficinas/oficinas').then((m) => m.Oficinas),
