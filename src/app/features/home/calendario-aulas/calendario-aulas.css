@@ -145,7 +145,7 @@
 ::ng-deep .fc-list :is(.evt-titulo, .evt-sub) { white-space: normal; overflow-wrap: anywhere; }
 ::ng-deep .fc-list .evt-titulo { font-size: 13px; line-height: 1.35; }
 ::ng-deep .fc-list .evt-sub { display: block; margin-top: 2px; font-size: 12px; line-height: 1.4; }
-::ng-deep .fc-list :is(.evt-hora, .fc-list-event-graphic), ::ng-deep .fc .fc-list-day-cushion::after { display: none; }
+::ng-deep .fc-list .evt-hora, ::ng-deep .fc .fc-list-day-cushion::after { display: none; }
 ::ng-deep .fc .fc-list-day-cushion {
   display: flex; align-items: center; justify-content: space-between;
   flex-wrap: wrap; gap: 4px 8px; padding: 8px 12px;
@@ -155,6 +155,7 @@
 
 @media (max-width: 767px) {
   ::ng-deep .fc-list :is(table, tbody, .fc-list-day, th) { display: block; }
+  ::ng-deep .fc-list-event-graphic { display: none; }
   ::ng-deep .fc-list-event {
     display: flex; flex-direction: column; gap: 4px;
     padding: 10px 12px; border-bottom: 1px solid var(--gray-100);
