@@ -79,7 +79,7 @@
   @case ('semanario') {
   <section class="panel" aria-labelledby="semanario-titulo">
     <div class="panel-header">
-      <div><h2 id="semanario-titulo">Semanário</h2><span class="subtle">O plano da semana de cada grupo, com o material</span></div>
+      <div><h2 id="semanario-titulo">Semanário</h2><span class="subtle">Conteúdos e estratégias da semana de cada grupo, com o material para impressão</span></div>
       <app-button size="sm" (click)="abrirEnvioSemanario()"><app-icon name="plus" [size]="16" /> Enviar semanário</app-button>
     </div>
     @if (sucessoSemanario()) {
@@ -133,16 +133,16 @@
         @if (semanarioExistente()) {
         <p class="feedback aviso-semanario" role="status">Este grupo já tem semanário nesta semana. Ao enviar, ele será atualizado com o que está abaixo.</p>
         }
-        <label>Plano da semana
+        <label>Conteúdos
           <textarea class="input" rows="4" [ngModel]="conteudoPrevisto()" (ngModelChange)="conteudoPrevisto.set($event)"></textarea>
         </label>
-        <label>Objetivos
+        <label>Estratégias
           <textarea class="input" rows="3" [ngModel]="objetivos()" (ngModelChange)="objetivos.set($event)"></textarea>
         </label>
         <label>Recursos necessários
           <textarea class="input" rows="3" [ngModel]="recursosNecessarios()" (ngModelChange)="recursosNecessarios.set($event)"></textarea>
         </label>
-        <label>Material (opcional)
+        <label>Material para impressão (opcional)
           <input type="file" class="input" accept="application/pdf,.pdf" (change)="selecionarArquivo($event)">
           <span class="hint-material">
             @if (arquivoMaterial(); as arq) { {{ arq.name }} ({{ tamanhoLegivel(arq.size) }}) } @else { PDF de até 2 MB }

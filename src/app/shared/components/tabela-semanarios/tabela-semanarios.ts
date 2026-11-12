@@ -81,7 +81,7 @@ export class TabelaSemanarios {
     { key: 'semana', header: 'Semana', sortable: true, value: (s) => rotuloSemana(s.semanaInicio) },
     { key: 'grupo', header: 'Grupo', sortable: true, value: (s) => s.nomeTurma },
     ...(this.mostrarOficina() ? [{ key: 'oficina', header: 'Oficina', value: (s: SemanarioResponseDTO) => s.nomeOficina }] : []),
-    { key: 'plano', header: 'Plano da semana', type: 'custom' as const },
+    { key: 'plano', header: 'Conteúdos', type: 'custom' as const },
     { key: 'enviadoPor', header: 'Enviado por', value: (s) => s.nomeEnviadoPor },
   ]);
 

@@ -6,7 +6,7 @@ import { rotuloSemana } from '../../utils/semana.util';
 import { ListaDocumentos } from '../lista-documentos/lista-documentos';
 
 /**
- * Um semanário: semana, grupo, plano, objetivos, recursos e os materiais anexados.
+ * Um semanário: semana, grupo, conteúdos, estratégias, recursos e o material para impressão.
  * Uso: `<app-cartao-semanario [semanario]="s" />`
  */
 @Component({
@@ -22,12 +22,12 @@ import { ListaDocumentos } from '../lista-documentos/lista-documentos';
 
       <div class="campos">
         <section>
-          <p class="rotulo">Plano da semana</p>
+          <p class="rotulo">Conteúdos</p>
           <p class="texto">{{ semanario().conteudoPrevisto }}</p>
         </section>
 
         <section>
-          <p class="rotulo">Objetivos</p>
+          <p class="rotulo">Estratégias</p>
           <p class="texto">{{ semanario().objetivos || '—' }}</p>
         </section>
 
@@ -37,12 +37,12 @@ import { ListaDocumentos } from '../lista-documentos/lista-documentos';
         </section>
 
         <section>
-          <p class="rotulo">Material</p>
+          <p class="rotulo">Material para impressão</p>
           <app-lista-documentos
             [entidadeTipo]="EntidadeArquivo.SEMANARIO"
             [entidadeId]="semanario().semanarioId"
             [categoria]="CategoriaArquivo.MATERIAL_SEMANARIO"
-            rotulo="Material"
+            rotulo="Material para impressão"
             vazio="Nenhum material enviado."
           />
         </section>
