@@ -107,21 +107,21 @@ export const routes: Routes = [
         title: 'Atendidos',
         loadComponent: () =>
           import('./features/home/assistidos/assistidos').then((m) => m.Assistidos),
-        data: { roles: [Role.COORD, Role.ASSISTENTE, Role.EDUCADOR] },
+        data: { roles: [Role.COORD, Role.ASSISTENTE] },
         canActivate: [roleGuard],
       },
       {
         path: 'turmas',
         title: 'Grupos',
         loadComponent: () => import('./features/home/turma/turma').then((m) => m.Turmas),
-        data: { roles: [Role.COORD, Role.ASSISTENTE, Role.EDUCADOR] },
+        data: { roles: [Role.COORD, Role.ASSISTENTE] },
         canActivate: [roleGuard],
       },
       {
         path: 'oficinas',
         title: 'Oficinas',
         loadComponent: () => import('./features/home/oficinas/oficinas').then((m) => m.Oficinas),
-        data: { roles: [Role.COORD, Role.ASSISTENTE, Role.EDUCADOR] },
+        data: { roles: [Role.COORD, Role.ASSISTENTE] },
         canActivate: [roleGuard],
       },
       {
@@ -129,7 +129,7 @@ export const routes: Routes = [
         title: 'Responsáveis',
         loadComponent: () =>
           import('./features/home/responsaveis/responsaveis').then((m) => m.Responsaveis),
-        data: { roles: [Role.COORD, Role.ASSISTENTE, Role.EDUCADOR] },
+        data: { roles: [Role.COORD, Role.ASSISTENTE] },
         canActivate: [roleGuard],
       },
       {
@@ -189,7 +189,7 @@ export const routes: Routes = [
         path: 'disciplinar',
         title: 'Disciplinar',
         loadComponent: () => import('./features/home/disciplinar/disciplinar').then((m) => m.Disciplinar),
-        data: { roles: [Role.COORD, Role.ASSISTENTE, Role.EDUCADOR] },
+        data: { roles: [Role.COORD, Role.ASSISTENTE] },
         canActivate: [roleGuard],
       },
       {
@@ -199,7 +199,7 @@ export const routes: Routes = [
           import('./features/home/disciplinar/documento-disciplinar/documento-disciplinar').then(
             (m) => m.DocumentoDisciplinar,
           ),
-        data: { roles: [Role.COORD, Role.ASSISTENTE, Role.EDUCADOR] },
+        data: { roles: [Role.COORD, Role.ASSISTENTE] },
         canActivate: [roleGuard],
       },
       {

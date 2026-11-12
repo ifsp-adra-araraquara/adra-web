@@ -25,7 +25,7 @@ export class OnboardingService {
 
   private driverAtivo: Driver | null = null;
 
-  /** Só Coordenador/Educador Social têm a jornada Turmas → Chamada completa mapeada. */
+  /** Coordenador (Grupos → Chamada) e Educador Social (Chamada) têm tour mapeado. */
   podeVerTour(): boolean {
     const perfil = this.auth.currentProfile();
     return perfil === Role.COORD || perfil === Role.EDUCADOR;
@@ -72,6 +72,8 @@ export class OnboardingService {
   }
 
   private construirTour(): Driver {
+    // Educador Social só tem Chamada e Calendário: o tour não passa por Grupos.
+    const educador = this.auth.currentProfile() === Role.EDUCADOR;
     const driverObj = driver({
       showProgress: true,
       allowClose: true,
@@ -92,8 +94,9 @@ export class OnboardingService {
         {
           popover: {
             title: 'Bem-vindo(a) ao Sistema de Gestão ADRA',
-            description:
-              'Um tour rápido pela jornada principal do dia a dia: Grupos → abrir um grupo → Chamada.',
+            description: educador
+              ? 'Um tour rápido pelo seu dia a dia: a Chamada dos grupos e o Calendário.'
+              : 'Um tour rápido pela jornada principal do dia a dia: Grupos → abrir um grupo → Chamada.',
           },
         },
         {
@@ -101,20 +104,27 @@ export class OnboardingService {
           onHighlightStarted: () => this.abrirMenuMobileSeFechado(),
           popover: {
             title: 'Menu lateral',
-            description: 'Por aqui você navega entre todas as áreas do sistema.',
+            description: educador
+              ? 'Por aqui você abre a Chamada e o Calendário.'
+              : 'Por aqui você navega entre todas as áreas do sistema.',
             side: 'right',
-            onNextClick: () => this.irPara('/turmas', driverObj),
+            // Educador Social não tem Grupos: segue direto para a Chamada.
+            ...(educador ? {} : { onNextClick: () => this.irPara('/turmas', driverObj) }),
           },
         },
-        {
-          element: '[data-tour="turmas-tabela"]',
-          popover: {
-            title: 'Grupos',
-            description:
-              'Cada linha é um grupo. Clique no ícone "→" ("Abrir grupo") pra ver atendidos, oficinas e as demais ações dele num só lugar.',
-            side: 'top',
-          },
-        },
+        ...(educador
+          ? []
+          : [
+              {
+                element: '[data-tour="turmas-tabela"]',
+                popover: {
+                  title: 'Grupos',
+                  description:
+                    'Cada linha é um grupo. Clique no ícone "→" ("Abrir grupo") pra ver atendidos, oficinas e as demais ações dele num só lugar.',
+                  side: 'top' as const,
+                },
+              },
+            ]),
         {
           element: '[data-tour="nav-chamada"]',
           onHighlightStarted: () => this.abrirMenuMobileSeFechado(),
@@ -129,8 +139,9 @@ export class OnboardingService {
           element: '[data-tour="chamada-tabela"]',
           popover: {
             title: 'Chamada do dia',
-            description:
-              'Clique em uma aula de hoje (ou já passada, se você for Coordenador) para abrir a chamada.',
+            description: educador
+              ? 'Clique no grupo de hoje para fazer a chamada.'
+              : 'Clique em uma aula de hoje (ou já passada, se você for Coordenador) para abrir a chamada.',
             side: 'top',
           },
         },

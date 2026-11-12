@@ -26,7 +26,8 @@ const INFO_AVISO: Record<TipoAviso, { grupo: GrupoAviso; acao: string }> = {
   CADASTRO_SEM_NASCIMENTO: { grupo: 'cadastro', acao: 'Completar' },
 };
 
-export function acaoDoAviso(aviso: AvisoDTO): string {
+export function acaoDoAviso(aviso: AvisoDTO, soChamada = false): string {
+  if (soChamada && INFO_AVISO[aviso.tipo].grupo === 'hoje') return 'Abrir chamada';
   return INFO_AVISO[aviso.tipo].acao;
 }
 
@@ -37,10 +38,14 @@ export function agruparAvisos(avisos: AvisoDTO[]): { id: GrupoAviso; titulo: str
   );
 }
 
-/** CA-FT18.3: a tela onde o aviso se resolve, já no item. */
-export function rotaDoAviso(aviso: AvisoDTO): { comandos: (string | number)[]; queryParams?: Params } {
+/**
+ * CA-FT18.3: a tela onde o aviso se resolve, já no item.
+ * {@code soChamada}: o Educador Social não abre a ficha do atendido — o aviso de hoje leva à chamada.
+ */
+export function rotaDoAviso(aviso: AvisoDTO, soChamada = false): { comandos: (string | number)[]; queryParams?: Params } {
   switch (INFO_AVISO[aviso.tipo].grupo) {
     case 'hoje':
+      if (soChamada) return { comandos: ['/chamada'] };
       return { comandos: ['/assistidos'], queryParams: { assistidoId: aviso.assistidoId, aba: 'disc' } };
     case 'disciplinar':
       return {
