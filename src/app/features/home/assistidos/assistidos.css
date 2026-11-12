@@ -1,3 +1,13 @@
+/* Até 1023px os 4 botões não cabem ao lado do título: título em cima, botões embaixo. */
+@media (max-width: 1023px) {
+  .page-header { flex-direction: column; align-items: stretch; gap: 14px; }
+}
+/* Celular: "Novo atendido" em cima, ocupando a largura; os demais em 2 colunas. */
+@media (max-width: 719px) {
+  .acoes-atendidos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .acoes-atendidos > .acao-principal { grid-column: 1 / -1; order: -1; }
+}
+
 .link-voltar {
   display: inline-flex;
   align-items: center;
@@ -176,8 +186,12 @@
 /* Avatar + nome (tabela, cartões e ficha) */
 .pessoa { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .pessoa-texto { min-width: 0; }
-.ficha-identidade { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.ficha-identidade { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 12px; }
 .ficha-identidade .cell-sub { margin: 0; }
+.ficha-resumo { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.ficha-identidade app-button { margin-left: auto; }
+/* As abas da ficha quebram linha: no celular, rolar de lado escondia "Chamadas", "Disciplinar" e "Grupos". */
+.tabs.ficha-abas { flex-wrap: wrap; overflow-x: visible; }
 
 /* Foto de perfil + RG/CPF: empilhados no celular, lado a lado a partir de 720px. */
 .midia-cadastro {

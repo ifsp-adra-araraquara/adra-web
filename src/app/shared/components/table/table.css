@@ -83,7 +83,9 @@
   /* 1ª coluna: título do cartão, sem rótulo, com espaço para o botão ">" */
   tbody td:first-child {
     justify-content: flex-start;
-    padding: 0 56px 6px 0;
+    /* Mesma altura do botão ">" (44px): a linha divisória passa abaixo dele, não por cima. */
+    min-height: 44px;
+    padding: 0 56px 8px 0;
     margin-bottom: 4px;
     border-bottom: 1px solid var(--gray-100);
     font-size: 15px;
@@ -93,7 +95,7 @@
   }
   tbody td:first-child::before { display: none; }
 
-  tbody td.col-actions { position: absolute; top: 8px; right: 8px; width: auto; min-height: 0; padding: 0; }
+  tbody td.col-actions { position: absolute; top: 12px; right: 12px; width: auto; min-height: 0; padding: 0; }
   tbody td.col-actions::before { display: none; }
 
   /* Linha "Nenhum registro encontrado" continua como texto simples */

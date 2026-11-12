@@ -82,7 +82,20 @@
           </li>
         } @empty {
           @if (!carregando() && dia()) {
-            <li class="vazio">Nenhum grupo com chamada neste dia. Confira os dias de chamada no cadastro do grupo.</li>
+            <li class="vazio">
+              <p>{{ motivoSemGrupos() }}</p>
+              @if (atalhosDiaUtil().length) {
+                <div class="atalhos-dia">
+                  @for (atalho of atalhosDiaUtil(); track atalho.data; let primeiro = $first) {
+                    <app-button variant="secondary" size="sm" (click)="onDataChange(atalho.data)">
+                      @if (primeiro) { <app-icon name="chevron-left" [size]="16" /> }
+                      {{ atalho.rotulo }}
+                      @if (!primeiro) { <app-icon name="chevron-right" [size]="16" /> }
+                    </app-button>
+                  }
+                </div>
+              }
+            </li>
           }
         }
       </ul>

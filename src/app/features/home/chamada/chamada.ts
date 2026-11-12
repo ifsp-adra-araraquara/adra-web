@@ -11,6 +11,7 @@ import { Badge } from '../../../shared/components/badge/badge';
 import { Button } from '../../../shared/components/button/button';
 import { Icon } from '../../../shared/components/icon/icon';
 import { NavegadorData } from '../../../shared/components/navegador-data/navegador-data';
+import { Atalho, diasUteisVizinhos, ehFimDeSemana, motivoSemGrupos, tituloDoDia } from './chamada-dia.util';
 
 type Aba = 'dia' | 'pendentes';
 
@@ -49,8 +50,16 @@ export class Chamada implements OnInit {
   readonly carregando = signal(false);
   readonly erro = signal<string | null>(null);
 
+  /** Com o dia da semana: no retroativo o Coordenador sabe se caiu num sábado ou domingo. */
+  readonly motivoSemGrupos = computed(() => motivoSemGrupos(this.dataSelecionada()));
+  /** Fim de semana: atalhos para a sexta anterior e a segunda seguinte (esta só se não for futura). */
+  readonly atalhosDiaUtil = computed<Atalho[]>(() => {
+    if (!ehFimDeSemana(this.dataSelecionada())) return [];
+    const { anterior, proximo } = diasUteisVizinhos(this.dataSelecionada());
+    return proximo.data <= hojeISO() ? [anterior, proximo] : [anterior];
+  });
   readonly tituloDia = computed(() =>
-    this.dataSelecionada() === hojeISO() ? 'Hoje' : dataBr(this.dataSelecionada()),
+    tituloDoDia(this.dataSelecionada(), hojeISO()),
   );
 
   ngOnInit(): void {

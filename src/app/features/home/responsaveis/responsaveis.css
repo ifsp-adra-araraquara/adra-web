@@ -1,3 +1,35 @@
+/* Lista: cartões até 1023px, tabela a partir de 1024px (mesmo corte de Atendidos). */
+.lista-tabela { display: none; }
+.lista-cartoes { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.resp-cartao {
+  display: flex; flex-direction: column; gap: 10px; padding: 14px 16px;
+  background: #fff; border: 1px solid var(--gray-100); border-radius: var(--radius); box-shadow: var(--shadow-sm);
+}
+.resp-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.resp-identidade { min-width: 0; }
+.resp-identidade .cell-name { display: block; font-size: 15px; overflow-wrap: anywhere; }
+.resp-identidade .cell-sub { display: block; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.resp-dados {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 14px;
+  padding-top: 10px; border-top: 1px solid var(--gray-100); font-size: 13.5px;
+}
+.tel { color: inherit; text-decoration: none; font-variant-numeric: tabular-nums; }
+.tel:hover { color: var(--color-brand); text-decoration: underline; }
+.tel--toque { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: -10px 0; color: var(--color-adra-green-600); font-weight: 600; }
+.nowrap { white-space: nowrap; }
+.cpf { color: var(--gray-600); font-variant-numeric: tabular-nums; }
+
+/* Até 1023px os cartões já têm moldura: o card externo fica transparente. */
+@media (max-width: 1023px) {
+  .lista-responsaveis { background: none; border: 0; box-shadow: none; padding: 0; }
+}
+@media (min-width: 560px) {
+  .lista-cartoes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .lista-tabela { display: block; }
+  .lista-cartoes { display: none; }
+}
 
 /* Coluna "Assistidos" e seção de vinculados na ficha do responsável */
 .vinculos { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-variant-numeric: tabular-nums; }

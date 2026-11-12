@@ -163,14 +163,26 @@ export function haQuantoTempo(criadoEm: string, agora: Date): string {
           <app-input label="Buscar por nome" [hideLabel]="true" placeholder="Buscar por nome" [ngModel]="busca()" (ngModelChange)="busca.set($event)" />
         </div>
         @if (comFiltros()) {
-          <div class="filtros-renda">
+          <!-- Celular: renda, programas, condições e visualização ficam atrás do botão "Filtros". -->
+          <button
+            type="button"
+            class="btn btn-ghost botao-filtros"
+            [attr.aria-expanded]="filtrosAbertos()"
+            aria-controls="pc-filtros-avancados"
+            (click)="filtrosAbertos.set(!filtrosAbertos())"
+          >
+            <app-icon name="list" [size]="16" />
+            Filtros
+            @if (filtrosAvancadosAtivos(); as total) { <span class="count">{{ total }}</span> }
+          </button>
+          <div class="filtros-renda avancado" [class.aberto]="filtrosAbertos()">
             <app-input label="Renda até (R$)" [hideLabel]="true" placeholder="Renda até R$" type="number" min="0" [ngModel]="rendaAte()" (ngModelChange)="alterarRendaAte($event)" />
           </div>
         }
       </div>
 
       @if (comFiltros()) {
-        <div class="grupos">
+        <div class="grupos avancado" id="pc-filtros-avancados" [class.aberto]="filtrosAbertos()">
           <app-seletor-multiplo label="Programas" [opcoes]="opcoesPrograma" [valores]="programasMarcados()" (valoresChange)="alterarProgramas($event)" />
           <app-seletor-multiplo label="Condições" [opcoes]="opcoesCondicao" [valores]="comProblemaSaude() ? [problemaSaude] : []" (valoresChange)="alterarProblemaSaude($event)" />
           <app-seletor-multiplo label="Visualização" [opcoes]="opcoesVisualizacao" [valores]="somenteNaoVistas() ? [naoVistas] : []" (valoresChange)="alterarNaoVistas($event)" />
@@ -261,6 +273,15 @@ export function haQuantoTempo(criadoEm: string, agora: Date): string {
     .resultado { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 13px; color: var(--gray-600); }
     .resultado:empty { margin-bottom: 0; }
     .limpar { padding: 4px 0; border: none; background: none; font: inherit; color: var(--color-adra-green-600); text-decoration: underline; cursor: pointer; }
+    .botao-filtros { display: none; }
+    @media (max-width: 719px) {
+      .botao-filtros { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+      .botao-filtros .count {
+        display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px;
+        background: var(--color-adra-green-50); font-size: 12px; font-weight: 600;
+      }
+      .avancado:not(.aberto) { display: none; }
+    }
     @media (min-width: 720px) {
       .filtros-busca { flex: 1; }
       .filtros-ano { width: 170px; }
@@ -317,6 +338,15 @@ export class PreCadastros implements OnInit {
   protected readonly comProblemaSaude = signal(false);
   protected readonly programas = signal<ProgramaTransferencia[]>([]);
   protected readonly somenteNaoVistas = signal(false);
+  /** Celular: filtros avançados recolhidos até tocar em "Filtros". */
+  protected readonly filtrosAbertos = signal(false);
+  protected readonly filtrosAvancadosAtivos = computed(
+    () =>
+      (this.rendaAte() != null ? 1 : 0) +
+      this.programas().length +
+      (this.comProblemaSaude() ? 1 : 0) +
+      (this.somenteNaoVistas() ? 1 : 0),
+  );
   protected readonly porStatus = signal<Record<StatusPreCadastro, PreCadastroResumoDTO[]>>({
     PENDENTE: [],
     LISTA_ESPERA: [],
