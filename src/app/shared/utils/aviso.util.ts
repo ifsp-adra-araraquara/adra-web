@@ -1,7 +1,7 @@
 import { Params } from '@angular/router';
 import { AvisoDTO, TipoAviso } from '../models/aviso/Aviso';
 
-export type GrupoAviso = 'hoje' | 'disciplinar' | 'chamada' | 'frequencia' | 'cadastro';
+export type GrupoAviso = 'hoje' | 'disciplinar' | 'chamada' | 'frequencia' | 'semanario' | 'cadastro';
 
 /** Ordem em que os grupos aparecem (o que muda o dia primeiro) e a cor da bolinha de cada um. */
 export const GRUPOS_AVISO: { id: GrupoAviso; titulo: string; cor: string }[] = [
@@ -9,6 +9,7 @@ export const GRUPOS_AVISO: { id: GrupoAviso; titulo: string; cor: string }[] = [
   { id: 'disciplinar', titulo: 'Controle disciplinar', cor: 'var(--amber-600)' },
   { id: 'chamada', titulo: 'Chamada', cor: 'var(--blue-600)' },
   { id: 'frequencia', titulo: 'Frequência', cor: 'var(--teal-600)' },
+  { id: 'semanario', titulo: 'Semanário', cor: 'var(--coral-600)' },
   { id: 'cadastro', titulo: 'Cadastro', cor: 'var(--gray-600)' },
 ];
 
@@ -24,6 +25,7 @@ const INFO_AVISO: Record<TipoAviso, { grupo: GrupoAviso; acao: string }> = {
   FALTAS_SEGUIDAS: { grupo: 'frequencia', acao: 'Ver frequência' },
   PRE_CADASTRO_PENDENTE: { grupo: 'cadastro', acao: 'Revisar' },
   CADASTRO_SEM_NASCIMENTO: { grupo: 'cadastro', acao: 'Completar' },
+  SEMANARIO_PENDENTE: { grupo: 'semanario', acao: 'Ver oficinas' },
 };
 
 export function acaoDoAviso(aviso: AvisoDTO, soChamada = false): string {
@@ -56,6 +58,8 @@ export function rotaDoAviso(aviso: AvisoDTO, soChamada = false): { comandos: (st
       return { comandos: ['/chamada/grupo', aviso.turmaId!, aviso.data!] };
     case 'frequencia':
       return { comandos: ['/assistidos'], queryParams: { assistidoId: aviso.assistidoId, aba: 'cham' } };
+    case 'semanario':
+      return { comandos: ['/oficinas'] };
     case 'cadastro':
       return aviso.tipo === 'PRE_CADASTRO_PENDENTE' ? { comandos: ['/pre-cadastros'] } : { comandos: ['/assistidos'] };
   }

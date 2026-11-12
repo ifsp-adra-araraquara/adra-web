@@ -8,7 +8,6 @@ import { DisciplinarService } from '../../../core/disciplinar.service';
 import { Role } from '../../../shared/enum/role.enum';
 import { NIVEIS_DISCIPLINARES, NivelDisciplinar, ORDEM_NIVEIS } from '../../../shared/enum/NivelDisciplinar';
 import {
-  MotivoDisciplinarDTO,
   PendenciasDisciplinaresDTO,
   RegistroDisciplinarDTO,
 } from '../../../shared/models/disciplinar/Disciplinar';
@@ -34,13 +33,11 @@ import { RecomendacaoDisciplinarModal } from '../../../shared/components/recomen
 import { RecomendacoesPendentes } from './recomendacoes-pendentes/recomendacoes-pendentes';
 import { AnexarAssinadoModal } from '../../../shared/components/anexar-assinado-modal/anexar-assinado-modal';
 
-type Aba = 'registros' | 'motivos';
 type AcaoRegistro = 'ficha' | 'documento' | 'periodo' | 'resolver' | 'arquivar';
 
 /**
  * FT-04: tela do Sistema Disciplinar. Lista geral dos registros (com as
- * pendências no topo), registro de ocorrência e — só para o Coordenador —
- * o cadastro de motivos. A ficha disciplinar de cada assistido fica na
+ * pendências no topo) e registro de ocorrência. A ficha disciplinar de cada assistido fica na
  * ficha dele (Assistidos).
  */
 @Component({
@@ -66,7 +63,6 @@ export class Disciplinar implements OnInit {
 
   readonly ehCoordenador = computed(() => this.auth.currentProfile() === Role.COORD);
   readonly podeRegistrar = computed(() => this.ehCoordenador() || this.auth.currentProfile() === Role.EDUCADOR);
-  readonly abaAtiva = signal<Aba>('registros');
 
   // ---- Pendências (cartões do topo) ----
   readonly pendencias = signal<PendenciasDisciplinaresDTO | null>(null);
@@ -141,33 +137,11 @@ export class Disciplinar implements OnInit {
     }
   });
 
-  // ---- Motivos (Coordenador) ----
-  readonly motivos = signal<MotivoDisciplinarDTO[]>([]);
-  readonly carregandoMotivos = signal(false);
-  readonly gruposMotivos = computed(() =>
-    ORDEM_NIVEIS.map((nivel) => ({ nivel, motivos: this.motivos().filter((m) => m.nivel === nivel) })),
-  );
-  readonly mostrarMotivoForm = signal(false);
-  readonly motivoEditando = signal<MotivoDisciplinarDTO | null>(null);
-  readonly motivoNome = signal('');
-  readonly motivoNivel = signal<NivelDisciplinar>(NivelDisciplinar.OCORRENCIA);
-  readonly salvandoMotivo = signal(false);
-  readonly erroMotivo = signal<string | null>(null);
-  readonly opcoesNivelMotivo: SelectOption<NivelDisciplinar>[] = ORDEM_NIVEIS.map((n) => ({
-    value: n,
-    label: NIVEIS_DISCIPLINARES[n].rotulo,
-  }));
-
   ngOnInit(): void {
     this.aplicarFiltrosDaUrl();
     this.carregarPendencias();
     this.carregar();
     this.destroyRef.onDestroy(() => this.buscaTimer && clearTimeout(this.buscaTimer));
-  }
-
-  trocarAba(aba: Aba): void {
-    this.abaAtiva.set(aba);
-    if (aba === 'motivos' && this.motivos().length === 0) this.carregarMotivos();
   }
 
   // ================= Lista =================
@@ -383,82 +357,5 @@ export class Disciplinar implements OnInit {
     }
     if (acao === 'arquivar' && !this.acaoTexto().trim()) return 'Informe o motivo do arquivamento.';
     return null;
-  }
-
-  // ================= Motivos =================
-
-  private async carregarMotivos(): Promise<void> {
-    this.carregandoMotivos.set(true);
-    try {
-      this.motivos.set(await this.disciplinarService.listarMotivos(true));
-    } catch {
-      this.motivos.set([]);
-    } finally {
-      this.carregandoMotivos.set(false);
-    }
-  }
-
-  novoMotivo(nivel: NivelDisciplinar = NivelDisciplinar.OCORRENCIA): void {
-    this.motivoEditando.set(null);
-    this.motivoNome.set('');
-    this.motivoNivel.set(nivel);
-    this.erroMotivo.set(null);
-    this.mostrarMotivoForm.set(true);
-  }
-
-  editarMotivo(m: MotivoDisciplinarDTO): void {
-    this.motivoEditando.set(m);
-    this.motivoNome.set(m.nome);
-    this.motivoNivel.set(m.nivel);
-    this.erroMotivo.set(null);
-    this.mostrarMotivoForm.set(true);
-  }
-
-  async salvarMotivo(): Promise<void> {
-    const nome = this.motivoNome().trim();
-    if (!nome) {
-      this.erroMotivo.set('Informe o nome do motivo.');
-      return;
-    }
-    this.salvandoMotivo.set(true);
-    this.erroMotivo.set(null);
-    try {
-      const editando = this.motivoEditando();
-      const dto = { nome, nivel: this.motivoNivel(), ativo: editando?.ativo ?? true };
-      if (editando) {
-        await this.disciplinarService.atualizarMotivo(editando.motivoId, dto);
-      } else {
-        await this.disciplinarService.criarMotivo(dto);
-      }
-      this.mostrarMotivoForm.set(false);
-      this.carregarMotivos();
-    } catch (e) {
-      this.erroMotivo.set(mensagemErro(e as HttpErrorResponse, 'Não foi possível salvar o motivo.'));
-    } finally {
-      this.salvandoMotivo.set(false);
-    }
-  }
-
-  acoesMotivo(m: MotivoDisciplinarDTO): ActionMenuItem[] {
-    return [
-      { id: 'editar', label: 'Editar', icon: 'edit' },
-      m.ativo
-        ? { id: 'status', label: 'Inativar', icon: 'power', danger: true }
-        : { id: 'status', label: 'Reativar', icon: 'rotate-ccw' },
-    ];
-  }
-
-  executarAcaoMotivo(acao: string, m: MotivoDisciplinarDTO): void {
-    if (acao === 'editar') this.editarMotivo(m);
-    else this.alternarAtivoMotivo(m);
-  }
-
-  async alternarAtivoMotivo(m: MotivoDisciplinarDTO): Promise<void> {
-    try {
-      await this.disciplinarService.atualizarMotivo(m.motivoId, { nome: m.nome, nivel: m.nivel, ativo: !m.ativo });
-      this.carregarMotivos();
-    } catch {
-      // Lista não muda; o próximo carregamento mostra o estado real.
-    }
   }
 }

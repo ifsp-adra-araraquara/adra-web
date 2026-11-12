@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { GradeMensal } from '../../../shared/components/grade-mensal/grade-mensal';
 import { Icon } from '../../../shared/components/icon/icon';
 import { hojeISO } from '../../../shared/utils/aula.util';
@@ -12,7 +12,7 @@ import { hojeISO } from '../../../shared/utils/aula.util';
  */
 @Component({
   selector: 'app-grade-frequencia-turma',
-  imports: [GradeMensal, Icon],
+  imports: [GradeMensal, Icon, RouterLink],
   templateUrl: './grade-frequencia-turma.html',
   styleUrl: './grade-frequencia-turma.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

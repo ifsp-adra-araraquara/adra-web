@@ -24,7 +24,10 @@ export interface MotivoDisciplinarRequestDTO {
 }
 
 export interface RegistroDisciplinarRequestDTO {
-  motivoId: number;
+  /** Ocorrência, advertência ou suspensão (e-mail da ADRA de 11/11: sem motivos pré-cadastrados). */
+  nivel: NivelDisciplinar;
+  /** Motivo escrito à mão, até 200 caracteres. */
+  motivo: string;
   data: string;
   descricao: string;
   turmaId?: number | null;
@@ -35,7 +38,8 @@ export interface RegistroDisciplinarRequestDTO {
 /** FT-22: um fato com um ou mais atendidos — um registro por atendido. */
 export interface RegistroVariosRequestDTO {
   assistidoIds: number[];
-  motivoId: number;
+  nivel: NivelDisciplinar;
+  motivo: string;
   data: string;
   descricao: string;
 }

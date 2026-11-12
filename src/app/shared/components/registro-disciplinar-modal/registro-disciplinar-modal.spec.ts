@@ -11,7 +11,6 @@ import { Role } from '../../enum/role.enum';
 import { NivelDisciplinar } from '../../enum/NivelDisciplinar';
 import { RegistroDisciplinarDTO } from '../../models/disciplinar/Disciplinar';
 
-const motivo = { motivoId: 1, nome: 'Falar palavrão', nivel: NivelDisciplinar.OCORRENCIA, ativo: true };
 const lucas = { assistidoId: 7, nomeCompleto: 'Lucas Martins', totalOcorrenciasAtivas: 2 };
 const ana = { assistidoId: 8, nomeCompleto: 'Ana Souza', totalOcorrenciasAtivas: 0 };
 
@@ -36,7 +35,7 @@ async function montar(servico: Partial<DisciplinarService>) {
       provideHttpClientTesting(),
       provideRouter([]),
       { provide: AuthService, useValue: { currentProfile: signal(Role.COORD) } },
-      { provide: DisciplinarService, useValue: { listarMotivos: vi.fn().mockResolvedValue([motivo]), ...servico } },
+      { provide: DisciplinarService, useValue: servico },
     ],
   }).compileComponents();
 
@@ -55,7 +54,8 @@ describe('RegistroDisciplinarModal', () => {
     const modal = fixture.componentInstance;
 
     modal.escolhidos.set([lucas, ana]);
-    modal.motivoId.set(1);
+    modal.nivel.set(NivelDisciplinar.OCORRENCIA);
+    modal.motivo.set('Briga');
     modal.descricao.set('Briga no intervalo');
     fixture.detectChanges();
 
@@ -66,7 +66,12 @@ describe('RegistroDisciplinarModal', () => {
 
     expect(registrar).not.toHaveBeenCalled();
     expect(registrarVarios).toHaveBeenCalledWith(
-      expect.objectContaining({ assistidoIds: [7, 8], motivoId: 1, descricao: 'Briga no intervalo' }),
+      expect.objectContaining({
+        assistidoIds: [7, 8],
+        nivel: NivelDisciplinar.OCORRENCIA,
+        motivo: 'Briga',
+        descricao: 'Briga no intervalo',
+      }),
     );
     expect(modal.confirmacao()).toBe('Ocorrência registrada para Lucas M. e Ana S.');
   });
@@ -78,12 +83,36 @@ describe('RegistroDisciplinarModal', () => {
     const modal = fixture.componentInstance;
 
     modal.escolhidos.set([lucas]);
-    modal.motivoId.set(1);
+    modal.nivel.set(NivelDisciplinar.ADVERTENCIA);
+    modal.motivo.set('  Agressão a colega ');
     modal.descricao.set('Fato');
     await modal.registrar();
 
     expect(registrarVarios).not.toHaveBeenCalled();
-    expect(registrar).toHaveBeenCalledWith(7, expect.objectContaining({ motivoId: 1 }));
+    expect(registrar).toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({ nivel: NivelDisciplinar.ADVERTENCIA, motivo: 'Agressão a colega' }),
+    );
+  });
+
+  it('oferece só ocorrência, advertência e suspensão, e pede o motivo escrito', async () => {
+    const registrar = vi.fn();
+    const fixture = await montar({ registrar });
+    const modal = fixture.componentInstance;
+    modal.escolhidos.set([lucas]);
+    fixture.detectChanges();
+
+    const opcoes = [...(fixture.nativeElement as HTMLElement).querySelectorAll('.chip-nivel')].map((b) =>
+      b.textContent?.trim(),
+    );
+    expect(opcoes).toEqual(['Ocorrência', 'Advertência', 'Suspensão']);
+
+    modal.nivel.set(NivelDisciplinar.OCORRENCIA);
+    modal.descricao.set('Fato');
+    await modal.registrar();
+
+    expect(registrar).not.toHaveBeenCalled();
+    expect(modal.erroMotivo()).toBe('Escreva o motivo.');
   });
 
   it('remover um envolvido tira o atendido da lista', async () => {
@@ -112,7 +141,7 @@ describe('RegistroDisciplinarModal', () => {
   it('a prévia avisa quem vai chegar à 3ª e o que a Cartilha recomenda', async () => {
     const modal = (await montar({})).componentInstance;
     modal.escolhidos.set([lucas, ana]);
-    modal.motivoId.set(1);
+    modal.nivel.set(NivelDisciplinar.OCORRENCIA);
 
     expect(modal.previa()).toEqual([
       { atendido: lucas, registro: '3ª ocorrência', recomendacao: 'advertência escrita' },
@@ -134,18 +163,14 @@ describe('RegistroDisciplinarModal', () => {
   });
 
   it('suspensão com um atendido usa o período em dias de atividade do grupo (reunião de 05/11)', async () => {
-    const suspensao = { motivoId: 9, nome: 'Bullying', nivel: NivelDisciplinar.SUSPENSAO, ativo: true };
     const sugerirPeriodoSuspensao = vi
       .fn()
       .mockResolvedValue({ inicio: '2026-11-06', fim: '2026-11-10', diasDeAtividade: 3, retorno: '2026-11-11' });
-    const fixture = await montar({
-      listarMotivos: vi.fn().mockResolvedValue([motivo, suspensao]),
-      sugerirPeriodoSuspensao,
-    });
+    const fixture = await montar({ sugerirPeriodoSuspensao });
     const modal = fixture.componentInstance;
 
     modal.escolhidos.set([lucas]);
-    modal.motivoId.set(9);
+    modal.nivel.set(NivelDisciplinar.SUSPENSAO);
     modal.escolherData('2026-11-05');
     fixture.detectChanges();
     await fixture.whenStable();

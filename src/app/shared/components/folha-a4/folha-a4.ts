@@ -19,7 +19,7 @@ import { INSTITUICAO } from '../../utils/instituicao';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { style: 'display: block;' },
   template: `
-    <div class="barra no-print">
+    <div class="barra no-print" [class.paisagem]="paisagem()">
       <app-button variant="secondary" size="sm" (click)="voltar()">
         <app-icon name="chevron-left" [size]="16" /> Voltar
       </app-button>
@@ -28,7 +28,7 @@ import { INSTITUICAO } from '../../utils/instituicao';
       </app-button>
     </div>
 
-    <article class="folha" [attr.aria-label]="rotulo()">
+    <article class="folha" [class.paisagem]="paisagem()" [attr.aria-label]="rotulo()">
       <header class="folha-cabecalho">
         <app-brand-logo [size]="44" [markOnly]="true" />
         <div>
@@ -54,6 +54,8 @@ import { INSTITUICAO } from '../../utils/instituicao';
       font-family: Arial, Helvetica, sans-serif; font-size: 11pt; line-height: 1.45;
       box-shadow: var(--shadow-sm); border: 1px solid var(--gray-100);
     }
+    .barra.paisagem { max-width: 297mm; }
+    .folha.paisagem { max-width: 297mm; min-height: 210mm; padding: 10mm 10mm 8mm; }
     .folha p { margin: 0; }
     .folha-cabecalho { display: flex; align-items: center; gap: 14px; justify-content: center; text-align: center; }
     .instituicao { font-variant: small-caps; font-size: 13pt; }
@@ -66,6 +68,9 @@ import { INSTITUICAO } from '../../utils/instituicao';
     @media print {
       @page { size: A4; margin: 0; }
       .folha { box-shadow: none; border: none; max-width: none; width: 210mm; min-height: 297mm; }
+      /* Página nomeada: só a folha deitada sai em A4 paisagem. */
+      @page paisagem { size: A4 landscape; margin: 0; }
+      .folha.paisagem { page: paisagem; width: 297mm; min-height: 210mm; }
     }
   `,
 })
@@ -73,6 +78,8 @@ export class FolhaA4 {
   rotulo = input('Documento para impressão');
   /** Texto do botão (ex.: "Imprimir ou salvar PDF"). */
   rotuloImprimir = input('Imprimir');
+  /** A4 deitado (listas largas, como a de frequência do mês). */
+  paisagem = input(false);
 
   private readonly location = inject(Location);
   private readonly document = inject(DOCUMENT);

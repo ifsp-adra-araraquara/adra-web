@@ -52,6 +52,9 @@
           [dataAtual]="c.data"
           (abrirDia)="abrirDia($event)"
         />
+        <a class="btn btn-ghost btn-sm link-lista" [routerLink]="['/chamada/turma', c.turmaId, 'lista']" [queryParams]="{ mes: mesGrade() }">
+          <app-icon name="file-text" [size]="16" /> Imprimir lista do mês
+        </a>
       </div>
     } @else {
       <div id="painel-atendidos" role="tabpanel" aria-labelledby="aba-atendidos">

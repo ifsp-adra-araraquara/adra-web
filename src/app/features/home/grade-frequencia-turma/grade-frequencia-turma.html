@@ -9,6 +9,11 @@
       <h1 id="grade-titulo">{{ nomeTurma() || 'Grade do mês' }}</h1>
       <p class="page-intro">Frequência do mês, como na planilha. Toque no dia para abrir a chamada dele.</p>
     </div>
+    @if (turmaId(); as id) {
+      <a class="btn btn-ghost btn-sm" [routerLink]="['/chamada/turma', id, 'lista']" [queryParams]="{ mes: mes() }">
+        <app-icon name="file-text" [size]="16" /> Imprimir lista do mês
+      </a>
+    }
   </header>
 
   @if (turmaId(); as id) {
