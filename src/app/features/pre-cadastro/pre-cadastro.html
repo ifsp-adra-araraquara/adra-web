@@ -48,7 +48,7 @@
               @case ('renda') { <app-etapa-renda [grupo]="form.controls.renda" [tentativa]="tentativas()" /> }
               @case ('saude') { <app-etapa-saude-autorizacoes [grupo]="form.controls.saude" [tentativa]="tentativas()" /> }
               @case ('documentos') {
-                <app-etapa-documentos [(foto)]="foto" [(documentosCrianca)]="documentosCrianca" [(documentosResponsavel)]="documentosResponsavel" [(comprovanteEndereco)]="comprovanteEndereco" />
+                <app-etapa-documentos [tentou]="tentouDocumentos()" [(foto)]="foto" [(documentosCrianca)]="documentosCrianca" [(documentosResponsavel)]="documentosResponsavel" [(comprovanteEndereco)]="comprovanteEndereco" />
               }
               @case ('revisao') {
                 <app-etapa-revisao [form]="form" [anexos]="anexos()" (editar)="editar($event)" />

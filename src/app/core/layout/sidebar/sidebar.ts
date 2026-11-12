@@ -113,10 +113,17 @@ export class Sidebar {
 
     const grupos: { secao: string; itens: { codigo: AppModule; rota: AppModule; nomeExibicao: string }[] }[] = [];
 
+    // Educador Social só tem Chamada e Calendário: os dois juntos em "Pedagógico", Chamada primeiro.
+    const educador = perfil === Role.EDUCADOR;
+    const secaoDe = (codigo: string) =>
+      educador && codigo === 'DASHBOARD' ? 'Pedagógico' : this.secoesPorModulo[codigo];
+    const posicao = (codigo: string) =>
+      educador && codigo === 'DASHBOARD' ? this.ordemModulos.indexOf('CHAMADA') + 0.5 : this.ordemModulos.indexOf(codigo);
+
     for (const secao of this.ordemSecoes) {
       const itensDaSecao = modulosDoUsuario
-        .filter(m => this.secoesPorModulo[m.codigo] === secao)
-        .sort((a, b) => this.ordemModulos.indexOf(a.codigo) - this.ordemModulos.indexOf(b.codigo))
+        .filter(m => secaoDe(m.codigo) === secao)
+        .sort((a, b) => posicao(a.codigo) - posicao(b.codigo))
         .map(m => ({
           codigo: m.codigo.toLowerCase() as AppModule,
           rota: (m.rota?.slice(1) ?? m.codigo.toLowerCase()) as AppModule,

@@ -6,7 +6,7 @@ import { ChaveEtapa, FormularioPreCadastro, paraPayload } from '../pre-cadastro-
 import { SecaoRevisao, secoesRevisao } from '../resumo-inscricao';
 import { AnexosPreCadastro } from '../../../shared/models/precadastro/PreCadastro';
 
-const enviado = (quantidade: number) => (quantidade ? `Enviado (${quantidade})` : 'Não enviado — levar na entrevista');
+const enviado = (quantidade: number) => (quantidade ? `Enviado (${quantidade})` : 'Não enviado');
 
 function secaoDocumentos(anexos: AnexosPreCadastro): SecaoRevisao {
   return {
@@ -14,7 +14,7 @@ function secaoDocumentos(anexos: AnexosPreCadastro): SecaoRevisao {
     titulo: 'Documentos e foto',
     itens: [
       { rotulo: 'Comprovante de endereço', valor: enviado(anexos.comprovanteEndereco.length) },
-      { rotulo: 'Foto do atendido', valor: anexos.foto ? 'Enviada' : 'Não enviada — levar na entrevista' },
+      { rotulo: 'Foto do atendido', valor: anexos.foto ? 'Enviada' : 'Não enviada' },
       { rotulo: 'Documento do atendido', valor: enviado(anexos.documentosCrianca.length) },
       { rotulo: 'Documento do responsável', valor: enviado(anexos.documentosResponsavel.length) },
     ],

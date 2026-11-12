@@ -2,7 +2,9 @@ import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signa
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
+import { AuthService } from '../../../core/auth.service';
 import { AvisoService } from '../../../core/aviso.service';
+import { Role } from '../../enum/role.enum';
 import { AvisoDTO } from '../../models/aviso/Aviso';
 import { acaoDoAviso, agruparAvisos, rotaDoAviso } from '../../utils/aviso.util';
 import { Icon } from '../icon/icon';
@@ -21,6 +23,9 @@ import { Icon } from '../icon/icon';
 })
 export class Notificacoes {
   private readonly avisoService = inject(AvisoService);
+  private readonly auth = inject(AuthService);
+  /** Educador Social só usa Chamada e Calendário. */
+  private readonly soChamada = computed(() => this.auth.currentProfile() === Role.EDUCADOR);
   private readonly router = inject(Router);
   private readonly elemento = inject(ElementRef<HTMLElement>);
 
@@ -28,7 +33,9 @@ export class Notificacoes {
   readonly grupos = computed(() => agruparAvisos(this.avisoService.avisos()));
   readonly total = computed(() => this.avisoService.avisos().length);
   readonly rotulo = computed(() => `Notificações: ${this.total()} para resolver`);
-  readonly acao = acaoDoAviso;
+  acao(aviso: AvisoDTO): string {
+    return acaoDoAviso(aviso, this.soChamada());
+  }
 
   constructor() {
     this.avisoService.carregar();
@@ -52,7 +59,7 @@ export class Notificacoes {
 
   abrir(aviso: AvisoDTO): void {
     this.fechar();
-    const rota = rotaDoAviso(aviso);
+    const rota = rotaDoAviso(aviso, this.soChamada());
     this.router.navigate(rota.comandos, { queryParams: rota.queryParams });
   }
 }

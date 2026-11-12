@@ -18,7 +18,7 @@ import { EtapaResponsaveis } from './etapas/etapa-responsaveis';
 import { EtapaRevisao } from './etapas/etapa-revisao';
 import { EtapaSaudeAutorizacoes } from './etapas/etapa-saude-autorizacoes';
 import { EtapaTermos } from './etapas/etapa-termos';
-import { ChaveEtapa, ETAPAS, aplicarCondicionais, criarFormularioPreCadastro, paraPayload } from './pre-cadastro-form.util';
+import { ChaveEtapa, ETAPAS, anexosFaltando, aplicarCondicionais, criarFormularioPreCadastro, paraPayload } from './pre-cadastro-form.util';
 
 const MENSAGEM_AGUARDE_CAPTCHA = 'Aguarde a verificação de segurança e tente de novo.';
 
@@ -67,11 +67,12 @@ export class PreCadastro {
   protected readonly erroEnvio = signal<string | null>(null);
   protected readonly tokenCaptcha = signal<string | null>(null);
 
-  /** Fora do FormGroup (são arquivos). Só o comprovante é obrigatório. */
+  /** Fora do FormGroup (são arquivos). Todos obrigatórios. */
   protected readonly foto = signal<File | null>(null);
   protected readonly documentosCrianca = signal<File[]>([]);
   protected readonly documentosResponsavel = signal<File[]>([]);
   protected readonly comprovanteEndereco = signal<File[]>([]);
+  protected readonly tentouDocumentos = signal(false);
   protected readonly anexos = computed(() => ({
     foto: this.foto(),
     documentosCrianca: this.documentosCrianca(),
@@ -99,11 +100,14 @@ export class PreCadastro {
       return;
     }
     if (chave === 'documentos') {
-      if (this.comprovanteEndereco().length === 0) {
-        this.erroEnvio.set('Envie o comprovante de endereço para continuar.');
+      this.tentouDocumentos.set(true);
+      const faltando = anexosFaltando(this.anexos());
+      if (faltando.length) {
+        this.erroEnvio.set(`Para continuar, envie: ${faltando.join(', ')}.`);
         this.rolarAoTopo();
         return;
       }
+      this.erroEnvio.set(null);
       this.mostrarEtapa(this.indice() + 1);
       return;
     }
@@ -134,6 +138,7 @@ export class PreCadastro {
     this.form.reset();
     aplicarCondicionais(this.form);
     this.foto.set(null);
+    this.tentouDocumentos.set(false);
     this.documentosCrianca.set([]);
     this.documentosResponsavel.set([]);
     this.comprovanteEndereco.set([]);
