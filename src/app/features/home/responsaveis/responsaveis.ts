@@ -20,7 +20,8 @@ import { ActionMenu, ActionMenuItem } from '../../../shared/components/action-me
 import { cliqueEmElementoInterativo } from '../../../shared/utils/clique.util';
 import { formatarEndereco } from '../../../shared/utils/endereco.util';
 import { calcularIdade } from '../../../shared/utils/idade.util';
-import { formatarMoeda } from '../../../shared/utils/mascara.util';
+import { cpfParcial, formatarMoeda, formatarTelefone, linkTelefone } from '../../../shared/utils/mascara.util';
+import { formatarCpf } from '../../../shared/validators/cpf.validator';
 import { ESCOLARIDADE_LABELS } from '../../../shared/enum/Escolaridade';
 import { ESTADO_CIVIL_LABELS } from '../../../shared/enum/EstadoCivil';
 
@@ -47,6 +48,10 @@ export class Responsaveis implements OnInit {
 
   protected readonly formatarEndereco = formatarEndereco;
   protected readonly formatarMoeda = formatarMoeda;
+  protected readonly formatarTelefone = formatarTelefone;
+  protected readonly formatarCpf = formatarCpf;
+  protected readonly cpfParcial = cpfParcial;
+  protected readonly linkTelefone = linkTelefone;
   protected readonly idade = calcularIdade;
   protected readonly escolaridadeLabels = ESCOLARIDADE_LABELS;
   protected readonly estadoCivilLabels = ESTADO_CIVIL_LABELS;

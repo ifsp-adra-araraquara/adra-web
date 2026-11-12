@@ -30,3 +30,14 @@ const MOEDA_BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 
 export function formatarMoeda(valor: number | null | undefined): string {
   return valor == null ? '' : MOEDA_BRL.format(valor);
 }
+
+/** CPF parcial para listas (LGPD): só os dígitos do meio aparecem. Sem CPF completo, "—". */
+export function cpfParcial(cpf: string | null | undefined): string {
+  const d = (cpf ?? '').replace(/\D/g, '');
+  return d.length === 11 ? `***.***.${d.slice(6, 9)}-**` : '—';
+}
+
+/** Link de discagem (tel:) a partir de um telefone em qualquer formato. */
+export function linkTelefone(telefone: string | null | undefined): string {
+  return 'tel:+55' + telefoneNacional(telefone ?? '');
+}

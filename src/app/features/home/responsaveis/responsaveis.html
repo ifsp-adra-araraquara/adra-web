@@ -32,7 +32,7 @@
       />
     </div>
 
-    <div class="card">
+    <div class="card lista-responsaveis">
       @if (responsaveisFiltrados().length === 0) {
         <div class="muted" style="padding: 20px; text-align: center">
           @if (temFiltrosAtivos()) {
@@ -45,7 +45,39 @@
           }
         </div>
       } @else {
-        <div class="table-wrap">
+        <!-- Celular e tablet: cartões (a tabela não cabe). -->
+        <ul class="lista-cartoes" aria-label="Responsáveis">
+          @for (responsavel of responsaveisFiltrados(); track responsavel.responsavelId) {
+            <li class="resp-cartao linha-clicavel" (click)="abrirVisualizacaoPelaLinha($event, responsavel)">
+              <div class="resp-topo">
+                <div class="resp-identidade">
+                  <span class="cell-name">{{ responsavel.nomeCompleto }}</span>
+                  <span class="cell-sub">CPF {{ cpfParcial(responsavel.cpf) }}</span>
+                </div>
+                <app-action-menu
+                  [label]="'Ações de ' + responsavel.nomeCompleto"
+                  [itens]="acoesResponsavel()"
+                  (selecionado)="executarAcao($event, responsavel)"
+                />
+              </div>
+              <div class="resp-dados">
+                @if (responsavel.telefone) {
+                  <a class="tel tel--toque" [href]="linkTelefone(responsavel.telefone)">
+                    <app-icon name="phone" [size]="15" /> {{ formatarTelefone(responsavel.telefone) }}
+                  </a>
+                } @else {
+                  <span class="muted">Sem telefone</span>
+                }
+                <span class="vinculos" [class.vinculos-zero]="!responsavel.totalAssistidos">
+                  <app-icon name="users" [size]="14" /> {{ resumoVinculos(responsavel) }}
+                </span>
+              </div>
+            </li>
+          }
+        </ul>
+
+        <!-- Notebook e desktop: tabela. -->
+        <div class="table-wrap lista-tabela">
           <table>
             <thead>
               <tr>
@@ -60,8 +92,14 @@
               @for (responsavel of responsaveisFiltrados(); track responsavel.responsavelId) {
                 <tr class="linha-clicavel" (click)="abrirVisualizacaoPelaLinha($event, responsavel)">
                   <td class="cell-name">{{ responsavel.nomeCompleto }}</td>
-                  <td>{{ responsavel.cpf || 'Não informado' }}</td>
-                  <td>{{ responsavel.telefone || '-' }}</td>
+                  <td class="nowrap cpf">{{ cpfParcial(responsavel.cpf) }}</td>
+                  <td class="nowrap">
+                    @if (responsavel.telefone) {
+                      <a class="tel" [href]="linkTelefone(responsavel.telefone)">{{ formatarTelefone(responsavel.telefone) }}</a>
+                    } @else {
+                      <span class="muted">—</span>
+                    }
+                  </td>
                   <td>
                     <span class="vinculos" [class.vinculos-zero]="!responsavel.totalAssistidos"
                           [attr.title]="responsavel.totalAssistidos ? (responsavel.assistidosAtivos ?? 0) + ' ativo(s) de ' + responsavel.totalAssistidos : 'Sem atendido vinculado'">
@@ -131,7 +169,7 @@
       <div class="form-row">
         <div class="field">
           <label>CPF</label>
-          <div class="input" style="background: var(--gray-50)">{{ responsavel.cpf || 'Não informado' }}</div>
+          <div class="input" style="background: var(--gray-50)">{{ responsavel.cpf ? formatarCpf(responsavel.cpf) : 'Não informado' }}</div>
         </div>
         <div class="field">
           <label>Data de nascimento</label>
@@ -147,7 +185,7 @@
       <div class="form-row">
         <div class="field">
           <label>Telefone</label>
-          <div class="input" style="background: var(--gray-50)">{{ responsavel.telefone || 'Não informado' }}</div>
+          <div class="input" style="background: var(--gray-50)">{{ responsavel.telefone ? formatarTelefone(responsavel.telefone) : 'Não informado' }}</div>
         </div>
         <div class="field">
           <label>E-mail</label>
