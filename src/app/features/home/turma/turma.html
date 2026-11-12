@@ -364,6 +364,10 @@
       [errorMessage]="erroCorrecaoEntrada()"
     />
     <p class="hint mt-s">Não volta antes de 1º de janeiro do ano da matrícula nem da saída de um grupo anterior.</p>
+    <div class="notice notice-amber mt-s">
+      <app-icon name="alert-circle" />
+      <span>Nas chamadas já lançadas desses dias, quem for corrigido passa a contar como <b>presente</b>.</span>
+    </div>
   } @else {
     <div class="notice notice-success" role="status">
       <app-icon name="check" />
@@ -375,6 +379,15 @@
         }
       </span>
     </div>
+    @if (chamadasLancadasCorrecao() > 0) {
+      <div class="notice notice-amber mt-s" role="status">
+        <app-icon name="alert-circle" />
+        <span>
+          Há {{ chamadasLancadasCorrecao() }} {{ chamadasLancadasCorrecao() === 1 ? 'chamada já lançada' : 'chamadas já lançadas' }}
+          no período. Nelas, os corrigidos aparecem como presentes: confira e marque as faltas, se houver.
+        </span>
+      </div>
+    }
   }
 
   <ng-template #footer>

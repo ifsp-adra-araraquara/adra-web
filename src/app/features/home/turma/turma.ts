@@ -448,12 +448,15 @@ export class Turmas implements OnInit {
   corrigindoEntrada = signal(false);
   erroCorrecaoEntrada = signal<string | null>(null);
   resultadoCorrecaoEntrada = signal<number | null>(null);
+  /** Chamadas já feitas no período: os corrigidos passam a contar nelas como presentes. */
+  chamadasLancadasCorrecao = signal(0);
 
   abrirCorrecaoEntrada(turma: TurmaResponseDTO): void {
     this.turmaCorrecaoEntrada.set(turma);
     this.dataCorrecaoEntrada.set(this.hoje.slice(0, 8) + '01');
     this.erroCorrecaoEntrada.set(null);
     this.resultadoCorrecaoEntrada.set(null);
+    this.chamadasLancadasCorrecao.set(0);
     this.mostrarCorrecaoEntrada.set(true);
   }
 
@@ -477,12 +480,13 @@ export class Turmas implements OnInit {
     this.corrigindoEntrada.set(true);
     this.erroCorrecaoEntrada.set(null);
     try {
-      const { corrigidos } = await firstValueFrom(
-        this.http.patch<{ corrigidos: number }>(`${this.apiTurmas}/${turma.turmaId}/vinculos/data-entrada`, {
+      const { corrigidos, chamadasLancadas } = await firstValueFrom(
+        this.http.patch<{ corrigidos: number; chamadasLancadas: number }>(`${this.apiTurmas}/${turma.turmaId}/vinculos/data-entrada`, {
           dataEntrada: data,
         }),
       );
       this.resultadoCorrecaoEntrada.set(corrigidos);
+      this.chamadasLancadasCorrecao.set(chamadasLancadas);
     } catch (erro) {
       this.erroCorrecaoEntrada.set(mensagemErro(erro as HttpErrorResponse, 'Não foi possível corrigir. Tente novamente.'));
     } finally {
