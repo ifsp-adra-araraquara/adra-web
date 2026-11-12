@@ -1,31 +1,32 @@
-/* ===== TOOLBAR ===== */
-.cal { display: flex; flex-direction: column; gap: 14px; }
-
-.cal-toolbar {
+/* ===== LAYOUT FLEX ===== */
+.cal, .cal-toolbar, .cal-actions, .excecoes-lista, .dia-notas-lista, .dia-nota-info, .nota-lista-item-info, ::ng-deep .evt {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--gray-100);
 }
-/* Celular: visualização e botões em linhas próprias, cada botão com a mesma largura. */
-.cal-actions { display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
-.cal-botoes { display: flex; gap: 8px; }
-.cal-botoes .btn { flex: 1 1 0; min-height: 44px; white-space: nowrap; justify-content: center; }
+.cal-botoes, .cal-legend, .excecoes-lista li, .dia-nota-cabecalho, .dia-nota-acoes, .nota-form-acoes, ::ng-deep .fc-toolbar-chunk {
+  display: flex;
+  align-items: center;
+}
 
-/* Controle segmentado Mês/Semana — visual de toggle único, não dois botões soltos */
+/* ===== TOOLBAR ===== */
+.cal { gap: 14px; }
+.cal-toolbar { gap: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--gray-100); }
+.cal-actions { gap: 10px; }
+.cal-botoes, .cal-legend, .nota-form-acoes { gap: 8px; }
+.cal-botoes .btn { flex: 1 1 0; white-space: nowrap; }
+
 .seg-control {
   display: flex;
   background: var(--gray-50);
   border: 1px solid var(--campo-borda);
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   padding: 3px;
   gap: 2px;
 }
 .seg-btn {
   flex: 1 1 0;
-  border: none;
-  background: transparent;
+  border: 0;
+  background: none;
   color: var(--gray-600);
   font-size: 13px;
   font-weight: 600;
@@ -34,12 +35,13 @@
   border-radius: 7px;
   transition: background .15s, color .15s;
 }
-.seg-btn.active { background: #fff; color: var(--color-adra-green-600); box-shadow: var(--shadow-sm); }
-.seg-btn:not(.active):hover { color: var(--color-adra-green-600); }
+.seg-btn.active, .seg-btn:hover { color: var(--color-brand-hover); }
+.seg-btn.active { background: #fff; box-shadow: var(--shadow-sm); }
 
-/* ===== LEGENDA — pílulas com a mesma cor do dia no calendário ===== */
-.cal-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.legend-titulo { font-size: 12px; font-weight: 600; color: var(--gray-600); margin-right: 2px; }
+/* ===== LEGENDA ===== */
+.cal-legend, .dia-nota-cabecalho { flex-wrap: wrap; }
+.legend-titulo, .legend-chip { font-size: 12px; font-weight: 600; }
+.legend-titulo { color: var(--gray-600); margin-right: 2px; }
 .legend-separador { width: 1px; height: 18px; background: var(--gray-200); margin: 0 6px; }
 .legend-chip {
   display: inline-flex; align-items: center; gap: 6px;
@@ -47,16 +49,15 @@
   border-radius: 999px;
   background: var(--cor-fundo, var(--gray-50));
   color: var(--cor, var(--gray-600));
-  font-size: 12px; font-weight: 600;
 }
 .legend-chip--nota {
   background: #fff;
   color: var(--gray-800);
   box-shadow: inset 0 0 0 1px var(--gray-200);
-  --cor-ponto: var(--color-adra-green-400);
+  --cor-ponto: var(--color-brand);
 }
-.legend-chip--hachura {
-  background-image: repeating-linear-gradient(135deg, transparent 0 4px, rgba(0, 0, 0, 0.05) 4px 8px);
+.legend-chip--hachura, ::ng-deep .dia-sem-aula {
+  background-image: repeating-linear-gradient(135deg, transparent 0 5px, rgba(0, 0, 0, .045) 5px 10px);
 }
 .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--cor-ponto, var(--gray-400)); }
 
@@ -74,227 +75,141 @@
   --fc-button-bg-color: var(--gray-50);
   --fc-button-border-color: var(--gray-200);
   --fc-button-text-color: var(--gray-800);
-  --fc-button-hover-bg-color: var(--color-adra-green-50);
-  --fc-button-hover-border-color: var(--color-adra-green-400);
-  --fc-button-active-bg-color: var(--color-adra-green-400);
-  --fc-button-active-border-color: var(--color-adra-green-400);
-  /* Hoje é destacado via anel na .fc-daygrid-day-frame (mais abaixo), não
-     pelo preenchimento plano padrão do FullCalendar — fica mais "atual"
-     e não se confunde com o hover do dia. */
+  --fc-button-hover-bg-color: var(--color-brand-soft);
+  --fc-button-hover-border-color: var(--color-brand);
+  --fc-button-active-bg-color: var(--color-brand);
+  --fc-button-active-border-color: var(--color-brand);
   --fc-today-bg-color: transparent;
   --fc-border-color: var(--gray-100);
   --fc-neutral-bg-color: var(--gray-50);
 }
 
-/* Nav + título agrupados (headerToolbar left: 'prev,next title') */
-::ng-deep .fc .fc-toolbar { margin-bottom: 14px; gap: 10px; flex-wrap: wrap; }
-::ng-deep .fc .fc-toolbar-chunk { display: flex; align-items: center; gap: 10px; }
-::ng-deep .fc .fc-toolbar-title { font-size: 17px; font-weight: 600; color: var(--gray-800); margin: 0; }
+/* Nav + título */
+::ng-deep .fc :is(.fc-toolbar, .fc-toolbar-chunk) { min-width: 0; gap: 8px; flex-wrap: wrap; }
+::ng-deep .fc .fc-toolbar { margin-bottom: 14px; }
+::ng-deep .fc .fc-toolbar-title { font-size: 15px; font-weight: 600; line-height: 1.25; color: var(--gray-800); }
 ::ng-deep .fc .fc-button {
-  min-width: 44px; min-height: 44px; font-size: 13px; font-weight: 500; padding: 6px 10px; box-shadow: none !important;
-  text-transform: none;
+  min-width: 44px; min-height: 44px; font-size: 13px; font-weight: 500;
+  padding: 6px 10px; box-shadow: none !important;
 }
-::ng-deep .fc .fc-today-button { border-radius: var(--radius-sm); }
-::ng-deep .fc .fc-prev-button, ::ng-deep .fc .fc-next-button { padding: 6px 9px; }
+::ng-deep .fc .fc-today-button { border-radius: 8px; }
+::ng-deep .fc :is(.fc-prev-button, .fc-next-button) { padding: 6px 9px; }
 
-/* Grade mais leve: bordas sutis, sem linhas duplicadas pesadas */
-::ng-deep .fc-theme-standard td, ::ng-deep .fc-theme-standard th { border-color: var(--gray-100); }
-::ng-deep .fc .fc-scrollgrid { border-color: var(--gray-100); }
-
-/* Cabeçalho dos dias da semana: discreto, letter-spacing, separado do conteúdo */
-::ng-deep .fc .fc-col-header-cell {
-  background: var(--gray-50);
-  padding: 8px 0;
-}
-::ng-deep .fc .fc-col-header-cell-cushion {
+/* Cabeçalho e células */
+::ng-deep .fc-col-header-cell { background: var(--gray-50); padding: 8px 0; }
+::ng-deep .fc-col-header-cell-cushion {
   font-size: 11px; font-weight: 600; letter-spacing: .5px;
-  color: var(--gray-400); text-transform: uppercase; text-decoration: none;
+  color: var(--gray-400); text-transform: uppercase;
 }
-
-/* Células do dia: compactas por padrão (mobile-first), crescem um pouco
-   em telas maiores. Cantos arredondados + hover dão a leitura de "cartão
-   clicável", não só uma grade de planilha. */
 ::ng-deep .fc .fc-daygrid-day-frame {
-  min-height: 58px;
-  padding: 3px;
-  margin: 1px;
-  border-radius: 8px;
-  transition: background-color .14s ease, box-shadow .14s ease;
+  min-height: 58px; padding: 3px; margin: 1px; border-radius: 8px;
+  transition: background-color .14s, box-shadow .14s;
 }
-::ng-deep .fc .fc-daygrid-day { cursor: pointer; }
-/* Hover neutro: verde fica só para "hoje" e não se confunde com a cor de Férias. */
-::ng-deep .fc .fc-daygrid-day:hover .fc-daygrid-day-frame {
-  background: var(--gray-50);
-  box-shadow: inset 0 0 0 1px var(--gray-200);
+::ng-deep :is(.fc-daygrid-day, .fc-daygrid-event, .fc-list-event) { cursor: pointer; }
+::ng-deep .fc-daygrid-day:hover .fc-daygrid-day-frame {
+  background: var(--gray-50); box-shadow: inset 0 0 0 1px var(--gray-200);
 }
 ::ng-deep .fc .fc-daygrid-day-top { padding: 3px 4px 1px; }
 ::ng-deep .fc .fc-daygrid-day-number {
   font-size: 12px; font-weight: 700; color: var(--gray-600);
   padding: 1px 6px; border-radius: 20px;
 }
-/* Dias fora do mês corrente: bem discretos */
-::ng-deep .fc .fc-day-other .fc-daygrid-day-number { color: var(--gray-200); font-weight: 400; }
-/* Dia atual: anel de cor na célula inteira (não um preenchimento chapado)
-   + número em destaque sólido — mais "atual", menos bloco monocromático. */
-::ng-deep .fc .fc-day-today .fc-daygrid-day-frame {
-  background: var(--color-adra-green-50);
-  box-shadow: inset 0 0 0 1.5px var(--color-adra-green-400);
+::ng-deep .fc-day-other .fc-daygrid-day-number { color: var(--gray-200); font-weight: 400; }
+::ng-deep .fc-day-today .fc-daygrid-day-frame {
+  background: var(--color-brand-soft);
+  box-shadow: inset 0 0 0 1.5px var(--color-brand);
 }
-::ng-deep .fc .fc-day-today:hover .fc-daygrid-day-frame {
-  box-shadow: inset 0 0 0 1.5px var(--color-adra-green-600);
+::ng-deep .fc-day-today:hover .fc-daygrid-day-frame {
+  box-shadow: inset 0 0 0 1.5px var(--color-brand-hover);
 }
-::ng-deep .fc .fc-day-today .fc-daygrid-day-number {
-  background: var(--color-adra-green-400); color: #fff;
-}
+::ng-deep .fc-day-today .fc-daygrid-day-number { background: var(--color-brand); color: #fff; }
+::ng-deep .fc .fc-daygrid-more-link { font-size: 11px; font-weight: 600; color: var(--color-brand-hover); padding: 1px 6px; }
 
-/* "+N mais" nativo do FullCalendar, com a mesma tipografia discreta */
-::ng-deep .fc .fc-daygrid-more-link {
-  font-size: 11px; font-weight: 600; color: var(--color-adra-green-600);
-  padding: 1px 6px;
+/* ===== EVENTOS ===== */
+::ng-deep .fc .fc-daygrid-event {
+  border-radius: 5px; margin: 1px 2px; padding: 0;
+  overflow: hidden; transition: filter .12s;
 }
-
-/* ===== EVENTOS — chip compacto com acento de cor na lateral (em vez de
-   fundo pastel inteiro, que ficava "lavado") ===== */
-::ng-deep .fc-event.fc-daygrid-event {
-  border-radius: 5px;
-  margin: 1px 2px;
-  padding: 0;
-  overflow: hidden;
-  cursor: pointer;
-  transition: filter .12s ease;
-}
-::ng-deep .fc-event.fc-daygrid-event:hover { filter: brightness(0.97); }
-::ng-deep .fc-event .fc-event-main { padding: 0; }
+::ng-deep .fc-daygrid-event:hover { filter: brightness(.97); }
+::ng-deep .fc-event-main { padding: 0; }
 ::ng-deep .evt {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  padding: 2px 6px 2px 7px;
-  line-height: 1.22;
-  overflow: hidden;
+  padding: 2px 6px 2px 7px; line-height: 1.22; overflow: hidden;
   border-left: 3px solid var(--evt-accent, var(--gray-400));
 }
-::ng-deep .evt-hora {
-  font-size: 10px; font-weight: 700; opacity: .8;
-}
-::ng-deep .evt-titulo {
-  font-size: 11.5px; font-weight: 600;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-::ng-deep .evt-sub {
-  display: none;
-  font-size: 10px; opacity: .72;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
+::ng-deep .evt-hora { font-size: 10px; font-weight: 700; opacity: .8; }
+::ng-deep :is(.evt-titulo, .evt-sub) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+::ng-deep .evt-titulo { font-size: 11.5px; font-weight: 700; }
+::ng-deep .evt-sub { display: none; font-size: 10px; opacity: .72; }
 
-::ng-deep .fc .fc-list, ::ng-deep .fc .fc-list-table { width: 100%; max-width: 100%; }
-::ng-deep .fc-list .evt-titulo {
-  font-size: 13px; line-height: 1.35;
-  white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere;
+/* ===== LISTA (listWeek) ===== */
+::ng-deep .fc-list :is(.evt-titulo, .evt-sub) { white-space: normal; overflow-wrap: anywhere; }
+::ng-deep .fc-list .evt-titulo { font-size: 13px; line-height: 1.35; }
+::ng-deep .fc-list .evt-sub { display: block; margin-top: 2px; font-size: 12px; line-height: 1.4; }
+::ng-deep .fc-list :is(.evt-hora, .fc-list-event-graphic), ::ng-deep .fc .fc-list-day-cushion::after { display: none; }
+::ng-deep .fc .fc-list-day-cushion {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 4px 8px; padding: 8px 12px;
 }
-::ng-deep .fc-list .evt-sub {
-  display: block; margin-top: 2px; font-size: 12px; line-height: 1.4;
-  white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere;
-}
-::ng-deep .fc-list .evt-hora { display: none; }
-::ng-deep .fc-list-event { cursor: pointer; }
+::ng-deep .fc-list-day-text { font-size: 13px; font-weight: 700; color: var(--gray-800); text-transform: capitalize; }
+::ng-deep .fc-list-day-side-text { font-size: 12px; font-weight: 500; color: var(--texto-suave); }
 
 @media (max-width: 767px) {
-  ::ng-deep .fc .fc-toolbar { gap: 8px; }
-  ::ng-deep .fc .fc-toolbar-chunk { min-width: 0; gap: 8px; flex-wrap: wrap; }
-  ::ng-deep .fc .fc-toolbar-title { font-size: 15px; line-height: 1.25; }
-
-  ::ng-deep .fc .fc-list-table,
-  ::ng-deep .fc .fc-list-table tbody,
-  ::ng-deep .fc .fc-list-day,
-  ::ng-deep .fc .fc-list-day > th { display: block; width: 100%; }
-
-  ::ng-deep .fc .fc-list-day-cushion {
-    display: flex; align-items: center; justify-content: space-between;
-    flex-wrap: wrap; gap: 4px 8px; padding: 8px 12px;
-  }
-  ::ng-deep .fc .fc-list-day-cushion::after { display: none; }
-  ::ng-deep .fc .fc-list-day-text, ::ng-deep .fc .fc-list-day-side-text { float: none !important; }
-  ::ng-deep .fc .fc-list-day-text { font-size: 13px; font-weight: 700; color: var(--gray-800); text-transform: capitalize; }
-  ::ng-deep .fc .fc-list-day-side-text { font-size: 12px; font-weight: 500; color: var(--texto-suave); }
-
-  ::ng-deep .fc .fc-list-event {
+  ::ng-deep .fc-list :is(table, tbody, .fc-list-day, th) { display: block; }
+  ::ng-deep .fc-list-event {
     display: flex; flex-direction: column; gap: 4px;
-    width: 100%; padding: 10px 12px; border-bottom: 1px solid var(--gray-100);
+    padding: 10px 12px; border-bottom: 1px solid var(--gray-100);
   }
-  ::ng-deep .fc .fc-list-event:last-child { border-bottom: none; }
-  ::ng-deep .fc .fc-list-event:hover td { background-color: transparent; }
-  ::ng-deep .fc .fc-list-event-graphic { display: none; }
+  ::ng-deep .fc-list-event:last-child { border-bottom: 0; }
+  ::ng-deep .fc .fc-list-event td { width: auto; min-width: 0; padding: 0; border: 0; background: none !important; }
   ::ng-deep .fc .fc-list-event-time {
-    display: block; width: auto; padding: 0; border: none;
     font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .3px;
     color: var(--texto-suave); white-space: normal;
   }
-  ::ng-deep .fc .fc-list-event-title { display: block; width: 100%; min-width: 0; padding: 0; border: none; }
   ::ng-deep .fc-list .evt { padding: 6px 10px; }
-  ::ng-deep .fc-list .evt.evt-nota { padding-left: 20px; }
-  ::ng-deep .fc-list .evt.evt-nota::before { left: 8px; top: 10px; }
+  ::ng-deep .fc-list .evt-nota { padding-left: 20px; }
+  ::ng-deep .fc-list .evt-nota::before { left: 8px; top: 10px; }
 }
 
 @media (min-width: 720px) {
   .cal-scroll .fc { padding: 14px; }
-  .cal-toolbar { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-end; }
-  .cal-actions { flex-direction: row; align-items: center; }
+  .cal-toolbar, .cal-actions { flex-direction: row; align-items: center; }
+  .cal-toolbar { flex-wrap: wrap; justify-content: flex-end; }
   .seg-control { display: inline-flex; }
-  .seg-btn { flex: none; }
-  .cal-botoes .btn { flex: none; }
+  .seg-btn, .cal-botoes .btn { flex: none; }
+  ::ng-deep .fc .fc-toolbar-title { font-size: 17px; }
   ::ng-deep .fc .fc-daygrid-day-frame { min-height: 84px; padding: 4px; margin: 2px; }
   ::ng-deep .evt-sub { display: block; }
 }
 
-/* ===== Dias sem chamada (férias, feriado, ponto facultativo, evento/passeio) ===== */
-/* Hachurado por cima da cor do fundo: o dia "salta" mesmo sem eventos */
-::ng-deep .fc .dia-sem-aula {
-  background-image: repeating-linear-gradient(135deg, transparent 0 6px, rgba(0, 0, 0, 0.04) 6px 12px);
+/* ===== Dias sem chamada e notas ===== */
+.dia-sem-aula-aviso, .dia-nova-nota-acao { margin-bottom: 12px; }
+.excecoes-lista { list-style: none; gap: 6px; font-size: 13px; }
+.excecoes-lista li { justify-content: space-between; gap: 8px; padding: 8px 10px; border: 1px solid var(--gray-100); border-radius: 8px; }
+
+::ng-deep .evt-nota {
+  position: relative; padding-left: 16px;
+  border: 1px solid var(--gray-200); border-radius: 5px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
 }
-::ng-deep .evt-sem-aula .evt-titulo { font-weight: 700; }
-
-.dia-sem-aula-aviso { margin-bottom: 12px; }
-
-.excecoes-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
-.excecoes-lista li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border: 1px solid var(--gray-100); border-radius: 8px; }
-
-/* ===== Notas / eventos globais do calendário ===== */
-/* Nota: cartão branco com bolinha verde — formato diferente da barra colorida
-   dos dias sem chamada, para não se confundir com Feriado nem com Férias. */
-::ng-deep .evt.evt-nota {
-  position: relative;
-  padding-left: 16px;
-  border: 1px solid var(--gray-200);
-  border-radius: 5px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-::ng-deep .evt.evt-nota::before {
-  content: '';
-  position: absolute; left: 6px; top: 7px;
+::ng-deep .evt-nota::before {
+  content: ''; position: absolute; left: 6px; top: 7px;
   width: 6px; height: 6px; border-radius: 50%;
-  background: var(--color-adra-green-400);
+  background: var(--color-brand);
 }
-::ng-deep .evt-nota .evt-titulo { font-weight: 700; }
 
-.dia-notas-lista { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
-.dia-notas-lista .form-sec-title { margin-top: 0; margin-bottom: 2px; }
+.dia-notas-lista { gap: 8px; margin-bottom: 14px; }
+.dia-notas-lista .form-sec-title { margin-bottom: 2px; }
 .dia-nota-item {
   display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
   padding: 10px 12px;
   background: #fff;
   border: 1px solid var(--gray-200);
-  border-left: 3px solid var(--color-adra-green-400);
-  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-brand);
+  border-radius: 8px;
 }
-.dia-nota-info { display: flex; flex-direction: column; gap: 3px; font-size: 13.5px; color: var(--gray-800); }
-.dia-nota-cabecalho { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.dia-nota-hora {
-  font-size: 11.5px; font-weight: 700; color: var(--color-adra-green-600);
-  background: #fff; padding: 1px 6px; border-radius: 4px;
-}
-.dia-nota-desc { font-size: 12.5px; color: var(--gray-600); margin: 0; white-space: pre-wrap; }
-.dia-nota-acoes { display: flex; align-items: center; gap: 4px; flex: none; }
-.dia-nova-nota-acao { margin-bottom: 12px; }
-.nota-form-acoes { display: flex; align-items: center; gap: 8px; }
-.nota-lista-item-info { display: flex; flex-direction: column; gap: 2px; }
+.dia-nota-info { gap: 3px; font-size: 13.5px; color: var(--gray-800); }
+.dia-nota-cabecalho { gap: 6px; }
+.dia-nota-hora { font-size: 11.5px; font-weight: 700; color: var(--color-brand-hover); padding: 1px 6px; border-radius: 4px; }
+.dia-nota-desc { font-size: 12.5px; color: var(--gray-600); white-space: pre-wrap; }
+.dia-nota-acoes { gap: 4px; flex: none; }
+.nota-lista-item-info { gap: 2px; }
