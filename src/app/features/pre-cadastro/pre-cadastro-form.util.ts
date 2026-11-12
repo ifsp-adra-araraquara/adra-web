@@ -5,7 +5,7 @@ import { EstadoCivil } from '../../shared/enum/EstadoCivil';
 import { ProgramaTransferencia } from '../../shared/enum/ProgramaTransferencia';
 import { Sexo } from '../../shared/enum/Sexo';
 import { EnderecoDTO } from '../../shared/models/endereco/EnderecoDTO';
-import { PreCadastroRequestDTO } from '../../shared/models/precadastro/PreCadastro';
+import { AnexosPreCadastro, PreCadastroRequestDTO } from '../../shared/models/precadastro/PreCadastro';
 import { enderecoParaPayload, enderecoVazio } from '../../shared/utils/endereco.util';
 import { cpfOpcional, cpfValido, cpfValidator } from '../../shared/validators/cpf.validator';
 
@@ -223,4 +223,14 @@ export function paraPayload(form: FormularioPreCadastro): PreCadastroRequestDTO 
       },
     },
   };
+}
+
+/** O que a família ainda não anexou (todos obrigatórios), na ordem da tela. */
+export function anexosFaltando(anexos: AnexosPreCadastro): string[] {
+  const faltando: string[] = [];
+  if (anexos.comprovanteEndereco.length === 0) faltando.push('comprovante de endereço');
+  if (!anexos.foto) faltando.push('foto do atendido');
+  if (anexos.documentosCrianca.length === 0) faltando.push('documento do atendido');
+  if (anexos.documentosResponsavel.length === 0) faltando.push('documento do responsável');
+  return faltando;
 }

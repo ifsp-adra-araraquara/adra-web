@@ -1,17 +1,16 @@
-import { ChangeDetectionStrategy, Component, model } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
 
 import { FotoPerfil } from '../../../shared/components/foto-perfil/foto-perfil';
 import { UploadDocumento } from '../../../shared/components/upload-documento/upload-documento';
 
-/** Comprovante de endereço (obrigatório), foto e documentos. O que for opcional pode ser levado no dia da entrevista. */
+/** Comprovante de endereço, foto e documentos do atendido e do responsável: todos obrigatórios. */
 @Component({
   selector: 'app-etapa-documentos',
   imports: [FotoPerfil, UploadDocumento],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <p class="intro">
-      O comprovante de endereço é obrigatório. Foto e documentos são opcionais: se não tiver em mãos, leve no dia da
-      entrevista.
+      Todos os itens abaixo são obrigatórios. Pode ser foto tirada pelo celular ou PDF.
     </p>
 
     <section class="bloco" aria-labelledby="doc-comprovante">
@@ -20,13 +19,14 @@ import { UploadDocumento } from '../../../shared/components/upload-documento/upl
         label="Comprovante de endereço"
         dica="Foto ou PDF de uma conta de água, luz ou telefone."
         [obrigatorio]="true"
+        [invalido]="tentou() && comprovanteEndereco().length === 0"
         [(arquivos)]="comprovanteEndereco"
       />
     </section>
 
     <section class="bloco" aria-labelledby="doc-foto">
       <h3 id="doc-foto">Foto do atendido</h3>
-      <app-foto-perfil label="Foto do atendido" [(arquivo)]="foto" />
+      <app-foto-perfil label="Foto do atendido" [obrigatorio]="true" [invalido]="tentou() && !foto()" [(arquivo)]="foto" />
     </section>
 
     <section class="bloco" aria-labelledby="doc-crianca">
@@ -35,6 +35,8 @@ import { UploadDocumento } from '../../../shared/components/upload-documento/upl
         label="RG ou CPF do atendido"
         dica="Foto ou PDF. Até 2 arquivos (frente e verso)."
         [maximo]="2"
+        [obrigatorio]="true"
+        [invalido]="tentou() && documentosCrianca().length === 0"
         [(arquivos)]="documentosCrianca"
       />
     </section>
@@ -45,6 +47,8 @@ import { UploadDocumento } from '../../../shared/components/upload-documento/upl
         label="RG ou CPF do responsável"
         dica="Foto ou PDF. Até 2 arquivos (frente e verso)."
         [maximo]="2"
+        [obrigatorio]="true"
+        [invalido]="tentou() && documentosResponsavel().length === 0"
         [(arquivos)]="documentosResponsavel"
       />
     </section>
@@ -56,6 +60,8 @@ import { UploadDocumento } from '../../../shared/components/upload-documento/upl
   `,
 })
 export class EtapaDocumentos {
+  /** Já tentou avançar: destaca o que falta. */
+  tentou = input(false);
   foto = model<File | null>(null);
   documentosCrianca = model<File[]>([]);
   documentosResponsavel = model<File[]>([]);

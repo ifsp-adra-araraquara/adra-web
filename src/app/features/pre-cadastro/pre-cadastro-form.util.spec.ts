@@ -9,6 +9,7 @@ import {
   ESTADO_CIVIL_OUTRO,
   FormularioPreCadastro,
   aplicarCondicionais,
+  anexosFaltando,
   criarFormularioPreCadastro,
   paraPayload,
 } from './pre-cadastro-form.util';
@@ -140,5 +141,22 @@ describe('pre-cadastro-form.util', () => {
     const crianca = secoes.find((s) => s.chave === 'crianca')!;
     expect(crianca.itens).toContainEqual({ rotulo: 'CPF', valor: '565.322.282-81' });
     expect(secoes.find((s) => s.chave === 'renda')!.itens[0].valor).toBe('Não recebe');
+  });
+
+  it('foto e documentos são obrigatórios: lista o que falta na ordem da tela', () => {
+    const arquivo = new File(['x'], 'doc.png', { type: 'image/png' });
+    const vazio = { foto: null, documentosCrianca: [], documentosResponsavel: [], comprovanteEndereco: [] };
+    expect(anexosFaltando(vazio)).toEqual([
+      'comprovante de endereço',
+      'foto do atendido',
+      'documento do atendido',
+      'documento do responsável',
+    ]);
+    expect(anexosFaltando({ ...vazio, comprovanteEndereco: [arquivo], foto: arquivo, documentosCrianca: [arquivo] })).toEqual([
+      'documento do responsável',
+    ]);
+    expect(
+      anexosFaltando({ foto: arquivo, documentosCrianca: [arquivo], documentosResponsavel: [arquivo], comprovanteEndereco: [arquivo] }),
+    ).toEqual([]);
   });
 });
