@@ -9,39 +9,54 @@
     </div>
   </header>
 
+  <!-- Período: uma semana por vez (padrão: esta semana) ou todas -->
+  <div class="periodo">
+    <div class="modo-periodo" role="group" aria-label="Período">
+      <button
+        type="button"
+        class="btn btn-sm"
+        [class.btn-primary]="modo() === 'semana'"
+        [class.btn-ghost]="modo() !== 'semana'"
+        [attr.aria-pressed]="modo() === 'semana'"
+        (click)="mudarModo('semana')"
+      >
+        <app-icon name="calendar" [size]="16" /> Por semana
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm"
+        [class.btn-primary]="modo() === 'todas'"
+        [class.btn-ghost]="modo() !== 'todas'"
+        [attr.aria-pressed]="modo() === 'todas'"
+        (click)="mudarModo('todas')"
+      >
+        <app-icon name="list" [size]="16" /> Todas as semanas
+      </button>
+    </div>
+
+    @if (modo() === 'semana') {
+      <app-navegador-semana [semana]="semana()" (semanaChange)="mudarSemana($event)" />
+    }
+  </div>
+
   <div class="toolbar filtros-semanarios" role="search" aria-label="Filtrar semanários">
     <div class="filtro filtro-busca">
       <app-input
         label="Buscar"
         placeholder="Conteúdo, grupo, oficina ou oficineiro…"
         [ngModel]="busca()"
-        (ngModelChange)="busca.set($event)"
+        (ngModelChange)="mudarBusca($event)"
       />
     </div>
 
     <div class="filtro">
       <span class="filtro-rotulo">Grupo</span>
-      <app-select [options]="grupoOptions()" [ngModel]="grupoId()" (ngModelChange)="grupoId.set($event)" />
+      <app-select [options]="grupoOptions()" [ngModel]="grupoId()" (ngModelChange)="mudarGrupo($event)" />
     </div>
 
     <div class="filtro">
       <span class="filtro-rotulo">Oficina</span>
-      <app-select [options]="oficinaOptions()" [ngModel]="oficinaId()" (ngModelChange)="oficinaId.set($event)" />
-    </div>
-
-    <div class="filtro filtro-data">
-      <app-input label="De" type="date" [max]="ate()" [ngModel]="de()" (ngModelChange)="de.set($event ?? '')" />
-    </div>
-
-    <div class="filtro filtro-data">
-      <app-input
-        label="Até"
-        type="date"
-        [min]="de()"
-        [ngModel]="ate()"
-        [errorMessage]="periodoInvalido() ? 'A data final é anterior à inicial.' : null"
-        (ngModelChange)="ate.set($event ?? '')"
-      />
+      <app-select [options]="oficinaOptions()" [ngModel]="oficinaId()" (ngModelChange)="mudarOficina($event)" />
     </div>
 
     @if (temFiltro()) {
@@ -57,18 +72,34 @@
     <div class="notice notice-error" role="alert">{{ erro() }}</div>
   }
 
-  @if (carregando()) {
+  @if (carregando() && semanarios().length === 0) {
     <p class="muted estado">Carregando…</p>
-  } @else if (semanarios().length === 0 && !erro()) {
-    <p class="muted estado">Nenhum semanário enviado ainda.</p>
-  } @else if (semanarios().length > 0) {
-    <p class="resumo" role="status">{{ resumo() }}</p>
-    @if (filtrados().length > 0) {
-      <div class="card">
-        <app-tabela-semanarios [semanarios]="filtrados()" [podeRemover]="true" (remover)="remover($event)" />
-      </div>
+  } @else if (semanarios().length === 0) {
+    @if (!erro()) {
+      <p class="muted estado">{{ vazio() }}</p>
+    }
+  } @else {
+    <div class="card lista" [class.recarregando]="carregando()">
+      <app-tabela-semanarios [semanarios]="semanarios()" [podeRemover]="true" (remover)="remover($event)" />
+    </div>
+
+    @if (totalPaginas() > 1) {
+      <nav class="paginacao" aria-label="Paginação">
+        <app-button variant="secondary" size="sm" [disabled]="!temAnterior() || carregando()" (click)="paginaAnterior()">
+          <app-icon name="chevron-left" [size]="16" /> <span class="pag-rotulo">Anterior</span>
+        </app-button>
+        <span class="pagina-info">
+          Página {{ pagina() + 1 }} de {{ totalPaginas() }}
+          <span class="pagina-total">· {{ totalElementos() }} semanários</span>
+        </span>
+        <app-button variant="secondary" size="sm" [disabled]="!temProxima() || carregando()" (click)="proximaPagina()">
+          <span class="pag-rotulo">Próxima</span> <app-icon name="chevron-right" [size]="16" />
+        </app-button>
+      </nav>
     } @else {
-      <p class="muted estado">Nenhum semanário encontrado com esses filtros.</p>
+      <p class="resumo" role="status">
+        {{ totalElementos() === 1 ? '1 semanário' : totalElementos() + ' semanários' }}
+      </p>
     }
   }
 </section>

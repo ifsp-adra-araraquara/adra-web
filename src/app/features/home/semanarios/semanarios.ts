@@ -1,147 +1,205 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpErrorResponse } from '@angular/common/http';
-import { SemanarioService } from '../../../core/semanario.service';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import { FiltrosSemanario, SemanarioService } from '../../../core/semanario.service';
 import { SemanarioResponseDTO } from '../../../shared/models/semanario/SemanarioResponseDTO';
+import { OficinaResponseDTO } from '../../../shared/models/oficina/OficinaResponseDTO';
+import { TurmaResponseDTO } from '../../../shared/models/turma/TurmaResponseDTO';
 import { TabelaSemanarios } from '../../../shared/components/tabela-semanarios/tabela-semanarios';
+import { NavegadorSemana } from '../../../shared/components/navegador-semana/navegador-semana';
 import { Select, SelectOption } from '../../../shared/components/select/select';
 import { Input } from '../../../shared/components/input/input';
 import { Button } from '../../../shared/components/button/button';
 import { Icon } from '../../../shared/components/icon/icon';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
+import { segundaDaSemana } from '../../../shared/utils/semana.util';
+import { hojeISO } from '../../../shared/utils/aula.util';
 
-/** Soma dias a uma data ISO ("2026-11-02") sem passar por fuso. */
-function somarDias(iso: string, dias: number): string {
-  const [ano, mes, dia] = iso.split('-').map(Number);
-  const data = new Date(ano, mes - 1, dia + dias);
-  const m = String(data.getMonth() + 1).padStart(2, '0');
-  const d = String(data.getDate()).padStart(2, '0');
-  return `${data.getFullYear()}-${m}-${d}`;
+const TAMANHO_PAGINA = 20;
+const ESPERA_BUSCA_MS = 350;
+
+type ModoPeriodo = 'semana' | 'todas';
+
+function erroOu(e: unknown, padrao: string): string {
+  return e instanceof HttpErrorResponse ? mensagemErro(e, padrao) : padrao;
 }
 
-/** Minúsculo e sem acento, para a busca achar "historia" em "História". */
-function normalizar(texto: string | null | undefined): string {
-  return (texto ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-}
-
-/** Opções únicas (id → nome) dos semanários carregados, em ordem alfabética, com "Todos" no topo. */
-function opcoes(
-  lista: SemanarioResponseDTO[],
-  id: (s: SemanarioResponseDTO) => number,
-  nome: (s: SemanarioResponseDTO) => string,
+/** "Todos" no topo; inativos no fim, marcados (semanários antigos podem ser de grupo/oficina inativa). */
+function opcoes<T>(
+  itens: T[],
+  id: (i: T) => number,
+  nome: (i: T) => string,
+  ativo: (i: T) => boolean,
   rotuloTodos: string,
 ): SelectOption<number | null>[] {
-  const unicos = new Map<number, string>();
-  for (const s of lista) unicos.set(id(s), nome(s));
+  const ordenados = [...itens].sort(
+    (a, b) => Number(ativo(b)) - Number(ativo(a)) || nome(a).localeCompare(nome(b), 'pt-BR'),
+  );
   return [
     { value: null, label: rotuloTodos },
-    ...[...unicos]
-      .sort(([, a], [, b]) => a.localeCompare(b, 'pt-BR'))
-      .map(([value, label]) => ({ value, label })),
+    ...ordenados.map((i) => ({ value: id(i), label: ativo(i) ? nome(i) : `${nome(i)} (inativo)` })),
   ];
 }
 
 /**
- * Semanários de todas as oficinas, para a coordenação — a mesma visão do Oficineiro (que vê só os
- * das oficinas dele), com filtros por busca, grupo, oficina e período. Os filtros rodam no front:
- * a lista inteira vem numa chamada só e o volume (um semanário por grupo por semana) é pequeno.
+ * Semanários de todas as oficinas, para a coordenação: a mesma visão do Oficineiro (que vê só os
+ * das oficinas dele), com navegação por semana, filtros por busca, grupo e oficina e paginação.
+ * Filtros e paginação rodam na API (GET /api/semanarios).
  */
 @Component({
   selector: 'app-semanarios',
-  imports: [FormsModule, TabelaSemanarios, Select, Input, Button, Icon],
+  imports: [FormsModule, TabelaSemanarios, NavegadorSemana, Select, Input, Button, Icon],
   templateUrl: './semanarios.html',
   styleUrl: './semanarios.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Semanarios implements OnInit {
+  private readonly http = inject(HttpClient);
   private readonly semanarioService = inject(SemanarioService);
+  private readonly api = environment.apiUrl;
 
   readonly semanarios = signal<SemanarioResponseDTO[]>([]);
   readonly carregando = signal(true);
   readonly erro = signal<string | null>(null);
 
+  // ---- Período ----
+  readonly modo = signal<ModoPeriodo>('semana');
+  /** Segunda-feira da semana exibida no modo "Por semana". */
+  readonly semana = signal(segundaDaSemana(hojeISO()));
+
   // ---- Filtros ----
   readonly busca = signal('');
   readonly grupoId = signal<number | null>(null);
   readonly oficinaId = signal<number | null>(null);
-  /** Período (datas ISO); entra o semanário cuja semana (seg. a dom.) encosta no intervalo. */
-  readonly de = signal('');
-  readonly ate = signal('');
+  readonly grupoOptions = signal<SelectOption<number | null>[]>([{ value: null, label: 'Todos os grupos' }]);
+  readonly oficinaOptions = signal<SelectOption<number | null>[]>([{ value: null, label: 'Todas as oficinas' }]);
 
-  readonly grupoOptions = computed(() =>
-    opcoes(this.semanarios(), (s) => s.turmaId, (s) => s.nomeTurma, 'Todos os grupos'),
-  );
-  readonly oficinaOptions = computed(() =>
-    opcoes(this.semanarios(), (s) => s.oficinaId, (s) => s.nomeOficina, 'Todas as oficinas'),
-  );
+  // ---- Paginação ----
+  readonly pagina = signal(0);
+  readonly totalPaginas = signal(0);
+  readonly totalElementos = signal(0);
+  readonly temAnterior = computed(() => this.pagina() > 0);
+  readonly temProxima = computed(() => this.pagina() < this.totalPaginas() - 1);
 
-  readonly temFiltro = computed(
-    () => !!this.busca().trim() || this.grupoId() !== null || this.oficinaId() !== null || !!this.de() || !!this.ate(),
-  );
+  readonly temFiltro = computed(() => !!this.busca().trim() || this.grupoId() !== null || this.oficinaId() !== null);
 
-  readonly periodoInvalido = computed(() => !!this.de() && !!this.ate() && this.de() > this.ate());
-
-  readonly filtrados = computed(() => {
-    const termo = normalizar(this.busca().trim());
-    const grupo = this.grupoId();
-    const oficina = this.oficinaId();
-    const de = this.de();
-    const ate = this.ate();
-    if (this.periodoInvalido()) return [];
-
-    return this.semanarios().filter((s) => {
-      if (grupo !== null && s.turmaId !== grupo) return false;
-      if (oficina !== null && s.oficinaId !== oficina) return false;
-      if (ate && s.semanaInicio > ate) return false;
-      if (de && somarDias(s.semanaInicio, 6) < de) return false;
-      if (!termo) return true;
-      return [s.conteudoPrevisto, s.objetivos, s.recursosNecessarios, s.nomeTurma, s.nomeOficina, s.nomeEnviadoPor]
-        .some((campo) => normalizar(campo).includes(termo));
-    });
+  readonly vazio = computed(() => {
+    if (this.temFiltro()) return 'Nenhum semanário encontrado com esses filtros.';
+    return this.modo() === 'semana' ? 'Nenhum semanário enviado nesta semana.' : 'Nenhum semanário enviado ainda.';
   });
 
-  readonly resumo = computed(() => {
-    const total = this.filtrados().length;
-    const texto = total === 1 ? '1 semanário' : `${total} semanários`;
-    return this.temFiltro() ? `${texto} de ${this.semanarios().length}` : texto;
-  });
+  private esperaBusca: ReturnType<typeof setTimeout> | undefined;
+  /** Descarta respostas de buscas antigas que chegam depois da mais nova. */
+  private requisicao = 0;
 
-  ngOnInit(): void {
-    this.carregar();
+  constructor() {
+    inject(DestroyRef).onDestroy(() => clearTimeout(this.esperaBusca));
   }
 
-  async carregar(): Promise<void> {
-    this.carregando.set(true);
-    this.erro.set(null);
-    try {
-      this.semanarios.set(await this.semanarioService.listarTodos());
-    } catch (e) {
-      const padrao = 'Não foi possível carregar os semanários.';
-      this.erro.set(e instanceof HttpErrorResponse ? mensagemErro(e, padrao) : padrao);
-    } finally {
-      this.carregando.set(false);
-    }
+  ngOnInit(): void {
+    this.carregarOpcoes();
+    this.carregar(0);
+  }
+
+  // ---- Período ----
+  mudarModo(modo: ModoPeriodo): void {
+    if (this.modo() === modo) return;
+    this.modo.set(modo);
+    this.carregar(0);
+  }
+
+  mudarSemana(segunda: string): void {
+    this.semana.set(segunda);
+    this.carregar(0);
+  }
+
+  // ---- Filtros ----
+  mudarBusca(valor: string): void {
+    this.busca.set(valor);
+    clearTimeout(this.esperaBusca);
+    this.esperaBusca = setTimeout(() => this.carregar(0), ESPERA_BUSCA_MS);
+  }
+
+  mudarGrupo(id: number | null): void {
+    this.grupoId.set(id);
+    this.carregar(0);
+  }
+
+  mudarOficina(id: number | null): void {
+    this.oficinaId.set(id);
+    this.carregar(0);
   }
 
   limparFiltros(): void {
+    clearTimeout(this.esperaBusca);
     this.busca.set('');
     this.grupoId.set(null);
     this.oficinaId.set(null);
-    this.de.set('');
-    this.ate.set('');
+    this.carregar(0);
+  }
+
+  // ---- Paginação ----
+  paginaAnterior(): void {
+    if (this.temAnterior()) this.carregar(this.pagina() - 1);
+  }
+
+  proximaPagina(): void {
+    if (this.temProxima()) this.carregar(this.pagina() + 1);
   }
 
   async remover(semanario: SemanarioResponseDTO): Promise<void> {
     this.erro.set(null);
     try {
       await this.semanarioService.remover(semanario.semanarioId);
-      this.semanarios.update((lista) => lista.filter((s) => s.semanarioId !== semanario.semanarioId));
-      // Era o último do grupo/oficina filtrado: a opção some do select, então o filtro volta para "Todos".
-      if (!this.semanarios().some((s) => s.turmaId === this.grupoId())) this.grupoId.set(null);
-      if (!this.semanarios().some((s) => s.oficinaId === this.oficinaId())) this.oficinaId.set(null);
+      // Era o último da página: volta uma.
+      const pagina = this.semanarios().length === 1 && this.pagina() > 0 ? this.pagina() - 1 : this.pagina();
+      await this.carregar(pagina);
     } catch (e) {
-      const padrao = 'Não foi possível remover o semanário.';
-      this.erro.set(e instanceof HttpErrorResponse ? mensagemErro(e, padrao) : padrao);
+      this.erro.set(erroOu(e, 'Não foi possível remover o semanário.'));
+    }
+  }
+
+  async carregar(pagina: number): Promise<void> {
+    const requisicao = ++this.requisicao;
+    const filtros: FiltrosSemanario = {
+      semana: this.modo() === 'semana' ? this.semana() : null,
+      turmaId: this.grupoId(),
+      oficinaId: this.oficinaId(),
+      busca: this.busca(),
+      pagina,
+      tamanho: TAMANHO_PAGINA,
+    };
+    this.carregando.set(true);
+    this.erro.set(null);
+    try {
+      const resposta = await this.semanarioService.listar(filtros);
+      if (requisicao !== this.requisicao) return;
+      this.semanarios.set(resposta.conteudo);
+      this.pagina.set(resposta.pagina);
+      this.totalPaginas.set(resposta.totalPaginas);
+      this.totalElementos.set(resposta.totalElementos);
+    } catch (e) {
+      if (requisicao !== this.requisicao) return;
+      this.semanarios.set([]);
+      this.erro.set(erroOu(e, 'Não foi possível carregar os semanários.'));
+    } finally {
+      if (requisicao === this.requisicao) this.carregando.set(false);
+    }
+  }
+
+  /** Grupos e oficinas para os filtros (inclui inativos: semanários antigos podem ser deles). */
+  private async carregarOpcoes(): Promise<void> {
+    try {
+      const [turmas, oficinas] = await Promise.all([
+        firstValueFrom(this.http.get<TurmaResponseDTO[]>(`${this.api}/api/turmas`)),
+        firstValueFrom(this.http.get<OficinaResponseDTO[]>(`${this.api}/api/oficinas`)),
+      ]);
+      this.grupoOptions.set(opcoes(turmas, (t) => t.turmaId, (t) => t.nomeTurma, (t) => t.ativo, 'Todos os grupos'));
+      this.oficinaOptions.set(opcoes(oficinas, (o) => o.oficinaId, (o) => o.nomeOficina, (o) => o.ativo, 'Todas as oficinas'));
+    } catch {
+      // Sem as opções, a busca e a navegação por semana continuam funcionando.
     }
   }
 }

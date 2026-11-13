@@ -1,9 +1,20 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { SemanarioRequestDTO } from '../shared/models/semanario/SemanarioRequestDTO';
 import { SemanarioResponseDTO } from '../shared/models/semanario/SemanarioResponseDTO';
+import { PaginaResponse } from '../shared/models/PaginaResponse';
+
+export interface FiltrosSemanario {
+  /** Segunda-feira da semana; null = todas as semanas. */
+  semana: string | null;
+  turmaId: number | null;
+  oficinaId: number | null;
+  busca: string;
+  pagina: number;
+  tamanho: number;
+}
 
 @Injectable({ providedIn: 'root' })
 export class SemanarioService {
@@ -19,9 +30,14 @@ export class SemanarioService {
     return firstValueFrom(this.http.delete<void>(`${this.api}/${semanarioId}`));
   }
 
-  /** Todos os semanários, de todas as oficinas (só a coordenação). */
-  listarTodos(): Promise<SemanarioResponseDTO[]> {
-    return firstValueFrom(this.http.get<SemanarioResponseDTO[]>(this.api));
+  /** Semanários de todas as oficinas, paginados e filtrados no back (só a coordenação). */
+  listar(filtros: FiltrosSemanario): Promise<PaginaResponse<SemanarioResponseDTO>> {
+    let params = new HttpParams().set('pagina', filtros.pagina).set('tamanho', filtros.tamanho);
+    if (filtros.semana) params = params.set('semana', filtros.semana);
+    if (filtros.turmaId !== null) params = params.set('turmaId', filtros.turmaId);
+    if (filtros.oficinaId !== null) params = params.set('oficinaId', filtros.oficinaId);
+    if (filtros.busca.trim()) params = params.set('busca', filtros.busca.trim());
+    return firstValueFrom(this.http.get<PaginaResponse<SemanarioResponseDTO>>(this.api, { params }));
   }
 
   listarMeus(): Promise<SemanarioResponseDTO[]> {
