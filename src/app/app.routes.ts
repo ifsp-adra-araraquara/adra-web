@@ -100,7 +100,6 @@ export const routes: Routes = [
         title: 'Notificações',
         loadComponent: () =>
           import('./features/home/notificacoes/notificacoes').then((m) => m.Notificacoes),
-        canActivate: [administradorGuard],
       },
       {
         path: 'assistidos',

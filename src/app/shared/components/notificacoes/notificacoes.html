@@ -16,13 +16,29 @@
 @if (aberto()) {
   <section class="painel" role="dialog" aria-labelledby="notificacoes-titulo">
     <header class="painel-topo">
-      <h2 id="notificacoes-titulo">Notificações <small>· {{ total() }} para resolver</small></h2>
+      <h2 id="notificacoes-titulo">Notificações <small>· {{ pendencias() }} para resolver</small></h2>
       <button type="button" class="fechar" aria-label="Fechar notificações" (click)="fechar()">
         <app-icon name="x" [size]="18" />
       </button>
     </header>
 
     <div class="lista">
+      @if (novas().length > 0) {
+        <section class="grupo" style="--cor-grupo: var(--color-brand)" aria-label="Novas">
+          <h3 class="grupo-titulo"><span class="bolinha" aria-hidden="true"></span>Novas · {{ naoLidas() }}</h3>
+          <ul role="list">
+            @for (n of novas(); track n.notificacaoId) {
+              <li>
+                <button type="button" class="aviso" (click)="abrirNotificacao(n)">
+                  <span class="aviso-texto"><b>{{ n.titulo }}</b>@if (n.mensagem) {<small>{{ n.mensagem }}</small>}</span>
+                  <span class="aviso-acao">Ver<span class="seta" aria-hidden="true">›</span></span>
+                </button>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
       @if (grupos().length === 0) {
         <p class="vazio"><app-icon name="check" [size]="16" /> Nenhuma pendência. Tudo em dia.</p>
       }
@@ -42,5 +58,9 @@
         </section>
       }
     </div>
+
+    <footer class="painel-rodape">
+      <button type="button" class="ver-todas" (click)="verTodas()">Ver todas as notificações</button>
+    </footer>
   </section>
 }

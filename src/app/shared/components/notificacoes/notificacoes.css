@@ -82,3 +82,11 @@ ul { list-style: none; margin: 0; padding: 0; }
   .painel { animation: none; }
   .aviso, .aviso::before, .seta { transition: none; }
 }
+
+.painel-rodape { border-top: 1px solid var(--gray-100); padding: 8px 10px; }
+.ver-todas {
+  width: 100%; min-height: 40px; border: none; border-radius: 10px; background: transparent;
+  font-size: 14px; font-weight: 600; color: var(--color-adra-green-600); transition: background .16s;
+}
+.ver-todas:hover { background: var(--gray-50); }
+.ver-todas:focus-visible { outline: 3px solid var(--color-brand-ring); outline-offset: -3px; }
