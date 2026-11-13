@@ -1,1 +1,99 @@
-<p>notificacoes works!</p>
+<section class="page" aria-labelledby="notificacoes-pagina-titulo">
+  <header class="page-header">
+    <div class="page-header-texto">
+      <p class="eyebrow">Conta</p>
+      <h1 id="notificacoes-pagina-titulo">Notificações</h1>
+      <p class="page-intro">
+        Os avisos que o sistema mandou para você, os mais novos primeiro. As pendências do dia continuam no sino.
+      </p>
+    </div>
+    @if (haNaoLidas()) {
+      <div class="page-header-acoes">
+        <app-button variant="secondary" size="sm" [loading]="marcando()" (click)="marcarTodas()">
+          Marcar todas como lidas
+        </app-button>
+      </div>
+    }
+  </header>
+
+  @if (erro()) {
+    <div class="notice notice-error" role="alert">{{ erro() }}</div>
+  }
+
+  @if (ehAdministrador()) {
+    <section class="card card-pad bloco" aria-labelledby="envio-titulo">
+      <h2 id="envio-titulo" class="form-sec-title">Resumo diário por e-mail</h2>
+      <p class="dica">
+        Uma vez por dia, cada pessoa recebe um e-mail só, com os avisos novos dela. Sem aviso novo, não sai e-mail.
+      </p>
+      @if (envio(); as e) {
+        <ul class="numeros" role="list">
+          <li>
+            <span class="estado" [class.ligado]="e.emailLigado">{{ e.emailLigado ? 'Ligado' : 'Desligado' }}</span>
+            @if (!e.emailLigado) {
+              <span class="sub"> — nada sai por e-mail; o sino continua funcionando.</span>
+            }
+          </li>
+          <li><b>{{ e.enviadosHoje }}</b> de {{ e.limiteDiario }} e-mails enviados hoje</li>
+          <li>
+            <b>{{ e.pendentes }}</b> {{ e.pendentes === 1 ? 'aviso esperando' : 'avisos esperando' }} o próximo resumo
+          </li>
+        </ul>
+      }
+      <div class="acoes">
+        <app-button variant="secondary" size="sm" [loading]="processando()" (click)="processar()">
+          Processar agora
+        </app-button>
+        @if (resultado()) {
+          <span class="sub" role="status">{{ resultado() }}</span>
+        }
+      </div>
+    </section>
+  }
+
+  <section class="card lista-card" aria-label="Suas notificações">
+    @if (carregando()) {
+      <p class="muted vazio" role="status">Carregando…</p>
+    } @else if (notificacoes().length === 0) {
+      <p class="muted vazio"><app-icon name="check" [size]="16" /> Nenhuma notificação por aqui.</p>
+    } @else {
+      <ul class="lista" role="list">
+        @for (n of notificacoes(); track n.notificacaoId) {
+          <li class="item" [class.nao-lida]="!n.lida">
+            <button type="button" class="item-corpo" (click)="abrir(n)">
+              <span class="ponto" aria-hidden="true"></span>
+              <span class="texto">
+                <b>{{ n.titulo }}</b>
+                @if (n.mensagem) {
+                  <small>{{ n.mensagem }}</small>
+                }
+                <time [attr.datetime]="n.criadoEm">{{ n.criadoEm | date: "dd/MM/yyyy, HH:mm" }}</time>
+                @if (!n.lida) {
+                  <span class="sr-only">Não lida.</span>
+                }
+              </span>
+            </button>
+            @if (!n.lida) {
+              <button
+                type="button"
+                class="btn-icon"
+                aria-label="Marcar como lida"
+                title="Marcar como lida"
+                (click)="marcarLida(n)"
+              >
+                <app-icon name="check" />
+              </button>
+            }
+          </li>
+        }
+      </ul>
+      @if (temMais()) {
+        <div class="mais">
+          <app-button variant="secondary" size="sm" [loading]="carregandoMais()" (click)="carregarMais()">
+            Carregar mais
+          </app-button>
+        </div>
+      }
+    }
+  </section>
+</section>

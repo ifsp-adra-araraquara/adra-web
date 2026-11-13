@@ -5,18 +5,6 @@
     <p class="page-intro">Consulte seus grupos e envie o semanário de cada semana.</p>
   </header>
 
-  <nav class="tabs" role="tablist" aria-label="Módulos do oficineiro">
-    @for (item of [
-    { id: 'turmas', label: 'Grupos' },
-    { id: 'calendario', label: 'Calendário' },
-    { id: 'semanario', label: 'Semanário' }
-    ]; track item.id) {
-    <button type="button" class="tab" [class.active]="aba() === item.id" role="tab" [attr.aria-selected]="aba() === item.id" (click)="selecionarAba($any(item.id))">
-      {{ item.label }}
-    </button>
-    }
-  </nav>
-
   @if (carregando()) {
   <p class="feedback" role="status">Carregando...</p>
   } @else if (erro()) {
@@ -118,18 +106,16 @@
             (ngModelChange)="escolherGrupoSemanario($event)"
           />
         </label>
-        <label>Semana (segunda a domingo)
-          <app-select
-            [options]="semanasOptions()"
-            [ngModel]="semanaSemanario()"
-            (ngModelChange)="escolherSemanaSemanario($event)"
+        <div class="campo-semana">
+          <span class="campo-rotulo" id="semana-semanario-rotulo">Semana (segunda a domingo)</span>
+          <app-calendario-semanas
+            [selecionada]="semanaSemanario()"
+            (selecionadaChange)="escolherSemanaSemanario($event)"
+            [enviadas]="segundasEnviadas()"
+            [desabilitado]="!grupoSemanario()"
           />
-          @if (semanasJaEnviadas().length > 0) {
-          <span class="hint-material">Já enviado para este grupo: {{ semanasJaEnviadas().join(', ') }}</span>
-          } @else {
-          <span class="hint-material">Um semanário por grupo e semana.</span>
-          }
-        </label>
+          <span class="hint-material">Semana escolhida: {{ rotuloSemanaEscolhida() }}. Um semanário por grupo e semana.</span>
+        </div>
         @if (semanarioExistente()) {
         <p class="feedback aviso-semanario" role="status">Este grupo já tem semanário nesta semana. Ao enviar, ele será atualizado com o que está abaixo.</p>
         }

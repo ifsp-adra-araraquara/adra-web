@@ -4,12 +4,17 @@ import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { AuthService } from '../../../core/auth.service';
 import { AvisoService } from '../../../core/aviso.service';
+import { NotificacaoService } from '../../../core/notificacao.service';
 import { Role } from '../../enum/role.enum';
 import { AvisoDTO } from '../../models/aviso/Aviso';
+import { NotificacaoDTO } from '../../models/notificacao/Notificacao';
 import { acaoDoAviso, agruparAvisos, rotaDoAviso } from '../../utils/aviso.util';
 import { Icon } from '../icon/icon';
 
-/** FT-18: sino do cabeçalho com o painel suspenso de notificações (avisos do perfil logado). */
+/**
+ * Sino do cabeçalho. Em cima, as notificações novas (FT-14, guardadas: somem quando lidas);
+ * embaixo, os avisos do perfil (FT-18, calculados: somem quando resolvidos).
+ */
 @Component({
   selector: 'app-notificacoes',
   imports: [Icon],
@@ -23,6 +28,7 @@ import { Icon } from '../icon/icon';
 })
 export class Notificacoes {
   private readonly avisoService = inject(AvisoService);
+  private readonly notificacaoService = inject(NotificacaoService);
   private readonly auth = inject(AuthService);
   /** Educador Social só usa Chamada e Calendário. */
   private readonly soChamada = computed(() => this.auth.currentProfile() === Role.EDUCADOR);
@@ -31,21 +37,36 @@ export class Notificacoes {
 
   readonly aberto = signal(false);
   readonly grupos = computed(() => agruparAvisos(this.avisoService.avisos()));
-  readonly total = computed(() => this.avisoService.avisos().length);
-  readonly rotulo = computed(() => `Notificações: ${this.total()} para resolver`);
+  readonly pendencias = computed(() => this.avisoService.avisos().length);
+  readonly novas = this.notificacaoService.novas;
+  readonly naoLidas = this.notificacaoService.naoLidas;
+  readonly total = computed(() => this.pendencias() + this.naoLidas());
+  readonly rotulo = computed(() => {
+    const partes = [`${this.pendencias()} para resolver`];
+    if (this.naoLidas() > 0) partes.push(`${this.naoLidas()} ${this.naoLidas() === 1 ? 'nova' : 'novas'}`);
+    return `Notificações: ${partes.join(', ')}`;
+  });
   acao(aviso: AvisoDTO): string {
     return acaoDoAviso(aviso, this.soChamada());
   }
 
   constructor() {
-    this.avisoService.carregar();
+    this.recarregar();
     this.router.events
       .pipe(filter((e) => e instanceof NavigationEnd), takeUntilDestroyed())
-      .subscribe(() => this.avisoService.carregar());
+      .subscribe(() => this.recarregar());
+  }
+
+  private recarregar(): void {
+    this.avisoService.carregar();
+    this.notificacaoService.contar();
   }
 
   alternar(): void {
-    if (!this.aberto()) this.avisoService.carregar();
+    if (!this.aberto()) {
+      this.avisoService.carregar();
+      this.notificacaoService.carregarNovas();
+    }
     this.aberto.update((v) => !v);
   }
 
@@ -61,5 +82,16 @@ export class Notificacoes {
     this.fechar();
     const rota = rotaDoAviso(aviso, this.soChamada());
     this.router.navigate(rota.comandos, { queryParams: rota.queryParams });
+  }
+
+  abrirNotificacao(notificacao: NotificacaoDTO): void {
+    this.fechar();
+    this.notificacaoService.marcarComoLida(notificacao).catch(() => undefined);
+    this.router.navigateByUrl(notificacao.link ?? '/notificacoes');
+  }
+
+  verTodas(): void {
+    this.fechar();
+    this.router.navigateByUrl('/notificacoes');
   }
 }

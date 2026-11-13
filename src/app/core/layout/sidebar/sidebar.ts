@@ -29,6 +29,16 @@ const MODULOS_OCULTOS = new Set([
   'MATERIAIS',
 ]);
 
+/**
+ * Menu do Oficineiro: a área dele é uma rota só (/oficineiro) com abas, então os itens ficam aqui e
+ * não nos módulos do banco. `rota` é o valor de `?aba=` (ver `AuthService.setModule`/`currentModule`).
+ */
+const MENU_OFICINEIRO: { codigo: AppModule; rota: AppModule; nomeExibicao: string }[] = [
+  { codigo: AppModule.TURMAS, rota: AppModule.TURMAS, nomeExibicao: 'Grupos' },
+  { codigo: AppModule.DASHBOARD, rota: AppModule.DASHBOARD, nomeExibicao: 'Calendário' },
+  { codigo: AppModule.SEMANARIOS, rota: AppModule.SEMANARIOS, nomeExibicao: 'Semanário' },
+];
+
 @Component({
   selector: 'app-sidebar',
   imports: [Avatar, Icon, CommonModule, BrandLogo, TooltipDirective],
@@ -52,6 +62,7 @@ export class Sidebar {
     RESPONSAVEIS: 'Gestão',
     TURMAS: 'Gestão',
     OFICINAS: 'Gestão',
+    SEMANARIOS: 'Gestão',
     CHAMADA: 'Pedagógico',
     DISCIPLINAR: 'Pedagógico',
     MATERIAIS: 'Pedagógico',
@@ -77,6 +88,7 @@ export class Sidebar {
     PRE_CADASTRO: 'user-plus',
     RESPONSAVEIS: 'user-check',
     OFICINAS: 'layers',
+    SEMANARIOS: 'file-text',
     TURMAS: 'grid',
     CHAMADA: 'check-square',
     DISCIPLINAR: 'flag',
@@ -104,16 +116,21 @@ export class Sidebar {
 
   navAgrupado = computed(() => {
     const perfil = this.auth.currentProfile();
+    if (perfil === Role.OFICINEIRO) return [{ secao: 'Minhas atividades', itens: MENU_OFICINEIRO }];
+
     const modulosDoUsuario = this.auth.modulos().filter(m => {
       if (MODULOS_OCULTOS.has(m.codigo)) return false;
-      // COMUNICADOS só existe de fato dentro da área do Oficineiro por enquanto.
-      if (m.codigo === 'COMUNICADOS' && perfil !== Role.OFICINEIRO) return false;
+      // COMUNICADOS ainda não tem tela de verdade (a aba do Oficineiro foi retirada).
+      if (m.codigo === 'COMUNICADOS') return false;
+      // Oficinas é só da Coordenação (a Assistente Social continua vendo as oficinas de cada grupo em "Grupos").
+      // Semanários (de todas as oficinas) também: o Oficineiro vê os dele na própria área.
+      if ((m.codigo === 'OFICINAS' || m.codigo === 'SEMANARIOS') && perfil !== Role.COORD) return false;
       return true;
     });
 
     const grupos: { secao: string; itens: { codigo: AppModule; rota: AppModule; nomeExibicao: string }[] }[] = [];
 
-    // Educador Social só tem Chamada e Calendário: os dois juntos em "Pedagógico", Chamada primeiro.
+    // Educador Social tem Chamada, Calendário e Disciplinar: tudo em "Pedagógico", nessa ordem.
     const educador = perfil === Role.EDUCADOR;
     const secaoDe = (codigo: string) =>
       educador && codigo === 'DASHBOARD' ? 'Pedagógico' : this.secoesPorModulo[codigo];

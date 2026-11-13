@@ -100,7 +100,6 @@ export const routes: Routes = [
         title: 'Notificações',
         loadComponent: () =>
           import('./features/home/notificacoes/notificacoes').then((m) => m.Notificacoes),
-        canActivate: [administradorGuard],
       },
       {
         path: 'assistidos',
@@ -128,7 +127,14 @@ export const routes: Routes = [
         path: 'oficinas',
         title: 'Oficinas',
         loadComponent: () => import('./features/home/oficinas/oficinas').then((m) => m.Oficinas),
-        data: { roles: [Role.COORD, Role.ASSISTENTE] },
+        data: { roles: [Role.COORD] },
+        canActivate: [roleGuard],
+      },
+      {
+        path: 'semanarios',
+        title: 'Semanários',
+        loadComponent: () => import('./features/home/semanarios/semanarios').then((m) => m.Semanarios),
+        data: { roles: [Role.COORD] },
         canActivate: [roleGuard],
       },
       {
@@ -196,7 +202,7 @@ export const routes: Routes = [
         path: 'disciplinar',
         title: 'Disciplinar',
         loadComponent: () => import('./features/home/disciplinar/disciplinar').then((m) => m.Disciplinar),
-        data: { roles: [Role.COORD, Role.ASSISTENTE] },
+        data: { roles: [Role.COORD, Role.ASSISTENTE, Role.EDUCADOR] },
         canActivate: [roleGuard],
       },
       {
@@ -206,7 +212,7 @@ export const routes: Routes = [
           import('./features/home/disciplinar/documento-disciplinar/documento-disciplinar').then(
             (m) => m.DocumentoDisciplinar,
           ),
-        data: { roles: [Role.COORD, Role.ASSISTENTE] },
+        data: { roles: [Role.COORD, Role.ASSISTENTE, Role.EDUCADOR] },
         canActivate: [roleGuard],
       },
       {

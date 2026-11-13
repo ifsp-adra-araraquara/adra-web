@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { OficineiroTurmaDTO } from '../../../shared/models/oficineiro/OficineiroTurmaDTO';
@@ -11,7 +11,8 @@ import { SemanarioService } from '../../../core/semanario.service';
 import { SemanarioResponseDTO } from '../../../shared/models/semanario/SemanarioResponseDTO';
 import { TabelaSemanarios } from '../../../shared/components/tabela-semanarios/tabela-semanarios';
 import { OficinaResponseDTO } from '../../../shared/models/oficina/OficinaResponseDTO';
-import { rotuloSemana, segundaDaSemana, semanasAoRedor } from '../../../shared/utils/semana.util';
+import { rotuloSemana, segundaDaSemana } from '../../../shared/utils/semana.util';
+import { CalendarioSemanas } from '../../../shared/components/calendario-semanas/calendario-semanas';
 import { CategoriaArquivo } from '../../../shared/enum/CategoriaArquivo';
 import { EntidadeArquivo } from '../../../shared/enum/EntidadeArquivo';
 import { PaginaResponse } from '../../../shared/models/PaginaResponse';
@@ -28,9 +29,21 @@ import { mensagemErro } from '../../../shared/utils/erro-http.util';
 
 type AbaOficineiro = 'turmas' | 'calendario' | 'semanario';
 
+/**
+ * `?aba=` → aba da tela. O menu lateral manda o código do módulo (turmas, dashboard, semanarios);
+ * os nomes antigos (calendario, semanario) continuam valendo para links já salvos.
+ */
+const ABA_POR_PARAMETRO: Record<string, AbaOficineiro> = {
+  turmas: 'turmas',
+  dashboard: 'calendario',
+  calendario: 'calendario',
+  semanarios: 'semanario',
+  semanario: 'semanario',
+};
+
 @Component({
   selector: 'app-oficineiro',
-  imports: [TooltipDirective, Icon, FormsModule, Select, Button, Modal, CalendarioAulas, TabelaSemanarios],
+  imports: [TooltipDirective, Icon, FormsModule, Select, Button, Modal, CalendarioAulas, TabelaSemanarios, CalendarioSemanas],
   templateUrl: './oficineiro.html',
   styleUrl: './oficineiro.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,7 +56,6 @@ export class Oficineiro implements OnInit {
 
   private readonly http = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
   private readonly arquivoService = inject(ArquivoService);
   private readonly semanarioService = inject(SemanarioService);
@@ -101,18 +113,9 @@ export class Oficineiro implements OnInit {
   readonly semanarioExistente = computed(
     () => this.semanariosDoGrupo().find((s) => s.semanaInicio === this.semanaSemanario()) ?? null,
   );
-  readonly semanasOptions = computed<SelectOption<string>[]>(() => {
-    const atual = segundaDaSemana(hojeISO());
-    const enviadas = new Set(this.semanariosDoGrupo().map((s) => s.semanaInicio));
-    return semanasAoRedor(hojeISO(), 8, 4).map((segunda) => ({
-      value: segunda,
-      label:
-        rotuloSemana(segunda) +
-        (segunda === atual ? ' · esta semana' : '') +
-        (enviadas.has(segunda) ? ' · já enviado' : ''),
-    }));
-  });
-  readonly semanasJaEnviadas = computed(() => this.semanariosDoGrupo().map((s) => rotuloSemana(s.semanaInicio)));
+  /** Segundas-feiras com semanário do grupo escolhido: ficam verdes no calendário do modal. */
+  readonly segundasEnviadas = computed(() => this.semanariosDoGrupo().map((s) => s.semanaInicio));
+  readonly rotuloSemanaEscolhida = computed(() => rotuloSemana(this.semanaSemanario()));
 
   readonly podeEnviarSemanario = computed(
     () => !!this.grupoSemanario() && !!this.semanaSemanario() && !!this.conteudoPrevisto().trim() && !this.enviandoSemanario(),
@@ -120,22 +123,12 @@ export class Oficineiro implements OnInit {
 
   ngOnInit(): void {
     this.route.queryParamMap.subscribe((params) => {
-      const aba = params.get('aba');
-      if (this.ehAba(aba)) {
+      const aba = ABA_POR_PARAMETRO[params.get('aba') ?? ''];
+      if (aba) {
         this.aba.set(aba);
       }
       this.carregarAba(this.aba());
     });
-  }
-
-  selecionarAba(aba: AbaOficineiro): void {
-    this.aba.set(aba);
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { aba },
-      queryParamsHandling: 'merge',
-    });
-    this.carregarAba(aba);
   }
 
   abrirTurma(turma: OficineiroTurmaDTO): void {
@@ -324,14 +317,6 @@ export class Oficineiro implements OnInit {
 
   private usuarioLogado() {
     return this.auth.currentUserResponse();
-  }
-
-  private ehAba(valor: string | null): valor is AbaOficineiro {
-    return (
-      valor === 'turmas' ||
-      valor === 'calendario' ||
-      valor === 'semanario'
-    );
   }
 
 }

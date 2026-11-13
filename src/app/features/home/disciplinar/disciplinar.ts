@@ -245,7 +245,10 @@ export class Disciplinar implements OnInit {
   // ================= Ações do registro =================
 
   acoesRegistro(r: RegistroDisciplinarDTO): ActionMenuItem[] {
-    const itens: ActionMenuItem[] = [{ id: 'ficha', label: 'Ver ficha do atendido', icon: 'user' }];
+    // O Educador Social não abre a ficha do atendido (a tela Atendidos não é do perfil dele).
+    const itens: ActionMenuItem[] = this.auth.currentProfile() === Role.EDUCADOR
+      ? []
+      : [{ id: 'ficha', label: 'Ver ficha do atendido', icon: 'user' }];
     if (temDocumento(r)) itens.push({ id: 'documento', label: 'Imprimir documento', icon: 'file-text' });
     if (r.arquivado || !this.ehCoordenador()) return itens;
 

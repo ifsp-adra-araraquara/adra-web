@@ -158,8 +158,9 @@ export class RegistroDisciplinarModal {
 
   readonly registrados = computed(() => (this.resultado() ?? []).map((c) => c.registro));
   readonly comDocumento = computed(() => this.registrados().filter((r) => r.documentoStatus !== null));
+  // Só a coordenação decide a recomendação (advertência em diante); o Educador só vê o aviso na prévia.
   readonly recomendacoes = computed(() =>
-    (this.resultado() ?? []).flatMap((c) => (c.recomendacao ? [c.recomendacao] : [])),
+    !this.ehCoordenador() ? [] : (this.resultado() ?? []).flatMap((c) => (c.recomendacao ? [c.recomendacao] : [])),
   );
   readonly confirmacao = computed(() => {
     const registros = this.registrados();

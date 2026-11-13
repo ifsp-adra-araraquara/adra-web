@@ -1,0 +1,43 @@
+:host { display: block; width: 100%; }
+
+.eyebrow { margin: 0 0 6px; color: var(--color-adra-green-400); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+
+.bloco { margin-bottom: 16px; }
+.dica { margin: 0 0 10px; font-size: 13px; color: var(--gray-600); }
+.numeros { margin: 0 0 14px; padding-left: 18px; font-size: 14px; line-height: 1.7; color: var(--gray-800); }
+.sub { font-size: 13px; color: var(--gray-600); }
+.acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+
+.estado { font-weight: 700; color: var(--coral-600); }
+.estado.ligado { color: var(--color-adra-green-600); }
+
+.lista-card { overflow: hidden; }
+.vazio { display: flex; align-items: center; gap: 8px; margin: 0; padding: 20px; }
+
+.lista { list-style: none; margin: 0; padding: 0; }
+.item { display: flex; align-items: center; gap: 8px; padding-right: 12px; border-bottom: 1px solid var(--gray-100); }
+.item:last-child { border-bottom: none; }
+.item.nao-lida { background: color-mix(in srgb, var(--color-brand) 5%, #fff); }
+
+.item-corpo {
+  flex: 1; min-width: 0; display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 8px 14px 20px; border: none; background: transparent; text-align: left;
+}
+.item-corpo:hover { background: var(--gray-50); }
+.item-corpo:focus-visible { outline: 3px solid var(--color-brand-ring); outline-offset: -3px; }
+
+.ponto { flex: none; width: 8px; height: 8px; margin-top: 7px; border-radius: 50%; background: transparent; }
+.nao-lida .ponto { background: var(--color-brand); }
+
+.texto { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.texto b { font-size: 15px; font-weight: 600; line-height: 1.35; color: var(--gray-800); }
+.nao-lida .texto b { font-weight: 700; }
+.texto small { font-size: 13.5px; color: var(--gray-600); }
+.texto time { font-size: 12.5px; color: var(--gray-600); }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.mais { display: flex; justify-content: center; padding: 14px; border-top: 1px solid var(--gray-100); }
