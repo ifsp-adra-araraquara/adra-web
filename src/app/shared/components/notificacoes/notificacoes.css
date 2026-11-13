@@ -23,6 +23,14 @@
   animation: aparecer .16s var(--ease, ease-out);
 }
 @keyframes aparecer { from { opacity: 0; transform: translateY(-6px); } }
+/* Celular: o sino não fica na borda da tela (tem o "?" ao lado), então o painel preso a ele
+   vazava pela esquerda. Aqui ele ocupa a largura da tela, com a margem padrão de 16px. */
+@media (max-width: 719px) {
+  .painel {
+    position: fixed; top: calc(var(--topbar-h, 56px) + 8px); left: 16px; right: 16px; width: auto;
+    max-height: calc(100dvh - var(--topbar-h, 56px) - 24px);
+  }
+}
 
 .painel-topo {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;

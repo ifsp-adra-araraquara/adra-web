@@ -35,4 +35,17 @@ describe('aviso.util', () => {
     expect(acaoDoAviso(semanario)).toBe('Ver oficinas');
     expect(agruparAvisos([semanario]).map((g) => g.titulo)).toEqual(['Semanário']);
   });
+
+  it('pedido de desligamento leva aos pedidos em Atendidos', () => {
+    const pedido: AvisoDTO = {
+      tipo: 'DESLIGAMENTO_SOLICITADO',
+      titulo: '1 pedido(s) de desligamento aguardando',
+      detalhe: 'Solicitados pela Assistente Social',
+      assistidoId: null,
+      turmaId: null,
+      data: null,
+    };
+    expect(rotaDoAviso(pedido)).toEqual({ comandos: ['/assistidos'], queryParams: { desligamentos: 1 } });
+    expect(acaoDoAviso(pedido)).toBe('Analisar');
+  });
 });

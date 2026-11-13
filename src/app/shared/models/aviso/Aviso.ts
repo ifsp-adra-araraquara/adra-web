@@ -11,7 +11,8 @@ export type TipoAviso =
   | 'FALTAS_SEGUIDAS'
   | 'PRE_CADASTRO_PENDENTE'
   | 'CADASTRO_SEM_NASCIMENTO'
-  | 'SEMANARIO_PENDENTE';
+  | 'SEMANARIO_PENDENTE'
+  | 'DESLIGAMENTO_SOLICITADO';
 
 /** GET /api/avisos — `assistidoId`, `turmaId` e `data` apontam onde o aviso se resolve. */
 export interface AvisoDTO {

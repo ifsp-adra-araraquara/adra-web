@@ -29,14 +29,17 @@ const MODULOS_OCULTOS = new Set([
   'MATERIAIS',
 ]);
 
+type ItemMenu = { codigo: AppModule; rota: AppModule; nomeExibicao: string };
+
 /**
  * Menu do Oficineiro: a área dele é uma rota só (/oficineiro) com abas, então os itens ficam aqui e
  * não nos módulos do banco. `rota` é o valor de `?aba=` (ver `AuthService.setModule`/`currentModule`).
+ * Mesmas seções dos outros perfis, começando pelo Calendário.
  */
-const MENU_OFICINEIRO: { codigo: AppModule; rota: AppModule; nomeExibicao: string }[] = [
-  { codigo: AppModule.TURMAS, rota: AppModule.TURMAS, nomeExibicao: 'Grupos' },
-  { codigo: AppModule.DASHBOARD, rota: AppModule.DASHBOARD, nomeExibicao: 'Calendário' },
-  { codigo: AppModule.SEMANARIOS, rota: AppModule.SEMANARIOS, nomeExibicao: 'Semanário' },
+const MENU_OFICINEIRO: { secao: string; itens: ItemMenu[] }[] = [
+  { secao: 'Principal', itens: [{ codigo: AppModule.DASHBOARD, rota: AppModule.DASHBOARD, nomeExibicao: 'Calendário' }] },
+  { secao: 'Gestão', itens: [{ codigo: AppModule.TURMAS, rota: AppModule.TURMAS, nomeExibicao: 'Grupos' }] },
+  { secao: 'Pedagógico', itens: [{ codigo: AppModule.SEMANARIOS, rota: AppModule.SEMANARIOS, nomeExibicao: 'Semanário' }] },
 ];
 
 @Component({
@@ -54,6 +57,10 @@ export class Sidebar {
   open = model(false);
   collapsed = model(false);
 
+  /**
+   * Ordem das chaves = ordem no menu. O Coordenador começa pelo Painel (só ele tem);
+   * os demais perfis, pelo Calendário.
+   */
   private secoesPorModulo: Record<string, string> = {
     PAINEL: 'Principal',
     DASHBOARD: 'Principal',
@@ -116,7 +123,7 @@ export class Sidebar {
 
   navAgrupado = computed(() => {
     const perfil = this.auth.currentProfile();
-    if (perfil === Role.OFICINEIRO) return [{ secao: 'Minhas atividades', itens: MENU_OFICINEIRO }];
+    if (perfil === Role.OFICINEIRO) return MENU_OFICINEIRO;
 
     const modulosDoUsuario = this.auth.modulos().filter(m => {
       if (MODULOS_OCULTOS.has(m.codigo)) return false;
@@ -128,19 +135,14 @@ export class Sidebar {
       return true;
     });
 
-    const grupos: { secao: string; itens: { codigo: AppModule; rota: AppModule; nomeExibicao: string }[] }[] = [];
+    const grupos: { secao: string; itens: ItemMenu[] }[] = [];
 
-    // Educador Social tem Chamada, Calendário e Disciplinar: tudo em "Pedagógico", nessa ordem.
-    const educador = perfil === Role.EDUCADOR;
-    const secaoDe = (codigo: string) =>
-      educador && codigo === 'DASHBOARD' ? 'Pedagógico' : this.secoesPorModulo[codigo];
-    const posicao = (codigo: string) =>
-      educador && codigo === 'DASHBOARD' ? this.ordemModulos.indexOf('CHAMADA') + 0.5 : this.ordemModulos.indexOf(codigo);
-
+    // Mesmas seções para todos os perfis (Educador Social: Principal com Calendário; Pedagógico com
+    // Chamada e Disciplinar). Seção sem item não aparece.
     for (const secao of this.ordemSecoes) {
       const itensDaSecao = modulosDoUsuario
-        .filter(m => secaoDe(m.codigo) === secao)
-        .sort((a, b) => posicao(a.codigo) - posicao(b.codigo))
+        .filter(m => this.secoesPorModulo[m.codigo] === secao)
+        .sort((a, b) => this.ordemModulos.indexOf(a.codigo) - this.ordemModulos.indexOf(b.codigo))
         .map(m => ({
           codigo: m.codigo.toLowerCase() as AppModule,
           rota: (m.rota?.slice(1) ?? m.codigo.toLowerCase()) as AppModule,

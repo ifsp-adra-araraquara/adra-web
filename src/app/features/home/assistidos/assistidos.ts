@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
@@ -40,6 +41,10 @@ import { cpfValido, formatarCpf } from '../../../shared/validators/cpf.validator
 import { Modal } from '../../../shared/components/modal/modal';
 import { Badge } from '../../../shared/components/badge/badge';
 import { Icon } from '../../../shared/components/icon/icon';
+import { DesligamentoService } from '../../../core/desligamento.service';
+import { SolicitacaoDesligamentoDTO } from '../../../shared/models/desligamento/SolicitacaoDesligamento';
+import { PedidosDesligamento } from './desligamento/pedidos-desligamento';
+import { SolicitarDesligamentoModal } from './desligamento/solicitar-desligamento-modal';
 import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 import { ActionMenu, ActionMenuItem } from '../../../shared/components/action-menu/action-menu';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
@@ -81,7 +86,7 @@ import {
 @Component({
   selector: 'app-assistidos',
   standalone: true,
-  imports: [ActionMenu, TooltipDirective, Icon, CommonModule, FormsModule, Select, Input, Button, Modal, Badge, FotoPerfil, Avatar, UploadDocumento, ResponsavelVinculoModal, ListaDocumentos, DadosComplementaresAssistidoForm, DadosComplementaresResponsavelForm, SocioeconomicoAssistidoForm, TermosAssistidoForm, FichaDisciplinarAssistido],
+  imports: [ActionMenu, TooltipDirective, Icon, PedidosDesligamento, SolicitarDesligamentoModal, CommonModule, FormsModule, Select, Input, Button, Modal, Badge, FotoPerfil, Avatar, UploadDocumento, ResponsavelVinculoModal, ListaDocumentos, DadosComplementaresAssistidoForm, DadosComplementaresResponsavelForm, SocioeconomicoAssistidoForm, TermosAssistidoForm, FichaDisciplinarAssistido],
   templateUrl: './assistidos.html',
   styleUrl: './assistidos.css',
 })
@@ -108,6 +113,20 @@ export class Assistidos implements OnInit {
 
   /** Aba "Turmas" do modal do assistido (histórico + ver alunos/aulas) é só pro coordenador. */
   readonly ehCoordenador = computed(() => this.auth.currentProfile() === Role.COORD);
+
+  // ---- Pedido de desligamento: a Assistente Social pede, só o Coordenador desliga/reativa ----
+  private readonly desligamentoService = inject(DesligamentoService);
+  private readonly document = inject(DOCUMENT);
+  readonly pedidosDesligamento = signal<SolicitacaoDesligamentoDTO[]>([]);
+  /** Pedido em aberto de cada atendido (selo "Desligamento solicitado" e o menu da Assistente). */
+  readonly pedidoPendentePorAtendido = computed(
+    () => new Map(this.pedidosDesligamento().filter((p) => p.status === 'PENDENTE').map((p) => [p.assistidoId, p])),
+  );
+  readonly pedidoOcupado = signal<number | null>(null);
+  readonly solicitandoDesligamento = signal<AssistidoResponseDTO | null>(null);
+  readonly enviandoPedido = signal(false);
+  readonly erroPedido = signal<string | null>(null);
+  readonly erroDecisaoPedido = signal<string | null>(null);
   readonly podeEditarCadastro = computed(() => {
     const perfil = this.auth.currentProfile();
     return perfil === Role.COORD || perfil === Role.ASSISTENTE;
@@ -215,6 +234,14 @@ export class Assistidos implements OnInit {
   ngOnInit(): void {
     this.carregarTurmas();
     this.carregarOficinas();
+    if (this.podeEditarCadastro()) {
+      const veioDoAviso = this.route.snapshot.queryParamMap.get('desligamentos') === '1';
+      this.carregarPedidosDesligamento().then(() => {
+        if (veioDoAviso) {
+          setTimeout(() => this.document.getElementById('pedidos-desligamento')?.scrollIntoView({ behavior: 'smooth' }));
+        }
+      });
+    }
 
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const id = Number(params.get('turmaId'));
@@ -456,13 +483,25 @@ export class Assistidos implements OnInit {
 
   acoesAssistido(assistido: AssistidoResponseDTO): ActionMenuItem[] {
     const ativo = assistido.status === StatusGeral.ATIVO;
-    return [
+    const itens: ActionMenuItem[] = [
       { id: 'ver', label: 'Ver ficha', icon: 'eye' },
       { id: 'editar', label: 'Editar', icon: 'edit' },
-      ativo
-        ? { id: 'status', label: 'Inativar', icon: 'power', danger: true }
-        : { id: 'status', label: 'Reativar', icon: 'rotate-ccw' },
     ];
+    if (this.ehCoordenador()) {
+      itens.push(
+        ativo
+          ? { id: 'status', label: 'Inativar', icon: 'power', danger: true }
+          : { id: 'status', label: 'Reativar', icon: 'rotate-ccw' },
+      );
+    } else if (ativo) {
+      // Assistente Social: pede o desligamento; quem desliga (e reativa) é o Coordenador.
+      itens.push(
+        this.pedidoPendentePorAtendido().has(assistido.assistidoId)
+          ? { id: 'cancelar-desligamento', label: 'Retirar pedido de desligamento', icon: 'rotate-ccw' }
+          : { id: 'solicitar-desligamento', label: 'Solicitar desligamento', icon: 'power', danger: true },
+      );
+    }
+    return itens;
   }
 
   executarAcao(acao: string, assistido: AssistidoResponseDTO): void {
@@ -477,6 +516,63 @@ export class Assistidos implements OnInit {
         assistido,
         assistido.status === StatusGeral.ATIVO ? StatusGeral.INATIVO : StatusGeral.ATIVO,
       );
+    } else if (acao === 'solicitar-desligamento') {
+      this.erroPedido.set(null);
+      this.solicitandoDesligamento.set(assistido);
+    } else if (acao === 'cancelar-desligamento') {
+      const pedido = this.pedidoPendentePorAtendido().get(assistido.assistidoId);
+      if (pedido) this.cancelarPedidoDesligamento(pedido);
+    }
+  }
+
+  async carregarPedidosDesligamento(): Promise<void> {
+    try {
+      this.pedidosDesligamento.set(await this.desligamentoService.listar());
+    } catch {
+      this.pedidosDesligamento.set([]);
+    }
+  }
+
+  async enviarPedidoDesligamento(dados: { dataSaida: string; motivo: string }): Promise<void> {
+    const assistido = this.solicitandoDesligamento();
+    if (!assistido || this.enviandoPedido()) return;
+    this.enviandoPedido.set(true);
+    this.erroPedido.set(null);
+    try {
+      await this.desligamentoService.solicitar(assistido.assistidoId, dados.dataSaida, dados.motivo);
+      this.solicitandoDesligamento.set(null);
+      await this.carregarPedidosDesligamento();
+    } catch (e) {
+      this.erroPedido.set(mensagemErro(e as HttpErrorResponse, 'Não foi possível enviar o pedido. Tente de novo.'));
+    } finally {
+      this.enviandoPedido.set(false);
+    }
+  }
+
+  async cancelarPedidoDesligamento(pedido: SolicitacaoDesligamentoDTO): Promise<void> {
+    await this.decidirPedido(pedido, () => this.desligamentoService.cancelar(pedido.solicitacaoId));
+  }
+
+  async aprovarPedidoDesligamento(pedido: SolicitacaoDesligamentoDTO): Promise<void> {
+    await this.decidirPedido(pedido, () => this.desligamentoService.aprovar(pedido.solicitacaoId));
+    this.carregarAssistidos();
+    this.carregarContagem();
+  }
+
+  async recusarPedidoDesligamento(evento: { pedido: SolicitacaoDesligamentoDTO; resposta: string }): Promise<void> {
+    await this.decidirPedido(evento.pedido, () => this.desligamentoService.recusar(evento.pedido.solicitacaoId, evento.resposta));
+  }
+
+  private async decidirPedido(pedido: SolicitacaoDesligamentoDTO, acao: () => Promise<unknown>): Promise<void> {
+    this.pedidoOcupado.set(pedido.solicitacaoId);
+    this.erroDecisaoPedido.set(null);
+    try {
+      await acao();
+    } catch (e) {
+      this.erroDecisaoPedido.set(mensagemErro(e as HttpErrorResponse, 'Não foi possível concluir. Tente de novo.'));
+    } finally {
+      this.pedidoOcupado.set(null);
+      await this.carregarPedidosDesligamento();
     }
   }
 

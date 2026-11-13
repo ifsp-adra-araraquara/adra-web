@@ -37,6 +37,20 @@
     </div>
   }
 
+  @if (podeEditarCadastro()) {
+    <app-pedidos-desligamento
+      [pedidos]="pedidosDesligamento()"
+      [ehCoordenador]="ehCoordenador()"
+      [ocupado]="pedidoOcupado()"
+      (aprovar)="aprovarPedidoDesligamento($event)"
+      (recusar)="recusarPedidoDesligamento($event)"
+      (cancelar)="cancelarPedidoDesligamento($event)"
+    />
+    @if (erroDecisaoPedido()) {
+      <div class="notice notice-error" role="alert"><app-icon name="alert-circle" /><span>{{ erroDecisaoPedido() }}</span></div>
+    }
+  }
+
   <div class="tabs">
     <button type="button" class="tab" [class.active]="abaAtiva() === 'todos'" [attr.aria-pressed]="abaAtiva() === 'todos'" (click)="trocarAbaStatus('todos')">
       Todos @if (contagem(); as c) { <span class="count">{{ c.todos }}</span> }
@@ -322,7 +336,9 @@
   </ng-template>
 
   <ng-template #status let-a>
-    @if (cadastroPendente(a); as motivo) {
+    @if (pedidoPendentePorAtendido().has(a.assistidoId)) {
+      <app-badge variant="amber" label="Desligamento solicitado" />
+    } @else if (cadastroPendente(a); as motivo) {
       <app-badge variant="coral" label="Cadastro pendente" [appTooltip]="motivo" />
     } @else if (a.emAcompanhamento) {
       <app-badge variant="amber" label="Em acompanhamento" />
@@ -939,11 +955,17 @@
       <app-button variant="secondary" (click)="fecharModalVisualizarAssistido()">
         Fechar
       </app-button>
-      @if (podeEditarCadastro()) {
+      @if (ehCoordenador()) {
         @if (assistidoSelecionado()!.status === StatusGeral.ATIVO) {
           <app-button variant="danger" (click)="executarAcaoDaFicha('status')">Inativar</app-button>
         } @else {
           <app-button variant="secondary" (click)="executarAcaoDaFicha('status')">Reativar</app-button>
+        }
+      } @else if (podeEditarCadastro() && assistidoSelecionado()!.status === StatusGeral.ATIVO) {
+        @if (pedidoPendentePorAtendido().has(assistidoSelecionado()!.assistidoId)) {
+          <app-button variant="secondary" (click)="executarAcaoDaFicha('cancelar-desligamento')">Retirar pedido de desligamento</app-button>
+        } @else {
+          <app-button variant="danger" (click)="executarAcaoDaFicha('solicitar-desligamento')">Solicitar desligamento</app-button>
         }
       }
     </ng-template>
@@ -1233,4 +1255,13 @@
   </app-modal>
 }
 
-
+<!-- MODAL: SOLICITAR DESLIGAMENTO (Assistente Social) -->
+@if (solicitandoDesligamento(); as a) {
+  <app-solicitar-desligamento-modal
+    [nomeAtendido]="a.nomeCompleto"
+    [enviando]="enviandoPedido()"
+    [erro]="erroPedido()"
+    (enviado)="enviarPedidoDesligamento($event)"
+    (cancelado)="solicitandoDesligamento.set(null)"
+  />
+}

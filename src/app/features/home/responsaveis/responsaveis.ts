@@ -95,21 +95,46 @@ export class Responsaveis implements OnInit {
     });
   });
 
+  // ---- Paginação (mesmo padrão de Atendidos: 20 por página, na tela) ----
+  readonly tamanhoPagina = 20;
+  readonly pagina = signal(0);
+  readonly totalPaginas = computed(() => Math.max(1, Math.ceil(this.responsaveisFiltrados().length / this.tamanhoPagina)));
+  readonly responsaveisDaPagina = computed(() => {
+    // Filtro novo pode deixar a página atual vazia: volta para a última que existe.
+    const pagina = Math.min(this.pagina(), this.totalPaginas() - 1);
+    const inicio = pagina * this.tamanhoPagina;
+    return this.responsaveisFiltrados().slice(inicio, inicio + this.tamanhoPagina);
+  });
+  readonly paginaExibida = computed(() => Math.min(this.pagina(), this.totalPaginas() - 1));
+  readonly temAnterior = computed(() => this.paginaExibida() > 0);
+  readonly temProxima = computed(() => this.paginaExibida() < this.totalPaginas() - 1);
+
+  paginaAnterior(): void {
+    if (this.temAnterior()) this.pagina.set(this.paginaExibida() - 1);
+  }
+
+  proximaPagina(): void {
+    if (this.temProxima()) this.pagina.set(this.paginaExibida() + 1);
+  }
+
   readonly temFiltrosAtivos = computed(
     () => !!this.termoBusca().trim() || this.filtroContato() !== 'todos',
   );
 
   onBuscaChange(valor: string): void {
     this.termoBusca.set(valor);
+    this.pagina.set(0);
   }
 
   onFiltroContatoChange(valor: FiltroContato): void {
     this.filtroContato.set(valor);
+    this.pagina.set(0);
   }
 
   limparFiltros(): void {
     this.termoBusca.set('');
     this.filtroContato.set('todos');
+    this.pagina.set(0);
   }
 
   ngOnInit(): void {

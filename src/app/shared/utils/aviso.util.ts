@@ -26,6 +26,7 @@ const INFO_AVISO: Record<TipoAviso, { grupo: GrupoAviso; acao: string }> = {
   PRE_CADASTRO_PENDENTE: { grupo: 'cadastro', acao: 'Revisar' },
   CADASTRO_SEM_NASCIMENTO: { grupo: 'cadastro', acao: 'Completar' },
   SEMANARIO_PENDENTE: { grupo: 'semanario', acao: 'Ver oficinas' },
+  DESLIGAMENTO_SOLICITADO: { grupo: 'cadastro', acao: 'Analisar' },
 };
 
 export function acaoDoAviso(aviso: AvisoDTO, soChamada = false): string {
@@ -61,6 +62,8 @@ export function rotaDoAviso(aviso: AvisoDTO, soChamada = false): { comandos: (st
     case 'semanario':
       return { comandos: ['/oficinas'] };
     case 'cadastro':
-      return aviso.tipo === 'PRE_CADASTRO_PENDENTE' ? { comandos: ['/pre-cadastros'] } : { comandos: ['/assistidos'] };
+      if (aviso.tipo === 'PRE_CADASTRO_PENDENTE') return { comandos: ['/pre-cadastros'] };
+      if (aviso.tipo === 'DESLIGAMENTO_SOLICITADO') return { comandos: ['/assistidos'], queryParams: { desligamentos: 1 } };
+      return { comandos: ['/assistidos'] };
   }
 }
