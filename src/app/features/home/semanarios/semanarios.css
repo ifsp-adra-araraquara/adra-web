@@ -1,0 +1,59 @@
+/* Cabeçalho e .toolbar: padrões globais (styles.css). Aqui fica só o que é desta página. */
+
+.filtros-semanarios {
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.filtro {
+  display: flex;
+  flex-direction: column;
+  min-width: 170px;
+}
+
+.filtro-busca {
+  flex: 1 1 260px;
+}
+
+.filtro-data {
+  min-width: 150px;
+}
+
+.filtro-limpar {
+  min-width: auto;
+  align-self: flex-end;
+}
+
+/* Mesmo visual do rótulo do app-input, para os selects (que não têm label própria). */
+.filtro-rotulo {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--rotulo, #3f464b);
+  margin-bottom: 6px;
+}
+
+.resumo {
+  margin: 4px 0 10px;
+  font-size: 13px;
+  color: var(--gray-600);
+}
+
+.muted {
+  color: #9ca3af;
+  text-align: center;
+  font-style: italic;
+}
+
+.estado {
+  padding: 32px 20px;
+}
+
+@media (max-width: 640px) {
+  .filtro,
+  .filtro-busca,
+  .filtro-data {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+}

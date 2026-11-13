@@ -19,6 +19,11 @@ export class SemanarioService {
     return firstValueFrom(this.http.delete<void>(`${this.api}/${semanarioId}`));
   }
 
+  /** Todos os semanários, de todas as oficinas (só a coordenação). */
+  listarTodos(): Promise<SemanarioResponseDTO[]> {
+    return firstValueFrom(this.http.get<SemanarioResponseDTO[]>(this.api));
+  }
+
   listarMeus(): Promise<SemanarioResponseDTO[]> {
     return firstValueFrom(this.http.get<SemanarioResponseDTO[]>(`${this.api}/meus`));
   }

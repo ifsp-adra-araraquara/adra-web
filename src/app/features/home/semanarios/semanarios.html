@@ -1,0 +1,74 @@
+<section class="page" id="page-semanarios">
+  <header class="page-header">
+    <div class="page-header-texto">
+      <h1>Semanários</h1>
+      <p class="page-intro">
+        Conteúdos e estratégias da semana de cada grupo, enviados pelos oficineiros de todas as oficinas, com o material
+        para impressão.
+      </p>
+    </div>
+  </header>
+
+  <div class="toolbar filtros-semanarios" role="search" aria-label="Filtrar semanários">
+    <div class="filtro filtro-busca">
+      <app-input
+        label="Buscar"
+        placeholder="Conteúdo, grupo, oficina ou oficineiro…"
+        [ngModel]="busca()"
+        (ngModelChange)="busca.set($event)"
+      />
+    </div>
+
+    <div class="filtro">
+      <span class="filtro-rotulo">Grupo</span>
+      <app-select [options]="grupoOptions()" [ngModel]="grupoId()" (ngModelChange)="grupoId.set($event)" />
+    </div>
+
+    <div class="filtro">
+      <span class="filtro-rotulo">Oficina</span>
+      <app-select [options]="oficinaOptions()" [ngModel]="oficinaId()" (ngModelChange)="oficinaId.set($event)" />
+    </div>
+
+    <div class="filtro filtro-data">
+      <app-input label="De" type="date" [max]="ate()" [ngModel]="de()" (ngModelChange)="de.set($event ?? '')" />
+    </div>
+
+    <div class="filtro filtro-data">
+      <app-input
+        label="Até"
+        type="date"
+        [min]="de()"
+        [ngModel]="ate()"
+        [errorMessage]="periodoInvalido() ? 'A data final é anterior à inicial.' : null"
+        (ngModelChange)="ate.set($event ?? '')"
+      />
+    </div>
+
+    @if (temFiltro()) {
+      <div class="filtro filtro-limpar">
+        <app-button variant="secondary" size="sm" (click)="limparFiltros()">
+          <app-icon name="x" [size]="16" /> Limpar filtros
+        </app-button>
+      </div>
+    }
+  </div>
+
+  @if (erro()) {
+    <div class="notice notice-error" role="alert">{{ erro() }}</div>
+  }
+
+  @if (carregando()) {
+    <p class="muted estado">Carregando…</p>
+  } @else if (semanarios().length === 0 && !erro()) {
+    <p class="muted estado">Nenhum semanário enviado ainda.</p>
+  } @else if (semanarios().length > 0) {
+    <p class="resumo" role="status">{{ resumo() }}</p>
+    @if (filtrados().length > 0) {
+      <div class="card">
+        <app-tabela-semanarios [semanarios]="filtrados()" [podeRemover]="true" (remover)="remover($event)" />
+      </div>
+    } @else {
+      <p class="muted estado">Nenhum semanário encontrado com esses filtros.</p>
+    }
+  }
+</section>

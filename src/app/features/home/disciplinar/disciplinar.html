@@ -152,11 +152,13 @@
                     <ng-container *ngTemplateOutlet="situacao; context: { $implicit: r }" />
                   </td>
                   <td class="col-acoes">
-                    <app-action-menu
-                      [label]="'Ações do registro de ' + r.nomeAssistido"
-                      [itens]="acoesRegistro(r)"
-                      (selecionado)="executarAcao($event, r)"
-                    />
+                    @if (acoesRegistro(r).length) {
+                      <app-action-menu
+                        [label]="'Ações do registro de ' + r.nomeAssistido"
+                        [itens]="acoesRegistro(r)"
+                        (selecionado)="executarAcao($event, r)"
+                      />
+                    }
                   </td>
                 </tr>
               }
@@ -175,11 +177,13 @@
                 <span class="cell-name">{{ r.nomeAssistido }}</span>
                 <span class="cell-sub">{{ dataBr(r.dataRegistro) }} · {{ rotuloSequencia(r) }}</span>
               </div>
-              <app-action-menu
-                [label]="'Ações do registro de ' + r.nomeAssistido"
-                [itens]="acoesRegistro(r)"
-                (selecionado)="executarAcao($event, r)"
-              />
+              @if (acoesRegistro(r).length) {
+                <app-action-menu
+                  [label]="'Ações do registro de ' + r.nomeAssistido"
+                  [itens]="acoesRegistro(r)"
+                  (selecionado)="executarAcao($event, r)"
+                />
+              }
             </div>
             <div class="cartao-meio">
               <app-badge [variant]="NIVEIS[r.nivel].variant" [label]="NIVEIS[r.nivel].rotulo" />
