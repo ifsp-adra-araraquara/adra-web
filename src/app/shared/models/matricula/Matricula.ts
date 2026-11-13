@@ -54,6 +54,12 @@ export interface EncerramentoPreviaDTO {
   quemNaoRenovou: AtendidoNaoRenovouDTO[];
   podeEncerrar: boolean;
   motivoBloqueio: string | null;
+  /** Registros disciplinares ativos do ano que serão arquivados (a contagem recomeça). */
+  disciplinarArquivados?: number;
+  /** Desses, documentos de advertência/suspensão ainda sem assinatura. */
+  disciplinarDocumentosPendentes?: number;
+  /** Desses, consequências ainda não resolvidas. */
+  disciplinarConsequenciasPendentes?: number;
 }
 
 export interface EncerramentoAnoDTO {

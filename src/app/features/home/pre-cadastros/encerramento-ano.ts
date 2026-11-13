@@ -53,7 +53,31 @@ import { mensagemErro } from '../../../shared/utils/erro-http.util';
           {{ previa().novosNoAnoSeguinte === 1 ? 'família nova já matriculada' : 'famílias novas já matriculadas' }}
           em {{ previa().ano + 1 }}.
         </li>
+        @if (previa().disciplinarArquivados; as arquivados) {
+          <li>
+            <b>{{ arquivados }}</b>
+            {{ arquivados === 1 ? 'registro disciplinar será arquivado' : 'registros disciplinares serão arquivados' }}:
+            a contagem de ocorrências recomeça em {{ previa().ano + 1 }}. O histórico continua na ficha.
+          </li>
+        }
       </ul>
+
+      @if (previa().disciplinarDocumentosPendentes || previa().disciplinarConsequenciasPendentes) {
+        <p class="aviso-disciplinar" role="note">
+          <app-icon name="alert-triangle" [size]="16" />
+          <span>
+            Antes de encerrar, confira no Disciplinar:
+            @if (previa().disciplinarDocumentosPendentes; as docs) {
+              {{ docs }} {{ docs === 1 ? 'documento ainda sem assinatura' : 'documentos ainda sem assinatura' }}
+            }
+            @if (previa().disciplinarDocumentosPendentes && previa().disciplinarConsequenciasPendentes) { e }
+            @if (previa().disciplinarConsequenciasPendentes; as cons) {
+              {{ cons }} {{ cons === 1 ? 'consequência não resolvida' : 'consequências não resolvidas' }}
+            }.
+            Eles também serão arquivados.
+          </span>
+        </p>
+      }
 
       @if (previa().quemNaoRenovou.length) {
         <h3 class="subtitulo">Quem não renovou</h3>
@@ -93,6 +117,7 @@ import { mensagemErro } from '../../../shared/utils/erro-http.util';
     </app-modal>
   `,
   styles: `
+    .aviso-disciplinar { display: flex; gap: 8px; align-items: flex-start; margin: 8px 0 0; font-size: 13.5px; color: var(--amber-700, #92400e); }
     .faixa {
       display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
       padding: 12px 16px; margin-bottom: 16px;
