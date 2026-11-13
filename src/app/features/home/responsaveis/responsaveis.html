@@ -47,7 +47,7 @@
       } @else {
         <!-- Celular e tablet: cartões (a tabela não cabe). -->
         <ul class="lista-cartoes" aria-label="Responsáveis">
-          @for (responsavel of responsaveisFiltrados(); track responsavel.responsavelId) {
+          @for (responsavel of responsaveisDaPagina(); track responsavel.responsavelId) {
             <li class="resp-cartao linha-clicavel" (click)="abrirVisualizacaoPelaLinha($event, responsavel)">
               <div class="resp-topo">
                 <div class="resp-identidade">
@@ -89,7 +89,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (responsavel of responsaveisFiltrados(); track responsavel.responsavelId) {
+              @for (responsavel of responsaveisDaPagina(); track responsavel.responsavelId) {
                 <tr class="linha-clicavel" (click)="abrirVisualizacaoPelaLinha($event, responsavel)">
                   <td class="cell-name">{{ responsavel.nomeCompleto }}</td>
                   <td class="nowrap cpf">{{ cpfParcial(responsavel.cpf) }}</td>
@@ -118,6 +118,21 @@
             </tbody>
           </table>
         </div>
+
+        @if (totalPaginas() > 1) {
+          <nav class="paginacao" aria-label="Paginação">
+            <app-button variant="secondary" size="sm" [disabled]="!temAnterior()" (click)="paginaAnterior()" aria-label="Página anterior">
+              <app-icon name="chevron-left" [size]="16" /> <span class="pag-rotulo">Anterior</span>
+            </app-button>
+            <span class="pagina-info">
+              Página {{ paginaExibida() + 1 }} de {{ totalPaginas() }}
+              <span class="pagina-total">({{ responsaveisFiltrados().length }} responsáveis)</span>
+            </span>
+            <app-button variant="secondary" size="sm" [disabled]="!temProxima()" (click)="proximaPagina()" aria-label="Próxima página">
+              <span class="pag-rotulo">Próxima</span> <app-icon name="chevron-right" [size]="16" />
+            </app-button>
+          </nav>
+        }
       }
     </div>
   }
