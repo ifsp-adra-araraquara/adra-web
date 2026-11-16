@@ -83,13 +83,9 @@
                 <ul class="rosca-legenda" role="list">
                   @for (s of f.segmentos; track s.rotulo) {
                     <li>
-                      <span class="rosca-linha">
-                        <span class="amostra" [style.background]="s.cor"></span>
-                        <span class="rosca-rotulo">{{ s.rotulo }}</span>
-                        <b>{{ s.total }}</b>
-                        <small>{{ s.percentual }}%</small>
-                      </span>
-                      <span class="rosca-barra" aria-hidden="true"><span [style.width.%]="s.percentual" [style.background]="s.cor"></span></span>
+                      <span class="rosca-rotulo"><span class="amostra" [style.background]="s.cor"></span>{{ s.rotulo }}</span>
+                      <span class="rosca-valor">Atendidos nesta faixa: <b>{{ s.total }}</b></span>
+                      <span class="rosca-valor">Porcentagem: <b>{{ s.percentual }}%</b></span>
                     </li>
                   }
                 </ul>
