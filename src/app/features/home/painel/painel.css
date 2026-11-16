@@ -112,15 +112,23 @@
 .rosca-centro { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; pointer-events: none; }
 .rosca-centro b { font-size: 26px; font-weight: 700; line-height: 1; letter-spacing: -.5px; color: var(--texto); }
 .rosca-centro small { margin-top: 4px; font-size: 12.5px; color: var(--texto-3); }
-.rosca-legenda { list-style: none; margin: 0; padding: 0; flex: 1 1 260px; min-width: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px 20px; }
-.rosca-legenda li { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 10px; background: var(--gray-50); }
-.rosca-linha { display: flex; align-items: baseline; gap: 8px; min-width: 0; font-size: 14px; color: var(--texto-2); }
-.rosca-linha .amostra { flex: none; align-self: center; width: 11px; height: 11px; border-radius: 3px; }
-.rosca-rotulo { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rosca-linha b { font-size: 18px; font-weight: 700; line-height: 1; color: var(--texto); font-variant-numeric: tabular-nums; }
-.rosca-linha small { margin-left: auto; font-size: 13px; color: var(--texto-3); font-variant-numeric: tabular-nums; }
-.rosca-barra { display: block; height: 4px; border-radius: 2px; background: var(--gray-100); overflow: hidden; }
-.rosca-barra span { display: block; height: 100%; border-radius: 2px; }
+.rosca-legenda { list-style: none; margin: 0; padding: 0; flex: 1 1 320px; min-width: 0; display: grid; }
+.rosca-legenda li {
+  display: grid; grid-template-columns: minmax(100px, 1fr) auto auto; align-items: center; gap: 8px 28px;
+  padding: 12px 4px; font-size: 14px; color: var(--texto-2); border-bottom: 1px solid var(--gray-100);
+}
+.rosca-legenda li:last-child { border-bottom: 0; }
+.rosca-legenda .amostra { flex: none; width: 11px; height: 11px; border-radius: 3px; }
+.rosca-rotulo { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--texto); }
+.rosca-valor { color: var(--texto-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rosca-valor b { margin-left: 4px; font-size: 15px; font-weight: 700; color: var(--texto); }
+@media (max-width: 599px) {
+  /* Celular: nome em cima, os dois valores lado a lado embaixo */
+  .rosca-legenda li { grid-template-columns: auto 1fr; gap: 4px 16px; }
+  .rosca-legenda .rosca-rotulo { grid-column: 1 / -1; }
+  .rosca-legenda .rosca-valor { font-size: 13px; }
+  .rosca-legenda .rosca-valor:nth-child(2) { padding-left: 21px; }
+}
 
 /* ---------- Atividade recente ---------- */
 .evento-icone { display: grid; place-items: center; flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--gray-50); color: var(--texto-2); }
