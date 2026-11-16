@@ -233,3 +233,6 @@
 .permissao__texto { flex: 1; min-width: 0; }
 .permissao__texto b { display: block; font-size: 14px; color: var(--gray-800); }
 .permissao__texto small { display: block; font-size: 12px; color: var(--gray-600); }
+
+/* Aba "Pedidos de desligamento": contador em destaque quando há pedido aguardando. */
+.tab .count.count-pendente { background: var(--amber-100, #fdecc8); color: var(--amber-700, #8a5a00); font-weight: 600; }

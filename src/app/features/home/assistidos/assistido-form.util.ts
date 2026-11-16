@@ -1,6 +1,7 @@
 import { SelectOption } from '../../../shared/components/select/select';
 import { ProgramaTransferencia } from '../../../shared/enum/ProgramaTransferencia';
 import { AssistidoRequestDTO } from '../../../shared/models/assistido/AssistidoRequestDTO';
+import { AssistidoResponseDTO } from '../../../shared/models/assistido/AssistidoResponseDTO';
 import { ResponsavelRequestDTO } from '../../../shared/models/responsavel/ResponsavelRequestDTO';
 import { VinculoFamiliarComResponsavelRequestDTO } from '../../../shared/models/vinculoFamiliar/VinculoFamiliarComResponsavelRequestDTO';
 import { enderecoParaForm, enderecoParaPayload } from '../../../shared/utils/endereco.util';
@@ -162,5 +163,40 @@ export function paraVinculoComResponsavel(
     contatoEmergencia: responsavel.contatoEmergencia,
     autorizadoRetirada: responsavel.autorizadoRetirada,
     responsavelId: responsavel.responsavelId,
+  };
+}
+
+/** Request completo (PUT substitui o cadastro inteiro) a partir do que a API devolveu. */
+export function formDoAssistido(assistido: AssistidoResponseDTO): AssistidoRequestDTO {
+  return {
+    nomeCompleto: assistido.nomeCompleto,
+    dataNascimento: assistido.dataNascimento ?? '',
+    cpf: assistido.cpf ?? '',
+    dataEntrada: assistido.dataEntrada ?? '',
+    necessidadesEspecificas: assistido.necessidadesEspecificas ?? '',
+    observacoes: assistido.observacoes ?? '',
+    turmaId: assistido.turmaId ?? null,
+    sexo: assistido.sexo ?? null,
+    possuiProblemaSaude: assistido.possuiProblemaSaude ?? null,
+    problemaSaude: assistido.problemaSaude ?? '',
+    pcd: assistido.pcd ?? null,
+    deficiencia: assistido.deficiencia ?? '',
+    escolaNome: assistido.escolaNome ?? '',
+    escolaAnoSerie: assistido.escolaAnoSerie ?? '',
+    escolaTurno: assistido.escolaTurno ?? null,
+    estudaContraturno: assistido.estudaContraturno ?? null,
+    endereco: enderecoParaForm(assistido.endereco),
+    rendaFamiliar: assistido.rendaFamiliar ?? null,
+    recebeProgramaTransferencia: assistido.recebeProgramaTransferencia ?? null,
+    programasTransferencia: [...(assistido.programasTransferencia ?? [])],
+    programaTransferenciaOutro: assistido.programaTransferenciaOutro ?? '',
+    nis: assistido.nis ?? '',
+    aceiteLgpd: assistido.aceiteLgpd ?? false,
+    autorizaUsoImagem: assistido.autorizaUsoImagem ?? false,
+    autorizaEventosPasseios: assistido.autorizaEventosPasseios ?? false,
+    podeIrEmboraSozinho: assistido.podeIrEmboraSozinho ?? false,
+    cienteFrequenciaObrigatoria: assistido.cienteFrequenciaObrigatoria ?? false,
+    // Sem `responsaveis`: a API reconcilia os vínculos se a lista vier, mesmo vazia.
+    // Responsáveis se editam na aba "Família".
   };
 }
