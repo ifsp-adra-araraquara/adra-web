@@ -16,59 +16,66 @@ const ROTULO: Record<string, { texto: string; variante: 'blue' | 'green' | 'cora
 };
 
 /**
- * Pedidos de desligamento no topo de Atendidos. Coordenador: aprova ou recusa os pendentes.
+ * Pedidos de desligamento (aba de Atendidos). Coordenador: aprova ou recusa os pendentes.
  * Assistente Social: acompanha os pedidos (e retira os que ainda estão abertos).
+ * Sem pedidos, explica onde eles aparecem e como pedir.
  */
 @Component({
   selector: 'app-pedidos-desligamento',
   imports: [DatePipe, FormsModule, Badge, Button, Icon, Modal],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    @if (pedidos().length) {
-      <section class="card pedidos" id="pedidos-desligamento" aria-labelledby="pd-titulo">
-        <button type="button" class="pedidos-topo" [attr.aria-expanded]="aberto()" (click)="aberto.set(!aberto())">
-          <app-icon name="power" [size]="18" />
-          <h2 id="pd-titulo">
-            Pedidos de desligamento
-            @if (pendentes().length) { <span class="count count-alerta">{{ pendentes().length }} aguardando</span> }
-          </h2>
-          <app-icon [name]="aberto() ? 'chevron-left' : 'chevron-right'" [size]="16" class="seta" />
-        </button>
-
-        @if (aberto()) {
-          <ul class="lista">
-            @for (p of pedidos(); track p.solicitacaoId) {
-              <li class="pedido">
-                <div class="pedido-texto">
-                  <span class="cell-name">{{ p.nomeAtendido }}</span>
-                  <span class="cell-sub">
-                    {{ p.nomeTurma || 'Sem grupo' }} · saída em {{ p.dataSaida | date: 'dd/MM/yyyy' }}
-                    · pedido por {{ p.solicitadoPorNome }} em {{ p.criadoEm | date: 'dd/MM' }}
-                  </span>
-                  <span class="motivo"><b>Motivo:</b> {{ p.motivo }}</span>
-                  @if (p.status !== 'PENDENTE' && p.decididoPorNome) {
-                    <span class="cell-sub">
-                      {{ rotulo(p).texto }} por {{ p.decididoPorNome }} em {{ p.decididoEm | date: 'dd/MM' }}@if (p.resposta) {: {{ p.resposta }}}
-                    </span>
-                  }
-                </div>
-                <div class="pedido-acoes">
-                  <app-badge [variant]="rotulo(p).variante" [label]="rotulo(p).texto" />
-                  @if (p.status === 'PENDENTE') {
-                    @if (ehCoordenador()) {
-                      <app-button variant="secondary" size="sm" [loading]="ocupado() === p.solicitacaoId" (click)="abrirRecusa(p)">Recusar</app-button>
-                      <app-button variant="danger" size="sm" [loading]="ocupado() === p.solicitacaoId" (click)="aprovar.emit(p)">Aprovar e desligar</app-button>
-                    } @else {
-                      <app-button variant="secondary" size="sm" [loading]="ocupado() === p.solicitacaoId" (click)="cancelar.emit(p)">Retirar pedido</app-button>
-                    }
-                  }
-                </div>
-              </li>
-            }
-          </ul>
+    <section class="card pedidos" id="pedidos-desligamento" aria-label="Pedidos de desligamento">
+      @if (pedidos().length) {
+        @if (pendentes().length) {
+          <p class="resumo" role="status">
+            <app-icon name="alert-circle" [size]="16" />
+            {{ pendentes().length === 1 ? '1 pedido aguardando decisão' : pendentes().length + ' pedidos aguardando decisão' }}
+          </p>
         }
-      </section>
-    }
+        <ul class="lista">
+          @for (p of pedidos(); track p.solicitacaoId) {
+            <li class="pedido">
+              <div class="pedido-texto">
+                <span class="cell-name">{{ p.nomeAtendido }}</span>
+                <span class="cell-sub">
+                  {{ p.nomeTurma || 'Sem grupo' }} · saída em {{ p.dataSaida | date: 'dd/MM/yyyy' }}
+                  · pedido por {{ p.solicitadoPorNome }} em {{ p.criadoEm | date: 'dd/MM' }}
+                </span>
+                <span class="motivo"><b>Motivo:</b> {{ p.motivo }}</span>
+                @if (p.status !== 'PENDENTE' && p.decididoPorNome) {
+                  <span class="cell-sub">
+                    {{ rotulo(p).texto }} por {{ p.decididoPorNome }} em {{ p.decididoEm | date: 'dd/MM' }}@if (p.resposta) {: {{ p.resposta }}}
+                  </span>
+                }
+              </div>
+              <div class="pedido-acoes">
+                <app-badge [variant]="rotulo(p).variante" [label]="rotulo(p).texto" />
+                @if (p.status === 'PENDENTE') {
+                  @if (ehCoordenador()) {
+                    <app-button variant="secondary" size="sm" [loading]="ocupado() === p.solicitacaoId" (click)="abrirRecusa(p)">Recusar</app-button>
+                    <app-button variant="danger" size="sm" [loading]="ocupado() === p.solicitacaoId" (click)="aprovar.emit(p)">Aprovar e desligar</app-button>
+                  } @else {
+                    <app-button variant="secondary" size="sm" [loading]="ocupado() === p.solicitacaoId" (click)="cancelar.emit(p)">Retirar pedido</app-button>
+                  }
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <div class="vazio">
+          <app-icon name="power" [size]="20" />
+          <p>
+            @if (ehCoordenador()) {
+              Nenhum pedido de desligamento. Quando a Assistente Social pedir um, ele aparece aqui e no sino.
+            } @else {
+              Nenhum pedido de desligamento. Para pedir, abra a ficha do atendido e use <b>Solicitar desligamento</b>.
+            }
+          </p>
+        </div>
+      }
+    </section>
 
     @if (recusando(); as p) {
       <app-modal [open]="true" title="Recusar desligamento" size="sm" (closed)="recusando.set(null)">
@@ -89,14 +96,12 @@ const ROTULO: Record<string, { texto: string; variante: 'blue' | 'green' | 'cora
     }
   `,
   styles: `
-    .pedidos { margin-bottom: 16px; padding: 0; overflow: hidden; }
-    .pedidos-topo {
-      display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 12px 16px;
-      border: 0; background: none; font: inherit; text-align: left; cursor: pointer; color: var(--gray-800);
-    }
-    .pedidos-topo h2 { flex: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; font-size: 15px; font-weight: 600; }
-    .seta { color: var(--gray-400); transform: rotate(90deg); }
+    .pedidos { margin-bottom: 16px; padding: 4px 0; overflow: hidden; }
+    .resumo { display: flex; align-items: center; gap: 6px; margin: 0; padding: 12px 16px 4px; font-size: 14px; font-weight: 600; color: var(--amber-600); }
+    .vazio { display: flex; align-items: center; gap: 10px; padding: 16px; color: var(--gray-600); }
+    .vazio p { margin: 0; font-size: 14px; }
     .lista { list-style: none; margin: 0; padding: 0 16px 8px; }
+    .lista > .pedido:first-child { border-top: 0; }
     .pedido { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 16px; padding: 12px 0; border-top: 1px solid var(--gray-100); }
     .pedido-texto { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1 1 320px; }
     .pedido-texto .cell-name { overflow-wrap: anywhere; }
@@ -116,8 +121,6 @@ export class PedidosDesligamento {
   readonly recusar = output<{ pedido: SolicitacaoDesligamentoDTO; resposta: string }>();
   readonly cancelar = output<SolicitacaoDesligamentoDTO>();
 
-  /** Aberto quando há pendente; o resto do tempo fica recolhido. */
-  readonly aberto = signal(true);
   protected readonly pendentes = computed(() => this.pedidos().filter((p) => p.status === 'PENDENTE'));
   protected readonly recusando = signal<SolicitacaoDesligamentoDTO | null>(null);
   protected readonly resposta = signal('');

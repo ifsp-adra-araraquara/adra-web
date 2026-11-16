@@ -131,7 +131,44 @@
     <div class="colunas" [class.colunas--leitura]="!podeAprovar() && !rematricula()">
       @if (rematricula() && comparacao(); as c) {
         <div class="formulario">
-          <app-comparacao-rematricula [comparacao]="c" (abrirFicha)="abrirFichaDoAtendido(c.assistidoId)" />
+          <app-comparacao-rematricula
+            [comparacao]="c"
+            [editavel]="fichaEditavel()"
+            [aplicados]="aplicados()"
+            (alternar)="alternarCampo($event)"
+            (abrirFamilia)="abrirFamiliaDoAtendido(c.assistidoId)"
+          />
+
+          @if (fichaEditavel()) {
+            <section class="card card-pad bloco" aria-labelledby="sec-ficha">
+              <h2 id="sec-ficha" class="form-sec-title">Ficha do atendido</h2>
+              <p class="dica">
+                Estes são os dados da ficha, já com o que você marcou acima. Corrija o que precisar: ao rematricular, a ficha
+                fica como está aqui. CPF, grupo e responsáveis não mudam por esta tela.
+              </p>
+              @if (fichaAlterada()) {
+                <p class="dica dica-alterada" role="status"><app-icon name="edit" [size]="14" /> A ficha será atualizada ao rematricular.</p>
+              }
+              <app-input label="Nome completo" [required]="true" [ngModel]="assistido().nomeCompleto" (ngModelChange)="atualizar('nomeCompleto', $event)" />
+              <div class="form-row">
+                <app-input label="Data de nascimento" type="date" [ngModel]="assistido().dataNascimento" (ngModelChange)="atualizar('dataNascimento', $event)" />
+                <div class="field">
+                  <label for="av-re-sexo">Sexo</label>
+                  <app-select id="av-re-sexo" [options]="sexoOptions" [ngModel]="assistido().sexo ?? null" (ngModelChange)="atualizar('sexo', $event)" />
+                </div>
+              </div>
+              <div class="field">
+                <label for="av-re-obs">Observações</label>
+                <textarea id="av-re-obs" rows="4" [ngModel]="assistido().observacoes" (ngModelChange)="atualizar('observacoes', $event)"></textarea>
+              </div>
+              <app-dados-complementares-assistido [(dados)]="assistido" [exibirSexo]="false" />
+            </section>
+
+            <section class="card card-pad bloco" aria-labelledby="sec-re-socio">
+              <h2 id="sec-re-socio" class="form-sec-title">Socioeconômico (família)</h2>
+              <app-socioeconomico-assistido [(dados)]="assistido" />
+            </section>
+          }
 
           @if (podeRematricular()) {
             <section class="card card-pad bloco" aria-labelledby="sec-grupo">

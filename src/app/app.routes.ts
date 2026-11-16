@@ -257,13 +257,6 @@ export const routes: Routes = [
         canActivate: [roleGuard],
       },
       {
-        path: 'materiais',
-        title: 'Materiais',
-        loadComponent: () => import('./features/home/materiais/materiais').then((m) => m.Materiais),
-        data: { roles: [Role.COORD, Role.OFICINEIRO] },
-        canActivate: [roleGuard],
-      },
-      {
         path: 'oficineiro',
         title: 'Minhas oficinas',
         loadComponent: () =>

@@ -33,14 +33,21 @@ describe('PedidosDesligamento', () => {
   const botao = (rotulo: string) =>
     [...(fixture.nativeElement as HTMLElement).querySelectorAll('button')].find((b) => b.textContent?.includes(rotulo));
 
-  it('sem pedidos, não mostra nada', async () => {
+  it('sem pedidos, a aba explica onde os pedidos aparecem', async () => {
     await montar([], true);
-    expect(texto().trim()).toBe('');
+    expect(texto()).toContain('Nenhum pedido de desligamento');
+    expect(texto()).toContain('aparece aqui e no sino');
+    expect(botao('Aprovar')).toBeUndefined();
+  });
+
+  it('sem pedidos, a Assistente Social vê como pedir', async () => {
+    await montar([], false);
+    expect(texto()).toContain('Solicitar desligamento');
   });
 
   it('Coordenador aprova ou recusa; a recusa exige resposta', async () => {
     await montar([pedido('PENDENTE')], true);
-    expect(texto()).toContain('1 aguardando');
+    expect(texto()).toContain('1 pedido aguardando decisão');
     expect(texto()).toContain('Família mudou de cidade');
     const aprovados: SolicitacaoDesligamentoDTO[] = [];
     const recusados: { resposta: string }[] = [];

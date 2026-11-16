@@ -25,7 +25,21 @@ export interface CampoComparadoDTO {
   naFicha: string;
   enviado: string;
   diferente: boolean;
+  /** Parte da ficha que a linha representa (null nas linhas de responsável). */
+  chave: ChaveCampoFicha | null;
 }
+
+/** Partes da ficha que a rematrícula pode atualizar com o que a família enviou. */
+export type ChaveCampoFicha =
+  | 'nomeCompleto'
+  | 'dataNascimento'
+  | 'sexo'
+  | 'endereco'
+  | 'saude'
+  | 'renda'
+  | 'programas'
+  | 'nis'
+  | 'observacoes';
 
 export interface ComparacaoRematriculaDTO {
   assistidoId: number;

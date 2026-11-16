@@ -1,4 +1,3 @@
-import { DOCUMENT } from '@angular/common';
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
@@ -74,6 +73,7 @@ import {
 
 import {
   assistidoVazio,
+  formDoAssistido,
   PARENTESCO_OPTIONS,
   paraPayloadAssistido,
   paraVinculoComResponsavel,
@@ -82,6 +82,9 @@ import {
   validarDadosComplementares,
   validarResponsavel,
 } from './assistido-form.util';
+
+/** Abas de Atendidos; "desligamentos" mostra os pedidos em vez da lista. */
+type AbaAtendidos = 'todos' | 'ativos' | 'inativos' | 'acomp' | 'proximo' | 'desligamentos';
 
 @Component({
   selector: 'app-assistidos',
@@ -116,12 +119,13 @@ export class Assistidos implements OnInit {
 
   // ---- Pedido de desligamento: a Assistente Social pede, só o Coordenador desliga/reativa ----
   private readonly desligamentoService = inject(DesligamentoService);
-  private readonly document = inject(DOCUMENT);
   readonly pedidosDesligamento = signal<SolicitacaoDesligamentoDTO[]>([]);
   /** Pedido em aberto de cada atendido (selo "Desligamento solicitado" e o menu da Assistente). */
   readonly pedidoPendentePorAtendido = computed(
     () => new Map(this.pedidosDesligamento().filter((p) => p.status === 'PENDENTE').map((p) => [p.assistidoId, p])),
   );
+  /** Contador da aba "Pedidos de desligamento": só os que aguardam decisão. */
+  readonly pedidosPendentes = computed(() => this.pedidoPendentePorAtendido().size);
   readonly pedidoOcupado = signal<number | null>(null);
   readonly solicitandoDesligamento = signal<AssistidoResponseDTO | null>(null);
   readonly enviandoPedido = signal(false);
@@ -154,7 +158,7 @@ export class Assistidos implements OnInit {
   filtroOficina = signal<number | ''>('');
   turmas = signal<TurmaResponseDTO[]>([]);
   oficinas = signal<OficinaResponseDTO[]>([]);
-  abaAtiva = signal<'todos' | 'ativos' | 'inativos' | 'acomp' | 'proximo'>('todos');
+  abaAtiva = signal<AbaAtendidos>('todos');
   /** Totais das abas — recarregado quando muda busca/turma/oficina (não ao trocar de aba). */
   contagem = signal<AssistidoContagemDTO | null>(null);
 
@@ -235,12 +239,9 @@ export class Assistidos implements OnInit {
     this.carregarTurmas();
     this.carregarOficinas();
     if (this.podeEditarCadastro()) {
-      const veioDoAviso = this.route.snapshot.queryParamMap.get('desligamentos') === '1';
-      this.carregarPedidosDesligamento().then(() => {
-        if (veioDoAviso) {
-          setTimeout(() => this.document.getElementById('pedidos-desligamento')?.scrollIntoView({ behavior: 'smooth' }));
-        }
-      });
+      // Aviso de pedido pendente (sino) abre direto na aba dos pedidos.
+      if (this.route.snapshot.queryParamMap.get('desligamentos') === '1') this.abaAtiva.set('desligamentos');
+      this.carregarPedidosDesligamento();
     }
 
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
@@ -261,7 +262,7 @@ export class Assistidos implements OnInit {
     this.http.get<AssistidoResponseDTO>(`${this.apiAssistidos}/${assistidoId}`).subscribe({
       next: (assistido) => {
         this.abrirModalVisualizarAssistido(assistido);
-        if (aba === 'cham' || aba === 'disc') this.trocarAbaVerAssistido(aba);
+        if (aba === 'cham' || aba === 'disc' || aba === 'fam') this.trocarAbaVerAssistido(aba);
       },
       error: (erro) => console.error('Erro ao abrir a ficha do assistido:', erro),
     });
@@ -379,8 +380,13 @@ export class Assistidos implements OnInit {
     this.router.navigate(['/assistidos/lote']);
   }
 
-  trocarAbaStatus(aba: 'todos' | 'ativos' | 'inativos' | 'acomp' | 'proximo'): void {
+  trocarAbaStatus(aba: AbaAtendidos): void {
     this.abaAtiva.set(aba);
+    if (aba === 'desligamentos') {
+      // Aba sem listagem paginada: só os pedidos (atualizados ao abrir).
+      this.carregarPedidosDesligamento();
+      return;
+    }
     this.pagina.set(0);
     this.carregarAssistidos();
   }
@@ -623,46 +629,11 @@ export class Assistidos implements OnInit {
   abrirModalEditarAssistido(assistido: AssistidoResponseDTO, secao: 'dados' | 'turma' = 'dados'): void {
     this.secaoEdicao.set(secao);
     this.assistidoEmEdicao.set(assistido);
-    this.formEdicaoAssistido = this.formDoAssistido(assistido);
+    this.formEdicaoAssistido = formDoAssistido(assistido);
     this.erroSalvarEdicao.set(null);
     this.fotoPerfilEdicao.set(null);
     this.documentosIdentidadeEdicao.set([]);
     this.mostrarModalEditar.set(true);
-  }
-
-  /** Request completo (PUT substitui o cadastro inteiro) a partir do que a API devolveu. */
-  private formDoAssistido(assistido: AssistidoResponseDTO): AssistidoRequestDTO {
-    return {
-      nomeCompleto: assistido.nomeCompleto,
-      dataNascimento: assistido.dataNascimento ?? '',
-      cpf: assistido.cpf ?? '',
-      dataEntrada: assistido.dataEntrada ?? '',
-      necessidadesEspecificas: assistido.necessidadesEspecificas ?? '',
-      observacoes: assistido.observacoes ?? '',
-      turmaId: assistido.turmaId ?? null,
-      sexo: assistido.sexo ?? null,
-      possuiProblemaSaude: assistido.possuiProblemaSaude ?? null,
-      problemaSaude: assistido.problemaSaude ?? '',
-      pcd: assistido.pcd ?? null,
-      deficiencia: assistido.deficiencia ?? '',
-      escolaNome: assistido.escolaNome ?? '',
-      escolaAnoSerie: assistido.escolaAnoSerie ?? '',
-      escolaTurno: assistido.escolaTurno ?? null,
-      estudaContraturno: assistido.estudaContraturno ?? null,
-      endereco: enderecoParaForm(assistido.endereco),
-      rendaFamiliar: assistido.rendaFamiliar ?? null,
-      recebeProgramaTransferencia: assistido.recebeProgramaTransferencia ?? null,
-      programasTransferencia: [...(assistido.programasTransferencia ?? [])],
-      programaTransferenciaOutro: assistido.programaTransferenciaOutro ?? '',
-      nis: assistido.nis ?? '',
-      aceiteLgpd: assistido.aceiteLgpd ?? false,
-      autorizaUsoImagem: assistido.autorizaUsoImagem ?? false,
-      autorizaEventosPasseios: assistido.autorizaEventosPasseios ?? false,
-      podeIrEmboraSozinho: assistido.podeIrEmboraSozinho ?? false,
-      cienteFrequenciaObrigatoria: assistido.cienteFrequenciaObrigatoria ?? false,
-      // Sem `responsaveis`: a API reconcilia os vínculos se a lista vier, mesmo vazia.
-      // Responsáveis se editam na aba "Família".
-    };
   }
 
   fecharModalEditar(): void {
@@ -912,7 +883,7 @@ export class Assistidos implements OnInit {
   abrirEdicaoSocioeconomico(): void {
     const assistido = this.assistidoSelecionado();
     if (!assistido) return;
-    this.formSocioeconomico = this.formDoAssistido(assistido);
+    this.formSocioeconomico = formDoAssistido(assistido);
     this.erroSocioeconomico.set(null);
     this.editandoSocioeconomico.set(true);
   }

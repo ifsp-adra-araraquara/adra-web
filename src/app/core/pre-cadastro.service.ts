@@ -47,8 +47,11 @@ export class PreCadastroService {
     return firstValueFrom(this.http.get<ComparacaoRematriculaDTO>(`${this.api}/${preCadastroId}/comparacao`));
   }
 
-  rematricular(preCadastroId: number, turmaId: number): Promise<PreCadastroResponseDTO> {
-    return firstValueFrom(this.http.post<PreCadastroResponseDTO>(`${this.api}/${preCadastroId}/rematricular`, { turmaId }));
+  /** {@code ficha}: dados revisados na avaliação (null = a ficha fica como está). */
+  rematricular(preCadastroId: number, turmaId: number, ficha: AssistidoRequestDTO | null = null): Promise<PreCadastroResponseDTO> {
+    return firstValueFrom(
+      this.http.post<PreCadastroResponseDTO>(`${this.api}/${preCadastroId}/rematricular`, { turmaId, ficha }),
+    );
   }
 
   buscar(preCadastroId: number): Promise<PreCadastroResponseDTO> {

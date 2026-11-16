@@ -42,6 +42,20 @@ const responsavel = {
   autorizadoRetirada: false,
 };
 
+/** Responde o GET da ficha do atendido 42 (a tela pede depois da comparação). */
+async function responderFicha(ficha: object): Promise<void> {
+  const http = TestBed.inject(HttpTestingController);
+  for (let tentativa = 0; tentativa < 10; tentativa++) {
+    await new Promise((resolve) => setTimeout(resolve));
+    const pedidos = http.match((req) => req.url.endsWith('/api/assistidos/42'));
+    if (pedidos.length) {
+      pedidos.forEach((req) => req.flush(ficha));
+      return;
+    }
+  }
+  throw new Error('a tela não pediu a ficha do atendido');
+}
+
 describe('AvaliacaoPreCadastro', () => {
   let fixture: ComponentFixture<AvaliacaoPreCadastro>;
   const service = {
@@ -133,7 +147,7 @@ describe('AvaliacaoPreCadastro', () => {
     botao('Aprovar e criar cadastro').click();
     await new Promise((resolve) => setTimeout(resolve));
     TestBed.inject(HttpTestingController).expectOne((req) => req.url.endsWith('/api/turmas')).flush([]);
-    await new Promise((resolve) => setTimeout(resolve));
+    await responderFicha({ assistidoId: 42, nomeCompleto: 'Crianca Teste', cpf: '56532228281' });
     await fixture.whenStable();
     fixture.detectChanges();
 
@@ -192,8 +206,9 @@ function comparacao(extra: Partial<ComparacaoRematriculaDTO> = {}): ComparacaoRe
     turmaAtualId: 3,
     nomeTurmaAtual: 'Grupo Manhã',
     campos: [
-      { rotulo: 'Endereço', naFicha: 'Rua das Flores, 100', enviado: 'Rua das Palmeiras, 100', diferente: true },
-      { rotulo: 'NIS', naFicha: '12345678901', enviado: '12345678901', diferente: false },
+      { rotulo: 'Endereço', naFicha: 'Rua das Flores, 100', enviado: 'Rua das Palmeiras, 100', diferente: true, chave: 'endereco' },
+      { rotulo: 'NIS', naFicha: '12345678901', enviado: '12345678901', diferente: false, chave: 'nis' },
+      { rotulo: 'Mãe', naFicha: 'Mae Teste — (16) 99123-4567', enviado: 'Mae Teste — (16) 99000-0000', diferente: true, chave: null },
     ],
     ...extra,
   };
@@ -206,11 +221,36 @@ describe('AvaliacaoPreCadastro — rematrícula', () => {
     comparacao: vi.fn(),
     rematricular: vi.fn(),
     colocarNaListaEspera: vi.fn(),
+    rascunhoAssistido: vi.fn(),
+  };
+
+  // Ficha de hoje e o que a família enviou agora (dados inventados).
+  const fichaAtual = {
+    assistidoId: 42,
+    nomeCompleto: 'Crianca Teste',
+    dataNascimento: '2016-04-12',
+    cpf: '56532228281',
+    dataEntrada: '2026-02-01',
+    turmaId: 3,
+    observacoes: 'Busca: avó',
+    endereco: { logradouro: 'Rua das Flores', numero: '100', bairro: 'Centro', pontoReferencia: null },
+    nis: '12345678901',
+  };
+  const enviadoAgora = {
+    nomeCompleto: 'Crianca Teste',
+    dataNascimento: '2016-04-12',
+    cpf: '56532228281',
+    dataEntrada: '2027-01-01',
+    observacoes: 'Busca: avó',
+    endereco: { logradouro: 'Rua das Palmeiras', numero: '100', bairro: 'Centro', pontoReferencia: null },
+    nis: '12345678901',
+    responsaveis: [responsavel],
   };
 
   async function montar(dadosComparacao: ComparacaoRematriculaDTO): Promise<void> {
     service.buscar.mockResolvedValue({ ...detalhe, assistidoExistenteId: 42, jaMatriculadoNoAno: dadosComparacao.jaMatriculadoNoAno });
     service.comparacao.mockResolvedValue(dadosComparacao);
+    service.rascunhoAssistido.mockResolvedValue(enviadoAgora);
 
     await TestBed.configureTestingModule({
       imports: [AvaliacaoPreCadastro],
@@ -232,6 +272,8 @@ describe('AvaliacaoPreCadastro — rematrícula', () => {
         { turmaId: 3, nomeTurma: 'Grupo Manhã', ativo: true },
         { turmaId: 4, nomeTurma: 'Grupo Tarde', ativo: true },
       ]);
+    await responderFicha(fichaAtual);
+    await new Promise((resolve) => setTimeout(resolve));
     await fixture.whenStable();
     fixture.detectChanges();
   }
@@ -246,7 +288,7 @@ describe('AvaliacaoPreCadastro — rematrícula', () => {
     await montar(comparacao());
 
     expect(texto()).toContain('Rematrícula em 2027');
-    expect(texto()).toContain('1 dado diferente da ficha');
+    expect(texto()).toContain('2 dados diferentes da ficha');
     expect(texto()).toContain('Rua das Palmeiras, 100');
     expect(texto()).not.toContain('12345678901');
     expect(botao('Aprovar e criar cadastro')).toBeUndefined();
@@ -264,8 +306,47 @@ describe('AvaliacaoPreCadastro — rematrícula', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(service.rematricular).toHaveBeenCalledWith(5, 3);
+    expect(service.rematricular).toHaveBeenCalledWith(5, 3, null);
     expect(texto()).toContain('matriculado em 2027');
+  });
+
+  it('marcar um dado leva o enviado para a ficha; desmarcar volta ao que estava', async () => {
+    await montar(comparacao());
+    const caixa = () => (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>('td.levar input[type=checkbox]')!;
+    expect(texto()).toContain('Ficha do atendido');
+    expect(texto()).toContain('Na aba Família');
+
+    caixa().click();
+    fixture.detectChanges();
+    expect(texto()).toContain('A ficha será atualizada ao rematricular.');
+
+    caixa().click();
+    fixture.detectChanges();
+    expect(texto()).not.toContain('A ficha será atualizada ao rematricular.');
+
+    caixa().click();
+    fixture.detectChanges();
+    service.rematricular.mockResolvedValue({ ...detalhe, status: 'CONVERTIDO', assistidoId: 42 });
+    botao('Rematricular em 2027')!.click();
+    await fixture.whenStable();
+
+    const ficha = service.rematricular.mock.calls[0][2];
+    expect(ficha.endereco.logradouro).toBe('Rua das Palmeiras');
+    expect(ficha.dataEntrada).toBe('2026-02-01');
+    expect(ficha.observacoes).toBe('Busca: avó');
+  });
+
+  it('a equipe corrige um texto da ficha e ele vai junto na rematrícula', async () => {
+    await montar(comparacao());
+    const componente = fixture.componentInstance as unknown as { atualizar(campo: string, valor: unknown): void };
+    componente.atualizar('nomeCompleto', 'Criança Teste');
+    fixture.detectChanges();
+    service.rematricular.mockResolvedValue({ ...detalhe, status: 'CONVERTIDO', assistidoId: 42 });
+
+    botao('Rematricular em 2027')!.click();
+    await fixture.whenStable();
+
+    expect(service.rematricular).toHaveBeenCalledWith(5, 3, expect.objectContaining({ nomeCompleto: 'Criança Teste' }));
   });
 
   it('sem grupo escolhido não rematricula', async () => {
