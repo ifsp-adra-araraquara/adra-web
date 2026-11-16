@@ -10,7 +10,8 @@ import { PreCadastroService } from '../../../../core/pre-cadastro.service';
 import { CategoriaArquivo } from '../../../../shared/enum/CategoriaArquivo';
 import { AssistidoRequestDTO } from '../../../../shared/models/assistido/AssistidoRequestDTO';
 import { PreCadastroResponseDTO, emAvaliacao } from '../../../../shared/models/precadastro/PreCadastro';
-import { ComparacaoRematriculaDTO } from '../../../../shared/models/matricula/Matricula';
+import { ChaveCampoFicha, ComparacaoRematriculaDTO } from '../../../../shared/models/matricula/Matricula';
+import { AssistidoResponseDTO } from '../../../../shared/models/assistido/AssistidoResponseDTO';
 import { TurmaResponseDTO } from '../../../../shared/models/turma/TurmaResponseDTO';
 import { VinculoFamiliarComResponsavelRequestDTO } from '../../../../shared/models/vinculoFamiliar/VinculoFamiliarComResponsavelRequestDTO';
 import { Badge } from '../../../../shared/components/badge/badge';
@@ -25,6 +26,7 @@ import { mensagemErro } from '../../../../shared/utils/erro-http.util';
 import { hojeISO } from '../../../../shared/utils/aula.util';
 import {
   assistidoVazio,
+  formDoAssistido,
   paraPayloadAssistido,
   paraVinculoComResponsavel,
   ResponsavelPendente,
@@ -61,12 +63,35 @@ function paraResponsavelPendente(v: VinculoFamiliarComResponsavelRequestDTO): Re
   };
 }
 
+/** Campos do formulário que cada linha da comparação leva para a ficha. */
+const CAMPOS_DA_CHAVE: Record<ChaveCampoFicha, (keyof AssistidoRequestDTO)[]> = {
+  nomeCompleto: ['nomeCompleto'],
+  dataNascimento: ['dataNascimento'],
+  sexo: ['sexo'],
+  endereco: ['endereco'],
+  saude: ['possuiProblemaSaude', 'problemaSaude'],
+  renda: ['rendaFamiliar'],
+  programas: ['recebeProgramaTransferencia', 'programasTransferencia', 'programaTransferenciaOutro'],
+  nis: ['nis'],
+  observacoes: ['observacoes'],
+};
+
+/** Só os dados cadastrais (o que a rematrícula atualiza), para saber se a equipe mudou algo. */
+function dadosDaFicha(a: AssistidoRequestDTO): string {
+  const { turmaId, dataEntrada, cpf, aceiteLgpd, autorizaUsoImagem, autorizaEventosPasseios, podeIrEmboraSozinho,
+    cienteFrequenciaObrigatoria, responsaveis, responsaveisVinculados, ...dados } = paraPayloadAssistido(a);
+  // Ordena só as chaves de cima: um replacer em lista também filtraria as do endereço.
+  const ordenado = Object.fromEntries(Object.entries(dados).sort(([a], [b]) => a.localeCompare(b)));
+  return JSON.stringify(ordenado);
+}
+
 /**
  * Avaliação de um pré-cadastro: o cadastro do atendido já vem preenchido com
  * o que a família enviou (rascunho da API) e a equipe edita o que quiser.
  * Aprovar cria o atendido; reprovar pede o motivo. Já avaliado: só leitura.
- * CPF de quem já é atendido = rematrícula: mostra o que mudou (sem alterar a
- * ficha) e abre a matrícula do ano no grupo escolhido.
+ * CPF de quem já é atendido = rematrícula: mostra o que mudou, a equipe marca
+ * o que leva para a ficha (e corrige o que quiser) e abre a matrícula do ano no
+ * grupo escolhido.
  */
 @Component({
   selector: 'app-avaliacao-pre-cadastro',
@@ -115,6 +140,17 @@ export class AvaliacaoPreCadastro implements OnInit {
   protected readonly comparacao = signal<ComparacaoRematriculaDTO | null>(null);
   protected readonly turmaRematricula = signal<number | null>(null);
   protected readonly tentouRematricular = signal(false);
+  /** Rematrícula: a ficha como está hoje e o que a família enviou, no formato do formulário. */
+  private readonly fichaOriginal = signal<AssistidoRequestDTO | null>(null);
+  private readonly enviado = signal<AssistidoRequestDTO | null>(null);
+  /** Dados da comparação marcados para ir para a ficha. */
+  protected readonly aplicados = signal<ReadonlySet<ChaveCampoFicha>>(new Set());
+  /** A ficha pode ser revisada aqui (carregou a ficha e o que a família enviou). */
+  protected readonly fichaEditavel = computed(() => this.podeRematricular() && !!this.fichaOriginal() && !!this.enviado());
+  protected readonly fichaAlterada = computed(() => {
+    const original = this.fichaOriginal();
+    return !!original && this.fichaEditavel() && dadosDaFicha(original) !== dadosDaFicha(this.assistido());
+  });
 
   protected readonly modalReprovar = signal(false);
   protected readonly motivo = signal('');
@@ -201,6 +237,35 @@ export class AvaliacaoPreCadastro implements OnInit {
     this.router.navigate(['/assistidos'], { queryParams: { assistidoId } });
   }
 
+  /** Responsáveis se atualizam na aba Família; abre em outra aba para não perder a avaliação. */
+  protected abrirFamiliaDoAtendido(assistidoId: number): void {
+    const url = this.router.serializeUrl(
+      this.router.createUrlTree(['/assistidos'], { queryParams: { assistidoId, aba: 'fam' } }),
+    );
+    this.document.defaultView?.open(url, '_blank', 'noopener');
+  }
+
+  /** Marca/desmarca um dado da comparação: copia o que a família enviou ou volta ao que estava na ficha. */
+  protected alternarCampo(chave: ChaveCampoFicha): void {
+    const original = this.fichaOriginal();
+    const enviado = this.enviado();
+    if (!original || !enviado) return;
+    const marcados = new Set(this.aplicados());
+    const levar = !marcados.has(chave);
+    if (levar) marcados.add(chave);
+    else marcados.delete(chave);
+    this.aplicados.set(marcados);
+    const origem = levar ? enviado : original;
+    this.assistido.update((a) => {
+      const novo = { ...a } as Record<string, unknown>;
+      for (const campo of CAMPOS_DA_CHAVE[chave]) {
+        const valor = origem[campo];
+        novo[campo] = Array.isArray(valor) ? [...valor] : valor && typeof valor === 'object' ? { ...valor } : valor;
+      }
+      return novo as unknown as AssistidoRequestDTO;
+    });
+  }
+
   protected async aprovar(): Promise<void> {
     if (this.salvando()) return;
     const erro = this.validar();
@@ -236,10 +301,20 @@ export class AvaliacaoPreCadastro implements OnInit {
     this.tentouRematricular.set(true);
     const turmaId = this.turmaRematricula();
     if (turmaId == null || this.salvando()) return;
+    const ficha = this.fichaAlterada() ? this.assistido() : null;
+    if (ficha) {
+      const erro = !ficha.nomeCompleto.trim() ? 'Informe o nome completo na ficha do atendido.' : validarDadosComplementares(ficha);
+      if (erro) {
+        this.erroAcao.set(erro);
+        return;
+      }
+    }
     this.salvando.set(true);
     this.erroAcao.set(null);
     try {
-      this.detalhe.set(await this.service.rematricular(this.preCadastroId, turmaId));
+      this.detalhe.set(
+        await this.service.rematricular(this.preCadastroId, turmaId, ficha ? paraPayloadAssistido(ficha) : null),
+      );
     } catch (e) {
       this.erroAcao.set(mensagemErro(e as HttpErrorResponse, 'Não foi possível rematricular. Tente de novo.'));
     } finally {
@@ -341,9 +416,29 @@ export class AvaliacaoPreCadastro implements OnInit {
     ]);
     this.comparacao.set(comparacao);
     this.turmas.set(turmas);
+    await this.carregarFichaParaRevisao(comparacao.assistidoId);
     // Sem passagem automática: sugere o grupo de agora, a equipe confirma ou troca.
     const atualAtivo = turmas.some((t) => t.ativo && t.turmaId === comparacao.turmaAtualId);
     this.turmaRematricula.set(atualAtivo ? comparacao.turmaAtualId : null);
+  }
+
+  /** Sem a ficha ou sem o rascunho, a comparação continua só para leitura. */
+  private async carregarFichaParaRevisao(assistidoId: number): Promise<void> {
+    const [ficha, rascunho] = await Promise.all([
+      firstValueFrom(this.http.get<AssistidoResponseDTO>(`${environment.apiUrl}/api/assistidos/${assistidoId}`)).catch(() => null),
+      this.service.rascunhoAssistido(this.preCadastroId).catch(() => null),
+    ]);
+    if (!ficha || !rascunho) return;
+    const original = formDoAssistido(ficha);
+    this.fichaOriginal.set(original);
+    this.enviado.set({
+      ...original,
+      ...rascunho,
+      endereco: enderecoParaForm(rascunho.endereco),
+      programasTransferencia: rascunho.programasTransferencia ?? [],
+    });
+    this.assistido.set(structuredClone(original));
+    this.aplicados.set(new Set());
   }
 
   private async carregar(): Promise<void> {
