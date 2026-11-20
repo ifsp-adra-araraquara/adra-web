@@ -3,7 +3,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subscription } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
 
@@ -31,6 +31,9 @@ import { ActionMenu, ActionMenuItem } from '../../../shared/components/action-me
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
 import { HistoricoOficineiros } from '../../../shared/components/historico-oficineiros/historico-oficineiros';
 import { SeletorMultiplo } from '../../../shared/components/seletor-multiplo/seletor-multiplo';
+import { SeletorDiasSemana } from '../../../shared/components/seletor-dias-semana/seletor-dias-semana';
+import { DiaSemana } from '../../../shared/enum/DiaSemana';
+import { nomesDosDias, ordenarDias } from '../../../shared/utils/dia-semana.util';
 import { corDaOficina, textoHorario } from './oficina-card.util';
 
 const MAX_HORARIOS = 3;
@@ -44,6 +47,7 @@ interface CardOficina {
   cor: string;
   oficineiro: string;
   grupos: string[];
+  dias: string;
   horarios: string[];
   outrosHorarios: number;
   turmasAtivas: number;
@@ -63,7 +67,7 @@ function lerModoExibicao(): ModoExibicao {
 @Component({
   selector: 'app-oficinas',
   standalone: true,
-  imports: [HistoricoOficineiros, SeletorMultiplo, TabelaSemanarios, Table, Drawer, ListaBadges, AcaoDrawer, ActionMenu, Badge, Icon, CommonModule, FormsModule, Select, Modal, Input, Button],
+  imports: [HistoricoOficineiros, SeletorMultiplo, SeletorDiasSemana, TabelaSemanarios, Table, Drawer, ListaBadges, AcaoDrawer, ActionMenu, Badge, Icon, CommonModule, FormsModule, Select, Modal, Input, Button],
   templateUrl: './oficinas.html',
   styleUrl: './oficinas.css',
 })
@@ -112,6 +116,7 @@ export class Oficinas implements OnInit {
         cor: corDaOficina(oficina.oficinaId),
         oficineiro: nomes.get(oficina.oficineiroResponsavelId ?? -1) ?? 'Sem oficineiro',
         grupos: oficina.turmaIds.map((id) => nomesGrupos.get(id)).filter((nome): nome is string => !!nome),
+        dias: nomesDosDias(oficina.diasDaSemana ?? []),
         // Turmas com agendas diferentes: uma linha por agenda, até 3.
         horarios: horarios.slice(0, MAX_HORARIOS),
         outrosHorarios: Math.max(horarios.length - MAX_HORARIOS, 0),
@@ -128,6 +133,7 @@ export class Oficinas implements OnInit {
   readonly colunasOficinas: TableColumn<CardOficina>[] = [
     { key: 'nome', header: 'Oficina', sortable: true, value: (c) => c.oficina.nomeOficina },
     { key: 'oficineiro', header: 'Oficineiro', sortable: true, value: (c) => c.oficineiro },
+    { key: 'dias', header: 'Dias', value: (c) => c.dias || '—' },
     { key: 'grupos', header: 'Grupos atendidos', type: 'custom' },
     { key: 'local', header: 'Local', value: (c) => c.oficina.local || '—' },
     { key: 'vagas', header: 'Vagas', align: 'center', value: (c) => (c.turmasAtivas > 0 ? `${c.alunos}/${c.capacidade}` : '—') },
@@ -159,6 +165,7 @@ export class Oficinas implements OnInit {
 
   filtroNome = '';
   filtroStatus: 'todas' | 'ativas' | 'inativas' = 'ativas';
+  filtroDias: DiaSemana[] = [];
 
   filtroStatusOptions: SelectOption<'todas' | 'ativas' | 'inativas'>[] = [
     { value: 'ativas', label: 'Ativas' },
@@ -167,6 +174,7 @@ export class Oficinas implements OnInit {
   ];
   
   private debounceTimerListagem?: ReturnType<typeof setTimeout>;
+  private requisicaoListagem?: Subscription;
 
   ngOnInit(): void {
     this.carregarOficinas();
@@ -210,6 +218,11 @@ export class Oficinas implements OnInit {
     this.carregarOficinas();
   }
 
+  onFiltroDiasChange(dias: DiaSemana[]): void {
+    this.filtroDias = dias;
+    this.carregarOficinas();
+  }
+
   carregarOficinas(): void {
     this.carregando.set(true);
     this.erroListar.set(null);
@@ -226,7 +239,12 @@ export class Oficinas implements OnInit {
       params = params.set('ativo', 'false');
     }
 
-    this.http.get<OficinaResponseDTO[]>(this.apiOficinas, { params }).subscribe({
+    if (this.filtroDias.length > 0) {
+      params = params.set('dias', ordenarDias(this.filtroDias).join(','));
+    }
+
+    this.requisicaoListagem?.unsubscribe();
+    this.requisicaoListagem = this.http.get<OficinaResponseDTO[]>(this.apiOficinas, { params }).subscribe({
       next: (lista) => {
         this.oficinas.set(lista);
         this.carregando.set(false);
@@ -259,6 +277,7 @@ export class Oficinas implements OnInit {
       oficineiroResponsavelId: null,
       local: '',
       turmaIds: [],
+      diasDaSemana: [],
     };
   }
 
@@ -277,7 +296,7 @@ export class Oficinas implements OnInit {
     this.oficinaSendoEditada.set(null);
   }
 
-  atualizarCampoOficina(campo: keyof OficinaRequestDTO, valor: string | number | number[] | null): void {
+  atualizarCampoOficina(campo: keyof OficinaRequestDTO, valor: string | number | number[] | DiaSemana[] | null): void {
     this.formOficina = { ...this.formOficina, [campo]: valor };
 
     if (campo === 'nomeOficina') {
@@ -407,6 +426,7 @@ export class Oficinas implements OnInit {
       oficineiroResponsavelId: oficina.oficineiroResponsavelId ?? null,
       local: oficina.local ?? '',
       turmaIds: oficina.turmaIds ?? [],
+      diasDaSemana: oficina.diasDaSemana ?? [],
     };
     this.erroSalvar.set(null);
     this.alertaDuplicidade.set(false);

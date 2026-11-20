@@ -1,3 +1,5 @@
+import { DiaSemana } from '../../enum/DiaSemana';
+
 export interface OficinaResponseDTO {
   oficinaId: number;
   nomeOficina: string;
@@ -6,4 +8,5 @@ export interface OficinaResponseDTO {
   local: string | null;
   /** Grupos atendidos pela oficina. */
   turmaIds: number[];
+  diasDaSemana?: DiaSemana[];
 }

@@ -26,6 +26,7 @@ import { CalendarioAulas } from '../calendario-aulas/calendario-aulas';
 import { Icon } from '../../../shared/components/icon/icon';
 import { TooltipDirective } from '../../../shared/components/tooltip/tooltip';
 import { mensagemErro } from '../../../shared/utils/erro-http.util';
+import { nomesDosDias } from '../../../shared/utils/dia-semana.util';
 
 type AbaOficineiro = 'turmas' | 'calendario' | 'semanario';
 
@@ -52,6 +53,11 @@ export class Oficineiro implements OnInit {
   /** Ver `shared/utils/ocupacao.util.ts` — mesma conta reutilizada em `turma.ts`. */
   ocupacaoTurma(turma: OficineiroTurmaDTO): number {
     return ocupacaoTurmaUtil(turma.quantidadeAlunos, turma.capacidade);
+  }
+
+  diasDaOficina(oficinaId: number | null): string {
+    const oficina = this.oficinas().find((o) => o.oficinaId === oficinaId);
+    return nomesDosDias(oficina?.diasDaSemana ?? []) || '—';
   }
 
   private readonly http = inject(HttpClient);
