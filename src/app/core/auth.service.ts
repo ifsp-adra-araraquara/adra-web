@@ -276,6 +276,8 @@ export class AuthService {
     supabase.auth.signOut({ scope: 'local' });
     localStorage.removeItem(CHAVE_TOKEN);
     localStorage.removeItem(USER_KEY);
+    // Conversa do ADRAbot: só da sessão, apagada ao sair (pode ter nomes de atendidos).
+    sessionStorage.removeItem('adra.robo.conversa');
     this.inatividade.limpar();
     this.usuarioLogado.set(null);
   }

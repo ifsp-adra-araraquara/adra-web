@@ -48,3 +48,7 @@
   .main.sidebar-collapsed { margin-left: 72px; }
   .menu-btn, .backdrop { display: none; }
 }
+
+/* ADRAbot no topo: mascote no lugar do ícone. */
+.robo-atalho { color: inherit; }
+.robo-atalho:focus-visible { outline: 3px solid var(--color-brand-ring); outline-offset: 2px; }

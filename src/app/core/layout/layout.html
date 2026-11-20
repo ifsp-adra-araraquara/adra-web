@@ -23,6 +23,19 @@
     <div class="topbar-acoes">
       <app-notificacoes />
 
+      @if (temRobo()) {
+        <button
+          type="button"
+          class="help-btn robo-atalho"
+          [attr.aria-label]="'Abrir o ' + nomeRobo + ', assistente do sistema'"
+          [attr.aria-expanded]="roboAberto()"
+          [appTooltip]="nomeRobo"
+          (click)="abrirRobo($event)"
+        >
+          <app-robo-mascote [tamanho]="30" [animado]="false" />
+        </button>
+      }
+
       @if (mostrarAjudaTour()) {
         <button
           type="button"
@@ -42,3 +55,5 @@
   </main>
   <p class="sr-only no-print" aria-live="polite">{{ anuncioTela() }}</p>
 </div>
+
+<app-robo-botao />
