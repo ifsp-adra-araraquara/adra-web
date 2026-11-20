@@ -123,7 +123,8 @@ export function extrairPeriodos(texto: string, hoje: Date): Periodo[] {
   // "ultimos 3 meses", "ultimos tres meses", "ultimo trimestre/semestre"
   marcar(/\bultim[oa]s? (\d{1,2}|[a-z]+) mes(es)?\b/, (m) => {
     const n = /^\d+$/.test(m[1]) ? Number(m[1]) : numeroPorExtenso(m[1]);
-    if (!n || n < 1 || n > 24) return null;
+    if (!n || n < 1) return null;
+    if (n > MAXIMO_MESES) return periodoIntervalo(somarMeses(atual, -(MAXIMO_MESES - 1)), atual);
     return periodoIntervalo(somarMeses(atual, -(n - 1)), atual);
   });
   marcar(/\bultimo trimestre\b/, () => periodoIntervalo(somarMeses(atual, -2), atual));
@@ -187,12 +188,15 @@ export function extrairPeriodos(texto: string, hoje: Date): Periodo[] {
     });
 }
 
-/** Achados que caem no futuro são trazidos para o presente; nada passa de 24 meses. */
+/** Maior período de UMA consulta (igual ao MAXIMO_MESES da API). Comparações viram consultas separadas. */
+export const MAXIMO_MESES = 12;
+
+/** Achados que caem no futuro são trazidos para o presente; nada passa de {@link MAXIMO_MESES}. */
 export function limitarPeriodo(p: Periodo, hoje: Date): Periodo {
   const atual = ym(hoje.getFullYear(), hoje.getMonth() + 1);
   let { de, ate } = p;
   if (ate > atual) ate = atual;
   if (de > ate) de = ate;
-  if (mesesEntre(de, ate) > 24) de = somarMeses(ate, -23);
+  if (mesesEntre(de, ate) > MAXIMO_MESES) de = somarMeses(ate, -(MAXIMO_MESES - 1));
   return de === p.de && ate === p.ate ? p : { ...p, de, ate, rotulo: rotuloIntervalo(de, ate) };
 }

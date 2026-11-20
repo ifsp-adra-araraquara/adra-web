@@ -9,6 +9,7 @@ import { StatusPresenca } from '../../../shared/enum/StatusPresenca';
 import { ajudaPorIntencao } from '../motor/ajuda';
 import { INTENCOES_DADOS, intencaoPorId } from '../motor/catalogo';
 import {
+  MAXIMO_MESES,
   MESES_ROTULO,
   Periodo,
   mesesEntre,
@@ -186,7 +187,8 @@ const freqGrupo: Executor = async (ctx) => {
   if (lacunas.comparar || lacunas.periodos.length >= 2) return freqEvolucao(ctx);
   const p = periodoOuMesAtual(ctx);
   const anterior = periodoAnterior(p, ctx.hoje);
-  const busca = mesesEntre(anterior.de, p.ate) <= 24 ? anterior.de : p.de;
+  // Período + o anterior numa consulta só, se couber em 12 meses; senão, só o período.
+  const busca = mesesEntre(anterior.de, p.ate) <= MAXIMO_MESES ? anterior.de : p.de;
   const dto = await ctx.dados.frequencia(busca, p.ate);
   const doPeriodo = dto.linhas.filter((l) => l.mes >= p.de && l.mes <= p.ate);
   const doAnterior = dto.linhas.filter((l) => l.mes >= anterior.de && l.mes <= anterior.ate);
@@ -291,12 +293,18 @@ const freqEvolucao: Executor = async (ctx) => {
 
   // Comparação de dois períodos
   if (periodos.length === 2) {
+    // Juntos cabem em uma consulta (≤ 12 meses)? Uma só. Senão, uma por período (cada uma ≤ 12 meses).
     const ordenados = [...periodos].sort((a, b) => a.de.localeCompare(b.de));
-    let de = ordenados[0].de;
     const ate = ordenados[1].ate > ordenados[0].ate ? ordenados[1].ate : ordenados[0].ate;
-    if (mesesEntre(de, ate) > 24) de = somarMeses(ate, -23);
-    const dto = await ctx.dados.frequencia(de, ate);
-    const linhas = filtrar(dto.linhas);
+    const juntos = mesesEntre(ordenados[0].de, ate) <= MAXIMO_MESES;
+    const linhas = filtrar(
+      juntos
+        ? (await ctx.dados.frequencia(ordenados[0].de, ate)).linhas
+        : [
+            ...(await ctx.dados.frequencia(ordenados[0].de, ordenados[0].ate)).linhas,
+            ...(await ctx.dados.frequencia(ordenados[1].de, ordenados[1].ate)).linhas,
+          ],
+    );
     const [a, b] = periodos.map((p) => ({ p, s: somar(linhas.filter((l) => l.mes >= p.de && l.mes <= p.ate)) }));
     const d = a.s.percentual != null && b.s.percentual != null ? b.s.percentual - a.s.percentual : null;
     const r: Resposta = {

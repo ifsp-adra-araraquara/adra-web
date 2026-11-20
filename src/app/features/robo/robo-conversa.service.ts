@@ -185,6 +185,21 @@ export class RoboConversa {
       return resposta;
     } catch (erro) {
       if (erro instanceof HttpErrorResponse && erro.status === 403) return n.respostaSemPermissao(intencao, perfil);
+      if (erro instanceof HttpErrorResponse && erro.status === 503) {
+        return {
+          texto: ['Estou respondendo outra pergunta agora. Tente de novo em alguns segundos.'],
+          interpretacao: ['Faço uma consulta por vez para não deixar o sistema lento para quem está lançando chamada.'],
+          acoes: [
+            { tipo: 'executar', rotulo: 'Tentar de novo', intencaoId: intencao.id, lacunas },
+            { tipo: 'menu', rotulo: 'Outra pergunta' },
+          ],
+          humor: 'confuso',
+        };
+      }
+      if (erro instanceof HttpErrorResponse && erro.status === 409 && typeof erro.error?.mensagem === 'string') {
+        // Regra de negócio da API (ex.: período inválido): mostra a mensagem dela.
+        return { texto: [erro.error.mensagem], acoes: [{ tipo: 'menu', rotulo: 'Outra pergunta' }], humor: 'confuso' };
+      }
       return {
         texto: ['Não consegui buscar os dados agora. Confira a conexão e tente de novo.'],
         acoes: [

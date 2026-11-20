@@ -121,6 +121,10 @@ interface Guardado {
  * "e em setembro?" reaproveitam o que já veio, e dois pedidos iguais ao mesmo
  * tempo viram um só. Erro não fica guardado. O contexto (grupos e oficinas
  * visíveis) vale a sessão inteira. Tudo é limpo ao trocar de usuário.
+ *
+ * Fila: UMA requisição do robô por vez por pessoa. O pool de conexões da API
+ * é pequeno, e um relatório completo (várias consultas) não pode ocupá-lo
+ * inteiro enquanto alguém lança a chamada.
  */
 @Injectable({ providedIn: 'root' })
 export class RoboDados {
@@ -128,6 +132,14 @@ export class RoboDados {
   private readonly api = environment.apiUrl;
   private readonly cache = new Map<string, Guardado>();
   private entidadesPedido: Promise<Entidades> | null = null;
+  /** Fim da fila: cada pedido novo só sai quando o anterior terminar. */
+  private fila: Promise<unknown> = Promise.resolve();
+
+  private enfileirar<T>(fazer: () => Promise<T>): Promise<T> {
+    const pedido = this.fila.then(fazer, fazer);
+    this.fila = pedido.catch(() => undefined);
+    return pedido;
+  }
 
   private get<T>(caminho: string, params: Record<string, string | number | undefined> = {}): Promise<T> {
     const limpos: Record<string, string | number> = {};
@@ -137,7 +149,7 @@ export class RoboDados {
     const guardado = this.cache.get(chave);
     if (guardado && guardado.expira > agora) return guardado.pedido as Promise<T>;
 
-    const pedido = firstValueFrom(this.http.get<T>(`${this.api}${caminho}`, { params: limpos }));
+    const pedido = this.enfileirar(() => firstValueFrom(this.http.get<T>(`${this.api}${caminho}`, { params: limpos })));
     pedido.catch(() => this.cache.delete(chave));
     this.cache.delete(chave);
     this.cache.set(chave, { expira: agora + VALIDADE_CACHE_MS, pedido });
@@ -146,7 +158,7 @@ export class RoboDados {
   }
 
   entidades(): Promise<Entidades> {
-    this.entidadesPedido ??= firstValueFrom(this.http.get<RoboContextoDTO>(`${this.api}/api/robo/contexto`)).catch((erro) => {
+    this.entidadesPedido ??= this.enfileirar(() => firstValueFrom(this.http.get<RoboContextoDTO>(`${this.api}/api/robo/contexto`))).catch((erro) => {
       this.entidadesPedido = null;
       throw erro;
     });
