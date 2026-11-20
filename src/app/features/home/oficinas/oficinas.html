@@ -37,6 +37,13 @@
         <app-icon name="grid" [size]="16" /> Blocos
       </button>
     </div>
+
+    <app-seletor-dias-semana
+      class="filtro-dias"
+      label="Filtrar por dia da semana"
+      [dias]="filtroDias"
+      (diasChange)="onFiltroDiasChange($event)"
+    />
   </div>
 
   @if (carregando() && oficinas().length === 0) {
@@ -78,17 +85,14 @@
               </span>
               <span class="m">
                 <app-icon name="calendar" [size]="15" />
-                @if (c.horarios.length > 0) {
-                  <span class="horarios">
-                    @for (h of c.horarios; track h) { <span>{{ h }}</span> }
-                    @if (c.outrosHorarios > 0) {
-                      <small class="extra">e mais {{ c.outrosHorarios }} {{ c.outrosHorarios === 1 ? 'horário' : 'horários' }}</small>
-                    }
-                  </span>
-                } @else {
-                  <span class="vazio">Sem horário definido</span>
-                }
+                @if (c.dias) { {{ c.dias }} } @else { <span class="vazio">Sem dia definido</span> }
               </span>
+              @if (c.horarios.length > 0) {
+                <details class="horarios-grupos">
+                  <summary>Dias dos grupos</summary>
+                  <ng-container *ngTemplateOutlet="horariosDosGrupos; context: { $implicit: c }" />
+                </details>
+              }
               <span class="m">
                 <app-icon name="map-pin" [size]="15" />
                 @if (c.oficina.local) { {{ c.oficina.local }} } @else { <span class="vazio">Local não informado</span> }
@@ -117,8 +121,16 @@
 
   @if (oficinaDoDrawer(); as c) {
     <app-drawer [open]="true" [title]="c.oficina.nomeOficina" [subtitle]="c.oficineiro" (closed)="oficinaDoDrawer.set(null)">
+      <p class="drawer-secao-titulo">Dias da semana</p>
+      @if (c.dias) { <p class="drawer-texto">{{ c.dias }}</p> } @else { <p class="drawer-texto vazio">Sem dia definido</p> }
+
       <p class="drawer-secao-titulo">Grupos atendidos</p>
       <app-lista-badges [nomes]="c.grupos" vazio="Nenhum grupo atendido." />
+
+      @if (c.horarios.length > 0) {
+        <p class="drawer-secao-titulo">Dias dos grupos</p>
+        <ng-container *ngTemplateOutlet="horariosDosGrupos; context: { $implicit: c }" />
+      }
 
       <p class="drawer-secao-titulo">Ações</p>
       @for (acao of acoesOficina(c.oficina); track acao.id) {
@@ -128,6 +140,15 @@
       }
     </app-drawer>
   }
+
+  <ng-template #horariosDosGrupos let-c>
+    <span class="horarios">
+      @for (h of c.horarios; track h) { <span>{{ h }}</span> }
+      @if (c.outrosHorarios > 0) {
+        <small class="extra">e mais {{ c.outrosHorarios }} {{ c.outrosHorarios === 1 ? 'horário' : 'horários' }}</small>
+      }
+    </span>
+  </ng-template>
 </section>
 
 <!-- ============================================================
@@ -178,6 +199,11 @@
       (ngModelChange)="atualizarCampoOficina('local', $event)"
     />
   </div>
+
+  <app-seletor-dias-semana
+    [dias]="formOficina.diasDaSemana"
+    (diasChange)="atualizarCampoOficina('diasDaSemana', $event)"
+  />
 
   <app-seletor-multiplo
     label="Grupos atendidos"

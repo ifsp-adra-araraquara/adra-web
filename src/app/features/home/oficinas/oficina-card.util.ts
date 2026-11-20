@@ -1,4 +1,5 @@
 import { DiaSemana, HorarioOficina } from '../../../shared/models/oficina/OficinaResumoDTO';
+import { juntarComE } from '../../../shared/utils/dia-semana.util';
 const DIA_CURTO: Record<DiaSemana, string> = {
   MONDAY: 'Seg',
   TUESDAY: 'Ter',
@@ -36,6 +37,5 @@ export function corDaOficina(oficinaId: number): string {
 
 /** "Seg, Qua e Sex" — dias já vêm ordenados da API. */
 export function textoHorario(h: HorarioOficina): string {
-  const dias = h.dias.map((d) => DIA_CURTO[d]);
-  return dias.length > 1 ? `${dias.slice(0, -1).join(', ')} e ${dias.at(-1)}` : (dias[0] ?? '');
+  return juntarComE(h.dias.map((d) => DIA_CURTO[d]));
 }

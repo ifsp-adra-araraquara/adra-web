@@ -17,11 +17,12 @@
     <div class="panel-header"><h2 id="turmas-titulo">Meus grupos</h2><span class="subtle">Somente leitura</span></div>
     <div class="table-wrap" role="region" tabindex="0" aria-label="Grupos">
       <table>
-        <thead><tr><th>Grupo</th><th>Oficina</th><th>Turno</th><th>Ocupação</th><th>Ações</th></tr></thead>
+        <thead><tr><th>Grupo</th><th>Oficina</th><th>Dias da oficina</th><th>Turno</th><th>Ocupação</th><th>Ações</th></tr></thead>
         <tbody>
         @for (turma of turmas(); track turma.turmaId) {
         <tr>
-          <td class="strong">{{ turma.nomeTurma }}</td><td>{{ turma.nomeOficina || '-' }}</td><td>{{ turma.turno }}</td>
+          <td class="strong">{{ turma.nomeTurma }}</td><td>{{ turma.nomeOficina || '-' }}</td>
+          <td>{{ diasDaOficina(turma.oficinaId) }}</td><td>{{ turma.turno }}</td>
           <td>
             <div
               class="freq"
@@ -46,11 +47,11 @@
         }
         @for (oficina of oficinasSemGrupo(); track oficina.oficinaId) {
         <tr>
-          <td class="subtle">—</td><td>{{ oficina.nomeOficina }}</td><td>—</td>
+          <td class="subtle">—</td><td>{{ oficina.nomeOficina }}</td><td>{{ diasDaOficina(oficina.oficinaId) }}</td><td>—</td>
           <td colspan="2" class="subtle">Nenhum grupo vinculado ainda. Peça à coordenação para escolher os grupos desta oficina.</td>
         </tr>
         }
-        @if (turmas().length === 0 && oficinasSemGrupo().length === 0) { <tr><td colspan="5" class="empty">Nenhum grupo vinculado ao seu usuário.</td></tr> }
+        @if (turmas().length === 0 && oficinasSemGrupo().length === 0) { <tr><td colspan="6" class="empty">Nenhum grupo vinculado ao seu usuário.</td></tr> }
         </tbody>
       </table>
     </div>
