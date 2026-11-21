@@ -78,7 +78,7 @@ export const routes: Routes = [
         title: 'Importar atendidos',
         loadComponent: () =>
           import('./features/home/assistidos/lote/assistidos-lote').then((m) => m.AssistidosLote),
-        data: { roles: [Role.COORD, Role.ASSISTENTE] },
+        data: { roboRecolhido: true, roles: [Role.COORD, Role.ASSISTENTE] },
         canActivate: [roleGuard],
       },
       {
@@ -86,7 +86,7 @@ export const routes: Routes = [
         title: 'Novo atendido',
         loadComponent: () =>
           import('./features/home/assistidos/novo/assistido-novo').then((m) => m.AssistidoNovo),
-        data: { roles: [Role.COORD, Role.ASSISTENTE] },
+        data: { roboRecolhido: true, roles: [Role.COORD, Role.ASSISTENTE] },
         canActivate: [roleGuard],
       },
       {
@@ -163,7 +163,7 @@ export const routes: Routes = [
         title: 'Avaliar pré-cadastro',
         loadComponent: () =>
           import('./features/home/pre-cadastros/avaliacao/avaliacao-pre-cadastro').then((m) => m.AvaliacaoPreCadastro),
-        data: { roles: [Role.COORD, Role.ASSISTENTE] },
+        data: { roboRecolhido: true, roles: [Role.COORD, Role.ASSISTENTE] },
         canActivate: [roleGuard],
       },
       {
@@ -227,7 +227,7 @@ export const routes: Routes = [
         title: 'Chamada do grupo',
         loadComponent: () =>
           import('./features/home/chamada/chamada-grupo/chamada-grupo').then((m) => m.ChamadaGrupo),
-        data: { roles: [Role.COORD, Role.ASSISTENTE, Role.EDUCADOR] },
+        data: { roboRecolhido: true, roles: [Role.COORD, Role.ASSISTENTE, Role.EDUCADOR] },
         canActivate: [roleGuard],
       },
       {
@@ -262,6 +262,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/home/oficineiro/oficineiro').then((m) => m.Oficineiro),
         data: { roles: [Role.OFICINEIRO] },
+        canActivate: [roleGuard],
+      },
+      {
+        // ADRAbot: relatório da conversa na folha A4 (dados só em memória).
+        path: 'robo/relatorio',
+        title: 'Relatório do ADRAbot',
+        loadComponent: () => import('./features/robo/ui/robo-relatorio').then((m) => m.RoboRelatorio),
+        data: { roles: [Role.COORD, Role.ASSISTENTE, Role.EDUCADOR, Role.OFICINEIRO] },
         canActivate: [roleGuard],
       },
       {

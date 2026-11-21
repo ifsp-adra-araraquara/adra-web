@@ -21,12 +21,16 @@ import { OnboardingService } from '../onboarding.service';
 import { TooltipDirective } from '../../shared/components/tooltip/tooltip';
 import { Icon } from '../../shared/components/icon/icon';
 import { Notificacoes } from '../../shared/components/notificacoes/notificacoes';
+import { RoboBotao } from '../../features/robo/ui/robo-botao';
+import { RoboMascote } from '../../features/robo/ui/robo-mascote';
+import { RoboConversa } from '../../features/robo/robo-conversa.service';
+import { NOME_ROBO } from '../../features/robo/nome';
 
 const CHAVE_SIDEBAR_COLAPSADA = 'adra.sidebar.collapsed';
 
 @Component({
   selector: 'app-layout',
-  imports: [Icon, Notificacoes, RouterOutlet, Sidebar, TooltipDirective],
+  imports: [Icon, Notificacoes, RoboBotao, RoboMascote, RouterOutlet, Sidebar, TooltipDirective],
   templateUrl: './layout.html',
   styleUrl: './layout.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,12 +50,18 @@ export class Layout {
   /** Lido pelo leitor de tela ao trocar de tela (o título da aba já vem da rota). */
   readonly anuncioTela = signal('');
 
+  private readonly auth = inject(AuthService);
+  private readonly robo = inject(RoboConversa);
+  protected readonly nomeRobo = NOME_ROBO;
+  /** Atalho do ADRAbot no topo: sempre à mão, inclusive onde o botão flutuante some (telas com "Salvar" no rodapé). */
+  protected readonly temRobo = computed(() => !!this.auth.currentProfile());
+  protected readonly roboAberto = this.robo.aberto;
+
   /** Botão "Ver tutorial" só aparece pra quem o tour (Fase 5) realmente cobre — ver OnboardingService. */
   readonly mostrarAjudaTour = computed(() => this.onboarding.podeVerTour());
 
   constructor() {
-    const auth = inject(AuthService);
-    inject(InatividadeService).acompanhar(() => auth.logout(), inject(DestroyRef));
+    inject(InatividadeService).acompanhar(() => this.auth.logout(), inject(DestroyRef));
 
     effect(() => {
       localStorage.setItem(CHAVE_SIDEBAR_COLAPSADA, String(this.sidebarCollapsed()));
@@ -83,6 +93,11 @@ export class Layout {
 
   private focarConteudo(): void {
     this.conteudo().nativeElement.focus({ preventScroll: true });
+  }
+
+  protected abrirRobo(evento: Event): void {
+    if (this.robo.aberto()) this.robo.fechar();
+    else void this.robo.abrir(evento.currentTarget as HTMLElement);
   }
 
   abrirTutorial(): void {
