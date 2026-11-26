@@ -84,10 +84,10 @@
         <app-input label="Profissão" formControlName="profissao" [maxLength]="120" />
         <app-input
           label="Renda mensal (R$)"
-          type="number"
-          min="0"
+          mask="moeda"
           placeholder="0,00"
           formControlName="renda"
+          [required]="true"
           [errorMessage]="erroRenda()"
         />
       </div>

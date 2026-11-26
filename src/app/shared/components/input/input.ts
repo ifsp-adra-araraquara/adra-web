@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, forwardRef, input, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { formatarCpf, somenteDigitos } from '../../validators/cpf.validator';
-import { formatarTelefone, telefoneNacional } from '../../utils/mascara.util';
+import { formatarTelefone, formatarValorMoeda, parseMoeda, telefoneNacional } from '../../utils/mascara.util';
 import { Icon } from '../icon/icon';
 
 export type InputType = 'text' | 'number' | 'password' | 'email' | 'date' | 'time';
-export type InputMask = 'none' | 'cpf' | 'telefone';
+export type InputMask = 'none' | 'cpf' | 'telefone' | 'moeda';
 
 let nextInputId = 0;
 
@@ -69,6 +69,7 @@ export class Input implements ControlValueAccessor {
 
   protected inputMode = computed<string | null>(() => {
     if (this.mask() === 'telefone') return 'tel';
+    if (this.mask() === 'moeda') return 'decimal';
     if (this.mask() !== 'none') return 'numeric';
     if (this.type() === 'number') return 'decimal';
     if (this.type() === 'email') return 'email';
@@ -79,6 +80,7 @@ export class Input implements ControlValueAccessor {
     if (this.maxLength() != null) return this.maxLength();
     if (this.mask() === 'cpf') return 14;
     if (this.mask() === 'telefone') return 19;
+    if (this.mask() === 'moeda') return 16;
     return null;
   });
 
@@ -86,8 +88,15 @@ export class Input implements ControlValueAccessor {
   private onTouched: () => void = () => {};
 
   writeValue(value: unknown): void {
-    if (value == null) {
+    if (value == null || value === '') {
       this.rawValue.set('');
+      return;
+    }
+    if (this.mask() === 'moeda') {
+      const numero = typeof value === 'number' ? value : parseMoeda(String(value));
+      // Não sobrescreve o texto enquanto o usuário digita (ex.: [ngModel] refletindo o mesmo valor).
+      if (this.rawValue() !== '' && parseMoeda(this.rawValue()) === numero) return;
+      this.rawValue.set(formatarValorMoeda(numero));
       return;
     }
     this.rawValue.set(this.mask() !== 'none' ? somenteDigitos(String(value)) : String(value));
@@ -106,7 +115,18 @@ export class Input implements ControlValueAccessor {
   }
 
   protected handleInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
+    const inputEl = event.target as HTMLInputElement;
+    const value = inputEl.value;
+
+    if (this.mask() === 'moeda') {
+      const limpo = value.replace(/[^\d.,]/g, '');
+      this.rawValue.set(limpo);
+      if (inputEl.value !== limpo) {
+        inputEl.value = limpo;
+      }
+      this.onChange(parseMoeda(limpo));
+      return;
+    }
 
     if (this.mask() === 'telefone') {
       const digitos = somenteDigitos(value);
@@ -128,6 +148,10 @@ export class Input implements ControlValueAccessor {
   }
 
   protected handleBlur(): void {
+    if (this.mask() === 'moeda') {
+      const numero = parseMoeda(this.rawValue());
+      this.rawValue.set(formatarValorMoeda(numero));
+    }
     this.onTouched();
   }
 

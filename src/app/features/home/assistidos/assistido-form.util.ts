@@ -84,7 +84,7 @@ export function responsavelVazio(): ResponsavelPendente {
   };
 }
 
-export function validarResponsavel(responsavel: { nomeCompleto: string; cpf?: string; telefone?: string }): string | null {
+export function validarResponsavel(responsavel: { nomeCompleto: string; cpf?: string; telefone?: string; renda?: number | null }): string | null {
   if (!responsavel.nomeCompleto.trim()) {
     return 'Informe o nome do responsável.';
   }
@@ -93,6 +93,9 @@ export function validarResponsavel(responsavel: { nomeCompleto: string; cpf?: st
   }
   if (!telefoneValido(responsavel.telefone ?? '')) {
     return 'Telefone do responsável deve ter DDD + número (10 ou 11 dígitos).';
+  }
+  if (responsavel.renda == null || responsavel.renda < 0) {
+    return 'Informe a renda mensal do responsável.';
   }
   return null;
 }

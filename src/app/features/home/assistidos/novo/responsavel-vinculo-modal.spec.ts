@@ -56,15 +56,22 @@ describe('ResponsavelVinculoModal', () => {
     expect(confirmados[0].cpf).toBe('');
   });
 
-  it('cadastra novo sem CPF aproveitando o nome digitado', async () => {
+  it('cadastra novo sem CPF aproveitando o nome digitado e exige renda', async () => {
     await abrir([]);
 
     component.termo.set('João Novo');
     component.cadastrarNovo();
     component.confirmar();
 
+    expect(component.erro()).toBe('Informe a renda mensal do responsável.');
+    expect(confirmados).toEqual([]);
+
+    component.atualizarComplementares({ ...component.form(), renda: 1500 });
+    component.confirmar();
+
     expect(component.etapa()).toBe('novo');
     expect(confirmados[0].nomeCompleto).toBe('João Novo');
+    expect(confirmados[0].renda).toBe(1500);
     expect(confirmados[0].responsavelId).toBeUndefined();
   });
 
@@ -74,6 +81,7 @@ describe('ResponsavelVinculoModal', () => {
     component.termo.set(CPF_ANA);
     component.cadastrarNovo();
     component.atualizar('nomeCompleto', 'Ana Digitada');
+    component.atualizarComplementares({ ...component.form(), renda: 0 });
     component.confirmar();
 
     expect(component.etapa()).toBe('existente');

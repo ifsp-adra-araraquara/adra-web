@@ -26,7 +26,7 @@ Campo de texto padronizado ADRA. Implementa `ControlValueAccessor`, então funci
 | `type` | `'text' \| 'number' \| 'password' \| 'email' \| 'date'` | `'text'` | Tipo do campo. `password` ganha botão de mostrar/ocultar embutido. |
 | `max` / `min` | `string` | `''` | Repassados como `max`/`min` nativos — úteis com `type="date"` (ex.: impedir data futura) ou `type="number"`. |
 | `maxLength` | `number \| null` | `null` | Sobrepõe o `maxlength` nativo. Quando `mask` é `cpf`/`telefone`, já tem um default (14/15) — só use `maxLength` pra outros casos (ex.: limitar um título a 150 caracteres). |
-| `mask` | `'none' \| 'cpf' \| 'telefone'` | `'none'` | Ver seção "Máscaras" abaixo. |
+| `mask` | `'none' \| 'cpf' \| 'telefone' \| 'moeda'` | `'none'` | Ver seção "Máscaras" abaixo. |
 | `placeholder` | `string` | `''` | — |
 | `id` / `name` | `string` | auto-gerado / `''` | Se `id` não for passado, um id único é gerado (o `<label>` sempre aponta pro campo certo). |
 | `autocomplete` | `string` | `'off'` | Repassado como `autocomplete` nativo. |

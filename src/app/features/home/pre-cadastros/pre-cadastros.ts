@@ -176,7 +176,7 @@ export function haQuantoTempo(criadoEm: string, agora: Date): string {
             @if (filtrosAvancadosAtivos(); as total) { <span class="count">{{ total }}</span> }
           </button>
           <div class="filtros-renda avancado" [class.aberto]="filtrosAbertos()">
-            <app-input label="Renda até (R$)" [hideLabel]="true" placeholder="Renda até R$" type="number" min="0" [ngModel]="rendaAte()" (ngModelChange)="alterarRendaAte($event)" />
+            <app-input label="Renda até (R$)" [hideLabel]="true" placeholder="Renda até R$" mask="moeda" [ngModel]="rendaAte()" (ngModelChange)="alterarRendaAte($event)" />
           </div>
         }
       </div>
