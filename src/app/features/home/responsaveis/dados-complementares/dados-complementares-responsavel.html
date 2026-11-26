@@ -46,8 +46,7 @@
 
   <app-input
     label="Renda mensal (R$)"
-    type="number"
-    min="0"
+    mask="moeda"
     placeholder="0,00"
     [ngModel]="dados().renda"
     (ngModelChange)="atualizar('renda', $event)"

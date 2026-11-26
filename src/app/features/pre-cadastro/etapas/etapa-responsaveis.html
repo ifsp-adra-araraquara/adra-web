@@ -35,7 +35,7 @@
       }
       <app-input label="Profissão" formControlName="profissao" [maxLength]="120" />
       <div class="form-row">
-        <app-input label="Renda mensal (R$)" type="number" min="0" placeholder="0,00" formControlName="renda" [required]="true" [errorMessage]="erro('mae.renda')" />
+        <app-input label="Renda mensal (R$)" mask="moeda" placeholder="0,00" formControlName="renda" [required]="true" [errorMessage]="erro('mae.renda')" />
         <app-input label="Telefone para contato" mask="telefone" autocomplete="tel" formControlName="telefone" [required]="true" [errorMessage]="erro('mae.telefone', MENSAGEM_TELEFONE)" />
       </div>
     </fieldset>
@@ -50,7 +50,7 @@
         <app-input label="Profissão" formControlName="profissao" [maxLength]="120" />
       </div>
       <div class="form-row">
-        <app-input label="Renda mensal (R$)" type="number" min="0" placeholder="0,00" formControlName="renda" [required]="true" [errorMessage]="erro('pai.renda')" />
+        <app-input label="Renda mensal (R$)" mask="moeda" placeholder="0,00" formControlName="renda" [required]="true" [errorMessage]="erro('pai.renda')" />
         <app-input label="Telefone para contato" mask="telefone" formControlName="telefone" [errorMessage]="erro('pai.telefone', MENSAGEM_TELEFONE)" />
       </div>
       <app-button variant="secondary" size="sm" (click)="incluir('temPai', false)">

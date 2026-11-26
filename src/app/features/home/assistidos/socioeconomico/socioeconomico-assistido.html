@@ -2,8 +2,7 @@
   <div>
     <app-input
       label="Renda familiar mensal (R$)"
-      type="number"
-      min="0"
+      mask="moeda"
       placeholder="0,00"
       [ngModel]="dados().rendaFamiliar"
       (ngModelChange)="atualizar('rendaFamiliar', $event)"
