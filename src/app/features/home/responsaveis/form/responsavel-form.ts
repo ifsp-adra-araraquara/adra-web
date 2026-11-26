@@ -62,14 +62,17 @@ export class ResponsavelForm implements OnChanges {
     escolaridade: [null as Escolaridade | null],
     estadoCivil: [null as EstadoCivil | null],
     profissao: ['', Validators.maxLength(120)],
-    renda: [null as number | null, Validators.min(0)],
+    renda: [null as number | null, [Validators.required, Validators.min(0)]],
   });
 
   protected readonly escolaridadeOptions = ESCOLARIDADE_OPTIONS;
   protected readonly estadoCivilOptions = ESTADO_CIVIL_OPTIONS;
 
   protected erroRenda = (): string | null => {
-    if (this.form.controls.renda.touched && this.form.controls.renda.invalid) return 'A renda não pode ser negativa.';
+    const c = this.form.controls.renda;
+    if (c.touched && c.invalid) {
+      return c.hasError('required') ? 'Informe a renda mensal.' : 'A renda não pode ser negativa.';
+    }
     return this.errosPorCampo()['renda'] ?? null;
   };
 

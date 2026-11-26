@@ -48,6 +48,7 @@
     label="Renda mensal (R$)"
     mask="moeda"
     placeholder="0,00"
+    [required]="true"
     [ngModel]="dados().renda"
     (ngModelChange)="atualizar('renda', $event)"
   />
